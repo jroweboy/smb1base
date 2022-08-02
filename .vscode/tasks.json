@@ -1,0 +1,61 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compile",
+            // "type": "cmake",
+            // "command": "build",
+            "type": "shell",
+            "command": "${config:cmake.cmakePath}",
+            "args": ["--build", "${config:cmake.buildDirectory}", "--target", "all"],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "problemMatcher": [
+                {
+                    "applyTo": "allDocuments",
+                    "pattern": [
+                        {
+                            "regexp": "^([^:]*):([0-9]+): ?([^:]*): ?(.*)$",
+                            "file": 1,
+                            "location": 2,
+                            "severity": 3,
+                            "message": 4
+                        },
+                        {
+                            "regexp": "^([^:]*)\\(([0-9]+)\\): ?([^:]*): ?(.*)$",
+                            "file": 1,
+                            "location": 2,
+                            "severity": 3,
+                            "message": 4
+                        },
+                        {
+                            "regexp": "^([a-zA-Z]:[\\\/][^:]+):([0-9]+): ?([^:]*): ?(.*)$",
+                            "file": 1,
+                            "location": 2,
+                            "severity": 3,
+                            "message": 4
+                        }
+                    ]
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "inputId",
+            "type": "command",
+            "command": "watch-run.getFilename",
+            "args" : "compile"
+        }
+    ]
+}
