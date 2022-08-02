@@ -5,19 +5,20 @@
             "label": "compile",
             // "type": "cmake",
             // "command": "build",
-            "type": "shell",
+            "type": "process",
             "command": "${config:cmake.cmakePath}",
             "args": ["--build", "${config:cmake.buildDirectory}", "--target", "all"],
             "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
                 "panel": "shared",
-                "showReuseMessage": true,
+                "showReuseMessage": false,
                 "clear": true
             },
             "problemMatcher": [
                 {
+                    "owner": "ca65",
                     "applyTo": "allDocuments",
                     "pattern": [
                         {
@@ -27,6 +28,12 @@
                             "severity": 3,
                             "message": 4
                         },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "pattern": [
                         {
                             "regexp": "^([^:]*)\\(([0-9]+)\\): ?([^:]*): ?(.*)$",
                             "file": 1,
@@ -34,8 +41,15 @@
                             "severity": 3,
                             "message": 4
                         },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
+                    "pattern": [
                         {
-                            "regexp": "^([a-zA-Z]:[\\\/][^:]+):([0-9]+): ?([^:]*): ?(.*)$",
+                            "regexp": "^([a-zA-Z]:.+):([\\d]+): ?(\\w*): ?(.*)$",
                             "file": 1,
                             "location": 2,
                             "severity": 3,

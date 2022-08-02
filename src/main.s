@@ -66,7 +66,7 @@ EndlessLoop:
   sta Mirror_PPU_CTRL_REG1
   and #%01111110            ;alter name table address to be $2800
   sta PPU_CTRL_REG1         ;(essentially $2000) but save other bits
-  lda Mirror_PPU_CaaassaaaTRL_REG2  ;disable OAM and background display by default
+  lda Mirror_PPU_CTRL_REG2  ;disable OAM and background display by default
   and #%11100110
   ldy DisableScreenFlag     ;get screen disable flag
   bne ScreenOff             ;if set, used bits as-is
