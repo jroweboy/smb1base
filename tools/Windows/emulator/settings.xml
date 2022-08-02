@@ -1623,8 +1623,8 @@
     <ShowPpuMemoryMapping>true</ShowPpuMemoryMapping>
     <ShowRightPanel>true</ShowRightPanel>
     <ShowBottomPanel>true</ShowBottomPanel>
-    <LeftPanelWidth>930</LeftPanelWidth>
-    <TopPanelHeight>450</TopPanelHeight>
+    <LeftPanelWidth>920</LeftPanelWidth>
+    <TopPanelHeight>437</TopPanelHeight>
     <CodeVerifiedDataColor ColorString="#FFFCEC" />
     <CodeUnidentifiedDataColor ColorString="#FFF2F2" />
     <CodeUnexecutedCodeColor ColorString="#E1F4E4" />
@@ -1698,11 +1698,11 @@
       <Y>0</Y>
     </WatchWindowLocation>
     <WindowLocation>
-      <X>0</X>
-      <Y>0</Y>
+      <X>1264</X>
+      <Y>434</Y>
     </WindowLocation>
-    <WindowWidth>-1</WindowWidth>
-    <WindowHeight>-1</WindowHeight>
+    <WindowWidth>1091</WindowWidth>
+    <WindowHeight>723</WindowHeight>
     <BreakInCount>1</BreakInCount>
     <BreakInMetric>CpuCycles</BreakInMetric>
     <BreakOnValue>241</BreakOnValue>
@@ -1763,19 +1763,21 @@
     <TraceFontSize>12</TraceFontSize>
     <TraceTextZoom>100</TraceTextZoom>
     <ScriptWindowSize>
-      <Width>0</Width>
-      <Height>0</Height>
+      <Width>981</Width>
+      <Height>626</Height>
     </ScriptWindowSize>
     <ScriptWindowLocation>
-      <X>0</X>
-      <Y>0</Y>
+      <X>-1608</X>
+      <Y>558</Y>
     </ScriptWindowLocation>
-    <ScriptCodeWindowHeight>0</ScriptCodeWindowHeight>
-    <RecentScripts />
+    <ScriptCodeWindowHeight>423</ScriptCodeWindowHeight>
+    <RecentScripts>
+      <string>c:\Users\jroweboy\.vscode\extensions\alchemic-raker.alchemy65-1.0.8\lua\adapter.lua</string>
+    </RecentScripts>
     <SaveScriptBeforeRun>true</SaveScriptBeforeRun>
     <AutoRestartScript>true</AutoRestartScript>
     <ScriptStartupBehavior>ShowTutorial</ScriptStartupBehavior>
-    <AutoLoadLastScript>true</AutoLoadLastScript>
+    <AutoLoadLastScript>false</AutoLoadLastScript>
     <ScriptFontFamily>Consolas</ScriptFontFamily>
     <ScriptFontStyle>Regular</ScriptFontStyle>
     <ScriptFontSize>12</ScriptFontSize>
@@ -1948,8 +1950,8 @@
   </HistoryViewerInfo>
   <GameSpecificSettings />
   <WindowLocation>
-    <X>1088</X>
-    <Y>534</Y>
+    <X>2848</X>
+    <Y>601</Y>
   </WindowLocation>
   <WindowSize>
     <Width>528</Width>

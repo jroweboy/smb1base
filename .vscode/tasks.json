@@ -13,7 +13,7 @@
                 "reveal": "never",
                 "focus": false,
                 "panel": "shared",
-                "showReuseMessage": false,
+                "showReuseMessage": true,
                 "clear": true
             },
             "problemMatcher": [

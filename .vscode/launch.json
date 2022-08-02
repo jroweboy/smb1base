@@ -8,11 +8,11 @@
             "type": "alchemy65",
             "request": "launch",
             "name": "Debug rom with Mesen",
-            "preLaunchTask": "Build NES project",
+            "preLaunchTask": "compile",
             "romPath": "${workspaceFolder}/build/smb1base.nes",
             "dbgPath": "${workspaceFolder}/build/smb1base.dbg",
             "program": "${workspaceFolder}/tools/Windows/emulator/mesen.exe",
-            "sourcePath": "${workspaceFolder}/",
+            "sourcePath": "/",
             "stopOnEntry": true,
             "resetOnEntry": true
         }
