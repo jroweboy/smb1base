@@ -3,28 +3,50 @@
     "tasks": [
         {
             "label": "compile",
+            "runOptions": {"instanceLimit": 10},
             // "type": "cmake",
             // "command": "build",
             "type": "process",
             "command": "${config:cmake.cmakePath}",
             "args": ["--build", "${config:cmake.buildDirectory}", "--target", "all"],
             "presentation": {
-                "echo": false,
+                "echo": true,
                 "reveal": "never",
                 "focus": false,
                 "panel": "shared",
-                "showReuseMessage": true,
-                "clear": true
+                "close": true,
+                "showReuseMessage": false,
+                "clear": false
             },
             "problemMatcher": [
                 {
                     "owner": "ca65",
                     "applyTo": "allDocuments",
+                    "source": "CMake",
+                    "fileLocation": ["relative", "${workspaceFolder}"],
+                    "pattern": [
+                        {
+                            "regexp": "^CMake (.*) at ([^:]*):([0-9]+) ?([^:]*): ?(.*)$",
+                            "file": 2,
+                            "line": 3,
+                            "severity": 1
+                        },
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1,
+                            "loop": true
+                        },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "source": "ca65",
                     "pattern": [
                         {
                             "regexp": "^([^:]*):([0-9]+): ?([^:]*): ?(.*)$",
                             "file": 1,
-                            "location": 2,
+                            "line": 2,
                             "severity": 3,
                             "message": 4
                         },
@@ -33,11 +55,12 @@
                 {
                     "owner": "ca65",
                     "applyTo": "allDocuments",
+                    "source": "ca65",
                     "pattern": [
                         {
                             "regexp": "^([^:]*)\\(([0-9]+)\\): ?([^:]*): ?(.*)$",
                             "file": 1,
-                            "location": 2,
+                            "line": 2,
                             "severity": 3,
                             "message": 4
                         },
@@ -47,11 +70,12 @@
                     "owner": "ca65",
                     "applyTo": "allDocuments",
                     "fileLocation": "absolute",
+                    "source": "ca65",
                     "pattern": [
                         {
                             "regexp": "^([a-zA-Z]:.+):([\\d]+): ?(\\w*): ?(.*)$",
                             "file": 1,
-                            "location": 2,
+                            "line": 2,
                             "severity": 3,
                             "message": 4
                         }

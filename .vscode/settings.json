@@ -6,11 +6,13 @@
             "task": "compile"
         },
         {
-            "target": "/src/*.s",
+            "target": "/**/*.s",
             "task": "compile"
-        }
+        },
     ],
     "files.autoSave": "afterDelay",
     "cmake.parseBuildDiagnostics": false,
-    "cmake.enabledOutputParsers": []
+    "cmake.enabledOutputParsers": [],
+    "editor.tabSize": 2,
+    "terminal.integrated.showExitAlert": false
 }

@@ -11,8 +11,10 @@
 
 .segment "CODE"
 
+;-------------------------------------------------------------------------------------
+
 .proc Start
-.import InitializeMemory, MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
+.import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
   sei                          ;pretty standard 6502 type init here
   cld
   lda #%00010000               ;init PPU control register 1 
@@ -311,3 +313,72 @@ WorldSelectMessage2:
   .byte $00
 
 .endproc
+
+;-------------------------------------------------------------------------------------
+
+;$06 - RAM address low
+;$07 - RAM address high
+InitializeMemoryRAMLo = $06
+InitializeMemoryRAMHi = $07
+.export InitializeMemory, InitializeMemoryRAMLo, InitializeMemoryRAMHi
+.proc InitializeMemory
+  ldx #$07          ;set initial high byte to $0700-$07ff
+  lda #$00          ;set initial low byte to start of page (at $00 of page)
+  sta InitializeMemoryRAMLo
+InitPageLoop:
+    stx InitializeMemoryRAMHi
+InitByteLoop:
+      cpx #$01          ;check to see if we're on the stack ($0100-$01ff)
+      bne InitByte      ;if not, go ahead anyway
+      cpy #$60          ;otherwise, check to see if we're at $0160-$01ff
+      bcs SkipByte      ;if so, skip write
+InitByte:
+      sta (InitializeMemoryRAMLo),y       ;otherwise, initialize byte with current low byte in Y
+SkipByte:
+      dey
+      cpy #$ff          ;do this until all bytes in page have been erased
+      bne InitByteLoop
+    dex               ;go onto the next page
+    bpl InitPageLoop  ;do this until all pages of memory have been erased
+  rts
+.endproc
+
+;-------------------------------------------------------------------------------------
+;$00 - temp joypad bit
+ReadJoypads: 
+  lda #$01               ;reset and clear strobe of joypad ports
+  sta JOYPAD_PORT
+  lsr
+  tax                    ;start with joypad 1's port
+  sta JOYPAD_PORT
+  jsr ReadPortBits
+  inx                    ;increment for joypad 2's port
+ReadPortBits:
+  ldy #$08
+PortLoop:
+  pha                    ;push previous bit onto stack
+    lda JOYPAD_PORT,x      ;read current bit on joypad port
+    sta $00                ;check d1 and d0 of port output
+    lsr                    ;this is necessary on the old
+    ora $00                ;famicom systems in japan
+    lsr
+    pla                    ;read bits from stack
+    rol                    ;rotate bit from carry flag
+    dey
+    bne PortLoop           ;count down bits left
+    sta SavedJoypadBits,x  ;save controller status here always
+    pha
+      and #%00110000         ;check for select or start
+      and JoypadBitMask,x    ;if neither saved state nor current state
+      beq Save8Bits          ;have any of these two set, branch
+    pla
+    and #%11001111         ;otherwise store without select
+    sta SavedJoypadBits,x  ;or start bits and leave
+    rts
+Save8Bits:
+  pla
+  sta JoypadBitMask,x    ;save with all bits in another place and leave
+  rts
+
+;-------------------------------------------------------------------------------------
+
