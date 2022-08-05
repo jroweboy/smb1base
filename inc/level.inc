@@ -6,6 +6,7 @@
 .global RenderUnderPart
 .global GetAreaObjXPosition, GetAreaObjYPosition
 .global FindEmptyEnemySlot
+.global GetRow
 
 ;large objects (rows $00-$0b or 00-11, d6-d4 set)
 .global VerticalPipe, AreaStyleObject, RowOfBricks, RowOfSolidBlocks

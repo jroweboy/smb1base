@@ -8,7 +8,9 @@
             // "command": "build",
             "type": "process",
             "command": "${config:cmake.cmakePath}",
-            "args": ["--build", "${config:cmake.buildDirectory}", "--target", "all"],
+            "args": ["--build", "${config:cmake.buildDirectory}", "--target", "all",
+                "--verbose"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "never",

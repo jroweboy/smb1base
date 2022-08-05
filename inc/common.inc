@@ -143,4 +143,4 @@ GameModeValue         = 1
 VictoryModeValue      = 2
 GameOverModeValue     = 3
 
-.global JumpEngine
+.include "globals.inc"

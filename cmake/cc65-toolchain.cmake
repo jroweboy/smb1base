@@ -92,3 +92,7 @@ endmacro()
 set_readonly(CMAKE_INCLUDE_FLAG_ASM "--asm-include-dir ")
 
 set_readonly(CMAKE_EXECUTABLE_SUFFIX ".nes")
+
+# Create depfiles using ca65
+set(CMAKE_DEPFILE_FLAGS_ASM "--create-dep <DEP_FILE>")
+set(CMAKE_DEPFILE_FLAGS_C "--create-dep <DEP_FILE>")

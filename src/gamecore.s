@@ -1,11 +1,29 @@
 
 .include "common.inc"
+.include "player.inc"
+
+; objects/object.s
+.import EnemiesAndLoopsCore, FloateyNumbersRoutine, MiscObjectsCore
+; objects/cannon.s
+.import ProcessCannons
+; music.s
+.import GetAreaMusic
+; player.s
+.import GameRoutines
+.import ResetPalStar ; TODO likely relocatable
+; screen_render.s
+.import AreaParserTaskHandler
+.import DrawBrickChunks
+.import DrawBlock
+.import DigitsMathRoutine
+.import PrintStatusBarNumbers
+.import AddToScore
+.import FlagpoleGfxHandler
+; collision.s
+.import ForceInjury
 
 ;-------------------------------------------------------------------------------------
 .proc GameCoreRoutine
-.import ProcFireball_Bubble, EnemiesAndLoopsCore, FloateyNumbersRoutine, GetPlayerOffscreenBits
-.import PlayerGfxHandler, RelativePlayerPosition
-.export GameCoreRoutine
 
   ldx CurrentPlayer          ;get which player is on the screen
   lda SavedJoypadBits,x      ;use appropriate player's controller bits
@@ -88,162 +106,6 @@ ExitEng:
 .endproc
 
 ;-------------------------------------------------------------------------------------
-
-.proc GameRoutines
-      lda GameEngineSubroutine  ;run routine based on number (a few of these routines are   
-      jsr JumpEngine            ;merely placeholders as conditions for other routines)
-
-      .word Entrance_GameTimerSetup
-      .word Vine_AutoClimb
-      .word SideExitPipeEntry
-      .word VerticalPipeEntry
-      .word FlagpoleSlide
-      .word PlayerEndLevel
-      .word PlayerLoseLife
-      .word PlayerEntrance
-      .word PlayerCtrlRoutine
-      .word PlayerChangeSize
-      .word PlayerInjuryBlink
-      .word PlayerDeath
-      .word PlayerFireFlower
-.endproc
-
-;-------------------------------------------------------------------------------------
-
-;page numbers are in order from -1 to -4
-HalfwayPageNybbles:
-      .byte $56, $40
-      .byte $65, $70
-      .byte $66, $40
-      .byte $66, $40
-      .byte $66, $40
-      .byte $66, $60
-      .byte $65, $70
-      .byte $00, $00
-
-.proc PlayerLoseLife
-.import TransposePlayers, ContinueGame
-  inc DisableScreenFlag    ;disable screen and sprite 0 check
-  lda #$00
-  sta Sprite0HitDetectFlag
-  lda #Silence             ;silence music
-  sta EventMusicQueue
-  dec NumberofLives        ;take one life from player
-  bpl StillInGame          ;if player still has lives, branch
-  lda #$00
-  sta OperMode_Task        ;initialize mode task,
-  lda #GameOverModeValue   ;switch to game over mode
-  sta OperMode             ;and leave
-  rts
-StillInGame:
-  lda WorldNumber          ;multiply world number by 2 and use
-  asl                      ;as offset
-  tax
-  lda LevelNumber          ;if in area -3 or -4, increment
-  and #$02                 ;offset by one byte, otherwise
-  beq GetHalfway           ;leave offset alone
-  inx
-GetHalfway:
-  ldy HalfwayPageNybbles,x ;get halfway page number with offset
-  lda LevelNumber          ;check area number's LSB
-  lsr
-  tya                      ;if in area -2 or -4, use lower nybble
-  bcs MaskHPNyb
-  lsr                      ;move higher nybble to lower if area
-  lsr                      ;number is -1 or -3
-  lsr
-  lsr
-MaskHPNyb:
-  and #%00001111           ;mask out all but lower nybble
-  cmp ScreenLeft_PageLoc
-  beq SetHalfway           ;left side of screen must be at the halfway page,
-  bcc SetHalfway           ;otherwise player must start at the
-  lda #$00                 ;beginning of the level
-SetHalfway:
-  sta HalfwayPage          ;store as halfway page for player
-  jsr TransposePlayers     ;switch players around if 2-player game
-  jmp ContinueGame         ;continue the game
-.endproc
-
-PlayerStarting_X_Pos:
-      .byte $28, $18
-      .byte $38, $28
-
-AltYPosOffset:
-      .byte $08, $00
-
-PlayerStarting_Y_Pos:
-      .byte $00, $20, $b0, $50, $00, $00, $b0, $b0
-      .byte $f0
-
-PlayerBGPriorityData:
-      .byte $00, $20, $00, $00, $00, $00, $00, $00
-
-GameTimerData:
-      .byte $20 ;dummy byte, used as part of bg priority data
-      .byte $04, $03, $02
-
-Entrance_GameTimerSetup:
-          lda ScreenLeft_PageLoc      ;set current page for area objects
-          sta Player_PageLoc          ;as page location for player
-          lda #$28                    ;store value here
-          sta VerticalForceDown       ;for fractional movement downwards if necessary
-          lda #$01                    ;set high byte of player position and
-          sta PlayerFacingDir         ;set facing direction so that player faces right
-          sta Player_Y_HighPos
-          lda #$00                    ;set player state to on the ground by default
-          sta Player_State
-          dec Player_CollisionBits    ;initialize player's collision bits
-          ldy #$00                    ;initialize halfway page
-          sty HalfwayPage      
-          lda AreaType                ;check area type
-          bne ChkStPos                ;if water type, set swimming flag, otherwise do not set
-          iny
-ChkStPos: sty SwimmingFlag
-          ldx PlayerEntranceCtrl      ;get starting position loaded from header
-          ldy AltEntranceControl      ;check alternate mode of entry flag for 0 or 1
-          beq SetStPos
-          cpy #$01
-          beq SetStPos
-          ldx AltYPosOffset-2,y       ;if not 0 or 1, override $0710 with new offset in X
-SetStPos: lda PlayerStarting_X_Pos,y  ;load appropriate horizontal position
-          sta Player_X_Position       ;and vertical positions for the player, using
-          lda PlayerStarting_Y_Pos,x  ;AltEntranceControl as offset for horizontal and either $0710
-          sta Player_Y_Position       ;or value that overwrote $0710 as offset for vertical
-          lda PlayerBGPriorityData,x
-          sta Player_SprAttrib        ;set player sprite attributes using offset in X
-          jsr GetPlayerColors         ;get appropriate player palette
-          ldy GameTimerSetting        ;get timer control value from header
-          beq ChkOverR                ;if set to zero, branch (do not use dummy byte for this)
-          lda FetchNewGameTimerFlag   ;do we need to set the game timer? if not, use 
-          beq ChkOverR                ;old game timer setting
-          lda GameTimerData,y         ;if game timer is set and game timer flag is also set,
-          sta GameTimerDisplay        ;use value of game timer control for first digit of game timer
-          lda #$01
-          sta GameTimerDisplay+2      ;set last digit of game timer to 1
-          lsr
-          sta GameTimerDisplay+1      ;set second digit of game timer
-          sta FetchNewGameTimerFlag   ;clear flag for game timer reset
-          sta StarInvincibleTimer     ;clear star mario timer
-ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to skip this part
-          beq ChkSwimE
-          lda #$03                    ;set player state to climbing
-          sta Player_State
-          ldx #$00                    ;set offset for first slot, for block object
-          jsr InitBlock_XY_Pos
-          lda #$f0                    ;set vertical coordinate for block object
-          sta Block_Y_Position
-          ldx #$05                    ;set offset in X for last enemy object buffer slot
-          ldy #$00                    ;set offset in Y for object coordinates used earlier
-          jsr Setup_Vine              ;do a sub to grow vine
-ChkSwimE: ldy AreaType                ;if level not water-type,
-          bne SetPESub                ;skip this subroutine
-          jsr SetupBubble             ;otherwise, execute sub to set up air bubbles
-SetPESub: lda #$07                    ;set to run player entrance subroutine
-          sta GameEngineSubroutine    ;on the next frame of game engine
-          rts
-
-;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer
 ;$06-$07 - used to store block buffer address
 .import ReplaceBlockMetatile
@@ -269,3 +131,297 @@ UpdateLoop: stx ObjectOffset          ;set offset here
 NextBUpd:   dex                       ;decrement block object offset
             bpl UpdateLoop            ;do this until both block objects are dealt with
             rts                       ;then leave
+
+;-------------------------------------------------------------------------------------
+
+BlockObjectsCore:
+        lda Block_State,x           ;get state of block object
+        beq UpdSte                  ;if not set, branch to leave
+        and #$0f                    ;mask out high nybble
+        pha                         ;push to stack
+        tay                         ;put in Y for now
+        txa
+        clc
+        adc #$09                    ;add 9 bytes to offset (note two block objects are created
+        tax                         ;when using brick chunks, but only one offset for both)
+        dey                         ;decrement Y to check for solid block state
+        beq BouncingBlockHandler    ;branch if found, otherwise continue for brick chunks
+        jsr ImposeGravityBlock      ;do sub to impose gravity on one block object object
+        jsr MoveObjectHorizontally  ;do another sub to move horizontally
+        txa
+        clc                         ;move onto next block object
+        adc #$02
+        tax
+        jsr ImposeGravityBlock      ;do sub to impose gravity on other block object
+        jsr MoveObjectHorizontally  ;do another sub to move horizontally
+        ldx ObjectOffset            ;get block object offset used for both
+        jsr RelativeBlockPosition   ;get relative coordinates
+        jsr GetBlockOffscreenBits   ;get offscreen information
+        jsr DrawBrickChunks         ;draw the brick chunks
+        pla                         ;get lower nybble of saved state
+        ldy Block_Y_HighPos,x       ;check vertical high byte of block object
+        beq UpdSte                  ;if above the screen, branch to kill it
+        pha                         ;otherwise save state back into stack
+        lda #$f0
+        cmp Block_Y_Position+2,x    ;check to see if bottom block object went
+        bcs ChkTop                  ;to the bottom of the screen, and branch if not
+        sta Block_Y_Position+2,x    ;otherwise set offscreen coordinate
+ChkTop: lda Block_Y_Position,x      ;get top block object's vertical coordinate
+        cmp #$f0                    ;see if it went to the bottom of the screen
+        pla                         ;pull block object state from stack
+        bcc UpdSte                  ;if not, branch to save state
+        bcs KillBlock               ;otherwise do unconditional branch to kill it
+
+BouncingBlockHandler:
+           jsr ImposeGravityBlock     ;do sub to impose gravity on block object
+           ldx ObjectOffset           ;get block object offset
+           jsr RelativeBlockPosition  ;get relative coordinates
+           jsr GetBlockOffscreenBits  ;get offscreen information
+           jsr DrawBlock              ;draw the block
+           lda Block_Y_Position,x     ;get vertical coordinate
+           and #$0f                   ;mask out high nybble
+           cmp #$05                   ;check to see if low nybble wrapped around
+           pla                        ;pull state from stack
+           bcs UpdSte                 ;if still above amount, not time to kill block yet, thus branch
+           lda #$01
+           sta Block_RepFlag,x        ;otherwise set flag to replace metatile
+KillBlock: lda #$00                   ;if branched here, nullify object state
+UpdSte:    sta Block_State,x          ;store contents of A in block object state
+           rts
+
+;-------------------------------------------------------------------------------------
+
+RunGameTimer:
+           lda OperMode               ;get primary mode of operation
+           beq ExGTimer               ;branch to leave if in title screen mode
+           lda GameEngineSubroutine
+           cmp #$08                   ;if routine number less than eight running,
+           bcc ExGTimer               ;branch to leave
+           cmp #$0b                   ;if running death routine,
+           beq ExGTimer               ;branch to leave
+           lda Player_Y_HighPos
+           cmp #$02                   ;if player below the screen,
+           bcs ExGTimer               ;branch to leave regardless of level type
+           lda GameTimerCtrlTimer     ;if game timer control not yet expired,
+           bne ExGTimer               ;branch to leave
+           lda GameTimerDisplay
+           ora GameTimerDisplay+1     ;otherwise check game timer digits
+           ora GameTimerDisplay+2
+           beq TimeUpOn               ;if game timer digits at 000, branch to time-up code
+           ldy GameTimerDisplay       ;otherwise check first digit
+           dey                        ;if first digit not on 1,
+           bne ResGTCtrl              ;branch to reset game timer control
+           lda GameTimerDisplay+1     ;otherwise check second and third digits
+           ora GameTimerDisplay+2
+           bne ResGTCtrl              ;if timer not at 100, branch to reset game timer control
+           lda #TimeRunningOutMusic
+           sta EventMusicQueue        ;otherwise load time running out music
+ResGTCtrl: lda #$18                   ;reset game timer control
+           sta GameTimerCtrlTimer
+           ldy #$23                   ;set offset for last digit
+           lda #$ff                   ;set value to decrement game timer digit
+           sta DigitModifier+5
+           jsr DigitsMathRoutine      ;do sub to decrement game timer slowly
+           lda #$a4                   ;set status nybbles to update game timer display
+           jmp PrintStatusBarNumbers  ;do sub to update the display
+TimeUpOn:  sta PlayerStatus           ;init player status (note A will always be zero here)
+           jsr ForceInjury            ;do sub to kill the player (note player is small here)
+           inc GameTimerExpiredFlag   ;set game timer expiration flag
+ExGTimer:  rts                        ;leave
+
+;-------------------------------------------------------------------------------------
+;$00 - used in WhirlpoolActivate to store whirlpool length / 2, page location of center of whirlpool
+;and also to store movement force exerted on player
+;$01 - used in ProcessWhirlpools to store page location of right extent of whirlpool
+;and in WhirlpoolActivate to store center of whirlpool
+;$02 - used in ProcessWhirlpools to store right extent of whirlpool and in
+;WhirlpoolActivate to store maximum vertical speed
+
+ProcessWhirlpools:
+        lda AreaType                ;check for water type level
+        bne ExitWh                  ;branch to leave if not found
+        sta Whirlpool_Flag          ;otherwise initialize whirlpool flag
+        lda TimerControl            ;if master timer control set,
+        bne ExitWh                  ;branch to leave
+        ldy #$04                    ;otherwise start with last whirlpool data
+WhLoop: lda Whirlpool_LeftExtent,y  ;get left extent of whirlpool
+        clc
+        adc Whirlpool_Length,y      ;add length of whirlpool
+        sta $02                     ;store result as right extent here
+        lda Whirlpool_PageLoc,y     ;get page location
+        beq NextWh                  ;if none or page 0, branch to get next data
+        adc #$00                    ;add carry
+        sta $01                     ;store result as page location of right extent here
+        lda Player_X_Position       ;get player's horizontal position
+        sec
+        sbc Whirlpool_LeftExtent,y  ;subtract left extent
+        lda Player_PageLoc          ;get player's page location
+        sbc Whirlpool_PageLoc,y     ;subtract borrow
+        bmi NextWh                  ;if player too far left, branch to get next data
+        lda $02                     ;otherwise get right extent
+        sec
+        sbc Player_X_Position       ;subtract player's horizontal coordinate
+        lda $01                     ;get right extent's page location
+        sbc Player_PageLoc          ;subtract borrow
+        bpl WhirlpoolActivate       ;if player within right extent, branch to whirlpool code
+NextWh: dey                         ;move onto next whirlpool data
+        bpl WhLoop                  ;do this until all whirlpools are checked
+ExitWh: rts                         ;leave
+
+WhirlpoolActivate:
+        lda Whirlpool_Length,y      ;get length of whirlpool
+        lsr                         ;divide by 2
+        sta $00                     ;save here
+        lda Whirlpool_LeftExtent,y  ;get left extent of whirlpool
+        clc
+        adc $00                     ;add length divided by 2
+        sta $01                     ;save as center of whirlpool
+        lda Whirlpool_PageLoc,y     ;get page location
+        adc #$00                    ;add carry
+        sta $00                     ;save as page location of whirlpool center
+        lda FrameCounter            ;get frame counter
+        lsr                         ;shift d0 into carry (to run on every other frame)
+        bcc WhPull                  ;if d0 not set, branch to last part of code
+        lda $01                     ;get center
+        sec
+        sbc Player_X_Position       ;subtract player's horizontal coordinate
+        lda $00                     ;get page location of center
+        sbc Player_PageLoc          ;subtract borrow
+        bpl LeftWh                  ;if player to the left of center, branch
+        lda Player_X_Position       ;otherwise slowly pull player left, towards the center
+        sec
+        sbc #$01                    ;subtract one pixel
+        sta Player_X_Position       ;set player's new horizontal coordinate
+        lda Player_PageLoc
+        sbc #$00                    ;subtract borrow
+        jmp SetPWh                  ;jump to set player's new page location
+LeftWh: lda Player_CollisionBits    ;get player's collision bits
+        lsr                         ;shift d0 into carry
+        bcc WhPull                  ;if d0 not set, branch
+        lda Player_X_Position       ;otherwise slowly pull player right, towards the center
+        clc
+        adc #$01                    ;add one pixel
+        sta Player_X_Position       ;set player's new horizontal coordinate
+        lda Player_PageLoc
+        adc #$00                    ;add carry
+SetPWh: sta Player_PageLoc          ;set player's new page location
+WhPull: lda #$10
+        sta $00                     ;set vertical movement force
+        lda #$01
+        sta Whirlpool_Flag          ;set whirlpool flag to be used later
+        sta $02                     ;also set maximum vertical speed
+        lsr
+        tax                         ;set X for player offset
+        jmp ImposeGravity           ;jump to put whirlpool effect on player vertically, do not return
+
+;-------------------------------------------------------------------------------------
+
+FlagpoleScoreMods:
+      .byte $05, $02, $08, $04, $01
+
+FlagpoleScoreDigits:
+      .byte $03, $03, $04, $04, $04
+
+FlagpoleRoutine:
+           ldx #$05                  ;set enemy object offset
+           stx ObjectOffset          ;to special use slot
+           lda Enemy_ID,x
+           cmp #FlagpoleFlagObject   ;if flagpole flag not found,
+           bne ExitFlagP             ;branch to leave
+           lda GameEngineSubroutine
+           cmp #$04                  ;if flagpole slide routine not running,
+           bne SkipScore             ;branch to near the end of code
+           lda Player_State
+           cmp #$03                  ;if player state not climbing,
+           bne SkipScore             ;branch to near the end of code
+           lda Enemy_Y_Position,x    ;check flagpole flag's vertical coordinate
+           cmp #$aa                  ;if flagpole flag down to a certain point,
+           bcs GiveFPScr             ;branch to end the level
+           lda Player_Y_Position     ;check player's vertical coordinate
+           cmp #$a2                  ;if player down to a certain point,
+           bcs GiveFPScr             ;branch to end the level
+           lda Enemy_YMF_Dummy,x
+           adc #$ff                  ;add movement amount to dummy variable
+           sta Enemy_YMF_Dummy,x     ;save dummy variable
+           lda Enemy_Y_Position,x    ;get flag's vertical coordinate
+           adc #$01                  ;add 1 plus carry to move flag, and
+           sta Enemy_Y_Position,x    ;store vertical coordinate
+           lda FlagpoleFNum_YMFDummy
+           sec                       ;subtract movement amount from dummy variable
+           sbc #$ff
+           sta FlagpoleFNum_YMFDummy ;save dummy variable
+           lda FlagpoleFNum_Y_Pos
+           sbc #$01                  ;subtract one plus borrow to move floatey number,
+           sta FlagpoleFNum_Y_Pos    ;and store vertical coordinate here
+SkipScore: jmp FPGfx                 ;jump to skip ahead and draw flag and floatey number
+GiveFPScr: ldy FlagpoleScore         ;get score offset from earlier (when player touched flagpole)
+           lda FlagpoleScoreMods,y   ;get amount to award player points
+           ldx FlagpoleScoreDigits,y ;get digit with which to award points
+           sta DigitModifier,x       ;store in digit modifier
+           jsr AddToScore            ;do sub to award player points depending on height of collision
+           lda #$05
+           sta GameEngineSubroutine  ;set to run end-of-level subroutine on next frame
+FPGfx:     jsr GetEnemyOffscreenBits ;get offscreen information
+           jsr RelativeEnemyPosition ;get relative coordinates
+           jsr FlagpoleGfxHandler    ;draw flagpole flag and floatey number
+ExitFlagP: rts
+
+;-------------------------------------------------------------------------------------
+
+;$00 - used as temporary counter in ColorRotation
+
+ColorRotatePalette:
+       .byte $27, $27, $27, $17, $07, $17
+
+BlankPalette:
+       .byte $3f, $0c, $04, $ff, $ff, $ff, $ff, $00
+
+;used based on area type
+Palette3Data:
+       .byte $0f, $07, $12, $0f 
+       .byte $0f, $07, $17, $0f
+       .byte $0f, $07, $17, $1c
+       .byte $0f, $07, $17, $00
+
+ColorRotation:
+              lda FrameCounter         ;get frame counter
+              and #$07                 ;mask out all but three LSB
+              bne ExitColorRot         ;branch if not set to zero to do this every eighth frame
+              ldx VRAM_Buffer1_Offset  ;check vram buffer offset
+              cpx #$31
+              bcs ExitColorRot         ;if offset over 48 bytes, branch to leave
+              tay                      ;otherwise use frame counter's 3 LSB as offset here
+GetBlankPal:  lda BlankPalette,y       ;get blank palette for palette 3
+              sta VRAM_Buffer1,x       ;store it in the vram buffer
+              inx                      ;increment offsets
+              iny
+              cpy #$08
+              bcc GetBlankPal          ;do this until all bytes are copied
+              ldx VRAM_Buffer1_Offset  ;get current vram buffer offset
+              lda #$03
+              sta $00                  ;set counter here
+              lda AreaType             ;get area type
+              asl                      ;multiply by 4 to get proper offset
+              asl
+              tay                      ;save as offset here
+GetAreaPal:   lda Palette3Data,y       ;fetch palette to be written based on area type
+              sta VRAM_Buffer1+3,x     ;store it to overwrite blank palette in vram buffer
+              iny
+              inx
+              dec $00                  ;decrement counter
+              bpl GetAreaPal           ;do this until the palette is all copied
+              ldx VRAM_Buffer1_Offset  ;get current vram buffer offset
+              ldy ColorRotateOffset    ;get color cycling offset
+              lda ColorRotatePalette,y
+              sta VRAM_Buffer1+4,x     ;get and store current color in second slot of palette
+              lda VRAM_Buffer1_Offset
+              clc                      ;add seven bytes to vram buffer offset
+              adc #$07
+              sta VRAM_Buffer1_Offset
+              inc ColorRotateOffset    ;increment color cycling offset
+              lda ColorRotateOffset
+              cmp #$06                 ;check to see if it's still in range
+              bcc ExitColorRot         ;if so, branch to leave
+              lda #$00
+              sta ColorRotateOffset    ;otherwise, init to keep it in range
+ExitColorRot: rts                      ;leave

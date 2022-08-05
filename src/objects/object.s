@@ -1,4 +1,10 @@
 .include "common.inc"
+.include "object.inc"
+
+; sprite_render.s
+.import EnemyGfxHandler, JCoinGfxHandler, DrawHammer
+; collision.s
+.import PlayerCollisionCore,InjurePlayer
 
 ;-------------------------------------------------------------------------------------
 
@@ -118,6 +124,12 @@ ExecGameLoopback:
       lda AreaDataOfsLoopback,y ;adjust area object offset based on
       sta AreaDataOffset        ;which loop command we encountered
       rts
+
+;-------------------------------------------------------------------------------------
+
+AreaDataOfsLoopback:
+      .byte $12, $36, $0e, $0e, $0e, $32, $32, $32, $0a, $26, $40
+
 
 
 .import KillAllEnemies
@@ -362,7 +374,6 @@ CheckpointEnemyID:
         sta EnemyOffscrBitsMasked,x  ;set offscreen masked bit
         tya                          ;get identifier back and use as offset for jump engine
 
-.import JumpEngine
 InitEnemyRoutines:
   jsr JumpEngine
 
@@ -517,17 +528,137 @@ SetBBox:
   sta Enemy_BoundBoxCtrl,x    ;set bounding box control here
   lda #$02                    ;set moving direction for left
   sta Enemy_MovingDir,x
-.export InitVStf
-InitVStf:
-  lda #$00                    ;initialize vertical speed
-  sta Enemy_Y_Speed,x         ;and movement force
-  sta Enemy_Y_MoveForce,x
-  rts
+  jmp InitVStf ; jroweboy: Added this jmp to common code
 
 ;-------------------------------------------------------------------------------------
 
-.proc SpawnHammerObj
+MiscObjectsCore:
+          ldx #$08          ;set at end of misc object buffer
+MiscLoop: stx ObjectOffset  ;store misc object offset here
+          lda Misc_State,x  ;check misc object state
+          beq MiscLoopBack  ;branch to check next slot
+          asl               ;otherwise shift d7 into carry
+          bcc ProcJumpCoin  ;if d7 not set, jumping coin, thus skip to rest of code here
+          jsr ProcHammerObj ;otherwise go to process hammer,
+          jmp MiscLoopBack  ;then check next slot
+
+;--------------------------------
+;$00 - used to set downward force
+;$01 - used to set upward force (residual)
+;$02 - used to set maximum speed
+
+ProcJumpCoin:
+           ldy Misc_State,x          ;check misc object state
+           dey                       ;decrement to see if it's set to 1
+           beq JCoinRun              ;if so, branch to handle jumping coin
+           inc Misc_State,x          ;otherwise increment state to either start off or as timer
+           lda Misc_X_Position,x     ;get horizontal coordinate for misc object
+           clc                       ;whether its jumping coin (state 0 only) or floatey number
+           adc ScrollAmount          ;add current scroll speed
+           sta Misc_X_Position,x     ;store as new horizontal coordinate
+           lda Misc_PageLoc,x        ;get page location
+           adc #$00                  ;add carry
+           sta Misc_PageLoc,x        ;store as new page location
+           lda Misc_State,x
+           cmp #$30                  ;check state of object for preset value
+           bne RunJCSubs             ;if not yet reached, branch to subroutines
+           lda #$00
+           sta Misc_State,x          ;otherwise nullify object state
+           jmp MiscLoopBack          ;and move onto next slot
+JCoinRun:  txa             
+           clc                       ;add 13 bytes to offset for next subroutine
+           adc #$0d
+           tax
+           lda #$50                  ;set downward movement amount
+           sta $00
+           lda #$06                  ;set maximum vertical speed
+           sta $02
+           lsr                       ;divide by 2 and set
+           sta $01                   ;as upward movement amount (apparently residual)
+           lda #$00                  ;set A to impose gravity on jumping coin
+           jsr ImposeGravity         ;do sub to move coin vertically and impose gravity on it
+           ldx ObjectOffset          ;get original misc object offset
+           lda Misc_Y_Speed,x        ;check vertical speed
+           cmp #$05
+           bne RunJCSubs             ;if not moving downward fast enough, keep state as-is
+           inc Misc_State,x          ;otherwise increment state to change to floatey number
+RunJCSubs: jsr RelativeMiscPosition  ;get relative coordinates
+           jsr GetMiscOffscreenBits  ;get offscreen information
+           jsr GetMiscBoundBox       ;get bounding box coordinates (why?)
+           jsr JCoinGfxHandler       ;draw the coin or floatey number
+
+MiscLoopBack: 
+           dex                       ;decrement misc object offset
+           bpl MiscLoop              ;loop back until all misc objects handled
+           rts                       ;then leave
+
+
+;--------------------------------
+;$00 - used to set downward force
+;$01 - used to set upward force (residual)
+;$02 - used to set maximum speed
+.export ProcHammerObj
+ProcHammerObj:
+          lda TimerControl           ;if master timer control set
+          bne RunHSubs               ;skip all of this code and go to last subs at the end
+          lda Misc_State,x           ;otherwise get hammer's state
+          and #%01111111             ;mask out d7
+          ldy HammerEnemyOffset,x    ;get enemy object offset that spawned this hammer
+          cmp #$02                   ;check hammer's state
+          beq SetHSpd                ;if currently at 2, branch
+          bcs SetHPos                ;if greater than 2, branch elsewhere
+          txa
+          clc                        ;add 13 bytes to use
+          adc #$0d                   ;proper misc object
+          tax                        ;return offset to X
+          lda #$10
+          sta $00                    ;set downward movement force
+          lda #$0f
+          sta $01                    ;set upward movement force (not used)
+          lda #$04
+          sta $02                    ;set maximum vertical speed
+          lda #$00                   ;set A to impose gravity on hammer
+          jsr ImposeGravity          ;do sub to impose gravity on hammer and move vertically
+          jsr MoveObjectHorizontally ;do sub to move it horizontally
+          ldx ObjectOffset           ;get original misc object offset
+          jmp RunAllH                ;branch to essential subroutines
+SetHSpd:  lda #$fe
+          sta Misc_Y_Speed,x         ;set hammer's vertical speed
+          lda Enemy_State,y          ;get enemy object state
+          and #%11110111             ;mask out d3
+          sta Enemy_State,y          ;store new state
+          ldx Enemy_MovingDir,y      ;get enemy's moving direction
+          dex                        ;decrement to use as offset
+          lda HammerXSpdData,x       ;get proper speed to use based on moving direction
+          ldx ObjectOffset           ;reobtain hammer's buffer offset
+          sta Misc_X_Speed,x         ;set hammer's horizontal speed
+SetHPos:  dec Misc_State,x           ;decrement hammer's state
+          lda Enemy_X_Position,y     ;get enemy's horizontal position
+          clc
+          adc #$02                   ;set position 2 pixels to the right
+          sta Misc_X_Position,x      ;store as hammer's horizontal position
+          lda Enemy_PageLoc,y        ;get enemy's page location
+          adc #$00                   ;add carry
+          sta Misc_PageLoc,x         ;store as hammer's page location
+          lda Enemy_Y_Position,y     ;get enemy's vertical position
+          sec
+          sbc #$0a                   ;move position 10 pixels upward
+          sta Misc_Y_Position,x      ;store as hammer's vertical position
+          lda #$01
+          sta Misc_Y_HighPos,x       ;set hammer's vertical high byte
+          bne RunHSubs               ;unconditional branch to skip first routine
+RunAllH:  jsr PlayerHammerCollision  ;handle collisions
+RunHSubs: jsr GetMiscOffscreenBits   ;get offscreen information
+          jsr RelativeMiscPosition   ;get relative coordinates
+          jsr GetMiscBoundBox        ;get bounding box coordinates
+          jsr DrawHammer             ;draw the hammer
+          rts                        ;and we are done here
+
+
+;-------------------------------------------------------------------------------------
+
 .export SpawnHammerObj
+SpawnHammerObj:
   lda PseudoRandomBitReg+1 ;get pseudorandom bits from
   and #%00000111           ;second part of LSFR
   bne SetMOfs              ;if any bits are set, branch and use as offset
@@ -560,7 +691,6 @@ HammerEnemyOfsData:
 
 HammerXSpdData:
       .byte $10, $f0
-.endproc
 
 
 ;--------------------------------
@@ -599,8 +729,6 @@ FlmEx:
 
 ;--------------------------------
 ;$00 - used to store enemy identifier in KillEnemies
-
-.export KillEnemies
 KillEnemies:
   sta $00           ;store identifier here
   lda #$00
@@ -614,3 +742,162 @@ NoKillE:
   dex               ;do this until all slots are checked
   bpl KillELoop
   rts
+
+
+;-------------------------------------------------------------------------------------
+
+EraseEnemyObject:
+      lda #$00                 ;clear all enemy object variables
+      sta Enemy_Flag,x
+      sta Enemy_ID,x
+      sta Enemy_State,x
+      sta FloateyNum_Control,x
+      sta EnemyIntervalTimer,x
+      sta ShellChainCounter,x
+      sta Enemy_SprAttrib,x
+      sta EnemyFrameTimer,x
+      rts
+
+
+;--------------------------------
+
+RunNormalEnemies:
+          lda #$00                  ;init sprite attributes
+          sta Enemy_SprAttrib,x
+          jsr GetEnemyOffscreenBits
+          jsr RelativeEnemyPosition
+          jsr EnemyGfxHandler
+          jsr GetEnemyBoundBox
+          jsr EnemyToBGCollisionDet
+          jsr EnemiesCollision
+          jsr PlayerEnemyCollision
+          ldy TimerControl          ;if master timer control set, skip to last routine
+          bne SkipMove
+          jsr EnemyMovementSubs
+SkipMove: jmp OffscreenBoundsCheck
+
+EnemyMovementSubs:
+      lda Enemy_ID,x
+      jsr JumpEngine
+
+      .word MoveNormalEnemy      ;only objects $00-$14 use this table
+      .word MoveNormalEnemy
+      .word MoveNormalEnemy
+      .word MoveNormalEnemy
+      .word MoveNormalEnemy
+      .word ProcHammerBro
+      .word MoveNormalEnemy
+      .word MoveBloober
+      .word MoveBulletBill
+      .word NoMoveCode
+      .word MoveSwimmingCheepCheep
+      .word MoveSwimmingCheepCheep
+      .word MovePodoboo
+      .word MovePiranhaPlant
+      .word MoveJumpingEnemy
+      .word ProcMoveRedPTroopa
+      .word MoveFlyGreenPTroopa
+      .word MoveLakitu
+      .word MoveNormalEnemy
+      .word NoMoveCode   ;dummy
+      .word MoveFlyingCheepCheep
+
+;--------------------------------
+
+NoMoveCode:
+      rts
+
+
+;-------------------------------------------------------------------------------------
+;$00 - page location of extended left boundary
+;$01 - extended left boundary position
+;$02 - page location of extended right boundary
+;$03 - extended right boundary position
+
+OffscreenBoundsCheck:
+          lda Enemy_ID,x          ;check for cheep-cheep object
+          cmp #FlyingCheepCheep   ;branch to leave if found
+          beq ExScrnBd
+          lda ScreenLeft_X_Pos    ;get horizontal coordinate for left side of screen
+          ldy Enemy_ID,x
+          cpy #HammerBro          ;check for hammer bro object
+          beq LimitB
+          cpy #PiranhaPlant       ;check for piranha plant object
+          bne ExtendLB            ;these two will be erased sooner than others if too far left
+LimitB:   adc #$38                ;add 56 pixels to coordinate if hammer bro or piranha plant
+ExtendLB: sbc #$48                ;subtract 72 pixels regardless of enemy object
+          sta $01                 ;store result here
+          lda ScreenLeft_PageLoc
+          sbc #$00                ;subtract borrow from page location of left side
+          sta $00                 ;store result here
+          lda ScreenRight_X_Pos   ;add 72 pixels to the right side horizontal coordinate
+          adc #$48
+          sta $03                 ;store result here
+          lda ScreenRight_PageLoc     
+          adc #$00                ;then add the carry to the page location
+          sta $02                 ;and store result here
+          lda Enemy_X_Position,x  ;compare horizontal coordinate of the enemy object
+          cmp $01                 ;to modified horizontal left edge coordinate to get carry
+          lda Enemy_PageLoc,x
+          sbc $00                 ;then subtract it from the page coordinate of the enemy object
+          bmi TooFar              ;if enemy object is too far left, branch to erase it
+          lda Enemy_X_Position,x  ;compare horizontal coordinate of the enemy object
+          cmp $03                 ;to modified horizontal right edge coordinate to get carry
+          lda Enemy_PageLoc,x
+          sbc $02                 ;then subtract it from the page coordinate of the enemy object
+          bmi ExScrnBd            ;if enemy object is on the screen, leave, do not erase enemy
+          lda Enemy_State,x       ;if at this point, enemy is offscreen to the right, so check
+          cmp #HammerBro          ;if in state used by spiny's egg, do not erase
+          beq ExScrnBd
+          cpy #PiranhaPlant       ;if piranha plant, do not erase
+          beq ExScrnBd
+          cpy #FlagpoleFlagObject ;if flagpole flag, do not erase
+          beq ExScrnBd
+          cpy #StarFlagObject     ;if star flag, do not erase
+          beq ExScrnBd
+          cpy #JumpspringObject   ;if jumpspring, do not erase
+          beq ExScrnBd            ;erase all others too far to the right
+TooFar:   jsr EraseEnemyObject    ;erase object if necessary
+ExScrnBd: rts                     ;leave
+
+.proc RelativeMiscPosition
+  ldy #$02                ;set for misc object offsets
+  jsr GetProperObjOffset  ;modify X to get proper misc object offset
+  ldy #$06
+  jmp RelWOfs             ;get the coordinates
+.endproc
+
+
+;-------------------------------------------------------------------------------------
+
+PlayerHammerCollision:
+        lda FrameCounter          ;get frame counter
+        lsr                       ;shift d0 into carry
+        bcc ExPHC                 ;branch to leave if d0 not set to execute every other frame
+        lda TimerControl          ;if either master timer control
+        ora Misc_OffscreenBits    ;or any offscreen bits for hammer are set,
+        bne ExPHC                 ;branch to leave
+        txa
+        asl                       ;multiply misc object offset by four
+        asl
+        clc
+        adc #$24                  ;add 36 or $24 bytes to get proper offset
+        tay                       ;for misc object bounding box coordinates
+        jsr PlayerCollisionCore   ;do player-to-hammer collision detection
+        ldx ObjectOffset          ;get misc object offset
+        bcc ClHCol                ;if no collision, then branch
+        lda Misc_Collision_Flag,x ;otherwise read collision flag
+        bne ExPHC                 ;if collision flag already set, branch to leave
+        lda #$01
+        sta Misc_Collision_Flag,x ;otherwise set collision flag now
+        lda Misc_X_Speed,x
+        eor #$ff                  ;get two's compliment of
+        clc                       ;hammer's horizontal speed
+        adc #$01
+        sta Misc_X_Speed,x        ;set to send hammer flying the opposite direction
+        lda StarInvincibleTimer   ;if star mario invincibility timer set,
+        bne ExPHC                 ;branch to leave
+        jmp InjurePlayer          ;otherwise jump to hurt player, do not return
+ClHCol: lda #$00                  ;clear collision flag
+        sta Misc_Collision_Flag,x
+ExPHC:  rts

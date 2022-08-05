@@ -1,10 +1,14 @@
 .include "common.inc"
 
+.import AreaParserTaskHandler
+
+; player.s
+.import DrawPlayer_Intermediate
 
 ;-------------------------------------------------------------------------------------
 
 .proc ScreenRoutines
-  .import JumpEngine, GetAreaPalette, ClearBuffersDrawIcon, WriteTopScore
+  .import GetAreaPalette, ClearBuffersDrawIcon, WriteTopScore
 
   lda ScreenRoutineTask        ;run one of the following subroutines
   jsr JumpEngine
@@ -192,10 +196,7 @@ NoTimeUp:
 
 ;-------------------------------------------------------------------------------------
 
-.proc ResetSpritesAndScreenTimer
-.import MoveAllSpritesOffscreen
-.export ResetScreenTimer
-
+ResetSpritesAndScreenTimer:
   lda ScreenTimer             ;check if screen timer has expired
   bne NoReset                 ;if not, branch to leave
   jsr MoveAllSpritesOffscreen ;otherwise reset sprites now
@@ -206,14 +207,10 @@ ResetScreenTimer:
   inc ScreenRoutineTask       ;move onto next task
 NoReset:
   rts
-.endproc
-
 
 ;-------------------------------------------------------------------------------------
 
-.proc DisplayIntermediate
-.import IncModeTask_B, ResetScreenTimer, DrawPlayer_Intermediate
-.export OutputInter
+DisplayIntermediate:
   lda OperMode                 ;check primary mode of operation
   beq NoInter                  ;if in title screen mode, skip this
   cmp #GameOverModeValue       ;are we in game over mode?
@@ -244,13 +241,11 @@ NoInter:
   lda #$08                     ;set for specific task and leave
   sta ScreenRoutineTask
   rts
-.endproc
 
 
 ;-------------------------------------------------------------------------------------
 
 .proc AreaParserTaskControl
-.import AreaParserTaskHandler
 
   inc DisableScreenFlag     ;turn off screen
 TaskLoop:
@@ -268,11 +263,8 @@ OutputCol:
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used as temp counter in GetPlayerColors
-
-.proc GetBackgroundColor
-.export GetPlayerColors, SetVRAMOffset
-
-
+.export GetPlayerColors
+GetBackgroundColor:
   ldy BackgroundColorCtrl   ;check background color control
   beq NoBGColor             ;if not set, increment task and fetch palette
   lda BGColorCtrl_Addr-4,y  ;put appropriate palette into vram
@@ -335,7 +327,6 @@ PlayerColors:
       .byte $22, $16, $27, $18 ;mario's colors
       .byte $22, $30, $27, $19 ;luigi's colors
       .byte $22, $37, $27, $16 ;fiery (used by both)
-.endproc
 
 
 ;-------------------------------------------------------------------------------------
@@ -360,7 +351,7 @@ NoAltPal:
 ;$00 - vram buffer address table low
 ;$01 - vram buffer address table high
 
-.proc DrawTitleScreen
+DrawTitleScreen:
 .import SetVRAMAddr_B
 .export IncSubtask, IncModeTask_B
   lda OperMode                 ;are we in title screen mode?
@@ -392,8 +383,6 @@ ChkHiByte:
 ;-------------------------------------------------------------------------------------
 
 WriteTopScore:
-.import UpdateNumber
-
   lda #$fa           ;run display routine to display top score on title
   jsr UpdateNumber
 IncModeTask_B:
@@ -402,7 +391,6 @@ IncModeTask_B:
 ;-------------------------------------------------------------------------------------
 
 ClearBuffersDrawIcon:
-
   lda OperMode               ;check game mode
   bne IncModeTask_B          ;if not title screen mode, leave
   ldx #$00                   ;otherwise, clear buffer space
@@ -415,7 +403,6 @@ TScrClear:
 IncSubtask:
   inc ScreenRoutineTask      ;move onto next task
   rts
-.endproc
 
 ;-------------------------------------------------------------------------------------
 
@@ -665,8 +652,7 @@ GameTextOffsets:
 
 
 ;-------------------------------------------------------------------------------------
-.proc GiveOneCoin
-.export GetSBNybbles, UpdateNumber, AddToScore
+GiveOneCoin:
   lda #$01               ;set digit modifier to add 1 coin
   sta DigitModifier+5    ;to the current player's coin tally
   ldx CurrentPlayer      ;get current player on the screen
@@ -715,8 +701,6 @@ ScoreOffsets:
 StatusBarNybbles:
       .byte $02, $13
 
-.endproc
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store status bar nybbles
@@ -735,6 +719,7 @@ StatusBarData:
 StatusBarOffset:
       .byte $06, $0c, $12, $18, $1e, $24
 
+.export PrintStatusBarNumbers
 .proc PrintStatusBarNumbers
   sta $00            ;store player-specific offset
   jsr OutputNumbers  ;use first nybble to print the coin display
@@ -790,7 +775,7 @@ ExitOutputN:
 .endproc
 
 ;-------------------------------------------------------------------------------------
-
+.export DigitsMathRoutine
 .proc DigitsMathRoutine
   lda OperMode              ;check mode of operation
   cmp #TitleScreenModeValue
@@ -854,264 +839,6 @@ CopyScore:
 NoTopSc:
   rts
 .endproc
-
-.proc DrawOneSpriteRow
-  sta $01
-  jmp DrawSpriteObject        ;draw them
-.endproc
-
-;-------------------------------------------------------------------------------------
-;$00-$01 - tile numbers
-;$02 - Y coordinate
-;$03 - flip control
-;$04 - sprite attributes
-;$05 - X coordinate
-
-
-.proc DrawSpriteObject
-  lda $03                    ;get saved flip control bits
-  lsr
-  lsr                        ;move d1 into carry
-  lda $00
-  bcc NoHFlip                ;if d1 not set, branch
-  sta Sprite_Tilenumber+4,y  ;store first tile into second sprite
-  lda $01                    ;and second into first sprite
-  sta Sprite_Tilenumber,y
-  lda #$40                   ;activate horizontal flip OAM attribute
-  bne SetHFAt                ;and unconditionally branch
-NoHFlip:
-  sta Sprite_Tilenumber,y    ;store first tile into first sprite
-  lda $01                    ;and second into second sprite
-  sta Sprite_Tilenumber+4,y
-  lda #$00                   ;clear bit for horizontal flip
-SetHFAt:
-  ora $04                    ;add other OAM attributes if necessary
-  sta Sprite_Attributes,y    ;store sprite attributes
-  sta Sprite_Attributes+4,y
-  lda $02                    ;now the y coordinates
-  sta Sprite_Y_Position,y    ;note because they are
-  sta Sprite_Y_Position+4,y  ;side by side, they are the same
-  lda $05       
-  sta Sprite_X_Position,y    ;store x coordinate, then
-  clc                        ;add 8 pixels and store another to
-  adc #$08                   ;put them side by side
-  sta Sprite_X_Position+4,y
-  lda $02                    ;add eight pixels to the next y
-  clc                        ;coordinate
-  adc #$08
-  sta $02
-  tya                        ;add eight to the offset in Y to
-  clc                        ;move to the next two sprites
-  adc #$08
-  tay
-  inx                        ;increment offset to return it to the
-  inx                        ;routine that called this subroutine
-  rts
-.endproc
-
-
-;-------------------------------------------------------------------------------------
-.proc FloateyNumbersRoutine
-.import AddToScore,DumpTwoSpr
-.export FloateyNumbersRoutine
-
-  lda FloateyNum_Control,x     ;load control for floatey number
-  beq EndFloateyNumber         ;if zero, branch to leave
-  cmp #$0b                     ;if less than $0b, branch
-  bcc ChkNumTimer
-  lda #$0b                     ;otherwise set to $0b, thus keeping
-  sta FloateyNum_Control,x     ;it in range
-ChkNumTimer:
-  tay                          ;use as Y
-  lda FloateyNum_Timer,x       ;check value here
-  bne DecNumTimer              ;if nonzero, branch ahead
-  sta FloateyNum_Control,x     ;initialize floatey number control and leave
-EndFloateyNumber:
-  rts
-DecNumTimer:
-  dec FloateyNum_Timer,x       ;decrement value here
-  cmp #$2b                     ;if not reached a certain point, branch  
-  bne ChkTallEnemy
-  cpy #$0b                     ;check offset for $0b
-  bne LoadNumTiles             ;branch ahead if not found
-  inc NumberofLives            ;give player one extra life (1-up)
-  lda #Sfx_ExtraLife
-  sta Square2SoundQueue        ;and play the 1-up sound
-LoadNumTiles:
-  lda ScoreUpdateData,y        ;load point value here
-  lsr                          ;move high nybble to low
-  lsr
-  lsr
-  lsr
-  tax                          ;use as X offset, essentially the digit
-  lda ScoreUpdateData,y        ;load again and this time
-  and #%00001111               ;mask out the high nybble
-  sta DigitModifier,x          ;store as amount to add to the digit
-  jsr AddToScore               ;update the score accordingly
-ChkTallEnemy:
-  ldy Enemy_SprDataOffset,x    ;get OAM data offset for enemy object
-  lda Enemy_ID,x               ;get enemy object identifier
-  cmp #Spiny
-  beq FloateyPart              ;branch if spiny
-  cmp #PiranhaPlant
-  beq FloateyPart              ;branch if piranha plant
-  cmp #HammerBro
-  beq GetAltOffset             ;branch elsewhere if hammer bro
-  cmp #GreyCheepCheep
-  beq FloateyPart              ;branch if cheep-cheep of either color
-  cmp #RedCheepCheep
-  beq FloateyPart
-  cmp #TallEnemy
-  bcs GetAltOffset             ;branch elsewhere if enemy object => $09
-  lda Enemy_State,x
-  cmp #$02                     ;if enemy state defeated or otherwise
-  bcs FloateyPart              ;$02 or greater, branch beyond this part
-GetAltOffset:
-  ldx SprDataOffset_Ctrl       ;load some kind of control bit
-  ldy Alt_SprDataOffset,x      ;get alternate OAM data offset
-  ldx ObjectOffset             ;get enemy object offset again
-FloateyPart:
-  lda FloateyNum_Y_Pos,x       ;get vertical coordinate for
-  cmp #$18                     ;floatey number, if coordinate in the
-  bcc SetupNumSpr              ;status bar, branch
-  sbc #$01
-  sta FloateyNum_Y_Pos,x       ;otherwise subtract one and store as new
-SetupNumSpr:
-  lda FloateyNum_Y_Pos,x       ;get vertical coordinate
-  sbc #$08                     ;subtract eight and dump into the
-  jsr DumpTwoSpr               ;left and right sprite's Y coordinates
-  lda FloateyNum_X_Pos,x       ;get horizontal coordinate
-  sta Sprite_X_Position,y      ;store into X coordinate of left sprite
-  clc
-  adc #$08                     ;add eight pixels and store into X
-  sta Sprite_X_Position+4,y    ;coordinate of right sprite
-  lda #$02
-  sta Sprite_Attributes,y      ;set palette control in attribute bytes
-  sta Sprite_Attributes+4,y    ;of left and right sprites
-  lda FloateyNum_Control,x
-  asl                          ;multiply our floatey number control by 2
-  tax                          ;and use as offset for look-up table
-  lda FloateyNumTileData,x
-  sta Sprite_Tilenumber,y      ;display first half of number of points
-  lda FloateyNumTileData+1,x
-  sta Sprite_Tilenumber+4,y    ;display the second half
-  ldx ObjectOffset             ;get enemy object offset and leave
-  rts
-
-;data is used as tiles for numbers
-;that appear when you defeat enemies
-FloateyNumTileData:
-      .byte $ff, $ff ;dummy
-      .byte $f6, $fb ; "100"
-      .byte $f7, $fb ; "200"
-      .byte $f8, $fb ; "400"
-      .byte $f9, $fb ; "500"
-      .byte $fa, $fb ; "800"
-      .byte $f6, $50 ; "1000"
-      .byte $f7, $50 ; "2000"
-      .byte $f8, $50 ; "4000"
-      .byte $f9, $50 ; "5000"
-      .byte $fa, $50 ; "8000"
-      .byte $fd, $fe ; "1-UP"
-
-;high nybble is digit number, low nybble is number to
-;add to the digit of the player's score
-ScoreUpdateData:
-      .byte $ff ;dummy
-      .byte $41, $42, $44, $45, $48
-      .byte $31, $32, $34, $35, $38, $00
-
-.endproc
-
-;-------------------------------------------------------------------------------------
-;$00-$01 - used to hold tile numbers ($01 addressed in draw floatey number part)
-;$02 - used to hold Y coordinate for floatey number
-;$03 - residual byte used for flip (but value set here affects nothing)
-;$04 - attribute byte for floatey number
-;$05 - used as X coordinate for floatey number
-
-
-.proc FlagpoleGfxHandler
-.export FlagpoleGfxHandler,MoveSixSpritesOffscreen,DumpSixSpr,DumpFourSpr,DumpThreeSpr,DumpTwoSpr
-      ldy Enemy_SprDataOffset,x      ;get sprite data offset for flagpole flag
-      lda Enemy_Rel_XPos             ;get relative horizontal coordinate
-      sta Sprite_X_Position,y        ;store as X coordinate for first sprite
-      clc
-      adc #$08                       ;add eight pixels and store
-      sta Sprite_X_Position+4,y      ;as X coordinate for second and third sprites
-      sta Sprite_X_Position+8,y
-      clc
-      adc #$0c                       ;add twelve more pixels and
-      sta $05                        ;store here to be used later by floatey number
-      lda Enemy_Y_Position,x         ;get vertical coordinate
-      jsr DumpTwoSpr                 ;and do sub to dump into first and second sprites
-      adc #$08                       ;add eight pixels
-      sta Sprite_Y_Position+8,y      ;and store into third sprite
-      lda FlagpoleFNum_Y_Pos         ;get vertical coordinate for floatey number
-      sta $02                        ;store it here
-      lda #$01
-      sta $03                        ;set value for flip which will not be used, and
-      sta $04                        ;attribute byte for floatey number
-      sta Sprite_Attributes,y        ;set attribute bytes for all three sprites
-      sta Sprite_Attributes+4,y
-      sta Sprite_Attributes+8,y
-      lda #$7e
-      sta Sprite_Tilenumber,y        ;put triangle shaped tile
-      sta Sprite_Tilenumber+8,y      ;into first and third sprites
-      lda #$7f
-      sta Sprite_Tilenumber+4,y      ;put skull tile into second sprite
-      lda FlagpoleCollisionYPos      ;get vertical coordinate at time of collision
-      beq ChkFlagOffscreen           ;if zero, branch ahead
-      tya
-      clc                            ;add 12 bytes to sprite data offset
-      adc #$0c
-      tay                            ;put back in Y
-      lda FlagpoleScore              ;get offset used to award points for touching flagpole
-      asl                            ;multiply by 2 to get proper offset here
-      tax
-      lda FlagpoleScoreNumTiles,x    ;get appropriate tile data
-      sta $00
-      lda FlagpoleScoreNumTiles+1,x
-      jsr DrawOneSpriteRow           ;use it to render floatey number
-
-ChkFlagOffscreen:
-      ldx ObjectOffset               ;get object offset for flag
-      ldy Enemy_SprDataOffset,x      ;get OAM data offset
-      lda Enemy_OffscreenBits        ;get offscreen bits
-      and #%00001110                 ;mask out all but d3-d1
-      beq ExitDumpSpr                ;if none of these bits set, branch to leave
-
-;-------------------------------------------------------------------------------------
-
-MoveSixSpritesOffscreen:
-      lda #$f8                  ;set offscreen coordinate if jumping here
-
-DumpSixSpr:
-      sta Sprite_Data+20,y      ;dump A contents
-      sta Sprite_Data+16,y      ;into third row sprites
-
-DumpFourSpr:
-      sta Sprite_Data+12,y      ;into second row sprites
-
-DumpThreeSpr:
-      sta Sprite_Data+8,y
-
-DumpTwoSpr:
-      sta Sprite_Data+4,y       ;and into first row sprites
-      sta Sprite_Data,y
-
-ExitDumpSpr:
-      rts
-
-FlagpoleScoreNumTiles:
-      .byte $f9, $50
-      .byte $f7, $50
-      .byte $fa, $fb
-      .byte $f8, $fb
-      .byte $f6, $fb
-
-.endproc
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - temp store for offset control bit
@@ -1393,66 +1120,6 @@ AttribLoop:  lda $00
 SetVRAMCtrl: lda #$06
              sta VRAM_Buffer_AddrCtrl ;set buffer to $0341 and leave
              rts
-
-;-------------------------------------------------------------------------------------
-
-;$00 - used as temporary counter in ColorRotation
-
-ColorRotatePalette:
-       .byte $27, $27, $27, $17, $07, $17
-
-BlankPalette:
-       .byte $3f, $0c, $04, $ff, $ff, $ff, $ff, $00
-
-;used based on area type
-Palette3Data:
-       .byte $0f, $07, $12, $0f 
-       .byte $0f, $07, $17, $0f
-       .byte $0f, $07, $17, $1c
-       .byte $0f, $07, $17, $00
-
-ColorRotation:
-              lda FrameCounter         ;get frame counter
-              and #$07                 ;mask out all but three LSB
-              bne ExitColorRot         ;branch if not set to zero to do this every eighth frame
-              ldx VRAM_Buffer1_Offset  ;check vram buffer offset
-              cpx #$31
-              bcs ExitColorRot         ;if offset over 48 bytes, branch to leave
-              tay                      ;otherwise use frame counter's 3 LSB as offset here
-GetBlankPal:  lda BlankPalette,y       ;get blank palette for palette 3
-              sta VRAM_Buffer1,x       ;store it in the vram buffer
-              inx                      ;increment offsets
-              iny
-              cpy #$08
-              bcc GetBlankPal          ;do this until all bytes are copied
-              ldx VRAM_Buffer1_Offset  ;get current vram buffer offset
-              lda #$03
-              sta $00                  ;set counter here
-              lda AreaType             ;get area type
-              asl                      ;multiply by 4 to get proper offset
-              asl
-              tay                      ;save as offset here
-GetAreaPal:   lda Palette3Data,y       ;fetch palette to be written based on area type
-              sta VRAM_Buffer1+3,x     ;store it to overwrite blank palette in vram buffer
-              iny
-              inx
-              dec $00                  ;decrement counter
-              bpl GetAreaPal           ;do this until the palette is all copied
-              ldx VRAM_Buffer1_Offset  ;get current vram buffer offset
-              ldy ColorRotateOffset    ;get color cycling offset
-              lda ColorRotatePalette,y
-              sta VRAM_Buffer1+4,x     ;get and store current color in second slot of palette
-              lda VRAM_Buffer1_Offset
-              clc                      ;add seven bytes to vram buffer offset
-              adc #$07
-              sta VRAM_Buffer1_Offset
-              inc ColorRotateOffset    ;increment color cycling offset
-              lda ColorRotateOffset
-              cmp #$06                 ;check to see if it's still in range
-              bcc ExitColorRot         ;if so, branch to leave
-              lda #$00
-              sta ColorRotateOffset    ;otherwise, init to keep it in range
-ExitColorRot: rts                      ;leave
 
 ;-------------------------------------------------------------------------------------
 ;METATILE GRAPHICS TABLE

@@ -2,9 +2,29 @@
 .include "common.inc"
 
 ;-------------------------------------------------------------------------------------
+;$04 - address low to jump address
+;$05 - address high to jump address
+;$06 - jump address low
+;$07 - jump address high
+.proc JumpEngine
+  asl          ;shift bit from contents of A
+  tay
+  pla          ;pull saved return address from stack
+  sta $04      ;save to indirect
+  pla
+  sta $05
+  iny
+  lda ($04),y  ;load pointer from indirect
+  sta $06      ;note that if an RTS is performed in next routine
+  iny          ;it will return to the execution before the sub
+  lda ($04),y  ;that called this routine
+  sta $07
+  jmp ($0006)  ;jump to the address we loaded
+.endproc
+
+;-------------------------------------------------------------------------------------
 
 .proc GetScreenPosition
-.export GetScreenPosition
 
   lda ScreenLeft_X_Pos    ;get coordinate of screen's left boundary
   clc
@@ -17,7 +37,6 @@
 .endproc
 
 ;-------------------------------------------------------------------------------------
-.export LoadAreaPointer
 LoadAreaPointer:
   jsr FindAreaPointer  ;find it and store it here
   sta AreaPointer
@@ -43,116 +62,18 @@ GetAreaType:
 .endproc
 
 
-.proc GetAreaDataAddrs
-.import EnemyAddrHOffsets, EnemyDataAddrLow, EnemyDataAddrHigh, AreaDataHOffsets, AreaDataAddrLow, AreaDataAddrHigh
-.export GetAreaDataAddrs
-
-  lda AreaPointer          ;use 2 MSB for Y
-  jsr GetAreaType
-  tay
-  lda AreaPointer          ;mask out all but 5 LSB
-  and #%00011111
-  sta AreaAddrsLOffset     ;save as low offset
-  lda EnemyAddrHOffsets,y  ;load base value with 2 altered MSB,
-  clc                      ;then add base value to 5 LSB, result
-  adc AreaAddrsLOffset     ;becomes offset for level data
-  tay
-  lda EnemyDataAddrLow,y   ;use offset to load pointer
-  sta EnemyDataLow
-  lda EnemyDataAddrHigh,y
-  sta EnemyDataHigh
-  ldy AreaType             ;use area type as offset
-  lda AreaDataHOffsets,y   ;do the same thing but with different base value
-  clc
-  adc AreaAddrsLOffset        
-  tay
-  lda AreaDataAddrLow,y    ;use this offset to load another pointer
-  sta AreaDataLow
-  lda AreaDataAddrHigh,y
-  sta AreaDataHigh
-  ldy #$00                 ;load first byte of header
-  lda (AreaData),y     
-  pha                      ;save it to the stack for now
-  and #%00000111           ;save 3 LSB for foreground scenery or bg color control
-  cmp #$04
-  bcc StoreFore
-  sta BackgroundColorCtrl  ;if 4 or greater, save value here as bg color control
-  lda #$00
-StoreFore:
-  sta ForegroundScenery    ;if less, save value here as foreground scenery
-  pla                      ;pull byte from stack and push it back
-  pha
-  and #%00111000           ;save player entrance control bits
-  lsr                      ;shift bits over to LSBs
-  lsr
-  lsr
-  sta PlayerEntranceCtrl       ;save value here as player entrance control
-  pla                      ;pull byte again but do not push it back
-  and #%11000000           ;save 2 MSB for game timer setting
-  clc
-  rol                      ;rotate bits over to LSBs
-  rol
-  rol
-  sta GameTimerSetting     ;save value here as game timer setting
-  iny
-  lda (AreaData),y         ;load second byte of header
-  pha                      ;save to stack
-  and #%00001111           ;mask out all but lower nybble
-  sta TerrainControl
-  pla                      ;pull and push byte to copy it to A
-  pha
-  and #%00110000           ;save 2 MSB for background scenery type
-  lsr
-  lsr                      ;shift bits to LSBs
-  lsr
-  lsr
-  sta BackgroundScenery    ;save as background scenery
-  pla           
-  and #%11000000
-  clc
-  rol                      ;rotate bits over to LSBs
-  rol
-  rol
-  cmp #%00000011           ;if set to 3, store here
-  bne StoreStyle           ;and nullify other value
-  sta CloudTypeOverride    ;otherwise store value in other place
-  lda #$00
-StoreStyle:
-  sta AreaStyle
-  lda AreaDataLow          ;increment area data address by 2 bytes
-  clc
-  adc #$02
-  sta AreaDataLow
-  lda AreaDataHigh
-  adc #$00
-  sta AreaDataHigh
-  rts
-.endproc
-
-
 ;-------------------------------------------------------------------------------------
 ;$00 - used in adding to get proper offset
 
 .proc RelativePlayerPosition
-.import RelWOfs
 
   ldx #$00      ;set offsets for relative cooordinates
   ldy #$00      ;routine to correspond to player object
   jmp RelWOfs   ;get the coordinates
 .endproc
 
-.proc RelativeBubblePosition
-.import RelWOfs
 
-  ldy #$01                ;set for air bubble offsets
-  jsr GetProperObjOffset  ;modify X to get proper air bubble offset
-  ldy #$03
-  jmp RelWOfs             ;get the coordinates
-.endproc
-
-.proc RelativeFireballPosition
-.export RelWOfs
-
+RelativeFireballPosition:
   ldy #$00                    ;set for fireball offsets
   jsr GetProperObjOffset      ;modify X to get proper fireball offset
   ldy #$02
@@ -160,28 +81,14 @@ RelWOfs:
   jsr GetObjRelativePosition  ;get the coordinates
   ldx ObjectOffset            ;return original offset
   rts                         ;leave
-.endproc
-
-.proc RelativeMiscPosition
-.import RelWOfs
-
-  ldy #$02                ;set for misc object offsets
-  jsr GetProperObjOffset  ;modify X to get proper misc object offset
-  ldy #$06
-  jmp RelWOfs             ;get the coordinates
-.endproc
 
 .proc RelativeEnemyPosition
-.import VariableObjOfsRelPos
-
   lda #$01                     ;get coordinates of enemy object 
   ldy #$01                     ;relative to the screen
   jmp VariableObjOfsRelPos
 .endproc
 
-.proc RelativeBlockPosition
-.export VariableObjOfsRelPos
-
+RelativeBlockPosition:
   lda #$09                     ;get coordinates of one block object
   ldy #$04                     ;relative to the screen
   jsr VariableObjOfsRelPos
@@ -198,7 +105,6 @@ VariableObjOfsRelPos:
   jsr GetObjRelativePosition
   ldx ObjectOffset            ;reload old object offset and leave
   rts
-.endproc
 
 .proc GetObjRelativePosition
   lda SprObject_Y_Position,x  ;load vertical coordinate low
@@ -214,30 +120,13 @@ VariableObjOfsRelPos:
 ;$00 - used as temp variable to hold offscreen bits
 
 .proc GetPlayerOffscreenBits
-.import GetOffScreenBitsSet
   ldx #$00                 ;set offsets for player-specific variables
   ldy #$00                 ;and get offscreen information about player
   jmp GetOffScreenBitsSet
 .endproc
 
-.proc GetFireballOffscreenBits
-.import GetOffScreenBitsSet
-  ldy #$00                 ;set for fireball offsets
-  jsr GetProperObjOffset   ;modify X to get proper fireball offset
-  ldy #$02                 ;set other offset for fireball's offscreen bits
-  jmp GetOffScreenBitsSet  ;and get offscreen information about fireball
-.endproc
-
-.proc GetBubbleOffscreenBits
-.import GetOffScreenBitsSet
-  ldy #$01                 ;set for air bubble offsets
-  jsr GetProperObjOffset   ;modify X to get proper air bubble offset
-  ldy #$03                 ;set other offset for airbubble's offscreen bits
-  jmp GetOffScreenBitsSet  ;and get offscreen information about air bubble
-.endproc
 
 .proc GetMiscOffscreenBits
-.import GetOffScreenBitsSet
   ldy #$02                 ;set for misc object offsets
   jsr GetProperObjOffset   ;modify X to get proper misc object offset
   ldy #$06                 ;set other offset for misc object's offscreen bits
@@ -255,15 +144,12 @@ ObjOffsetData:
 .endproc
 
 .proc GetEnemyOffscreenBits
-.import SetOffscrBitsOffset
-
   lda #$01                 ;set A to add 1 byte in order to get enemy offset
   ldy #$01                 ;set Y to put offscreen bits in Enemy_OffscreenBits
   jmp SetOffscrBitsOffset
 .endproc
 
-.proc GetBlockOffscreenBits
-.export SetOffscrBitsOffset, GetOffScreenBitsSet
+GetBlockOffscreenBits:
   lda #$09       ;set A to add 9 bytes in order to get block obj offset
   ldy #$04       ;set Y to put offscreen bits in Block_OffscreenBits
   ; fallthrough
@@ -289,7 +175,6 @@ GetOffScreenBitsSet:
   sta SprObject_OffscrBits,y
   ldx ObjectOffset
   rts
-.endproc
 
 .proc RunOffscrBitsSubs
   jsr GetXOffscreenBits  ;do subroutine here
@@ -438,6 +323,27 @@ ExTrans:
   rts
 .endproc
 
+;--------------------------------
+
+MaxSpdBlockData:
+      .byte $06, $08
+
+ResidualGravityCode:
+      ldy #$00       ;this part appears to be residual,
+      .byte $2c        ;no code branches or jumps to it...
+
+ImposeGravityBlock:
+      ldy #$01       ;set offset for maximum speed
+      lda #$50       ;set movement amount here
+      sta $00
+      lda MaxSpdBlockData,y    ;get maximum speed
+
+ImposeGravitySprObj:
+      sta $02            ;set maximum speed here
+      lda #$00           ;set value to move downwards
+      jmp ImposeGravity  ;jump to the code that actually moves it
+
+
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used for downward force
@@ -445,7 +351,6 @@ ExTrans:
 ;$07 - used as adder for vertical position
 
 .proc ImposeGravity
-.export ImposeGravity
 
   pha                          ;push value to stack
     lda SprObject_YMF_Dummy,x
@@ -511,7 +416,6 @@ ExVMove:
 ;$00 - used to hold horizontal difference between player and enemy
 
 .proc PlayerEnemyDiff
-.export PlayerEnemyDiff
   lda Enemy_X_Position,x  ;get distance between enemy object's
   sec                     ;horizontal coordinate and the player's
   sbc Player_X_Position   ;horizontal coordinate
@@ -521,6 +425,167 @@ ExVMove:
   rts
 .endproc
 
-.export Bitmasks
 Bitmasks:
       .byte %00000001, %00000010, %00000100, %00001000, %00010000, %00100000, %01000000, %10000000
+
+;-------------------------------------------------------------------------------------
+;$00 - used to store high nybble of horizontal speed as adder
+;$01 - used to store low nybble of horizontal speed
+;$02 - used to store adder to page location
+
+MoveEnemyHorizontally:
+      inx                         ;increment offset for enemy offset
+      jsr MoveObjectHorizontally  ;position object horizontally according to
+      ldx ObjectOffset            ;counters, return with saved value in A,
+      rts                         ;put enemy offset back in X and leave
+
+MovePlayerHorizontally:
+      lda JumpspringAnimCtrl  ;if jumpspring currently animating,
+      bne ExXMove             ;branch to leave
+      tax                     ;otherwise set zero for offset to use player's stuff
+
+MoveObjectHorizontally:
+          lda SprObject_X_Speed,x     ;get currently saved value (horizontal
+          asl                         ;speed, secondary counter, whatever)
+          asl                         ;and move low nybble to high
+          asl
+          asl
+          sta $01                     ;store result here
+          lda SprObject_X_Speed,x     ;get saved value again
+          lsr                         ;move high nybble to low
+          lsr
+          lsr
+          lsr
+          cmp #$08                    ;if < 8, branch, do not change
+          bcc SaveXSpd
+          ora #%11110000              ;otherwise alter high nybble
+SaveXSpd: sta $00                     ;save result here
+          ldy #$00                    ;load default Y value here
+          cmp #$00                    ;if result positive, leave Y alone
+          bpl UseAdder
+          dey                         ;otherwise decrement Y
+UseAdder: sty $02                     ;save Y here
+          lda SprObject_X_MoveForce,x ;get whatever number's here
+          clc
+          adc $01                     ;add low nybble moved to high
+          sta SprObject_X_MoveForce,x ;store result here
+          lda #$00                    ;init A
+          rol                         ;rotate carry into d0
+          pha                         ;push onto stack
+          ror                         ;rotate d0 back onto carry
+          lda SprObject_X_Position,x
+          adc $00                     ;add carry plus saved value (high nybble moved to low
+          sta SprObject_X_Position,x  ;plus $f0 if necessary) to object's horizontal position
+          lda SprObject_PageLoc,x
+          adc $02                     ;add carry plus other saved value to the
+          sta SprObject_PageLoc,x     ;object's page location and save
+          pla
+          clc                         ;pull old carry from stack and add
+          adc $00                     ;to high nybble moved to low
+ExXMove:  rts                         ;and leave
+
+;-------------------------------------------------------------------------------------
+;$00 - used for downward force
+;$01 - used for upward force
+;$02 - used for maximum vertical speed
+
+MovePlayerVertically:
+         ldx #$00                ;set X for player offset
+         lda TimerControl
+         bne NoJSChk             ;if master timer control set, branch ahead
+         lda JumpspringAnimCtrl  ;otherwise check to see if jumpspring is animating
+         bne ExXMove             ;branch to leave if so
+NoJSChk: lda VerticalForce       ;dump vertical force 
+         sta $00
+         lda #$04                ;set maximum vertical speed here
+         jmp ImposeGravitySprObj ;then jump to move player vertically
+
+;--------------------------------
+
+MoveD_EnemyVertically:
+      ldy #$3d           ;set quick movement amount downwards
+      lda Enemy_State,x  ;then check enemy state
+      cmp #$05           ;if not set to unique state for spiny's egg, go ahead
+      bne ContVMove      ;and use, otherwise set different movement amount, continue on
+
+MoveFallingPlatform:
+           ldy #$20       ;set movement amount
+ContVMove: jmp SetHiMax   ;jump to skip the rest of this
+
+;--------------------------------
+
+MoveRedPTroopaDown:
+      ldy #$00            ;set Y to move downwards
+      jmp MoveRedPTroopa  ;skip to movement routine
+
+MoveRedPTroopaUp:
+      ldy #$01            ;set Y to move upwards
+
+MoveRedPTroopa:
+      inx                 ;increment X for enemy offset
+      lda #$03
+      sta $00             ;set downward movement amount here
+      lda #$06
+      sta $01             ;set upward movement amount here
+      lda #$02
+      sta $02             ;set maximum speed here
+      tya                 ;set movement direction in A, and
+      jmp RedPTroopaGrav  ;jump to move this thing
+
+;--------------------------------
+
+MoveDropPlatform:
+      ldy #$7f      ;set movement amount for drop platform
+      bne SetMdMax  ;skip ahead of other value set here
+
+MoveEnemySlowVert:
+          ldy #$0f         ;set movement amount for bowser/other objects
+SetMdMax: lda #$02         ;set maximum speed in A
+          bne SetXMoveAmt  ;unconditional branch
+
+;--------------------------------
+
+MoveJ_EnemyVertically:
+             ldy #$1c                ;set movement amount for podoboo/other objects
+SetHiMax:    lda #$03                ;set maximum speed in A
+SetXMoveAmt: sty $00                 ;set movement amount here
+             inx                     ;increment X for enemy offset
+             jsr ImposeGravitySprObj ;do a sub to move enemy object downwards
+             ldx ObjectOffset        ;get enemy object buffer offset and leave
+             rts
+
+;--------------------------------
+
+MovePlatformDown:
+      lda #$00    ;save value to stack (if branching here, execute next
+      .byte $2c     ;part as BIT instruction)
+
+MovePlatformUp:
+           lda #$01        ;save value to stack
+           pha
+           ldy Enemy_ID,x  ;get enemy object identifier
+           inx             ;increment offset for enemy object
+           lda #$05        ;load default value here
+           cpy #$29        ;residual comparison, object #29 never executes
+           bne SetDplSpd   ;this code, thus unconditional branch here
+           lda #$09        ;residual code
+SetDplSpd: sta $00         ;save downward movement amount here
+           lda #$0a        ;save upward movement amount here
+           sta $01
+           lda #$03        ;save maximum vertical speed here
+           sta $02
+           pla             ;get value from stack
+           tay             ;use as Y, then move onto code shared by red koopa
+
+RedPTroopaGrav:
+      jsr ImposeGravity  ;do a sub to move object gradually
+      ldx ObjectOffset   ;get enemy object offset and leave
+      rts
+
+;------------------------------------------------
+; Moved from object handler since this is common code
+InitVStf:
+  lda #$00                    ;initialize vertical speed
+  sta Enemy_Y_Speed,x         ;and movement force
+  sta Enemy_Y_MoveForce,x
+  rts

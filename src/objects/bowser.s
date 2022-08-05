@@ -1,4 +1,5 @@
 .include "common.inc"
+.include "object.inc"
 
 ;--------------------------------
 
@@ -411,7 +412,7 @@ FlameYMFAdderData:
 
 InitBowserFlame:
         lda FrenzyEnemyTimer        ;if timer not expired yet, branch to leave
-        bne FlmEx
+        bne ExFlmeD
         sta Enemy_Y_MoveForce,x     ;reset something here
         lda NoiseSoundQueue
         ora #Sfx_BowserFlame        ;load bowser's flame sound into queue
