@@ -1,14 +1,18 @@
 
 .global PlayerEnemyCollision
 .global GetEnemyBoundBox
-.global SetBBox2
-.global KillEnemies
+.global SetBBox, SetBBox2
 .global EraseEnemyObject
 .global EnemyToBGCollisionDet
 .global EnemiesCollision
 .global OffscreenBoundsCheck
 .global SmallBBox
-
+.global DuplicateEnemyObj
+.global XMoveCntr_Platform
+.global MoveWithXMCntrs
+.global CheckpointEnemyID
+.global TallBBox2
+.global SmallPlatformBoundBox, LargePlatformBoundBox
 
 ; Object run code
 .global RunNormalEnemies

@@ -16,7 +16,7 @@
                 "reveal": "never",
                 "focus": false,
                 "panel": "shared",
-                "close": false,
+                "close": true,
                 "showReuseMessage": false,
                 "clear": false
             },

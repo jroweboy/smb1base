@@ -1,9 +1,5 @@
 .include "common.inc"
 
-;common.s
-.import MoveDropPlatform
-.import GetPlayerColors
-
 ; objects/hammer_bros.s
 .import SetHJ
 
@@ -12,7 +8,7 @@
 
 ; screen_render.s
 .import GiveOneCoin, RemoveCoin_Axe, HandlePipeEntry, DrawPowerUp
-.import DestroyBlockMetatile
+.import DestroyBlockMetatile, GetPlayerColors
 
 ; tiles/brick.s
 .import BlockBumpedChk, InitBlock_XY_Pos, BrickShatter, BumpBlock

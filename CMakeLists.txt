@@ -24,7 +24,6 @@ add_executable(${PROJECT_NAME}
   src/reset.s
   src/screen_render.s
   src/sprite_render.s
-  src/smb.s
 
   src/objects/blooper.s
   src/objects/bowser.s

@@ -2,7 +2,7 @@
 ; 
 .global JumpEngine
 
-; global imports typically found in common.s
+; global imports found in common.s
 .global GetEnemyOffscreenBits
 .global GetScreenPosition
 .global LoadAreaPointer
@@ -28,8 +28,12 @@
 .global GetBlockOffscreenBits
 .global InitVStf
 .global GetMiscOffscreenBits
+.global KillEnemies
+.global MoveFallingPlatform, MoveDropPlatform, MoveJ_EnemyVertically
+.global TransposePlayers, MovePlayerHorizontally, ImposeGravitySprObj
+.global RedPTroopaGrav, MoveEnemySlowVert, SetXMoveAmt
+.global EraseEnemyObject
+.global MovePlatformUp, MovePlatformDown
 
-; code likely in collision.s
-.global GetMiscBoundBox
-.global BlockBufferCollision
-
+.global WorldAddrOffsets
+.global AreaAddrOffsets
