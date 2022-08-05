@@ -26,13 +26,23 @@ add_executable(${PROJECT_NAME}
   src/sprite_render.s
   src/smb.s
 
+  src/objects/blooper.s
   src/objects/bowser.s
   src/objects/cannon.s
+  src/objects/cheepcheep.s
   src/objects/fire_bubble.s
+  src/objects/firebar.s
+  src/objects/fireworks.s
+  src/objects/frenzy.s
   src/objects/goomba.s
+  src/objects/hammer_bro.s
   src/objects/jump_spring.s
+  src/objects/koopa.s
+  src/objects/platform.s
+  src/objects/podoboo.s
   src/objects/object.s
   src/objects/piranha_plant.s
+  src/objects/powerup.s
   src/objects/vine.s
   src/objects/warpzone.s
 
@@ -48,6 +58,7 @@ add_executable(${PROJECT_NAME}
   src/tiles/level.s
   src/tiles/pipe.s
   src/tiles/pulley.s
+  src/tiles/rope.s
   src/tiles/question_block.s
   src/tiles/staircase.s
 

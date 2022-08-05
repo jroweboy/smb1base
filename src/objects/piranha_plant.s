@@ -17,3 +17,65 @@ InitPiranhaPlant:
       sta PiranhaPlantUpYPos,x     ;save original vertical coordinate - 24 pixels here
       lda #$09
       jmp SetBBox2                 ;set specific value for bounding box control
+
+;--------------------------------
+;$00 - used to store horizontal difference between player and piranha plant
+
+MovePiranhaPlant:
+      lda Enemy_State,x           ;check enemy state
+      bne PutinPipe               ;if set at all, branch to leave
+      lda EnemyFrameTimer,x       ;check enemy's timer here
+      bne PutinPipe               ;branch to end if not yet expired
+      lda PiranhaPlant_MoveFlag,x ;check movement flag
+      bne SetupToMovePPlant       ;if moving, skip to part ahead
+      lda PiranhaPlant_Y_Speed,x  ;if currently rising, branch 
+      bmi ReversePlantSpeed       ;to move enemy upwards out of pipe
+      jsr PlayerEnemyDiff         ;get horizontal difference between player and
+      bpl ChkPlayerNearPipe       ;piranha plant, and branch if enemy to right of player
+      lda $00                     ;otherwise get saved horizontal difference
+      eor #$ff
+      clc                         ;and change to two's compliment
+      adc #$01
+      sta $00                     ;save as new horizontal difference
+
+ChkPlayerNearPipe:
+      lda $00                     ;get saved horizontal difference
+      cmp #$21
+      bcc PutinPipe               ;if player within a certain distance, branch to leave
+
+ReversePlantSpeed:
+      lda PiranhaPlant_Y_Speed,x  ;get vertical speed
+      eor #$ff
+      clc                         ;change to two's compliment
+      adc #$01
+      sta PiranhaPlant_Y_Speed,x  ;save as new vertical speed
+      inc PiranhaPlant_MoveFlag,x ;increment to set movement flag
+
+SetupToMovePPlant:
+      lda PiranhaPlantDownYPos,x  ;get original vertical coordinate (lowest point)
+      ldy PiranhaPlant_Y_Speed,x  ;get vertical speed
+      bpl RiseFallPiranhaPlant    ;branch if moving downwards
+      lda PiranhaPlantUpYPos,x    ;otherwise get other vertical coordinate (highest point)
+
+RiseFallPiranhaPlant:
+      sta $00                     ;save vertical coordinate here
+      lda FrameCounter            ;get frame counter
+      lsr
+      bcc PutinPipe               ;branch to leave if d0 set (execute code every other frame)
+      lda TimerControl            ;get master timer control
+      bne PutinPipe               ;branch to leave if set (likely not necessary)
+      lda Enemy_Y_Position,x      ;get current vertical coordinate
+      clc
+      adc PiranhaPlant_Y_Speed,x  ;add vertical speed to move up or down
+      sta Enemy_Y_Position,x      ;save as new vertical coordinate
+      cmp $00                     ;compare against low or high coordinate
+      bne PutinPipe               ;branch to leave if not yet reached
+      lda #$00
+      sta PiranhaPlant_MoveFlag,x ;otherwise clear movement flag
+      lda #$40
+      sta EnemyFrameTimer,x       ;set timer to delay piranha plant movement
+
+PutinPipe:
+      lda #%00100000              ;set background priority bit in sprite
+      sta Enemy_SprAttrib,x       ;attributes to give illusion of being inside pipe
+      rts                         ;then leave

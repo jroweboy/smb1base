@@ -5,7 +5,8 @@
 ; sprite_render.s
 .import DrawVine
 
-.export Setup_Vine
+; collision.s
+.import BlockBufferCollision
 
 ;-------------------------------------------------------------------------------------
 

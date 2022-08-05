@@ -6,9 +6,13 @@
 
 ; screen_render.s
 .import GiveOneCoin
+.import AddToScore
+.import RemoveCoin_Axe
 
 ; brick_column.s
 .import DrawRow
+
+.export BlockBumpedChk, InitBlock_XY_Pos, BrickShatter, BumpBlock, PwrUpJmp
 
 ;--------------------------------
 ;$07 - used to save ID of brick object

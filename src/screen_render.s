@@ -5,10 +5,16 @@
 ; player.s
 .import DrawPlayer_Intermediate
 
+.export ScreenRoutines
+.export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, AddToScore
+.export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
+.export InitializeNameTables, UpdateTopScore, RenderAttributeTables
+.export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
+.export RemBridge, GiveOneCoin, ReplaceBlockMetatile, DrawMushroomIcon
+
 ;-------------------------------------------------------------------------------------
 
 .proc ScreenRoutines
-  .import GetAreaPalette, ClearBuffersDrawIcon, WriteTopScore
 
   lda ScreenRoutineTask        ;run one of the following subroutines
   jsr JumpEngine
@@ -33,10 +39,7 @@
 
 ;-------------------------------------------------------------------------------------
 
-.proc InitScreen
-  .import MoveAllSpritesOffscreen
-  .export GetAreaPalette
-
+InitScreen:
   jsr MoveAllSpritesOffscreen ;initialize all sprites including sprite #0
   jsr InitializeNameTables    ;and erase both name and attribute tables
   lda OperMode
@@ -46,7 +49,6 @@
   ; implicit rts
 
 GetAreaPalette:
-.import IncSubtask
   ldy AreaType             ;select appropriate palette to load
   ldx AreaPalette,y        ;based on area type
 SetVRAMAddr_A:
@@ -55,12 +57,11 @@ NextSubtask:
   jmp IncSubtask           ;move onto next task
 AreaPalette:
   .byte $01, $02, $03, $04
-.endproc
+
 
 
 ;-------------------------------------------------------------------------------------
-.proc MoveAllSpritesOffscreen
-.export MoveAllSpritesOffscreen, MoveSpritesOffscreen
+MoveAllSpritesOffscreen:
 
   ldy #$00                ;this routine moves all sprites off the screen
   .byte $2c                 ;BIT instruction opcode
@@ -75,12 +76,9 @@ MoveSpritesOffscreen:
     iny
     bne @SprInitLoop
   rts
-.endproc
 
 ;-------------------------------------------------------------------------------------
-.proc InitializeNameTables
-.import InitScroll
-.export InitializeNameTables
+InitializeNameTables:
 
   lda PPU_STATUS            ;reset flip-flop
   lda Mirror_PPU_CTRL_REG1  ;load mirror of ppu reg $2000
@@ -114,23 +112,18 @@ InitATLoop:
   sta HorizontalScroll      ;reset scroll variables
   sta VerticalScroll
   jmp InitScroll            ;initialize scroll registers to zero
-.endproc
 
 ;-------------------------------------------------------------------------------------
 
-.proc WriteTopStatusLine
-.import IncSubtask
+WriteTopStatusLine:
   lda #$00          ;select main status bar
   jsr WriteGameText ;output it
   jmp IncSubtask    ;onto the next task
   ;implicit rts
-.endproc
 
 ;-------------------------------------------------------------------------------------
 
-.proc SetupIntermediate
-.import GetPlayerColors, IncSubtask
-
+SetupIntermediate:
   lda BackgroundColorCtrl  ;save current background color control
   pha                      ;and player status to stack
     lda PlayerStatus
@@ -145,12 +138,10 @@ InitATLoop:
   pla                      ;and once we're done, we return bg
   sta BackgroundColorCtrl  ;color ctrl and player status from stack
   jmp IncSubtask           ;then move onto the next task
-.endproc
 
 ;-------------------------------------------------------------------------------------
 
-.proc WriteBottomStatusLine
-.import GetSBNybbles, IncSubtask
+WriteBottomStatusLine:
 
   jsr GetSBNybbles        ;write player's score and coin tally to screen
   ldx VRAM_Buffer1_Offset
@@ -177,12 +168,10 @@ InitATLoop:
   adc #$06
   sta VRAM_Buffer1_Offset
   jmp IncSubtask
-.endproc
 
 ;-------------------------------------------------------------------------------------
 
-.proc DisplayTimeUp
-.import OutputInter, IncSubtask
+DisplayTimeUp:
   lda GameTimerExpiredFlag  ;if game timer not expired, increment task
   beq NoTimeUp              ;control 2 tasks forward, otherwise, stay here
   lda #$00
@@ -192,7 +181,6 @@ InitATLoop:
 NoTimeUp:
   inc ScreenRoutineTask     ;increment control task 2 tasks forward
   jmp IncSubtask
-.endproc
 
 ;-------------------------------------------------------------------------------------
 
@@ -263,7 +251,6 @@ OutputCol:
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used as temp counter in GetPlayerColors
-.export GetPlayerColors
 GetBackgroundColor:
   ldy BackgroundColorCtrl   ;check background color control
   beq NoBGColor             ;if not set, increment task and fetch palette
@@ -331,10 +318,7 @@ PlayerColors:
 
 ;-------------------------------------------------------------------------------------
 
-.proc GetAlternatePalette1
-.import IncSubtask
-.export SetVRAMAddr_B
-
+GetAlternatePalette1:
   lda AreaStyle            ;check for mushroom level style
   cmp #$01
   bne NoAltPal
@@ -344,7 +328,6 @@ SetVRAMAddr_B:
   sta VRAM_Buffer_AddrCtrl
 NoAltPal:
   jmp IncSubtask           ;now onto the next task
-.endproc
 
 ;-------------------------------------------------------------------------------------
 
@@ -352,8 +335,6 @@ NoAltPal:
 ;$01 - vram buffer address table high
 
 DrawTitleScreen:
-.import SetVRAMAddr_B
-.export IncSubtask, IncModeTask_B
   lda OperMode                 ;are we in title screen mode?
   bne IncModeTask_B            ;if not, exit
   lda #>TitleScreenDataOffset  ;load address $1ec0 into
@@ -428,7 +409,6 @@ MushroomIconData:
 
 ;-------------------------------------------------------------------------------------
 .proc WritePPUReg1
-.export WritePPUReg1
 
   sta PPU_CTRL_REG1         ;write contents of A to PPU register 1
   sta Mirror_PPU_CTRL_REG1  ;and its mirror
@@ -440,7 +420,7 @@ MushroomIconData:
 ;$00 - vram buffer address table low
 ;$01 - vram buffer address table high
 
-.proc WriteBufferToScreen
+WriteBufferToScreen:
 .export UpdateScreen, InitScroll
 
   sta PPU_ADDRESS           ;store high byte of vram address
@@ -497,14 +477,11 @@ InitScroll:
   sta PPU_SCROLL_REG        ;store contents of A into scroll registers
   sta PPU_SCROLL_REG        ;and end whatever subroutine led us here
   rts
-.endproc
 
 
 ;-------------------------------------------------------------------------------------
 
-.proc WriteGameText
-.import SetVRAMOffset
-
+WriteGameText:
   pha                      ;save text number to stack
     asl
     tay                      ;multiply by 2 and use as offset
@@ -648,7 +625,55 @@ GameTextOffsets:
   .byte TwoPlayerTimeUp-GameText, OnePlayerTimeUp-GameText
   .byte TwoPlayerGameOver-GameText, OnePlayerGameOver-GameText
   .byte WarpZoneWelcome-GameText, WarpZoneWelcome-GameText
-.endproc
+
+
+HandlePipeEntry:
+         lda Up_Down_Buttons       ;check saved controller bits from earlier
+         and #%00000100            ;for pressing down
+         beq ExPipeE               ;if not pressing down, branch to leave
+         lda $00
+         cmp #$11                  ;check right foot metatile for warp pipe right metatile
+         bne ExPipeE               ;branch to leave if not found
+         lda $01
+         cmp #$10                  ;check left foot metatile for warp pipe left metatile
+         bne ExPipeE               ;branch to leave if not found
+         lda #$30
+         sta ChangeAreaTimer       ;set timer for change of area
+         lda #$03
+         sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
+         lda #Sfx_PipeDown_Injury
+         sta Square1SoundQueue     ;load pipedown/injury sound
+         lda #%00100000
+         sta Player_SprAttrib      ;set background priority bit in player's attributes
+         lda WarpZoneControl       ;check warp zone control
+         beq ExPipeE               ;branch to leave if none found
+         and #%00000011            ;mask out all but 2 LSB
+         asl
+         asl                       ;multiply by four
+         tax                       ;save as offset to warp zone numbers (starts at left pipe)
+         lda Player_X_Position     ;get player's horizontal position
+         cmp #$60      
+         bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
+         inx                       ;otherwise increment for middle pipe
+         cmp #$a0      
+         bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
+         inx                       ;otherwise increment for last pipe
+GetWNum: ldy WarpZoneNumbers,x     ;get warp zone numbers
+         dey                       ;decrement for use as world number
+         sty WorldNumber           ;store as world number and offset
+         ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
+         lda AreaAddrOffsets,x     ;get area offset based on world offset
+         sta AreaPointer           ;store area offset here to be used to change areas
+         lda #Silence
+         sta EventMusicQueue       ;silence music
+         lda #$00
+         sta EntrancePage          ;initialize starting page number
+         sta AreaNumber            ;initialize area number used for area address offset
+         sta LevelNumber           ;initialize level number used for world display
+         sta AltEntranceControl    ;initialize mode of entry
+         inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
+         inc FetchNewGameTimerFlag ;set flag to load new game timer
+ExPipeE: rts                       ;leave!!!
 
 
 ;-------------------------------------------------------------------------------------
@@ -868,12 +893,9 @@ WriteBlankMT:
   rts                       ;leave
 .endproc
 
-.proc DestroyBlockMetatile
+DestroyBlockMetatile:
   lda #$00       ;force blank metatile if branched/jumped to this point
-  ; fallthrough
-.endproc
-.proc WriteBlockMetatile
-.import SetVRAMOffset
+WriteBlockMetatile:
   ldy #$03                ;load offset for blank metatile
   cmp #$00                ;check contents of A for blank metatile
   beq UseBOffset          ;branch if found (unconditional if branched from 8a6b)
@@ -899,9 +921,7 @@ MoveVOffset:
   clc
   adc #10
   jmp SetVRAMOffset       ;branch to store as new vram buffer offset
-  ; fallthrough
-.endproc
-.proc PutBlockMetatile
+PutBlockMetatile:
   stx $00               ;store control bit from SprDataOffset_Ctrl
   sty $01               ;store vram buffer offset for next byte
   asl
@@ -935,9 +955,7 @@ SaveHAdder:
   sta $05               ;store here
   ldy $01               ;get vram buffer offset to be used
   ;fallthrough
-.endproc
-.proc RemBridge
-.export RemBridge
+RemBridge:
   lda BlockGfxData,x    ;write top left and top right
   sta VRAM_Buffer1+2,y  ;tile numbers into first spot
   lda BlockGfxData+1,x
@@ -968,7 +986,7 @@ BlockGfxData:
   .byte $57, $58, $59, $5a
   .byte $24, $24, $24, $24
   .byte $26, $26, $26, $26
-.endproc
+
 
 ;-------------------------------------------------------------------------------------
 ;$00 - temp vram buffer offset

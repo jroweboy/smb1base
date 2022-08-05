@@ -50,8 +50,6 @@ GetAreaType:
   rts
 
 .proc FindAreaPointer
-  .import WorldAddrOffsets, AreaAddrOffsets
-
   ldy WorldNumber        ;load offset from world variable
   lda WorldAddrOffsets,y
   clc                    ;add area number used to find data
@@ -298,8 +296,6 @@ ExDivPD:
 .endproc
 
 .proc TransposePlayers
-.export TransposePlayers
-
   sec                       ;set carry flag by default to end game
   lda NumberOfPlayers       ;if only a 1 player game, leave
   beq ExTrans
@@ -484,22 +480,6 @@ UseAdder: sty $02                     ;save Y here
           adc $00                     ;to high nybble moved to low
 ExXMove:  rts                         ;and leave
 
-;-------------------------------------------------------------------------------------
-;$00 - used for downward force
-;$01 - used for upward force
-;$02 - used for maximum vertical speed
-
-MovePlayerVertically:
-         ldx #$00                ;set X for player offset
-         lda TimerControl
-         bne NoJSChk             ;if master timer control set, branch ahead
-         lda JumpspringAnimCtrl  ;otherwise check to see if jumpspring is animating
-         bne ExXMove             ;branch to leave if so
-NoJSChk: lda VerticalForce       ;dump vertical force 
-         sta $00
-         lda #$04                ;set maximum vertical speed here
-         jmp ImposeGravitySprObj ;then jump to move player vertically
-
 ;--------------------------------
 
 MoveD_EnemyVertically:
@@ -511,26 +491,6 @@ MoveD_EnemyVertically:
 MoveFallingPlatform:
            ldy #$20       ;set movement amount
 ContVMove: jmp SetHiMax   ;jump to skip the rest of this
-
-;--------------------------------
-
-MoveRedPTroopaDown:
-      ldy #$00            ;set Y to move downwards
-      jmp MoveRedPTroopa  ;skip to movement routine
-
-MoveRedPTroopaUp:
-      ldy #$01            ;set Y to move upwards
-
-MoveRedPTroopa:
-      inx                 ;increment X for enemy offset
-      lda #$03
-      sta $00             ;set downward movement amount here
-      lda #$06
-      sta $01             ;set upward movement amount here
-      lda #$02
-      sta $02             ;set maximum speed here
-      tya                 ;set movement direction in A, and
-      jmp RedPTroopaGrav  ;jump to move this thing
 
 ;--------------------------------
 
@@ -589,3 +549,52 @@ InitVStf:
   sta Enemy_Y_Speed,x         ;and movement force
   sta Enemy_Y_MoveForce,x
   rts
+
+;--------------------------------
+;$00 - used to store enemy identifier in KillEnemies
+KillEnemies:
+  sta $00           ;store identifier here
+  lda #$00
+  ldx #$04          ;check for identifier in enemy object buffer
+KillELoop:
+  ldy Enemy_ID,x
+  cpy $00           ;if not found, branch
+  bne NoKillE
+  sta Enemy_Flag,x  ;if found, deactivate enemy object flag
+NoKillE:
+  dex               ;do this until all slots are checked
+  bpl KillELoop
+  rts
+
+
+;-------------------------------------------------------------------------------------
+
+EraseEnemyObject:
+      lda #$00                 ;clear all enemy object variables
+      sta Enemy_Flag,x
+      sta Enemy_ID,x
+      sta Enemy_State,x
+      sta FloateyNum_Control,x
+      sta EnemyIntervalTimer,x
+      sta ShellChainCounter,x
+      sta Enemy_SprAttrib,x
+      sta EnemyFrameTimer,x
+      rts
+
+WorldAddrOffsets:
+      .byte World1Areas-AreaAddrOffsets, World2Areas-AreaAddrOffsets
+      .byte World3Areas-AreaAddrOffsets, World4Areas-AreaAddrOffsets
+      .byte World5Areas-AreaAddrOffsets, World6Areas-AreaAddrOffsets
+      .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
+
+AreaAddrOffsets:
+World1Areas: .byte $25, $29, $c0, $26, $60
+World2Areas: .byte $28, $29, $01, $27, $62
+World3Areas: .byte $24, $35, $20, $63
+World4Areas: .byte $22, $29, $41, $2c, $61
+World5Areas: .byte $2a, $31, $26, $62
+World6Areas: .byte $2e, $23, $2d, $60
+World7Areas: .byte $33, $29, $01, $27, $64
+World8Areas: .byte $30, $32, $21, $65
+
+

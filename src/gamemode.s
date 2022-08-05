@@ -1,8 +1,8 @@
 
 .include "common.inc"
 
-
-.import InitializeArea, GameCoreRoutine, ScreenRoutines
+; core.s ???
+.import InitializeArea, GameCoreRoutine, ScreenRoutines, UpdScrollVar
 .import EnemiesAndLoopsCore, RelativePlayerPosition, PlayerGfxHandler
 
 .import IncModeTask_B
@@ -10,7 +10,9 @@
 ; objects/bowser.s
 .import BridgeCollapse
 ; player.s
-.import AutoControlPlayer
+.import AutoControlPlayer, ScrollScreen
+
+.export OperModeExecutionTree
 
 ;-------------------------------------------------------------------------------------
 
@@ -122,61 +124,10 @@ SetPause:      sta GamePauseStatus
 ExitPause:     rts
 
 ;-------------------------------------------------------------------------------------
-;$00 - used for preset value
-.export SpriteShuffler
-.proc SpriteShuffler
-  ldy AreaType                ;load level type, likely residual code
-  lda #$28                    ;load preset value which will put it at
-  sta $00                     ;sprite #10
-  ldx #$0e                    ;start at the end of OAM data offsets
-ShuffleLoop:
-    lda SprDataOffset,x         ;check for offset value against
-    cmp $00                     ;the preset value
-    bcc NextSprOffset           ;if less, skip this part
-    ldy SprShuffleAmtOffset     ;get current offset to preset value we want to add
-    clc
-    adc SprShuffleAmt,y         ;get shuffle amount, add to current sprite offset
-    bcc StrSprOffset            ;if not exceeded $ff, skip second add
-    clc
-    adc $00                     ;otherwise add preset value $28 to offset
-StrSprOffset:
-    sta SprDataOffset,x         ;store new offset here or old one if branched to here
-NextSprOffset: 
-    dex                         ;move backwards to next one
-    bpl ShuffleLoop
-  ldx SprShuffleAmtOffset     ;load offset
-  inx
-  cpx #$03                    ;check if offset + 1 goes to 3
-  bne SetAmtOffset            ;if offset + 1 not 3, store
-    ldx #$00                  ;otherwise, init to 0
-SetAmtOffset:
-  stx SprShuffleAmtOffset
-  ldx #$08                    ;load offsets for values and storage
-  ldy #$02
-SetMiscOffset:
-    lda SprDataOffset+5,y       ;load one of three OAM data offsets
-    sta Misc_SprDataOffset-2,x  ;store first one unmodified, but
-    clc                         ;add eight to the second and eight
-    adc #$08                    ;more to the third one
-    sta Misc_SprDataOffset-1,x  ;note that due to the way X is set up,
-    clc                         ;this code loads into the misc sprite offsets
-    adc #$08
-    sta Misc_SprDataOffset,x        
-    dex
-    dex
-    dex
-    dey
-    bpl SetMiscOffset           ;do this until all misc spr offsets are loaded
-  rts
-.endproc
-
-;-------------------------------------------------------------------------------------
-.export OperModeExecutionTree
 .proc OperModeExecutionTree
   lda OperMode     ;this is the heart of the entire program,
   jsr JumpEngine   ;most of what goes on starts here
 
-.import TitleScreenMode,GameMode,GameOverMode
   .word TitleScreenMode
   .word GameMode
   .word VictoryMode
@@ -186,8 +137,6 @@ SetMiscOffset:
 ;-------------------------------------------------------------------------------------
 
 .proc TitleScreenMode
-  .import ScreenRoutines,GameMenuRoutine
-  .export TitleScreenMode
   lda OperMode_Task
   jsr JumpEngine
 
@@ -213,7 +162,6 @@ ClrSndLoop:
 
 ;-------------------------------------------------------------------------------------
 .proc GameOverMode
-.import ScreenRoutines
   lda OperMode_Task
   jsr JumpEngine
   
@@ -462,7 +410,10 @@ AutoPlayer:
   stx DestinationPageLoc   ;store here
   lda #EndOfCastleMusic
   sta EventMusicQueue      ;play win castle music
-  jmp IncModeTask_B        ;jump to set next major task in victory mode
+  ; jroweboy (just inline it its literally just one more byte)
+  ; jmp IncModeTask_B        ;jump to set next major task in victory mode
+  inc OperMode_Task
+  rts
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -497,8 +448,13 @@ DontWalk:
   inc VictoryWalkControl  ;increment value to stay in this routine
 ExitVWalk:
   lda VictoryWalkControl  ;load value set here
-  beq IncModeTask_A       ;if zero, branch to change modes
-  rts                     ;otherwise leave
+  ; jroweboy: Change from vanilla: just inc and rts here instead
+  ; beq IncModeTask_A       ;if zero, branch to change modes
+  ; rts                     ;otherwise leave
+  bne DontIncModeTask
+    inc OperMode_Task
+DontIncModeTask:
+  rts
 .endproc
 
 ;-------------------------------------------------------------------------------------

@@ -22,9 +22,12 @@
 ; collision.s
 .import ForceInjury
 
-;-------------------------------------------------------------------------------------
-.proc GameCoreRoutine
+; gamemode.s
+.export GameCoreRoutine, UpdScrollVar
 
+
+;-------------------------------------------------------------------------------------
+GameCoreRoutine:
   ldx CurrentPlayer          ;get which player is on the screen
   lda SavedJoypadBits,x      ;use appropriate player's controller bits
   sta SavedJoypadBits        ;as the master controller bits
@@ -103,7 +106,7 @@ RunParser:
   jsr AreaParserTaskHandler  ;update the name table with more level graphics
 ExitEng:
   rts                        ;and after all that, we're finally done!
-.endproc
+
 
 ;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer

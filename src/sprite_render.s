@@ -2,6 +2,16 @@
 .include "common.inc"
 .include "object.inc"
 
+; screen_render.s
+.import AddToScore
+
+.export DrawFirebar, DrawSmallPlatform, DrawFireball, DrawExplosion_Fireball
+.export DrawVine, DrawLargePlatform, DrawPowerUp, DrawExplosion_Fireworks
+.export DrawOneSpriteRow, JCoinGfxHandler, DrawHammer, DrawBrickChunks, DrawBlock
+.export FlagpoleGfxHandler
+
+.export DumpTwoSpr, FloateyNumbersRoutine
+
 ;-------------------------------------------------------------------------------------
 ;$00 - offset to vine Y coordinate adder
 ;$02 - offset to sprite data
@@ -1246,9 +1256,6 @@ SetHFAt:
 
 ;-------------------------------------------------------------------------------------
 .proc FloateyNumbersRoutine
-.import AddToScore,DumpTwoSpr
-.export FloateyNumbersRoutine
-
   lda FloateyNum_Control,x     ;load control for floatey number
   beq EndFloateyNumber         ;if zero, branch to leave
   cmp #$0b                     ;if less than $0b, branch

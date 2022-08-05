@@ -2,6 +2,64 @@
 .include "common.inc"
 .include "object.inc"
 
+.import SpawnHammerObj
+
+; collision.s
+.export SetHJ
+
+;--------------------------------
+
+HBroWalkingTimerData:
+      .byte $80, $50
+
+InitHammerBro:
+      lda #$00                    ;init horizontal speed and timer used by hammer bro
+      sta HammerThrowingTimer,x   ;apparently to time hammer throwing
+      sta Enemy_X_Speed,x
+      ldy SecondaryHardMode       ;get secondary hard mode flag
+      lda HBroWalkingTimerData,y
+      sta EnemyIntervalTimer,x    ;set value as delay for hammer bro to walk left
+      lda #$0b                    ;set specific value for bounding box size control
+      jmp SetBBox
+
+
+;--------------------------------
+;$00 - used in HammerBroJumpCode as bitmask
+
+HammerThrowTmrData:
+      .byte $30, $1c
+
+XSpeedAdderData:
+      .byte $00, $e8, $00, $18
+
+RevivedXSpeed:
+      .byte $08, $f8, $0c, $f4
+
+ProcHammerBro:
+       lda Enemy_State,x          ;check hammer bro's enemy state for d5 set
+       and #%00100000
+       beq ChkJH                  ;if not set, go ahead with code
+       jmp MoveDefeatedEnemy      ;otherwise jump to something else
+ChkJH: lda HammerBroJumpTimer,x   ;check jump timer
+       beq HammerBroJumpCode      ;if expired, branch to jump
+       dec HammerBroJumpTimer,x   ;otherwise decrement jump timer
+       lda Enemy_OffscreenBits
+       and #%00001100             ;check offscreen bits
+       bne MoveHammerBroXDir      ;if hammer bro a little offscreen, skip to movement code
+       lda HammerThrowingTimer,x  ;check hammer throwing timer
+       bne DecHT                  ;if not expired, skip ahead, do not throw hammer
+       ldy SecondaryHardMode      ;otherwise get secondary hard mode flag
+       lda HammerThrowTmrData,y   ;get timer data using flag as offset
+       sta HammerThrowingTimer,x  ;set as new timer
+       jsr SpawnHammerObj         ;do a sub here to spawn hammer object
+       bcc DecHT                  ;if carry clear, hammer not spawned, skip to decrement timer
+       lda Enemy_State,x
+       ora #%00001000             ;set d3 in enemy state for hammer throw
+       sta Enemy_State,x
+       jmp MoveHammerBroXDir      ;jump to move hammer bro
+DecHT: dec HammerThrowingTimer,x  ;decrement timer
+       jmp MoveHammerBroXDir      ;jump to move hammer bro
+
 HammerBroJumpLData:
       .byte $20, $37
 
@@ -101,3 +159,34 @@ AddHS:  clc
         pla
         sta Enemy_X_Speed,x       ;get old horizontal speed from stack and return to
         rts                       ;original memory location, then leave
+
+ReviveStunned:
+         lda EnemyIntervalTimer,x  ;if enemy timer not expired yet,
+         bne ChkKillGoomba         ;skip ahead to something else
+         sta Enemy_State,x         ;otherwise initialize enemy state to normal
+         lda FrameCounter
+         and #$01                  ;get d0 of frame counter
+         tay                       ;use as Y and increment for movement direction
+         iny
+         sty Enemy_MovingDir,x     ;store as pseudorandom movement direction
+         dey                       ;decrement for use as pointer
+         lda PrimaryHardMode       ;check primary hard mode flag
+         beq SetRSpd               ;if not set, use pointer as-is
+         iny
+         iny                       ;otherwise increment 2 bytes to next data
+SetRSpd: lda RevivedXSpeed,y       ;load and store new horizontal speed
+         sta Enemy_X_Speed,x       ;and leave
+         rts
+
+MoveDefeatedEnemy:
+      jsr MoveD_EnemyVertically      ;execute sub to move defeated enemy downwards
+      jmp MoveEnemyHorizontally      ;now move defeated enemy horizontally
+
+ChkKillGoomba:
+        cmp #$0e              ;check to see if enemy timer has reached
+        bne NKGmba            ;a certain point, and branch to leave if not
+        lda Enemy_ID,x
+        cmp #Goomba           ;check for goomba object
+        bne NKGmba            ;branch if not found
+        jsr EraseEnemyObject  ;otherwise, kill this goomba object
+NKGmba: rts                   ;leave!

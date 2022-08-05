@@ -3,9 +3,12 @@
 .include "level.inc"
 
 .import RenderAttributeTables, RenderAreaGraphics
+.import InitializeMemory,GetScreenPosition
+.import WriteGameText
+
+.export AreaParserTaskHandler, InitializeArea
 
 .proc InitializeArea
-.import InitializeMemory,GetScreenPosition
 
   ldy #$4b                 ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
@@ -687,7 +690,6 @@ SetFore: sta ForegroundScenery     ;otherwise set new foreground scenery bits
 
 
 ;--------------------------------
-.import WriteGameText, KillEnemies
 ScrollLockObject_Warp:
          ldx #$04            ;load value of 4 for game text routine as default
          lda WorldNumber     ;warp zone (4-3-2), then check world number
@@ -780,22 +782,6 @@ GetAreaObjYPosition:
 
 ;-------------------------------------------------------------------------------------
 ;GAME LEVELS DATA
-
-WorldAddrOffsets:
-      .byte World1Areas-AreaAddrOffsets, World2Areas-AreaAddrOffsets
-      .byte World3Areas-AreaAddrOffsets, World4Areas-AreaAddrOffsets
-      .byte World5Areas-AreaAddrOffsets, World6Areas-AreaAddrOffsets
-      .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
-
-AreaAddrOffsets:
-World1Areas: .byte $25, $29, $c0, $26, $60
-World2Areas: .byte $28, $29, $01, $27, $62
-World3Areas: .byte $24, $35, $20, $63
-World4Areas: .byte $22, $29, $41, $2c, $61
-World5Areas: .byte $2a, $31, $26, $62
-World6Areas: .byte $2e, $23, $2d, $60
-World7Areas: .byte $33, $29, $01, $27, $64
-World8Areas: .byte $30, $32, $21, $65
 
 ;bonus area data offsets, included here for comparison purposes
 ;underground bonus area  - c2

@@ -1,13 +1,17 @@
 .include "common.inc"
 .include "object.inc"
 
+.import SpawnHammerObj
+
+.export InitBowserFlame, BridgeCollapse
+
+; frenzy.s
+.export PutAtRightExtent
+
 ;--------------------------------
 
 
 .proc InitBowser
-.export InitBowser
-.import DuplicateEnemyObj
-
   jsr DuplicateEnemyObj     ;jump to create another bowser object
   stx BowserFront_Offset    ;save offset of first here
   lda #$00
@@ -27,6 +31,16 @@
   sta BowserMovementSpeed   ;set default movement speed here
   rts
 .endproc
+
+;--------------------------------
+
+RunBowserFlame:
+      jsr ProcBowserFlame
+      jsr GetEnemyOffscreenBits
+      jsr RelativeEnemyPosition
+      jsr GetEnemyBoundBox
+      jsr PlayerEnemyCollision
+      jmp OffscreenBoundsCheck
 
 ;-------------------------------------------------------------------------------------
 ;$04-$05 - used to store name table address in little endian order
@@ -95,7 +109,6 @@ NoBFall:
 ;--------------------------------
 
 RunBowser:
-.import EraseEnemyObject, SpawnHammerObj
 
   lda Enemy_State,x       ;if d5 in enemy state is not set
   and #%00100000          ;then branch elsewhere to run bowser

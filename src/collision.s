@@ -11,175 +11,25 @@
 .import EraseEnemyObject
 
 ; screen_render.s
-.import GiveOneCoin
+.import GiveOneCoin, RemoveCoin_Axe, HandlePipeEntry, DrawPowerUp
+.import DestroyBlockMetatile
 
-;-------------------------------------------------------------------------------------
-;$00 - used to hold one of bitmasks, or offset
-;$01 - used for relative X coordinate, also used to store middle screen page location
-;$02 - used for relative Y coordinate, also used to store middle screen coordinate
+; tiles/brick.s
+.import BlockBumpedChk, InitBlock_XY_Pos, BrickShatter, BumpBlock
 
-;this data added to relative coordinates of sprite objects
-;stored in order: left edge, top edge, right edge, bottom edge
-BoundBoxCtrlData:
-      .byte $02, $08, $0e, $20 
-      .byte $03, $14, $0d, $20
-      .byte $02, $14, $0e, $20
-      .byte $02, $09, $0e, $15
-      .byte $00, $00, $18, $06
-      .byte $00, $00, $20, $0d
-      .byte $00, $00, $30, $0d
-      .byte $00, $00, $08, $08
-      .byte $06, $04, $0a, $08
-      .byte $03, $0e, $0d, $14
-      .byte $00, $02, $10, $15
-      .byte $04, $04, $0c, $1c
+.export PlayerBGCollision, FireballBGCollision, PlayerEnemyCollision
+.export FireballEnemyCollision, EnemyToBGCollisionDet
+.export EnemyJump, SetupFloateyNumber, EnemiesCollision, InjurePlayer
 
-GetFireballBoundBox:
-      txa         ;add seven bytes to offset
-      clc         ;to use in routines as offset for fireball
-      adc #$07
-      tax
-      ldy #$02    ;set offset for relative coordinates
-      bne FBallB  ;unconditional branch
+; platform.s
+.export SmallPlatformCollision, CheckPlayerVertical
+.export PlayerCollisionCore, ProcLPlatCollisions, GetEnemyBoundBoxOfsArg
 
-GetMiscBoundBox:
-        txa                       ;add nine bytes to offset
-        clc                       ;to use in routines as offset for misc object
-        adc #$09
-        tax
-        ldy #$06                  ;set offset for relative coordinates
-FBallB: jsr BoundingBoxCore       ;get bounding box coordinates
-        jmp CheckRightScreenBBox  ;jump to handle any offscreen coordinates
+; vine.s
+.export BlockBufferCollision
 
-GetEnemyBoundBox:
-      ldy #$48                 ;store bitmask here for now
-      sty $00
-      ldy #$44                 ;store another bitmask here for now and jump
-      jmp GetMaskedOffScrBits
-
-SmallPlatformBoundBox:
-      ldy #$08                 ;store bitmask here for now
-      sty $00
-      ldy #$04                 ;store another bitmask here for now
-
-GetMaskedOffScrBits:
-        lda Enemy_X_Position,x      ;get enemy object position relative
-        sec                         ;to the left side of the screen
-        sbc ScreenLeft_X_Pos
-        sta $01                     ;store here
-        lda Enemy_PageLoc,x         ;subtract borrow from current page location
-        sbc ScreenLeft_PageLoc      ;of left side
-        bmi CMBits                  ;if enemy object is beyond left edge, branch
-        ora $01
-        beq CMBits                  ;if precisely at the left edge, branch
-        ldy $00                     ;if to the right of left edge, use value in $00 for A
-CMBits: tya                         ;otherwise use contents of Y
-        and Enemy_OffscreenBits     ;preserve bitwise whatever's in here
-        sta EnemyOffscrBitsMasked,x ;save masked offscreen bits here
-        bne MoveBoundBoxOffscreen   ;if anything set here, branch
-        jmp SetupEOffsetFBBox       ;otherwise, do something else
-
-LargePlatformBoundBox:
-      inx                        ;increment X to get the proper offset
-      jsr GetXOffscreenBits      ;then jump directly to the sub for horizontal offscreen bits
-      dex                        ;decrement to return to original offset
-      cmp #$fe                   ;if completely offscreen, branch to put entire bounding
-      bcs MoveBoundBoxOffscreen  ;box offscreen, otherwise start getting coordinates
-
-SetupEOffsetFBBox:
-      txa                        ;add 1 to offset to properly address
-      clc                        ;the enemy object memory locations
-      adc #$01
-      tax
-      ldy #$01                   ;load 1 as offset here, same reason
-      jsr BoundingBoxCore        ;do a sub to get the coordinates of the bounding box
-      jmp CheckRightScreenBBox   ;jump to handle offscreen coordinates of bounding box
-
-MoveBoundBoxOffscreen:
-      txa                            ;multiply offset by 4
-      asl
-      asl
-      tay                            ;use as offset here
-      lda #$ff
-      sta EnemyBoundingBoxCoord,y    ;load value into four locations here and leave
-      sta EnemyBoundingBoxCoord+1,y
-      sta EnemyBoundingBoxCoord+2,y
-      sta EnemyBoundingBoxCoord+3,y
-      rts
-
-BoundingBoxCore:
-      stx $00                     ;save offset here
-      lda SprObject_Rel_YPos,y    ;store object coordinates relative to screen
-      sta $02                     ;vertically and horizontally, respectively
-      lda SprObject_Rel_XPos,y
-      sta $01
-      txa                         ;multiply offset by four and save to stack
-      asl
-      asl
-      pha
-      tay                         ;use as offset for Y, X is left alone
-      lda SprObj_BoundBoxCtrl,x   ;load value here to be used as offset for X
-      asl                         ;multiply that by four and use as X
-      asl
-      tax
-      lda $01                     ;add the first number in the bounding box data to the
-      clc                         ;relative horizontal coordinate using enemy object offset
-      adc BoundBoxCtrlData,x      ;and store somewhere using same offset * 4
-      sta BoundingBox_UL_Corner,y ;store here
-      lda $01
-      clc
-      adc BoundBoxCtrlData+2,x    ;add the third number in the bounding box data to the
-      sta BoundingBox_LR_Corner,y ;relative horizontal coordinate and store
-      inx                         ;increment both offsets
-      iny
-      lda $02                     ;add the second number to the relative vertical coordinate
-      clc                         ;using incremented offset and store using the other
-      adc BoundBoxCtrlData,x      ;incremented offset
-      sta BoundingBox_UL_Corner,y
-      lda $02
-      clc
-      adc BoundBoxCtrlData+2,x    ;add the fourth number to the relative vertical coordinate
-      sta BoundingBox_LR_Corner,y ;and store
-      pla                         ;get original offset loaded into $00 * y from stack
-      tay                         ;use as Y
-      ldx $00                     ;get original offset and use as X again
-      rts
-
-CheckRightScreenBBox:
-       lda ScreenLeft_X_Pos       ;add 128 pixels to left side of screen
-       clc                        ;and store as horizontal coordinate of middle
-       adc #$80
-       sta $02
-       lda ScreenLeft_PageLoc     ;add carry to page location of left side of screen
-       adc #$00                   ;and store as page location of middle
-       sta $01
-       lda SprObject_X_Position,x ;get horizontal coordinate
-       cmp $02                    ;compare against middle horizontal coordinate
-       lda SprObject_PageLoc,x    ;get page location
-       sbc $01                    ;subtract from middle page location
-       bcc CheckLeftScreenBBox    ;if object is on the left side of the screen, branch
-       lda BoundingBox_DR_XPos,y  ;check right-side edge of bounding box for offscreen
-       bmi NoOfs                  ;coordinates, branch if still on the screen
-       lda #$ff                   ;load offscreen value here to use on one or both horizontal sides
-       ldx BoundingBox_UL_XPos,y  ;check left-side edge of bounding box for offscreen
-       bmi SORte                  ;coordinates, and branch if still on the screen
-       sta BoundingBox_UL_XPos,y  ;store offscreen value for left side
-SORte: sta BoundingBox_DR_XPos,y  ;store offscreen value for right side
-NoOfs: ldx ObjectOffset           ;get object offset and leave
-       rts
-
-CheckLeftScreenBBox:
-        lda BoundingBox_UL_XPos,y  ;check left-side edge of bounding box for offscreen
-        bpl NoOfs2                 ;coordinates, and branch if still on the screen
-        cmp #$a0                   ;check to see if left-side edge is in the middle of the
-        bcc NoOfs2                 ;screen or really offscreen, and branch if still on
-        lda #$00
-        ldx BoundingBox_DR_XPos,y  ;check right-side edge of bounding box for offscreen
-        bpl SOLft                  ;coordinates, branch if still onscreen
-        sta BoundingBox_DR_XPos,y  ;store offscreen value for right side
-SOLft:  sta BoundingBox_UL_XPos,y  ;store offscreen value for left side
-NoOfs2: ldx ObjectOffset           ;get object offset and leave
-        rts
+; gamecore.s
+.export ForceInjury
 
 ;-------------------------------------------------------------------------------------
 ;$06 - second object's offset
@@ -843,40 +693,6 @@ RXSpd: lda Enemy_X_Speed,x      ;load horizontal speed
        sta Enemy_MovingDir,x    ;thus effectively turning the enemy around
 ExTA:  rts                      ;leave!!!
 
-;-------------------------------------------------------------------------------------
-;$00 - vertical position of platform
-
-LargePlatformCollision:
-       lda #$ff                     ;save value here
-       sta PlatformCollisionFlag,x
-       lda TimerControl             ;check master timer control
-       bne ExLPC                    ;if set, branch to leave
-       lda Enemy_State,x            ;if d7 set in object state,
-       bmi ExLPC                    ;branch to leave
-       lda Enemy_ID,x
-       cmp #$24                     ;check enemy object identifier for
-       bne ChkForPlayerC_LargeP     ;balance platform, branch if not found
-       lda Enemy_State,x
-       tax                          ;set state as enemy offset here
-       jsr ChkForPlayerC_LargeP     ;perform code with state offset, then original offset, in X
-
-ChkForPlayerC_LargeP:
-       jsr CheckPlayerVertical      ;figure out if player is below a certain point
-       bcs ExLPC                    ;or offscreen, branch to leave if true
-       txa
-       jsr GetEnemyBoundBoxOfsArg   ;get bounding box offset in Y
-       lda Enemy_Y_Position,x       ;store vertical coordinate in
-       sta $00                      ;temp variable for now
-       txa                          ;send offset we're on to the stack
-       pha
-       jsr PlayerCollisionCore      ;do player-to-platform collision detection
-       pla                          ;retrieve offset from the stack
-       tax
-       bcc ExLPC                    ;if no collision, branch to leave
-       jsr ProcLPlatCollisions      ;otherwise collision, perform sub
-ExLPC: ldx ObjectOffset             ;get enemy object buffer offset and leave
-       rts
-
 ;--------------------------------
 ;$00 - counter for bounding boxes
 
@@ -1165,37 +981,6 @@ NoPUp: rts
 
 ;-------------------------------------------------------------------------------------
 
-PlayerPosSPlatData:
-      .byte $80, $00
-
-PositionPlayerOnS_Plat:
-      tay                        ;use bounding box counter saved in collision flag
-      lda Enemy_Y_Position,x     ;for offset
-      clc                        ;add positioning data using offset to the vertical
-      adc PlayerPosSPlatData-1,y ;coordinate
-      .byte $2c                    ;BIT instruction opcode
-
-PositionPlayerOnVPlat:
-         lda Enemy_Y_Position,x    ;get vertical coordinate
-         ldy GameEngineSubroutine
-         cpy #$0b                  ;if certain routine being executed on this frame,
-         beq ExPlPos               ;skip all of this
-         ldy Enemy_Y_HighPos,x
-         cpy #$01                  ;if vertical high byte offscreen, skip this
-         bne ExPlPos
-         sec                       ;subtract 32 pixels from vertical coordinate
-         sbc #$20                  ;for the player object's height
-         sta Player_Y_Position     ;save as player's new vertical coordinate
-         tya
-         sbc #$00                  ;subtract borrow and store as player's
-         sta Player_Y_HighPos      ;new vertical high byte
-         lda #$00
-         sta Player_Y_Speed        ;initialize vertical speed and low byte of force
-         sta Player_Y_MoveForce    ;and then leave
-ExPlPos: rts
-
-;-------------------------------------------------------------------------------------
-
 CheckPlayerVertical:
        lda Player_OffscreenBits  ;if player object is completely offscreen
        cmp #$f0                  ;vertically, leave this routine
@@ -1394,7 +1179,7 @@ ExSCH: rts                       ;leave
 
 CheckSideMTiles:
           jsr ChkInvisibleMTiles     ;check for hidden or coin 1-up blocks
-          beq ExCSM                  ;branch to leave if either found
+          beq ExSCH                  ;branch to leave if either found
           jsr CheckForClimbMTiles    ;check for climbable metatiles
           bcc ContSChk               ;if not found, skip and continue with code
           jmp HandleClimbing         ;otherwise jump to handle climbing
@@ -1403,7 +1188,7 @@ ContSChk: jsr CheckForCoinMTiles     ;check to see if player touched coin
           jsr ChkJumpspringMetatiles ;check for jumpspring metatiles
           bcc ChkPBtm                ;if not found, branch ahead to continue cude
           lda JumpspringAnimCtrl     ;otherwise check jumpspring animation control
-          bne ExCSM                  ;branch to leave if set
+          bne ExSCH                  ;branch to leave if set
           jmp StopPlayerMove         ;otherwise jump to impede player's movement
 ChkPBtm:  ldy Player_State           ;get player's state
           cpy #$00                   ;check for player's state set to normal
@@ -1438,6 +1223,75 @@ ChkGERtn: lda GameEngineSubroutine   ;get number of game engine routine running
           lda #$02
           sta GameEngineSubroutine   ;otherwise set sideways pipe entry routine to run
           rts                        ;and leave
+
+;--------------------------------
+;$02 - high nybble of vertical coordinate from block buffer
+;$04 - low nybble of horizontal coordinate from block buffer
+;$06-$07 - block buffer address
+
+StopPlayerMove:
+       jsr ImpedePlayerMove      ;stop player's movement
+ExCSM: rts                       ;leave
+      
+AreaChangeTimerData:
+      .byte $a0, $34
+
+HandleCoinMetatile:
+      jsr ErACM             ;do sub to erase coin metatile from block buffer
+      inc CoinTallyFor1Ups  ;increment coin tally used for 1-up blocks
+      jmp GiveOneCoin       ;update coin amount and tally on the screen
+
+HandleAxeMetatile:
+       lda #$00
+       sta OperMode_Task   ;reset secondary mode
+       lda #$02
+       sta OperMode        ;set primary mode to autoctrl mode
+       lda #$18
+       sta Player_X_Speed  ;set horizontal speed and continue to erase axe metatile
+ErACM: ldy $02             ;load vertical high nybble offset for block buffer
+       lda #$00            ;load blank metatile
+       sta ($06),y         ;store to remove old contents from block buffer
+       jmp RemoveCoin_Axe  ;update the screen accordingly
+
+
+;--------------------------------
+
+SolidMTileUpperExt:
+      .byte $10, $61, $88, $c4
+
+CheckForSolidMTiles:
+      jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
+      cmp SolidMTileUpperExt,x  ;compare current metatile with solid metatiles
+      rts
+
+ClimbMTileUpperExt:
+      .byte $24, $6d, $8a, $c6
+
+CheckForClimbMTiles:
+      jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
+      cmp ClimbMTileUpperExt,x  ;compare current metatile with climbable metatiles
+      rts
+
+CheckForCoinMTiles:
+         cmp #$c2              ;check for regular coin
+         beq CoinSd            ;branch if found
+         cmp #$c3              ;check for underwater coin
+         beq CoinSd            ;branch if found
+         clc                   ;otherwise clear carry and leave
+         rts
+CoinSd:  lda #Sfx_CoinGrab
+         sta Square2SoundQueue ;load coin grab sound and leave
+         rts
+
+GetMTileAttrib:
+       tay            ;save metatile value into Y
+       and #%11000000 ;mask out all but 2 MSB
+       asl
+       rol            ;shift and rotate d7-d6 to d1-d0
+       rol
+       tax            ;use as offset for metatile data
+       tya            ;get original metatile value back
+ExEBG: rts            ;leave
 
 
 ;-------------------------------------------------------------------------------------
@@ -1716,143 +1570,6 @@ ExIPM: txa                       ;invert contents of X
        sta Player_CollisionBits  ;store to clear bit
        rts
 
-
-
-;--------------------------------
-
-YMovingPlatform:
-        lda Enemy_Y_Speed,x          ;if platform moving up or down, skip ahead to
-        ora Enemy_Y_MoveForce,x      ;check on other position
-        bne ChkYCenterPos
-        sta Enemy_YMF_Dummy,x        ;initialize dummy variable
-        lda Enemy_Y_Position,x
-        cmp YPlatformTopYPos,x       ;if current vertical position => top position, branch
-        bcs ChkYCenterPos            ;ahead of all this
-        lda FrameCounter
-        and #%00000111               ;check for every eighth frame
-        bne SkipIY
-        inc Enemy_Y_Position,x       ;increase vertical position every eighth frame
-SkipIY: jmp ChkYPCollision           ;skip ahead to last part
-
-ChkYCenterPos:
-        lda Enemy_Y_Position,x       ;if current vertical position < central position, branch
-        cmp YPlatformCenterYPos,x    ;to slow ascent/move downwards
-        bcc YMDown
-        jsr MovePlatformUp           ;otherwise start slowing descent/moving upwards
-        jmp ChkYPCollision
-YMDown: jsr MovePlatformDown         ;start slowing ascent/moving downwards
-
-ChkYPCollision:
-       lda PlatformCollisionFlag,x  ;if collision flag not set here, branch
-       bmi ExYPl                    ;to leave
-       jsr PositionPlayerOnVPlat    ;otherwise position player appropriately
-ExYPl: rts                          ;leave
-
-;--------------------------------
-;$00 - used as adder to position player hotizontally
-
-XMovingPlatform:
-      lda #$0e                     ;load preset maximum value for secondary counter
-      jsr XMoveCntr_Platform       ;do a sub to increment counters for movement
-      jsr MoveWithXMCntrs          ;do a sub to move platform accordingly, and return value
-      lda PlatformCollisionFlag,x  ;if no collision with player,
-      bmi ExXMP                    ;branch ahead to leave
-
-PositionPlayerOnHPlat:
-         lda Player_X_Position
-         clc                       ;add saved value from second subroutine to
-         adc $00                   ;current player's position to position
-         sta Player_X_Position     ;player accordingly in horizontal position
-         lda Player_PageLoc        ;get player's page location
-         ldy $00                   ;check to see if saved value here is positive or negative
-         bmi PPHSubt               ;if negative, branch to subtract
-         adc #$00                  ;otherwise add carry to page location
-         jmp SetPVar               ;jump to skip subtraction
-PPHSubt: sbc #$00                  ;subtract borrow from page location
-SetPVar: sta Player_PageLoc        ;save result to player's page location
-         sty Platform_X_Scroll     ;put saved value from second sub here to be used later
-         jsr PositionPlayerOnVPlat ;position player vertically and appropriately
-ExXMP:   rts                       ;and we are done here
-
-;--------------------------------
-
-DropPlatform:
-       lda PlatformCollisionFlag,x  ;if no collision between platform and player
-       bmi ExDPl                    ;occurred, just leave without moving anything
-       jsr MoveDropPlatform         ;otherwise do a sub to move platform down very quickly
-       jsr PositionPlayerOnVPlat    ;do a sub to position player appropriately
-ExDPl: rts                          ;leave
-
-;--------------------------------
-;$00 - residual value from sub
-
-RightPlatform:
-       jsr MoveEnemyHorizontally     ;move platform with current horizontal speed, if any
-       sta $00                       ;store saved value here (residual code)
-       lda PlatformCollisionFlag,x   ;check collision flag, if no collision between player
-       bmi ExRPl                     ;and platform, branch ahead, leave speed unaltered
-       lda #$10
-       sta Enemy_X_Speed,x           ;otherwise set new speed (gets moving if motionless)
-       jsr PositionPlayerOnHPlat     ;use saved value from earlier sub to position player
-ExRPl: rts                           ;then leave
-
-;--------------------------------
-
-MoveLargeLiftPlat:
-      jsr MoveLiftPlatforms  ;execute common to all large and small lift platforms
-      jmp ChkYPCollision     ;branch to position player correctly
-
-MoveSmallPlatform:
-      jsr MoveLiftPlatforms      ;execute common to all large and small lift platforms
-      jmp ChkSmallPlatCollision  ;branch to position player correctly
-
-MoveLiftPlatforms:
-      lda TimerControl         ;if master timer control set, skip all of this
-      bne ExLiftP              ;and branch to leave
-      lda Enemy_YMF_Dummy,x
-      clc                      ;add contents of movement amount to whatever's here
-      adc Enemy_Y_MoveForce,x
-      sta Enemy_YMF_Dummy,x
-      lda Enemy_Y_Position,x   ;add whatever vertical speed is set to current
-      adc Enemy_Y_Speed,x      ;vertical position plus carry to move up or down
-      sta Enemy_Y_Position,x   ;and then leave
-      rts
-
-ChkSmallPlatCollision:
-         lda PlatformCollisionFlag,x ;get bounding box counter saved in collision flag
-         beq ExLiftP                 ;if none found, leave player position alone
-         jsr PositionPlayerOnS_Plat  ;use to position player correctly
-ExLiftP: rts                         ;then leave
-
-;--------------------------------
-;$02 - high nybble of vertical coordinate from block buffer
-;$04 - low nybble of horizontal coordinate from block buffer
-;$06-$07 - block buffer address
-
-StopPlayerMove:
-       jsr ImpedePlayerMove      ;stop player's movement
-ExCSM: rts                       ;leave
-      
-AreaChangeTimerData:
-      .byte $a0, $34
-
-HandleCoinMetatile:
-      jsr ErACM             ;do sub to erase coin metatile from block buffer
-      inc CoinTallyFor1Ups  ;increment coin tally used for 1-up blocks
-      jmp GiveOneCoin       ;update coin amount and tally on the screen
-
-HandleAxeMetatile:
-       lda #$00
-       sta OperMode_Task   ;reset secondary mode
-       lda #$02
-       sta OperMode        ;set primary mode to autoctrl mode
-       lda #$18
-       sta Player_X_Speed  ;set horizontal speed and continue to erase axe metatile
-ErACM: ldy $02             ;load vertical high nybble offset for block buffer
-       lda #$00            ;load blank metatile
-       sta ($06),y         ;store to remove old contents from block buffer
-       jmp RemoveCoin_Axe  ;update the screen accordingly
-
 ;--------------------------------
 ;$02 - high nybble of vertical coordinate from block buffer
 ;$04 - low nybble of horizontal coordinate from block buffer
@@ -1984,147 +1701,6 @@ ChkJumpspringMetatiles:
 JSFnd:   sec           ;set carry if found
 NoJSFnd: rts           ;leave
 
-HandlePipeEntry:
-         lda Up_Down_Buttons       ;check saved controller bits from earlier
-         and #%00000100            ;for pressing down
-         beq ExPipeE               ;if not pressing down, branch to leave
-         lda $00
-         cmp #$11                  ;check right foot metatile for warp pipe right metatile
-         bne ExPipeE               ;branch to leave if not found
-         lda $01
-         cmp #$10                  ;check left foot metatile for warp pipe left metatile
-         bne ExPipeE               ;branch to leave if not found
-         lda #$30
-         sta ChangeAreaTimer       ;set timer for change of area
-         lda #$03
-         sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
-         lda #Sfx_PipeDown_Injury
-         sta Square1SoundQueue     ;load pipedown/injury sound
-         lda #%00100000
-         sta Player_SprAttrib      ;set background priority bit in player's attributes
-         lda WarpZoneControl       ;check warp zone control
-         beq ExPipeE               ;branch to leave if none found
-         and #%00000011            ;mask out all but 2 LSB
-         asl
-         asl                       ;multiply by four
-         tax                       ;save as offset to warp zone numbers (starts at left pipe)
-         lda Player_X_Position     ;get player's horizontal position
-         cmp #$60      
-         bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
-         inx                       ;otherwise increment for middle pipe
-         cmp #$a0      
-         bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
-         inx                       ;otherwise increment for last pipe
-GetWNum: ldy WarpZoneNumbers,x     ;get warp zone numbers
-         dey                       ;decrement for use as world number
-         sty WorldNumber           ;store as world number and offset
-         ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
-         lda AreaAddrOffsets,x     ;get area offset based on world offset
-         sta AreaPointer           ;store area offset here to be used to change areas
-         lda #Silence
-         sta EventMusicQueue       ;silence music
-         lda #$00
-         sta EntrancePage          ;initialize starting page number
-         sta AreaNumber            ;initialize area number used for area address offset
-         sta LevelNumber           ;initialize level number used for world display
-         sta AltEntranceControl    ;initialize mode of entry
-         inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
-         inc FetchNewGameTimerFlag ;set flag to load new game timer
-ExPipeE: rts                       ;leave!!!
-
-;--------------------------------
-
-SolidMTileUpperExt:
-      .byte $10, $61, $88, $c4
-
-CheckForSolidMTiles:
-      jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
-      cmp SolidMTileUpperExt,x  ;compare current metatile with solid metatiles
-      rts
-
-ClimbMTileUpperExt:
-      .byte $24, $6d, $8a, $c6
-
-CheckForClimbMTiles:
-      jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
-      cmp ClimbMTileUpperExt,x  ;compare current metatile with climbable metatiles
-      rts
-
-CheckForCoinMTiles:
-         cmp #$c2              ;check for regular coin
-         beq CoinSd            ;branch if found
-         cmp #$c3              ;check for underwater coin
-         beq CoinSd            ;branch if found
-         clc                   ;otherwise clear carry and leave
-         rts
-CoinSd:  lda #Sfx_CoinGrab
-         sta Square2SoundQueue ;load coin grab sound and leave
-         rts
-
-GetMTileAttrib:
-       tay            ;save metatile value into Y
-       and #%11000000 ;mask out all but 2 MSB
-       asl
-       rol            ;shift and rotate d7-d6 to d1-d0
-       rol
-       tax            ;use as offset for metatile data
-       tya            ;get original metatile value back
-ExEBG: rts            ;leave
-
-
-
-;-------------------------------------------------------------------------------------
-
-PowerUpObjHandler:
-         ldx #$05                   ;set object offset for last slot in enemy object buffer
-         stx ObjectOffset
-         lda Enemy_State+5          ;check power-up object's state
-         beq ExitPUp                ;if not set, branch to leave
-         asl                        ;shift to check if d7 was set in object state
-         bcc GrowThePowerUp         ;if not set, branch ahead to skip this part
-         lda TimerControl           ;if master timer control set,
-         bne RunPUSubs              ;branch ahead to enemy object routines
-         lda PowerUpType            ;check power-up type
-         beq ShroomM                ;if normal mushroom, branch ahead to move it
-         cmp #$03
-         beq ShroomM                ;if 1-up mushroom, branch ahead to move it
-         cmp #$02
-         bne RunPUSubs              ;if not star, branch elsewhere to skip movement
-         jsr MoveJumpingEnemy       ;otherwise impose gravity on star power-up and make it jump
-         jsr EnemyJump              ;note that green paratroopa shares the same code here 
-         jmp RunPUSubs              ;then jump to other power-up subroutines
-ShroomM: jsr MoveNormalEnemy        ;do sub to make mushrooms move
-         jsr EnemyToBGCollisionDet  ;deal with collisions
-         jmp RunPUSubs              ;run the other subroutines
-
-GrowThePowerUp:
-           lda FrameCounter           ;get frame counter
-           and #$03                   ;mask out all but 2 LSB
-           bne ChkPUSte               ;if any bits set here, branch
-           dec Enemy_Y_Position+5     ;otherwise decrement vertical coordinate slowly
-           lda Enemy_State+5          ;load power-up object state
-           inc Enemy_State+5          ;increment state for next frame (to make power-up rise)
-           cmp #$11                   ;if power-up object state not yet past 16th pixel,
-           bcc ChkPUSte               ;branch ahead to last part here
-           lda #$10
-           sta Enemy_X_Speed,x        ;otherwise set horizontal speed
-           lda #%10000000
-           sta Enemy_State+5          ;and then set d7 in power-up object's state
-           asl                        ;shift once to init A
-           sta Enemy_SprAttrib+5      ;initialize background priority bit set here
-           rol                        ;rotate A to set right moving direction
-           sta Enemy_MovingDir,x      ;set moving direction
-ChkPUSte:  lda Enemy_State+5          ;check power-up object's state
-           cmp #$06                   ;for if power-up has risen enough
-           bcc ExitPUp                ;if not, don't even bother running these routines
-RunPUSubs: jsr RelativeEnemyPosition  ;get coordinates relative to screen
-           jsr GetEnemyOffscreenBits  ;get offscreen bits
-           jsr GetEnemyBoundBox       ;get bounding box coordinates
-           jsr DrawPowerUp            ;draw the power-up object
-           jsr PlayerEnemyCollision   ;check for collision with player
-           jsr OffscreenBoundsCheck   ;check to see if it went offscreen
-ExitPUp:   rts                        ;and we're done
-
 ;-------------------------------------------------------------------------------------
 ;These apply to all routines in this section unless otherwise noted:
 ;$00 - used to store metatile from block buffer routine
@@ -2204,3 +1780,74 @@ InvOBit:   lda SprDataOffset_Ctrl   ;invert control bit used by block objects
            eor #$01                 ;and floatey numbers
            sta SprDataOffset_Ctrl
            rts                      ;leave!
+
+
+
+;--------------------------------
+
+EnemyLanding:
+      jsr InitVStf            ;do something here to vertical speed and something else
+      lda Enemy_Y_Position,x
+      and #%11110000          ;save high nybble of vertical coordinate, and
+      ora #%00001000          ;set d3, then store, probably used to set enemy object
+      sta Enemy_Y_Position,x  ;neatly on whatever it's landing on
+      rts
+
+SubtEnemyYPos:
+      lda Enemy_Y_Position,x  ;add 62 pixels to enemy object's
+      clc                     ;vertical coordinate
+      adc #$3e
+      cmp #$44                ;compare against a certain range
+      rts                     ;and leave with flags set for conditional branch
+
+EnemyJump:
+        jsr SubtEnemyYPos     ;do a sub here
+        bcc DoSide            ;if enemy vertical coord + 62 < 68, branch to leave
+        lda Enemy_Y_Speed,x
+        clc                   ;add two to vertical speed
+        adc #$02
+        cmp #$03              ;if green paratroopa not falling, branch ahead
+        bcc DoSide
+        jsr ChkUnderEnemy     ;otherwise, check to see if green paratroopa is 
+        beq DoSide            ;standing on anything, then branch to same place if not
+        jsr ChkForNonSolids   ;check for non-solid blocks
+        beq DoSide            ;branch if found
+        jsr EnemyLanding      ;change vertical coordinate and speed
+        lda #$fd
+        sta Enemy_Y_Speed,x   ;make the paratroopa jump again
+DoSide: jmp DoEnemySideCheck  ;check for horizontal blockage, then leave
+
+;--------------------------------
+
+HammerBroBGColl:
+      jsr ChkUnderEnemy    ;check to see if hammer bro is standing on anything
+      beq NoUnderHammerBro      
+      cmp #$23             ;check for blank metatile $23 and branch if not found
+      bne UnderHammerBro
+
+KillEnemyAboveBlock:
+      jsr ShellOrBlockDefeat  ;do this sub to kill enemy
+      lda #$fc                ;alter vertical speed of enemy and leave
+      sta Enemy_Y_Speed,x
+      rts
+
+UnderHammerBro:
+      lda EnemyFrameTimer,x ;check timer used by hammer bro
+      bne NoUnderHammerBro  ;branch if not expired
+      lda Enemy_State,x
+      and #%10001000        ;save d7 and d3 from enemy state, nullify other bits
+      sta Enemy_State,x     ;and store
+      jsr EnemyLanding      ;modify vertical coordinate, speed and something else
+      jmp DoEnemySideCheck  ;then check for horizontal blockage and leave
+
+NoUnderHammerBro:
+      lda Enemy_State,x  ;if hammer bro is not standing on anything, set d0
+      ora #$01           ;in the enemy state to indicate jumping or falling, then leave
+      sta Enemy_State,x
+      rts
+
+ChkUnderEnemy:
+      lda #$00                  ;set flag in A for save vertical coordinate
+      ldy #$15                  ;set Y to check the bottom middle (8,18) of enemy object
+      jmp BlockBufferChk_Enemy  ;hop to it!
+

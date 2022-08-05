@@ -2,6 +2,29 @@
 .include "common.inc"
 .include "object.inc"
 
+; gamecore.s
+.export ProcessCannons
+
+;--------------------------------
+
+InitBulletBill:
+      lda #$02                  ;set moving direction for left
+      sta Enemy_MovingDir,x
+      lda #$09                  ;set bounding box control for $09
+      sta Enemy_BoundBoxCtrl,x
+      rts
+
+;--------------------------------
+
+MoveBulletBill:
+         lda Enemy_State,x          ;check bullet bill's enemy object state for d5 set
+         and #%00100000
+         beq NotDefB                ;if not set, continue with movement code
+         jmp MoveJ_EnemyVertically  ;otherwise jump to move defeated bullet bill downwards
+NotDefB: lda #$e8                   ;set bullet bill's horizontal speed
+         sta Enemy_X_Speed,x        ;and move it accordingly (note: this bullet bill
+         jmp MoveEnemyHorizontally  ;object occurs in frenzy object $17, not from cannons)
+
 ;-------------------------------------------------------------------------------------
 
 CannonBitmasks:
