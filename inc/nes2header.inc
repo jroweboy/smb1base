@@ -1,3 +1,16 @@
+; Generate Linker Script.cmake
+; 
+; These are macro stubs provided to allow an extra script to read this data
+; and generate a linker script without actually doing anything in the code
+
+; TODO we can check the parameter values here before the cmake script runs maybe
+
+.macro CreateBanks addr, size, bank_list
+.endmacro
+
+.macro CreateSegment name, bank, start ; , align, offset
+.endmacro
+
 ;
 ; NES 2.0 header generator for ca65 (nes2header.inc)
 ; 

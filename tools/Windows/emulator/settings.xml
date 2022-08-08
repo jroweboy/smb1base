@@ -1467,6 +1467,22 @@
   <RecentFiles>
     <RecentItem>
       <RomFile>
+        <Path>C:\dev\smb-disassembly\main.nes</Path>
+        <InnerFile />
+        <InnerFileIndex>0</InnerFileIndex>
+      </RomFile>
+      <PatchFile xsi:nil="true" />
+    </RecentItem>
+    <RecentItem>
+      <RomFile>
+        <Path>C:\dev\smb1base\Super Mario Bros. (World).nes</Path>
+        <InnerFile />
+        <InnerFileIndex>0</InnerFileIndex>
+      </RomFile>
+      <PatchFile xsi:nil="true" />
+    </RecentItem>
+    <RecentItem>
+      <RomFile>
         <Path>C:\dev\smb1base/build/smb1base.nes</Path>
         <InnerFile />
         <InnerFileIndex>0</InnerFileIndex>
@@ -1623,8 +1639,8 @@
     <ShowPpuMemoryMapping>true</ShowPpuMemoryMapping>
     <ShowRightPanel>true</ShowRightPanel>
     <ShowBottomPanel>true</ShowBottomPanel>
-    <LeftPanelWidth>920</LeftPanelWidth>
-    <TopPanelHeight>437</TopPanelHeight>
+    <LeftPanelWidth>1518</LeftPanelWidth>
+    <TopPanelHeight>564</TopPanelHeight>
     <CodeVerifiedDataColor ColorString="#FFFCEC" />
     <CodeUnidentifiedDataColor ColorString="#FFF2F2" />
     <CodeUnexecutedCodeColor ColorString="#E1F4E4" />
@@ -1698,23 +1714,23 @@
       <Y>0</Y>
     </WatchWindowLocation>
     <WindowLocation>
-      <X>1264</X>
+      <X>666</X>
       <Y>434</Y>
     </WindowLocation>
-    <WindowWidth>1091</WindowWidth>
-    <WindowHeight>723</WindowHeight>
+    <WindowWidth>1689</WindowWidth>
+    <WindowHeight>850</WindowHeight>
     <BreakInCount>1</BreakInCount>
     <BreakInMetric>CpuCycles</BreakInMetric>
     <BreakOnValue>241</BreakOnValue>
     <FindOccurrencesMatchCase>false</FindOccurrencesMatchCase>
     <FindOccurrencesMatchWholeWord>false</FindOccurrencesMatchWholeWord>
     <FindOccurrencesLastSearch />
-    <AutoLoadDbgFiles>true</AutoLoadDbgFiles>
+    <AutoLoadDbgFiles>false</AutoLoadDbgFiles>
     <AutoLoadCdlFiles>false</AutoLoadCdlFiles>
-    <DisableDefaultLabels>false</DisableDefaultLabels>
+    <DisableDefaultLabels>true</DisableDefaultLabels>
     <RefreshWhileRunning>false</RefreshWhileRunning>
     <ShowMemoryValuesInCodeWindow>true</ShowMemoryValuesInCodeWindow>
-    <ReloadRomOnPowerCycle>false</ReloadRomOnPowerCycle>
+    <ReloadRomOnPowerCycle>true</ReloadRomOnPowerCycle>
     <BreakOnOpen>true</BreakOnOpen>
     <BreakOnReset>true</BreakOnReset>
     <BreakOnUnofficialOpcodes>true</BreakOnUnofficialOpcodes>
@@ -1732,31 +1748,32 @@
     <BringToFrontOnPause>false</BringToFrontOnPause>
     <BringToFrontOnBreak>true</BringToFrontOnBreak>
     <TraceLoggerOptions>
-      <ShowByteCode>true</ShowByteCode>
+      <ShowByteCode>false</ShowByteCode>
       <ShowRegisters>true</ShowRegisters>
       <ShowCpuCycles>false</ShowCpuCycles>
       <ShowPpuCycles>true</ShowPpuCycles>
       <ShowPpuScanline>true</ShowPpuScanline>
       <ShowPpuFrames>false</ShowPpuFrames>
       <ShowExtraInfo>true</ShowExtraInfo>
-      <IndentCode>false</IndentCode>
+      <IndentCode>true</IndentCode>
       <ShowEffectiveAddresses>true</ShowEffectiveAddresses>
       <ShowMemoryValues>false</ShowMemoryValues>
-      <UseLabels>false</UseLabels>
+      <UseLabels>true</UseLabels>
       <ExtendZeroPage>false</ExtendZeroPage>
       <UseWindowsEol>true</UseWindowsEol>
       <StatusFormat>Hexadecimal</StatusFormat>
-      <OverrideFormat>false</OverrideFormat>
+      <OverrideFormat>true</OverrideFormat>
+      <Format>[Disassembly][EffectiveAddress][Align,48] A:[A,h] X:[X,h] Y:[Y,h] P:[P,h] SP:[SP,h] CYC:[Cycle,3] SL:[Scanline,3]</Format>
     </TraceLoggerOptions>
     <TraceAutoRefresh>true</TraceAutoRefresh>
     <TraceLineCount>1000</TraceLineCount>
     <TraceLoggerSize>
-      <Width>0</Width>
-      <Height>0</Height>
+      <Width>800</Width>
+      <Height>448</Height>
     </TraceLoggerSize>
     <TraceLoggerLocation>
-      <X>0</X>
-      <Y>0</Y>
+      <X>1236</X>
+      <Y>145</Y>
     </TraceLoggerLocation>
     <TraceFontFamily>Consolas</TraceFontFamily>
     <TraceFontStyle>Regular</TraceFontStyle>
@@ -1767,8 +1784,8 @@
       <Height>626</Height>
     </ScriptWindowSize>
     <ScriptWindowLocation>
-      <X>-1608</X>
-      <Y>558</Y>
+      <X>521</X>
+      <Y>566</Y>
     </ScriptWindowLocation>
     <ScriptCodeWindowHeight>423</ScriptCodeWindowHeight>
     <RecentScripts>
@@ -1920,7 +1937,7 @@
       <ScriptWindow_StopScript Value="Escape" />
     </Shortcuts>
     <ImportConfig>
-      <ResetLabelsOnImport>true</ResetLabelsOnImport>
+      <ResetLabelsOnImport>false</ResetLabelsOnImport>
       <DbgImportRamLabels>true</DbgImportRamLabels>
       <DbgImportWorkRamLabels>true</DbgImportWorkRamLabels>
       <DbgImportSaveRamLabels>true</DbgImportSaveRamLabels>
@@ -1935,7 +1952,7 @@
     </ImportConfig>
   </DebugInfo>
   <AviRecordInfo>
-    <Codec>CSCD</Codec>
+    <Codec>GIF</Codec>
     <CompressionLevel>6</CompressionLevel>
   </AviRecordInfo>
   <MovieRecordInfo>
@@ -1950,8 +1967,8 @@
   </HistoryViewerInfo>
   <GameSpecificSettings />
   <WindowLocation>
-    <X>2848</X>
-    <Y>601</Y>
+    <X>643</X>
+    <Y>374</Y>
   </WindowLocation>
   <WindowSize>
     <Width>528</Width>

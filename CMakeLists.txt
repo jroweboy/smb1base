@@ -66,8 +66,6 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PUBLIC inc/)
 
-target_link_options(${PROJECT_NAME} PRIVATE
-  -C ${CMAKE_CURRENT_SOURCE_DIR}/src/nes.cfg
-  -m $<TARGET_FILE_DIR:${PROJECT_NAME}>/map.txt
-  --ld-args --dbgfile,$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.dbg
-)
+include(GenerateLinkerScript)
+
+generate_ca65_linker_cmd(TARGET "${PROJECT_NAME}" CONFIG src/nes.cfg)

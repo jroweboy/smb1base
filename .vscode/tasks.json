@@ -18,7 +18,7 @@
                 "panel": "shared",
                 "close": true,
                 "showReuseMessage": false,
-                "clear": false
+                "clear": true
             },
             "problemMatcher": [
                 {
@@ -28,7 +28,7 @@
                     "fileLocation": ["relative", "${workspaceFolder}"],
                     "pattern": [
                         {
-                            "regexp": "^CMake (.*) at ([^:]*):([0-9]+) ?([^:]*): ?(.*)$",
+                            "regexp": "^CMake (.*) at ([^:]+):([0-9]+) ?([^:]*): ?(.*)$",
                             "file": 2,
                             "line": 3,
                             "severity": 1
@@ -37,6 +37,44 @@
                             "regexp": "^(.*)$",
                             "message": 1,
                             "loop": true
+                        },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "source": "CMake",
+                    "fileLocation": "absolute",
+                    "pattern": [
+                        {
+                            "regexp": "^CMake (.*) at ([a-zA-Z]?:?.+):([0-9]+)",
+                            "file": 2,
+                            "line": 3,
+                            "severity": 1
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
                         },
                     ]
                 },
@@ -75,7 +113,7 @@
                     "source": "ca65",
                     "pattern": [
                         {
-                            "regexp": "^([a-zA-Z]:.+):([\\d]+): ?(\\w*): ?(.*)$",
+                            "regexp": "^([a-zA-Z]?:?.+):([\\d]+): ?(\\w*): ?(.*)$",
                             "file": 1,
                             "line": 2,
                             "severity": 3,

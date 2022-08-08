@@ -900,6 +900,10 @@ DrawEnemyObjRow:
       sta $00
       lda EnemyGraphicsTable+1,x
 
+DrawOneSpriteRow:
+      sta $01
+      jmp DrawSpriteObject        ;draw them
+
 MoveESprRowOffscreen:
       clc                         ;add A to enemy object OAM data offset
       adc Enemy_SprDataOffset,x
@@ -1197,12 +1201,6 @@ SOfs2: pla                         ;get from stack
        sta Sprite_Y_Position+20,y
 ExSPl: ldx ObjectOffset            ;get enemy object offset and leave
        rts
-
-
-.proc DrawOneSpriteRow
-  sta $01
-  jmp DrawSpriteObject        ;draw them
-.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - tile numbers
