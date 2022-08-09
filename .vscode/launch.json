@@ -10,7 +10,7 @@
             "name": "Debug rom with Mesen",
             "preLaunchTask": "compile",
             "romPath": "${workspaceFolder}/build/smb1base.nes",
-            "dbgPath": "${workspaceFolder}/build/smb1base.dbg",
+            "dbgPath": "${workspaceFolder}/build/smb1base.dbg.orig",
             "program": "${workspaceFolder}/tools/Windows/emulator/mesen.exe",
             "sourcePath": ".",
             "stopOnEntry": true,

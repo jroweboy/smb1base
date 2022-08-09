@@ -2,6 +2,128 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "compile_one",
+            "type": "process",
+            "runOptions": {"instanceLimit": 10},
+            "command": "${config:cmake.cmakePath}",
+            "args": ["--build", "${config:cmake.buildDirectory}", "--target", "${input:fileAsTarget}^"],
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "close": true,
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "problemMatcher": [
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "source": "CMake",
+                    "fileLocation": ["relative", "${workspaceFolder}"],
+                    "pattern": [
+                        {
+                            "regexp": "^CMake (.*) at ([^:]+):([0-9]+) ?([^:]*): ?(.*)$",
+                            "file": 2,
+                            "line": 3,
+                            "severity": 1
+                        },
+                        {
+                            "regexp": "^(.*)$",
+                            "message": 1,
+                            "loop": true
+                        },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "source": "CMake",
+                    "fileLocation": "absolute",
+                    "pattern": [
+                        {
+                            "regexp": "^CMake (.*) at ([a-zA-Z]?:?.+):([0-9]+)",
+                            "file": 2,
+                            "line": 3,
+                            "severity": 1
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                        {
+                            "regexp": "(.*)",
+                            "message": 1,
+                        },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "source": "ca65",
+                    "pattern": [
+                        {
+                            "regexp": "^([^:]*):([0-9]+): ?([^:]*): ?(.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "severity": 3,
+                            "message": 4
+                        },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "source": "ca65",
+                    "pattern": [
+                        {
+                            "regexp": "^([^:]*)\\(([0-9]+)\\): ?([^:]*): ?(.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "severity": 3,
+                            "message": 4
+                        },
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
+                    "source": "ca65",
+                    "pattern": [
+                        {
+                            "regexp": "^([a-zA-Z]?:?.+):([\\d]+): ?(\\w*): ?(.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "severity": 3,
+                            "message": 4
+                        }
+                    ]
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "compile",
             "runOptions": {"instanceLimit": 10},
             // "type": "cmake",
@@ -133,7 +255,18 @@
             "id": "inputId",
             "type": "command",
             "command": "watch-run.getFilename",
-            "args" : "compile"
+            "args" : "compile_one"
+        },
+        {
+            "id": "fileAsTarget",
+            "type": "command",
+            "command": "extension.commandvariable.transform",
+            "args": {
+                "text": "${command:extension.commandvariable.file.filePosix}",
+                "find": "/c",
+                "replace": "C:",
+                "flags": ""
+            }
         }
     ]
 }

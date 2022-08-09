@@ -41,8 +41,8 @@ Enemy_MovingDir:                .res  17
 
 
 ;--------------------------- X speed
-SprObject_X_Speed:              .res  1
 Player_X_Speed                = SprObject_X_Speed
+SprObject_X_Speed:              .res  1
 
 Enemy_X_Speed:                  .res  6
 LakituMoveSpeed               = Enemy_X_Speed
@@ -62,8 +62,8 @@ Misc_X_Speed:                   .res  9
 
 ;--------------------------- Obj Page Loc:
 
-Player_PageLoc:                 .res  1
-SprObject_PageLoc             = Player_PageLoc
+Player_PageLoc                = SprObject_PageLoc
+SprObject_PageLoc:              .res  1
 
 Enemy_PageLoc:                  .res  6
 Fireball_PageLoc:               .res  2
@@ -73,8 +73,8 @@ Bubble_PageLoc:                 .res  3
 
 ;--------------------------- X position
 
-Player_X_Position:              .res  1
-SprObject_X_Position:
+Player_X_Position             = SprObject_X_Position
+SprObject_X_Position:           .res  1
 
 Enemy_X_Position:               .res  6
 Fireball_X_Position:            .res  2
@@ -84,8 +84,8 @@ Bubble_X_Position:              .res  3
 
 ;--------------------------- Y Speed
 
-SprObject_Y_Speed:              .res  1
 Player_Y_Speed                = SprObject_Y_Speed
+SprObject_Y_Speed:              .res  1
 
 PiranhaPlant_MoveFlag:          .res  6
 FirebarSpinState_High         = PiranhaPlant_MoveFlag
@@ -101,8 +101,8 @@ Misc_Y_Speed:                   .res  9
 
 ;--------------------------- Y high pos
 
-Player_Y_HighPos:               .res  1
-SprObject_Y_HighPos           = Player_Y_HighPos
+Player_Y_HighPos              = SprObject_Y_HighPos
+SprObject_Y_HighPos:            .res  1
 
 Enemy_Y_HighPos:                .res  6
 Fireball_Y_HighPos:             .res  2
@@ -113,8 +113,8 @@ Bubble_Y_HighPos:               .res  3
 
 ;--------------------------- Y position
 
-SprObject_Y_Position:           .res  1
 Player_Y_Position             = SprObject_Y_Position
+SprObject_Y_Position:           .res  1
 
 Enemy_Y_Position:               .res  6
 Fireball_Y_Position:            .res  2
@@ -124,13 +124,13 @@ Bubble_Y_Position:              .res  3
 
 ;--------------------------- 
 
+AreaData                      = AreaDataLow
 AreaDataLow:                    .res  1
 AreaDataHigh:                   .res  1
-AreaData                      = AreaDataLow
 
+EnemyData                     = EnemyDataLow
 EnemyDataLow:                   .res  1
 EnemyDataHigh:                  .res  1
-EnemyData                     = EnemyDataLow
 
 dummylabel:                     .res  5 ; = start at $EB, reserve 5 bytes for local use.
 
@@ -140,8 +140,8 @@ Square2SoundBuffer:             .res  1
 NoiseSoundBuffer:               .res  1
 AreaMusicBuffer:                .res  1
 
-MusicDataLow:                   .res  1
 MusicData                     = MusicDataLow
+MusicDataLow:                   .res  1
 
 MusicDataHigh:                  .res  1
 MusicOffset_Square2:            .res  1
@@ -174,8 +174,8 @@ DigitModifier:                  .res 6
 .segment "OAM"
 ; start $0200
 
-Sprite_Y_Position:              .res 1
 Sprite_Data                   = Sprite_Y_Position
+Sprite_Y_Position:              .res 1
 Sprite_Tilenumber:              .res 1
 Sprite_Attributes:              .res 1
 Sprite_X_Position:              .res 1
@@ -207,11 +207,11 @@ Vine_Start_Y_Position:          .res  3
 BalPlatformAlignment:           .res  1
 Platform_X_Scroll:              .res  1
 
-PlatformCollisionFlag:          .res  11
 HammerThrowingTimer           = PlatformCollisionFlag
+PlatformCollisionFlag:          .res  11
 
-SprObject_Rel_XPos:             .res  1
 Player_Rel_XPos               = SprObject_Rel_XPos
+SprObject_Rel_XPos:             .res  1
 
 Enemy_Rel_XPos:                 .res  1
 Fireball_Rel_XPos:              .res  1
@@ -219,21 +219,21 @@ Bubble_Rel_XPos:                .res  1
 Block_Rel_XPos:                 .res  2
 Misc_Rel_XPos:                  .res  5
 
-SprObject_Rel_YPos:             .res  1
 Player_Rel_YPos               = SprObject_Rel_YPos
+SprObject_Rel_YPos:             .res  1
 Enemy_Rel_YPos:                 .res  1
 Fireball_Rel_YPos:              .res  1
 Bubble_Rel_YPos:                .res  1
 Block_Rel_YPos:                 .res  2
 Misc_Rel_YPos:                  .res  6
 
-SprObject_SprAttrib:            .res  1
 Player_SprAttrib              = SprObject_SprAttrib
+SprObject_SprAttrib:            .res  1
 
 Enemy_SprAttrib:                .res  11
 
-Player_OffscreenBits:           .res  1
-SprObject_OffscrBits          = Player_OffscreenBits
+Player_OffscreenBits          = SprObject_OffscrBits
+SprObject_OffscrBits:           .res  1
 
 Enemy_OffscreenBits:            .res  1
 FBall_OffscreenBits:            .res  1
@@ -252,59 +252,59 @@ Block_Orig_XPos:                .res  8
 AttributeBuffer:                .res  7
 SprObject_X_MoveForce:          .res  1
 
-Enemy_X_MoveForce:              .res  21
 RedPTroopaOrigXPos            = Enemy_X_MoveForce
 YPlatformTopYPos              = Enemy_X_MoveForce
+Enemy_X_MoveForce:              .res  21
 
-SprObject_YMoveForceFractional: .res  1
 Player_YMoveForceFractional   = SprObject_YMoveForceFractional
+SprObject_YMoveForceFractional: .res  1
 
-Enemy_YMoveForceFractional:     .res  21
 BowserFlamePRandomOfs         = Enemy_YMoveForceFractional
 PiranhaPlantUpYPos            = Enemy_YMoveForceFractional
+Enemy_YMoveForceFractional:     .res  21
 
 Bubble_YMoveForceFractional:    .res  7
 
-SprObject_Y_MoveForce:          .res  1
 Player_Y_MoveForce            = SprObject_Y_MoveForce
+SprObject_Y_MoveForce:          .res  1
 
-Enemy_Y_MoveForce:              .res  8
 CheepCheepOrigYPos            = Enemy_Y_MoveForce
 PiranhaPlantDownYPos          = Enemy_Y_MoveForce
+Enemy_Y_MoveForce:              .res  8
 
 Block_Y_MoveForce:              .res  20
 MaximumLeftSpeed:               .res  6
 MaximumRightSpeed:              .res  20
 
-Cannon_Offset:                  .res  1
 Whirlpool_Offset              = Cannon_Offset
+Cannon_Offset:                  .res  1
 
-Cannon_PageLoc:                 .res  6
 Whirlpool_PageLoc             = Cannon_PageLoc
+Cannon_PageLoc:                 .res  6
 
-Cannon_X_Position:              .res  6
 Whirlpool_LeftExtent          = Cannon_X_Position
+Cannon_X_Position:              .res  6
 
-Cannon_Y_Position:              .res  6
 Whirlpool_Length              = Cannon_Y_Position
+Cannon_Y_Position:              .res  6
 
-Cannon_Timer:                   .res  6
 Whirlpool_Flag                = Cannon_Timer
+Cannon_Timer:                   .res  6
 
 BowserHitPoints:                .res  1
 StompChainCounter:              .res  12
 Player_CollisionBits:           .res  1
 Enemy_CollisionBits:            .res  8
 
-SprObj_BoundBoxCtrl:            .res  1
 Player_BoundBoxCtrl           = SprObj_BoundBoxCtrl
+SprObj_BoundBoxCtrl:            .res  1
 
 Enemy_BoundBoxCtrl:             .res  6
 Fireball_BoundBoxCtrl:          .res  2
 Misc_BoundBoxCtrl:              .res  10
 
-BoundingBox_UL_Corner:          .res  1
 BoundingBox_UL_XPos           = BoundingBox_UL_Corner
+BoundingBox_UL_Corner:          .res  1
 
 BoundingBox_UL_YPos:            .res  1
 

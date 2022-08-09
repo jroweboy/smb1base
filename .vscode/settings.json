@@ -3,11 +3,11 @@
     "watch-run.targetList": [
         {
             "target": "/inc/*.inc",
-            "task": "compile"
+            "task": "compile_one"
         },
         {
             "target": "/**/*.s",
-            "task": "compile"
+            "task": "compile_one"
         },
     ],
     "files.autoSave": "afterDelay",

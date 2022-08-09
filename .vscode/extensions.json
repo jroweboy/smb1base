@@ -2,6 +2,7 @@
     "recommendations": [
         "alchemic-raker.alchemy65",
         "ms-vscode.cmake-tools",
-        "boukichi.watch-run"
+        "boukichi.watch-run",
+        "rioj7.command-variable"
     ]
 }
