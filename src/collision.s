@@ -27,6 +27,8 @@
 ; gamecore.s
 .export ForceInjury
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 ;$06 - second object's offset
 ;$07 - counter

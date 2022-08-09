@@ -15,6 +15,8 @@
 ; gamecore.s
 .export MiscObjectsCore
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 
 .proc EnemiesAndLoopsCore
@@ -322,7 +324,7 @@ StrID:  sta Enemy_ID,x       ;store enemy object number into buffer
 CheckFrenzyBuffer:
         lda EnemyFrenzyBuffer    ;if enemy object stored in frenzy buffer
         bne StrFre               ;then branch ahead to store in enemy object buffer
-        lda VineFlagOffset       ;otherwise check vine flag offset
+        lda Vine_FlagOffset       ;otherwise check vine flag offset
         cmp #$01
         bne ExEPar               ;if other value <> 1, leave
         lda #VineObject          ;otherwise put vine in enemy identifier

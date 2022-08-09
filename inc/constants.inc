@@ -1,0 +1,149 @@
+
+.ifndef __CONSTANTS_INC
+__CONSTANTS_INC = 1
+
+;-------------------------------------------------------------------------------------
+;DEFINES
+
+;NES specific hardware defines
+
+PPU_CTRL         = $2000
+PPU_MASK         = $2001
+PPU_STATUS            = $2002
+PPU_SPR_ADDR          = $2003
+PPU_SPR_DATA          = $2004
+PPU_SCROLL_REG        = $2005
+PPU_ADDRESS           = $2006
+PPU_DATA              = $2007
+
+SND_REGISTER          = $4000
+SND_SQUARE1_REG       = $4000
+SND_SQUARE2_REG       = $4004
+SND_TRIANGLE_REG      = $4008
+SND_NOISE_REG         = $400c
+SND_DELTA_REG         = $4010
+SND_MASTERCTRL_REG    = $4015
+
+SPR_DMA               = $4014
+JOYPAD_PORT           = $4016
+JOYPAD_PORT1          = $4016
+JOYPAD_PORT2          = $4017
+
+;-------------------------------------------------------------------------------------
+;CONSTANTS
+
+;sound effects constants
+Sfx_SmallJump         = %10000000
+Sfx_Flagpole          = %01000000
+Sfx_Fireball          = %00100000
+Sfx_PipeDown_Injury   = %00010000
+Sfx_EnemySmack        = %00001000
+Sfx_EnemyStomp        = %00000100
+Sfx_Bump              = %00000010
+Sfx_BigJump           = %00000001
+
+Sfx_BowserFall        = %10000000
+Sfx_ExtraLife         = %01000000
+Sfx_PowerUpGrab       = %00100000
+Sfx_TimerTick         = %00010000
+Sfx_Blast             = %00001000
+Sfx_GrowVine          = %00000100
+Sfx_GrowPowerUp       = %00000010
+Sfx_CoinGrab          = %00000001
+
+Sfx_BowserFlame       = %00000010
+Sfx_BrickShatter      = %00000001
+
+;music constants
+Silence               = %10000000
+
+StarPowerMusic        = %01000000
+PipeIntroMusic        = %00100000
+CloudMusic            = %00010000
+CastleMusic           = %00001000
+UndergroundMusic      = %00000100
+WaterMusic            = %00000010
+GroundMusic           = %00000001
+
+TimeRunningOutMusic   = %01000000
+EndOfLevelMusic       = %00100000
+AltGameOverMusic      = %00010000
+EndOfCastleMusic      = %00001000
+VictoryMusic          = %00000100
+GameOverMusic         = %00000010
+DeathMusic            = %00000001
+
+;enemy object constants 
+GreenKoopa            = $00
+BuzzyBeetle           = $02
+RedKoopa              = $03
+HammerBro             = $05
+Goomba                = $06
+Bloober               = $07
+BulletBill_FrenzyVar  = $08
+GreyCheepCheep        = $0a
+RedCheepCheep         = $0b
+Podoboo               = $0c
+PiranhaPlant          = $0d
+GreenParatroopaJump   = $0e
+RedParatroopa         = $0f
+GreenParatroopaFly    = $10
+Lakitu                = $11
+Spiny                 = $12
+FlyCheepCheepFrenzy   = $14
+FlyingCheepCheep      = $14
+BowserFlame           = $15
+Fireworks             = $16
+BBill_CCheep_Frenzy   = $17
+Stop_Frenzy           = $18
+Bowser                = $2d
+PowerUpObject         = $2e
+VineObject            = $2f
+FlagpoleFlagObject    = $30
+StarFlagObject        = $31
+JumpspringObject      = $32
+BulletBill_CannonVar  = $33
+RetainerObject        = $35
+TallEnemy             = $09
+
+.enum
+  World1
+  World2
+  World3
+  World4
+  World5
+  World6
+  World7
+  World8
+.endenum
+
+.enum
+    Level1
+    Level2
+    Level3
+    Level4
+.endenum
+
+.enum
+    MODE_TITLESCREEN
+    MODE_GAMEPLAY
+    MODE_VICTORY
+    MODE_GAMEOVER
+.endenum
+
+
+WarmBootOffset        = <_WarmBootOffset
+ColdBootOffset        = <_ColdBootOffset
+
+TitleScreenDataOffset = $1ec0                     ; address in CHR ROM for titlescreen nametable layout
+
+A_Button              = %10000000
+B_Button              = %01000000
+Select_Button         = %00100000
+Start_Button          = %00010000
+Up_Dir                = %00001000
+Down_Dir              = %00000100
+Left_Dir              = %00000010
+Right_Dir             = %00000001
+
+.endif ;__CONSTANTS_INC

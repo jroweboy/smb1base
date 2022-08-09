@@ -2,6 +2,8 @@
 .include "common.inc"
 .include "level.inc"
 
+.segment "CODE"
+
 ;--------------------------------
 
 ;tiles used by pulleys and rope object

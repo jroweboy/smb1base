@@ -3,6 +3,8 @@
 .include "object.inc"
 
 
+.segment "CODE"
+
 ;--------------------------------
 ;$02 - used to hold preset values
 ;$03 - used to hold enemy state
@@ -40,10 +42,10 @@ CCSwim: sta $03                   ;save enemy state in $03
         lda CheepCheepMoveMFlag,x ;check movement flag
         cmp #$10                  ;if movement speed set to $00,
         bcc CCSwimUpwards         ;branch to move upwards
-        lda Enemy_YMF_Dummy,x
+        lda Enemy_YMoveForceFractional,x
         clc
         adc $02                   ;add preset value to dummy variable to get carry
-        sta Enemy_YMF_Dummy,x     ;and save dummy
+        sta Enemy_YMoveForceFractional,x     ;and save dummy
         lda Enemy_Y_Position,x    ;get vertical coordinate
         adc $03                   ;add carry to it plus enemy state to slowly move it downwards
         sta Enemy_Y_Position,x    ;save as new vertical coordinate
@@ -52,10 +54,10 @@ CCSwim: sta $03                   ;save enemy state in $03
         jmp ChkSwimYPos           ;jump to end of movement code
 
 CCSwimUpwards:
-        lda Enemy_YMF_Dummy,x
+        lda Enemy_YMoveForceFractional,x
         sec
         sbc $02                   ;subtract preset value to dummy variable to get borrow
-        sta Enemy_YMF_Dummy,x     ;and save dummy
+        sta Enemy_YMoveForceFractional,x     ;and save dummy
         lda Enemy_Y_Position,x    ;get vertical coordinate
         sbc $03                   ;subtract borrow to it plus enemy state to slowly move it upwards
         sta Enemy_Y_Position,x    ;save as new vertical coordinate

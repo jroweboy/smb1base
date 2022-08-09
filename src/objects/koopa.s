@@ -2,6 +2,8 @@
 .include "common.inc"
 .include "object.inc"
 
+.segment "CODE"
+
 ;--------------------------------
 
 InitRedKoopa:
@@ -16,7 +18,7 @@ ProcMoveRedPTroopa:
           lda Enemy_Y_Speed,x
           ora Enemy_Y_MoveForce,x     ;check for any vertical force or speed
           bne MoveRedPTUpOrDown       ;branch if any found
-          sta Enemy_YMF_Dummy,x       ;initialize something here
+          sta Enemy_YMoveForceFractional,x       ;initialize something here
           lda Enemy_Y_Position,x      ;check current vs. original vertical coordinate
           cmp RedPTroopaOrigXPos,x
           bcs MoveRedPTUpOrDown       ;if current => original, skip ahead to more code

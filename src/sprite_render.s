@@ -12,6 +12,8 @@
 
 .export DumpTwoSpr, FloateyNumbersRoutine
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 ;$00 - offset to vine Y coordinate adder
 ;$02 - offset to sprite data
@@ -24,7 +26,7 @@ DrawVine:
          lda Enemy_Rel_YPos         ;get relative vertical coordinate
          clc
          adc VineYPosAdder,y        ;add value using offset in Y to get value
-         ldx VineObjOffset,y        ;get offset to vine
+         ldx Vine_ObjOffset,y        ;get offset to vine
          ldy Enemy_SprDataOffset,x  ;get sprite data offset
          sty $02                    ;store sprite data offset here
          jsr SixSpriteStacker       ;stack six sprites on top of each other vertically
@@ -60,7 +62,7 @@ VineTL:  lda #$e1                   ;set tile number for sprite
          lda #$e0
          sta Sprite_Tilenumber,y    ;set other tile number for top of vine
 SkpVTop: ldx #$00                   ;start with the first sprite again
-ChkFTop: lda VineStart_Y_Position   ;get original starting vertical coordinate
+ChkFTop: lda Vine_Start_Y_Position   ;get original starting vertical coordinate
          sec
          sbc Sprite_Y_Position,y    ;subtract top-most sprite's Y coordinate
          cmp #$64                   ;if two coordinates are less than 100/$64 pixels
@@ -79,7 +81,7 @@ NextVSp: iny                        ;move offset to next OAM data
 
 SixSpriteStacker:
        ldx #$06           ;do six sprites
-StkLp: sta Sprite_Data,y  ;store X or Y coordinate into OAM data
+StkLp: sta Sprite_Data,y ;store X or Y coordinate into OAM data
        clc
        adc #$08           ;add eight pixels
        iny
@@ -916,7 +918,7 @@ MoveESprColOffscreen:
       adc Enemy_SprDataOffset,x
       tay                         ;use as offset
       jsr MoveColOffscreen        ;move first and second row sprites in column offscreen
-      sta Sprite_Data+16,y        ;move third row sprite in column offscreen
+      sta Sprite_Data+16,y       ;move third row sprite in column offscreen
       rts
 
 ;-------------------------------------------------------------------------------------

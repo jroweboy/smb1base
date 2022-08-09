@@ -16,6 +16,9 @@
 ; sprite_render.s
 .import DrawLargePlatform, DrawSmallPlatform
 
+
+.segment "CODE"
+
 ;--------------------------------
 
 InitBalPlatform:
@@ -455,7 +458,7 @@ YMovingPlatform:
         lda Enemy_Y_Speed,x          ;if platform moving up or down, skip ahead to
         ora Enemy_Y_MoveForce,x      ;check on other position
         bne ChkYCenterPos
-        sta Enemy_YMF_Dummy,x        ;initialize dummy variable
+        sta Enemy_YMoveForceFractional,x        ;initialize dummy variable
         lda Enemy_Y_Position,x
         cmp YPlatformTopYPos,x       ;if current vertical position => top position, branch
         bcs ChkYCenterPos            ;ahead of all this
@@ -540,10 +543,10 @@ MoveSmallPlatform:
 MoveLiftPlatforms:
       lda TimerControl         ;if master timer control set, skip all of this
       bne ExLiftP              ;and branch to leave
-      lda Enemy_YMF_Dummy,x
+      lda Enemy_YMoveForceFractional,x
       clc                      ;add contents of movement amount to whatever's here
       adc Enemy_Y_MoveForce,x
-      sta Enemy_YMF_Dummy,x
+      sta Enemy_YMoveForceFractional,x
       lda Enemy_Y_Position,x   ;add whatever vertical speed is set to current
       adc Enemy_Y_Speed,x      ;vertical position plus carry to move up or down
       sta Enemy_Y_Position,x   ;and then leave

@@ -1,4 +1,7 @@
 
+.ifndef __GLOBALS_INC
+__GLOBALS_INC = 1
+
 ; 
 .global JumpEngine
 
@@ -37,3 +40,5 @@
 
 .global WorldAddrOffsets
 .global AreaAddrOffsets
+
+.endif ; __GLOBALS_INC

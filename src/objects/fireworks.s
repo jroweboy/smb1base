@@ -5,6 +5,8 @@
 ; sprite_render.s
 .import DrawExplosion_Fireworks, DigitsMathRoutine, UpdateNumber
 
+.segment "CODE"
+
 ;--------------------------------
 
 RunFireworks:

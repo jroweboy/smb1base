@@ -2,6 +2,7 @@
 .include "common.inc"
 .include "level.inc"
 
+.segment "CODE"
 
 ;--------------------------------
 

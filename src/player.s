@@ -31,6 +31,8 @@
 ; gamecore.s
 .export ResetPalStar
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 
 .proc GameRoutines
@@ -84,7 +86,7 @@ EntrMode2:  lda JoypadOverride        ;if controller override bits set here,
             cmp #$91                  ;if player risen to a certain point (this requires pipes
             bcc PlayerRdy             ;to be at specific height to look/function right) branch
             rts                       ;to the last part, otherwise leave
-VineEntr:   lda VineHeight
+VineEntr:   lda Vine_Height
             cmp #$60                  ;check vine height
             bne ExitEntr              ;if vine not yet reached maximum height, branch to leave
             lda Player_Y_Position     ;get player's vertical coordinate
@@ -314,7 +316,7 @@ HalfwayPageNybbles:
   bpl StillInGame          ;if player still has lives, branch
   lda #$00
   sta OperMode_Task        ;initialize mode task,
-  lda #GameOverModeValue   ;switch to game over mode
+  lda #MODE_GAMEOVER       ;switch to game over mode
   sta OperMode             ;and leave
   rts
 StillInGame:
@@ -575,10 +577,10 @@ PosBubl:  tya                      ;use value loaded as adder
           lda BubbleTimerData,y    ;get data for air bubble timer
           sta AirBubbleTimer       ;set air bubble timer
 MoveBubl: ldy $07                  ;get pseudorandom bit again, use as offset
-          lda Bubble_YMF_Dummy,x
+          lda Bubble_YMoveForceFractional,x
           sec                      ;subtract pseudorandom amount from dummy variable
           sbc Bubble_MForceData,y
-          sta Bubble_YMF_Dummy,x   ;save dummy variable
+          sta Bubble_YMoveForceFractional,x   ;save dummy variable
           lda Bubble_Y_Position,x
           sbc #$00                 ;subtract borrow from airbubble's vertical coordinate
           cmp #$20                 ;if below the status bar,
@@ -1069,10 +1071,10 @@ ClimbAdderHigh:
       .byte $00, $00, $ff, $ff
 
 ClimbingSub:
-             lda Player_YMF_Dummy
+             lda Player_YMoveForceFractional
              clc                      ;add movement force to dummy variable
              adc Player_Y_MoveForce   ;save with carry
-             sta Player_YMF_Dummy
+             sta Player_YMoveForceFractional
              ldy #$00                 ;set default adder here
              lda Player_Y_Speed       ;get player's vertical speed
              bpl MoveOnVine           ;if not moving upwards, branch
@@ -1189,7 +1191,7 @@ ProcJumping:
 InitJS:    lda #$20                   ;set jump/swim timer
            sta JumpSwimTimer
            ldy #$00                   ;initialize vertical force and dummy variable
-           sty Player_YMF_Dummy
+           sty Player_YMoveForceFractional
            sty Player_Y_MoveForce
            lda Player_Y_HighPos       ;get vertical high and low bytes of jump origin
            sta JumpOrigin_Y_HighPos   ;and store them next to each other here
@@ -1454,10 +1456,10 @@ ScrollScreen:
               sta ScreenLeft_PageLoc    ;side of the screen
               and #$01                  ;get LSB of page location
               sta $00                   ;save as temp variable for PPU register 1 mirror
-              lda Mirror_PPU_CTRL_REG1  ;get PPU register 1 mirror
+              lda Mirror_PPU_CTRL       ;get PPU register 1 mirror
               and #%11111110            ;save all bits except d0
               ora $00                   ;get saved bit here and save in PPU register 1
-              sta Mirror_PPU_CTRL_REG1  ;mirror to be used to set name table later
+              sta Mirror_PPU_CTRL       ;mirror to be used to set name table later
               jsr GetScreenPosition     ;figure out where the right side is
               lda #$08
               sta ScrollIntervalTimer   ;set scroll timer (residual, not used elsewhere)

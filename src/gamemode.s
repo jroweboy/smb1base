@@ -16,6 +16,8 @@
 
 .export OperModeExecutionTree
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 
 ;indirect jump routine called when
@@ -54,10 +56,10 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   lda #$ff
   sta BalPlatformAlignment  ;initialize balance platform assignment flag
   lda ScreenLeft_PageLoc    ;get left side page location
-  lsr Mirror_PPU_CTRL_REG1  ;shift LSB of ppu register #1 mirror out
+  lsr Mirror_PPU_CTRL       ;shift LSB of ppu register #1 mirror out
   and #$01                  ;mask out all but LSB of page location
   ror                       ;rotate LSB of page location into carry then onto mirror
-  rol Mirror_PPU_CTRL_REG1  ;this is to set the proper PPU name table
+  rol Mirror_PPU_CTRL       ;this is to set the proper PPU name table
   jsr GetAreaMusic          ;load proper music into queue
   lda #$38                  ;load sprite shuffle amounts to be used later
   sta SprShuffleAmt+2
@@ -94,9 +96,9 @@ Sprite0Data:
 .export PauseRoutine
 PauseRoutine:
                lda OperMode           ;are we in victory mode?
-               cmp #VictoryModeValue  ;if so, go ahead
+               cmp #MODE_VICTORY  ;if so, go ahead
                beq ChkPauseTimer
-               cmp #GameModeValue     ;are we in game mode?
+               cmp #MODE_GAMEPLAY     ;are we in game mode?
                bne ExitPause          ;if not, leave
                lda OperMode_Task      ;if we are in game mode, are we running game engine?
                cmp #$03
@@ -602,7 +604,7 @@ ExitMsgs:
   inc WorldNumber            ;increment world number to move onto the next world
   jsr LoadAreaPointer        ;get area address offset for the next area
   inc FetchNewGameTimerFlag  ;set flag to load game timer from header
-  lda #GameModeValue
+  lda #MODE_GAMEPLAY
   sta OperMode               ;set mode of operation to game mode
 EndExitOne:
   rts                        ;and leave

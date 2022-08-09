@@ -7,11 +7,12 @@ project(${PROJECT_NAME} ASM C)
 add_executable(${PROJECT_NAME}
   inc/charmap.inc
   inc/common.inc
+  inc/constants.inc
   inc/globals.inc
   inc/level.inc
+  inc/memory.inc
   inc/nes2header.inc
   inc/object.inc
-  inc/variables.inc
 
   src/chr.s
   src/collision.s
@@ -19,6 +20,7 @@ add_executable(${PROJECT_NAME}
   src/gamecore.s
   src/gamemode.s
   src/player.s
+  src/memory.s
   src/music.s
   src/nesheader.s
   src/reset.s

@@ -5,6 +5,9 @@
 ; gamecore.s
 .export ProcessCannons
 
+
+.segment "CODE"
+
 ;--------------------------------
 
 InitBulletBill:

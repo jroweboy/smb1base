@@ -25,6 +25,7 @@
 ; gamemode.s
 .export GameCoreRoutine, UpdScrollVar
 
+.segment "CODE"
 
 ;-------------------------------------------------------------------------------------
 GameCoreRoutine:
@@ -343,9 +344,9 @@ FlagpoleRoutine:
            lda Player_Y_Position     ;check player's vertical coordinate
            cmp #$a2                  ;if player down to a certain point,
            bcs GiveFPScr             ;branch to end the level
-           lda Enemy_YMF_Dummy,x
+           lda Enemy_YMoveForceFractional,x
            adc #$ff                  ;add movement amount to dummy variable
-           sta Enemy_YMF_Dummy,x     ;save dummy variable
+           sta Enemy_YMoveForceFractional,x     ;save dummy variable
            lda Enemy_Y_Position,x    ;get flag's vertical coordinate
            adc #$01                  ;add 1 plus carry to move flag, and
            sta Enemy_Y_Position,x    ;store vertical coordinate

@@ -3,6 +3,8 @@
 
 .import InitPiranhaPlant
 
+.segment "CODE"
+
 ;--------------------------------
 
 WaterPipe:

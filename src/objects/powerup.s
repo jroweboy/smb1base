@@ -7,6 +7,8 @@
 ; screen_render.s
 .import DrawPowerUp
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 
 PowerUpObjHandler:

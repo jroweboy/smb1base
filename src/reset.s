@@ -23,7 +23,7 @@
   sei                          ;pretty standard 6502 type init here
   cld
   lda #%00010000               ;init PPU control register 1 
-  sta PPU_CTRL_REG1
+  sta PPU_CTRL
   ldx #$ff                     ;reset stack pointer
   txs
 : lda PPU_STATUS               ;wait two frames
@@ -52,11 +52,11 @@ ColdBoot:
   lda #%00001111
   sta SND_MASTERCTRL_REG       ;enable all sound channels except dmc
   lda #%00000110
-  sta PPU_CTRL_REG2            ;turn off clipping for OAM and background
+  sta PPU_MASK            ;turn off clipping for OAM and background
   jsr MoveAllSpritesOffscreen
   jsr InitializeNameTables     ;initialize both name tables
   inc DisableScreenFlag        ;set flag to disable screen output
-  lda Mirror_PPU_CTRL_REG1
+  lda Mirror_PPU_CTRL
   ora #%10000000               ;enable NMIs
   jsr WritePPUReg1
 EndlessLoop:
@@ -65,21 +65,21 @@ EndlessLoop:
 
 .proc NonMaskableInterrupt
 
-  lda Mirror_PPU_CTRL_REG1  ;disable NMIs in mirror reg
+  lda Mirror_PPU_CTRL       ;disable NMIs in mirror reg
   and #%01111111            ;save all other bits
-  sta Mirror_PPU_CTRL_REG1
+  sta Mirror_PPU_CTRL
   and #%01111110            ;alter name table address to be $2800
-  sta PPU_CTRL_REG1         ;(essentially $2000) but save other bits
-  lda Mirror_PPU_CTRL_REG2  ;disable OAM and background display by default
+  sta PPU_CTRL         ;(essentially $2000) but save other bits
+  lda Mirror_PPU_MASK       ;disable OAM and background display by default
   and #%11100110
   ldy DisableScreenFlag     ;get screen disable flag
   bne ScreenOff             ;if set, used bits as-is
-    lda Mirror_PPU_CTRL_REG2  ;otherwise reenable bits and save them
+    lda Mirror_PPU_MASK     ;otherwise reenable bits and save them
     ora #%00011110
 ScreenOff:
-  sta Mirror_PPU_CTRL_REG2  ;save bits for later but not in register at the moment
+  sta Mirror_PPU_MASK       ;save bits for later but not in register at the moment
   and #%11100111            ;disable screen for now
-  sta PPU_CTRL_REG2
+  sta PPU_MASK
   ldx PPU_STATUS            ;reset flip-flop and reset scroll registers to zero
   lda #$00
   jsr InitScroll
@@ -103,8 +103,8 @@ InitBuffer:
   sta VRAM_Buffer1_Offset,x        
   sta VRAM_Buffer1,x
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
-  lda Mirror_PPU_CTRL_REG2  ;copy mirror of $2001 to register
-  sta PPU_CTRL_REG2
+  lda Mirror_PPU_MASK       ;copy mirror of $2001 to register
+  sta PPU_MASK
   jsr SoundEngine           ;play sound
   jsr ReadJoypads           ;read joypads
   jsr PauseRoutine          ;handle pause
@@ -173,9 +173,9 @@ SkipSprite0:
   sta PPU_SCROLL_REG
   lda VerticalScroll
   sta PPU_SCROLL_REG
-  lda Mirror_PPU_CTRL_REG1  ;load saved mirror of $2000
+  lda Mirror_PPU_CTRL       ;load saved mirror of $2000
   pha
-    sta PPU_CTRL_REG1
+    sta PPU_CTRL
     lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
     lsr
     bcs SkipMainOper
@@ -184,7 +184,7 @@ SkipMainOper:
     lda PPU_STATUS            ;reset flip-flop
   pla
   ora #%10000000            ;reactivate NMIs
-  sta PPU_CTRL_REG1
+  sta PPU_CTRL
   rti                       ;we are done until the next frame!
 
 ;-------------------------------------------------------------------------------------

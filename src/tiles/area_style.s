@@ -1,6 +1,8 @@
 .include "common.inc"
 .include "level.inc"
 
+.segment "CODE"
+
 ;--------------------------------
 ;$06 - used by MushroomLedge to store length
 

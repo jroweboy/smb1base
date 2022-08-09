@@ -3,6 +3,8 @@
 
 .export DrawRow
 
+.segment "CODE"
+
 ;--------------------------------
 
 SolidBlockMetatiles:

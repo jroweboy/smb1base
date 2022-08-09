@@ -5,6 +5,9 @@
 ; objects/bowser.s
 .import InitBowserFlame, PutAtRightExtent
 
+
+.segment "CODE"
+
 ;--------------------------------
 
 InitEnemyFrenzy:
@@ -75,7 +78,7 @@ AddFBit: ora BitMFilter            ;add bit to already set bits in filter
          sta BitMFilter            ;and store
          lda Enemy17YPosData,y     ;load vertical position using offset
          jsr PutAtRightExtent      ;set vertical position and other values
-         sta Enemy_YMF_Dummy,x     ;initialize dummy variable
+         sta Enemy_YMoveForceFractional,x     ;initialize dummy variable
          lda #$20                  ;set timer
          sta FrenzyEnemyTimer
          jmp CheckpointEnemyID     ;process our new enemy object

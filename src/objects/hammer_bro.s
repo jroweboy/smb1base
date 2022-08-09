@@ -7,6 +7,8 @@
 ; collision.s
 .export SetHJ
 
+.segment "CODE"
+
 ;--------------------------------
 
 HBroWalkingTimerData:

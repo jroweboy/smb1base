@@ -12,6 +12,8 @@
 .export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
 .export RemBridge, GiveOneCoin, ReplaceBlockMetatile, DrawMushroomIcon
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 
 .proc ScreenRoutines
@@ -81,7 +83,7 @@ MoveSpritesOffscreen:
 InitializeNameTables:
 
   lda PPU_STATUS            ;reset flip-flop
-  lda Mirror_PPU_CTRL_REG1  ;load mirror of ppu reg $2000
+  lda Mirror_PPU_CTRL       ;load mirror of ppu reg $2000
   ora #%00010000            ;set sprites for first 4k and background for second 4k
   and #%11110000            ;clear rest of lower nybble, leave higher alone
   jsr WritePPUReg1
@@ -201,7 +203,7 @@ NoReset:
 DisplayIntermediate:
   lda OperMode                 ;check primary mode of operation
   beq NoInter                  ;if in title screen mode, skip this
-  cmp #GameOverModeValue       ;are we in game over mode?
+  cmp #MODE_GAMEOVER           ;are we in game over mode?
   beq GameOverInter            ;if so, proceed to display game over screen
   lda AltEntranceControl       ;otherwise check for mode of alternate entry
   bne NoInter                  ;and branch if found
@@ -410,8 +412,8 @@ MushroomIconData:
 ;-------------------------------------------------------------------------------------
 .proc WritePPUReg1
 
-  sta PPU_CTRL_REG1         ;write contents of A to PPU register 1
-  sta Mirror_PPU_CTRL_REG1  ;and its mirror
+  sta PPU_CTRL         ;write contents of A to PPU register 1
+  sta Mirror_PPU_CTRL       ;and its mirror
   rts
 .endproc
 
@@ -431,7 +433,7 @@ WriteBufferToScreen:
   lda ($00),y               ;load next byte (third)
   asl                       ;shift to left and save in stack
   pha
-    lda Mirror_PPU_CTRL_REG1  ;load mirror of $2000,
+    lda Mirror_PPU_CTRL     ;load mirror of $2000,
     ora #%00000100            ;set ppu to increment by 32 by default
     bcs SetupWrites           ;if d7 of third byte was clear, ppu will
       and #%11111011            ;only increment by 1
@@ -539,7 +541,7 @@ CheckPlayerName:
   dex                    ;check to see if current message number is for time up
   bne ChkLuigi
   ldy OperMode           ;check for game over mode
-  cpy #GameOverModeValue
+  cpy #MODE_GAMEOVER
   beq ChkLuigi
   eor #%00000001         ;if not, must be time up, invert d0 to do other player
 ChkLuigi:
@@ -803,7 +805,7 @@ ExitOutputN:
 .export DigitsMathRoutine
 .proc DigitsMathRoutine
   lda OperMode              ;check mode of operation
-  cmp #TitleScreenModeValue
+  cmp #MODE_TITLESCREEN
   beq EraseDMods            ;if in title screen mode, branch to lock score
   ldx #$05
 AddModLoop:

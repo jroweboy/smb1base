@@ -1,6 +1,8 @@
 
 .include "common.inc"
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 ;$04 - address low to jump address
 ;$05 - address high to jump address
@@ -349,10 +351,10 @@ ImposeGravitySprObj:
 .proc ImposeGravity
 
   pha                          ;push value to stack
-    lda SprObject_YMF_Dummy,x
+    lda Player_YMoveForceFractional,x
     clc                          ;add value in movement force to contents of dummy variable
     adc SprObject_Y_MoveForce,x
-    sta SprObject_YMF_Dummy,x
+    sta Player_YMoveForceFractional,x
     ldy #$00                     ;set Y to zero by default
     lda SprObject_Y_Speed,x      ;get current vertical speed
     bpl AlterYP                  ;if currently moving downwards, do not decrement Y

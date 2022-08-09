@@ -8,6 +8,8 @@
 ; collision.s
 .import BlockBufferCollision
 
+.segment "CODE"
+
 ;-------------------------------------------------------------------------------------
 
 Setup_Vine:
@@ -21,12 +23,12 @@ Setup_Vine:
         sta Enemy_X_Position,x   ;copy horizontal coordinate from previous object
         lda Block_Y_Position,y
         sta Enemy_Y_Position,x   ;copy vertical coordinate from previous object
-        ldy VineFlagOffset       ;load vine flag/offset to next available vine slot
+        ldy Vine_FlagOffset       ;load vine flag/offset to next available vine slot
         bne NextVO               ;if set at all, don't bother to store vertical
-        sta VineStart_Y_Position ;otherwise store vertical coordinate here
+        sta Vine_Start_Y_Position ;otherwise store vertical coordinate here
 NextVO: txa                      ;store object offset to next available vine slot
-        sta VineObjOffset,y      ;using vine flag as offset
-        inc VineFlagOffset       ;increment vine flag offset
+        sta Vine_ObjOffset,y      ;using vine flag as offset
+        inc Vine_FlagOffset       ;increment vine flag offset
         lda #Sfx_GrowVine
         sta Square2SoundQueue    ;load vine grow sound
         rts
@@ -41,9 +43,9 @@ VineHeightData:
 VineObjectHandler:
            cpx #$05                  ;check enemy offset for special use slot
            bne ExitVH                ;if not in last slot, branch to leave
-           ldy VineFlagOffset
+           ldy Vine_FlagOffset
            dey                       ;decrement vine flag in Y, use as offset
-           lda VineHeight
+           lda Vine_Height
            cmp VineHeightData,y      ;if vine has reached certain height,
            beq RunVSubs              ;branch ahead to skip this part
            lda FrameCounter          ;get frame counter
@@ -53,8 +55,8 @@ VineObjectHandler:
            lda Enemy_Y_Position+5
            sbc #$01                  ;subtract vertical position of vine
            sta Enemy_Y_Position+5    ;one pixel every frame it's time
-           inc VineHeight            ;increment vine height
-RunVSubs:  lda VineHeight            ;if vine still very small,
+           inc Vine_Height            ;increment vine height
+RunVSubs:  lda Vine_Height            ;if vine still very small,
            cmp #$08                  ;branch to leave
            bcc ExitVH
            jsr RelativeEnemyPosition ;get relative coordinates of vine,
@@ -62,19 +64,19 @@ RunVSubs:  lda VineHeight            ;if vine still very small,
            ldy #$00                  ;initialize offset used in draw vine sub
 VDrawLoop: jsr DrawVine              ;draw vine
            iny                       ;increment offset
-           cpy VineFlagOffset        ;if offset in Y and offset here
+           cpy Vine_FlagOffset        ;if offset in Y and offset here
            bne VDrawLoop             ;do not yet match, loop back to draw more vine
            lda Enemy_OffscreenBits
            and #%00001100            ;mask offscreen bits
            beq WrCMTile              ;if none of the saved offscreen bits set, skip ahead
            dey                       ;otherwise decrement Y to get proper offset again
-KillVine:  ldx VineObjOffset,y       ;get enemy object offset for this vine object
+KillVine:  ldx Vine_ObjOffset,y       ;get enemy object offset for this vine object
            jsr EraseEnemyObject      ;kill this vine object
            dey                       ;decrement Y
            bpl KillVine              ;if any vine objects left, loop back to kill it
-           sta VineFlagOffset        ;initialize vine flag/offset
-           sta VineHeight            ;initialize vine height
-WrCMTile:  lda VineHeight            ;check vine height
+           sta Vine_FlagOffset        ;initialize vine flag/offset
+           sta Vine_Height            ;initialize vine height
+WrCMTile:  lda Vine_Height            ;check vine height
            cmp #$20                  ;if vine small (less than 32 pixels tall)
            bcc ExitVH                ;then branch ahead to leave
            ldx #$06                  ;set offset in X to last enemy slot

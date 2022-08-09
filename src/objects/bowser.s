@@ -1,12 +1,14 @@
 .include "common.inc"
 .include "object.inc"
 
-.import SpawnHammerObj
+.import SpawnHammerObj, MoveVOffset, RemBridge
 
-.export InitBowserFlame, BridgeCollapse
+.export InitBowserFlame, BridgeCollapse, KillAllEnemies
 
 ; frenzy.s
 .export PutAtRightExtent
+
+.segment "CODE"
 
 ;--------------------------------
 
@@ -45,9 +47,7 @@ RunBowserFlame:
 ;-------------------------------------------------------------------------------------
 ;$04-$05 - used to store name table address in little endian order
 
-.proc BridgeCollapse
-.export KillAllEnemies, RunBowser
-.import MoveEnemySlowVert, PlayerEnemyDiff, RemBridge, MoveVOffset, InitVStf
+BridgeCollapse:
 
   ldx BowserFront_Offset    ;get enemy offset for bowser
   lda Enemy_ID,x            ;check enemy object identifier for bowser
@@ -107,6 +107,14 @@ NoBFall:
   jmp BowserGfxHandler      ;jump to code that draws bowser
 
 ;--------------------------------
+
+BridgeCollapseData:
+  .byte $1a ;axe
+  .byte $58 ;chain
+  .byte $98, $96, $94, $92, $90, $8e, $8c ;bridge
+  .byte $8a, $88, $86, $84, $82, $80
+PRandomRange:
+  .byte $21, $41, $11, $31
 
 RunBowser:
 
@@ -252,19 +260,10 @@ SetFBTmr:
   lda #BowserFlame           ;put bowser's flame identifier
   sta EnemyFrenzyBuffer      ;in enemy frenzy buffer
 
-BridgeCollapseData:
-  .byte $1a ;axe
-  .byte $58 ;chain
-  .byte $98, $96, $94, $92, $90, $8e, $8c ;bridge
-  .byte $8a, $88, $86, $84, $82, $80
-PRandomRange:
-  .byte $21, $41, $11, $31
-.endproc
 
 ;--------------------------------
 
-.proc BowserGfxHandler
-.import RunRetainerObj
+BowserGfxHandler:
   jsr ProcessBowserHalf    ;do a sub here to process bowser's front
   ldy #$10                 ;load default value here to position bowser's rear
   lda Enemy_MovingDir,x    ;check moving direction
@@ -300,7 +299,6 @@ CopyFToR:
 ExBGfxH:
   rts                      ;leave!
 
-
 ProcessBowserHalf:
   inc BowserGfxFlag         ;increment bowser's graphics flag, then run subroutines
   jsr RunRetainerObj        ;to get offscreen bits, relative position and draw bowser (finally!)
@@ -310,7 +308,6 @@ ProcessBowserHalf:
   sta Enemy_BoundBoxCtrl,x  ;set bounding box size control
   jsr GetEnemyBoundBox      ;get bounding box coordinates
   jmp PlayerEnemyCollision  ;do player-to-enemy collision detection
-.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to hold movement force and tile number
@@ -472,7 +469,7 @@ SpawnFromMouth:
        sta Enemy_Y_Position,x    ;save as flame's vertical position
        lda PseudoRandomBitReg,x
        and #%00000011            ;get 2 LSB from first part of LSFR
-       sta Enemy_YMF_Dummy,x     ;save here
+       sta Enemy_YMoveForceFractional,x     ;save here
        tay                       ;use as offset
        lda FlameYPosData,y       ;get value here using bits as offset
        ldy #$00                  ;load default offset
