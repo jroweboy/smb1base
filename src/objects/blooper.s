@@ -9,6 +9,7 @@
 BlooberBitmasks:
       .byte %00111111, %00000011
 
+
 MoveBloober:
         lda Enemy_State,x
         and #%00100000             ;check enemy state for d5 set

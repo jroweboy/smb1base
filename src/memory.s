@@ -44,7 +44,7 @@ Enemy_MovingDir:                .res  17
 SprObject_X_Speed:              .res  1
 Player_X_Speed                = SprObject_X_Speed
 
-Enemy_X_Speed:                  .res 6
+Enemy_X_Speed:                  .res  6
 LakituMoveSpeed               = Enemy_X_Speed
 PiranhaPlant_Y_Speed          = Enemy_X_Speed
 ExplosionGfxCounter           = Enemy_X_Speed
@@ -56,14 +56,14 @@ CheepCheepMoveMFlag           = Enemy_X_Speed
 FirebarSpinState_Low          = Enemy_X_Speed
 YPlatformCenterYPos           = Enemy_X_Speed
 
-Fireball_X_Speed:               .res 2
-Block_X_Speed:                  .res 4
-Misc_X_Speed:                   .res 9
+Fireball_X_Speed:               .res  2
+Block_X_Speed:                  .res  4
+Misc_X_Speed:                   .res  9
 
 ;--------------------------- Obj Page Loc:
 
-SprObject_PageLoc:
 Player_PageLoc:                 .res  1
+SprObject_PageLoc             = Player_PageLoc
 
 Enemy_PageLoc:                  .res  6
 Fireball_PageLoc:               .res  2
@@ -73,8 +73,8 @@ Bubble_PageLoc:                 .res  3
 
 ;--------------------------- X position
 
-SprObject_X_Position:
 Player_X_Position:              .res  1
+SprObject_X_Position:
 
 Enemy_X_Position:               .res  6
 Fireball_X_Position:            .res  2
@@ -84,16 +84,16 @@ Bubble_X_Position:              .res  3
 
 ;--------------------------- Y Speed
 
-Player_Y_Speed:
 SprObject_Y_Speed:              .res  1
+Player_Y_Speed                = SprObject_Y_Speed
 
-FirebarSpinState_High:
-XMovePrimaryCounter:
-BlooperMoveCounter:
-Enemy_Y_Speed:
-LakituMoveDirection:
-ExplosionTimerCounter:
 PiranhaPlant_MoveFlag:          .res  6
+FirebarSpinState_High         = PiranhaPlant_MoveFlag
+XMovePrimaryCounter           = PiranhaPlant_MoveFlag
+BlooperMoveCounter            = PiranhaPlant_MoveFlag
+Enemy_Y_Speed                 = PiranhaPlant_MoveFlag
+LakituMoveDirection           = PiranhaPlant_MoveFlag
+ExplosionTimerCounter         = PiranhaPlant_MoveFlag
 
 Fireball_Y_Speed:               .res  2
 Block_Y_Speed:                  .res  4
@@ -101,8 +101,8 @@ Misc_Y_Speed:                   .res  9
 
 ;--------------------------- Y high pos
 
-SprObject_Y_HighPos:
 Player_Y_HighPos:               .res  1
+SprObject_Y_HighPos           = Player_Y_HighPos
 
 Enemy_Y_HighPos:                .res  6
 Fireball_Y_HighPos:             .res  2
@@ -113,8 +113,8 @@ Bubble_Y_HighPos:               .res  3
 
 ;--------------------------- Y position
 
-Player_Y_Position:
 SprObject_Y_Position:           .res  1
+Player_Y_Position             = SprObject_Y_Position
 
 Enemy_Y_Position:               .res  6
 Fireball_Y_Position:            .res  2
@@ -124,15 +124,15 @@ Bubble_Y_Position:              .res  3
 
 ;--------------------------- 
 
-AreaData:
 AreaDataLow:                    .res  1
 AreaDataHigh:                   .res  1
+AreaData                      = AreaDataLow
 
-EnemyData:
 EnemyDataLow:                   .res  1
 EnemyDataHigh:                  .res  1
+EnemyData                     = EnemyDataLow
 
-dummylabel:                     .res 5 ; = start at $EB, reserve 5 bytes for local use.
+dummylabel:                     .res  5 ; = start at $EB, reserve 5 bytes for local use.
 
 NoteLenLookupTblOfs:            .res  1
 Square1SoundBuffer:             .res  1
@@ -140,8 +140,8 @@ Square2SoundBuffer:             .res  1
 NoiseSoundBuffer:               .res  1
 AreaMusicBuffer:                .res  1
 
-MusicData:
 MusicDataLow:                   .res  1
+MusicData                     = MusicDataLow
 
 MusicDataHigh:                  .res  1
 MusicOffset_Square2:            .res  1
@@ -153,8 +153,6 @@ EventMusicQueue:                .res  1
 NoiseSoundQueue:                .res  1
 Square2SoundQueue:              .res  1
 Square1SoundQueue:              .res  1
-
-
 
 .segment "STACK"
 ; start $0100
@@ -176,11 +174,11 @@ DigitModifier:                  .res 6
 .segment "OAM"
 ; start $0200
 
-Sprite_Y_Position:            .res 1
-Sprite_Data = Sprite_Y_Position
-Sprite_Tilenumber:            .res 1
-Sprite_Attributes:            .res 1
-Sprite_X_Position:            .res 1
+Sprite_Y_Position:              .res 1
+Sprite_Data                   = Sprite_Y_Position
+Sprite_Tilenumber:              .res 1
+Sprite_Attributes:              .res 1
+Sprite_X_Position:              .res 1
 
 .segment "BSS"
 ; start $0300
@@ -209,32 +207,33 @@ Vine_Start_Y_Position:          .res  3
 BalPlatformAlignment:           .res  1
 Platform_X_Scroll:              .res  1
 
-HammerThrowingTimer:
 PlatformCollisionFlag:          .res  11
+HammerThrowingTimer           = PlatformCollisionFlag
 
-Player_Rel_XPos:
 SprObject_Rel_XPos:             .res  1
+Player_Rel_XPos               = SprObject_Rel_XPos
 
 Enemy_Rel_XPos:                 .res  1
 Fireball_Rel_XPos:              .res  1
 Bubble_Rel_XPos:                .res  1
 Block_Rel_XPos:                 .res  2
 Misc_Rel_XPos:                  .res  5
-SprObject_Rel_YPos:
-Player_Rel_YPos:                .res  1
+
+SprObject_Rel_YPos:             .res  1
+Player_Rel_YPos               = SprObject_Rel_YPos
 Enemy_Rel_YPos:                 .res  1
 Fireball_Rel_YPos:              .res  1
 Bubble_Rel_YPos:                .res  1
 Block_Rel_YPos:                 .res  2
 Misc_Rel_YPos:                  .res  6
 
-Player_SprAttrib:
 SprObject_SprAttrib:            .res  1
+Player_SprAttrib              = SprObject_SprAttrib
 
 Enemy_SprAttrib:                .res  11
 
-SprObject_OffscrBits:
 Player_OffscreenBits:           .res  1
+SprObject_OffscrBits          = Player_OffscreenBits
 
 Enemy_OffscreenBits:            .res  1
 FBall_OffscreenBits:            .res  1
@@ -253,64 +252,64 @@ Block_Orig_XPos:                .res  8
 AttributeBuffer:                .res  7
 SprObject_X_MoveForce:          .res  1
 
-Enemy_X_MoveForce:
-YPlatformTopYPos:
-RedPTroopaOrigXPos:             .res  21
+Enemy_X_MoveForce:              .res  21
+RedPTroopaOrigXPos            = Enemy_X_MoveForce
+YPlatformTopYPos              = Enemy_X_MoveForce
 
-SprObject_YMoveForceFractional:
-Player_YMoveForceFractional:    .res  1
+SprObject_YMoveForceFractional: .res  1
+Player_YMoveForceFractional   = SprObject_YMoveForceFractional
 
-Enemy_YMoveForceFractional:
-BowserFlamePRandomOfs:
-PiranhaPlantUpYPos:             .res  21
+Enemy_YMoveForceFractional:     .res  21
+BowserFlamePRandomOfs         = Enemy_YMoveForceFractional
+PiranhaPlantUpYPos            = Enemy_YMoveForceFractional
 
 Bubble_YMoveForceFractional:    .res  7
 
-Player_Y_MoveForce:
 SprObject_Y_MoveForce:          .res  1
+Player_Y_MoveForce            = SprObject_Y_MoveForce
 
-CheepCheepOrigYPos:
-Enemy_Y_MoveForce:
-PiranhaPlantDownYPos:           .res  8
+Enemy_Y_MoveForce:              .res  8
+CheepCheepOrigYPos            = Enemy_Y_MoveForce
+PiranhaPlantDownYPos          = Enemy_Y_MoveForce
 
 Block_Y_MoveForce:              .res  20
 MaximumLeftSpeed:               .res  6
 MaximumRightSpeed:              .res  20
 
-Whirlpool_Offset:
 Cannon_Offset:                  .res  1
+Whirlpool_Offset              = Cannon_Offset
 
-Whirlpool_PageLoc:
 Cannon_PageLoc:                 .res  6
+Whirlpool_PageLoc             = Cannon_PageLoc
 
-Cannon_X_Position:
-Whirlpool_LeftExtent:           .res  6
+Cannon_X_Position:              .res  6
+Whirlpool_LeftExtent          = Cannon_X_Position
 
-Whirlpool_Length:
 Cannon_Y_Position:              .res  6
+Whirlpool_Length              = Cannon_Y_Position
 
-Cannon_Timer:
-Whirlpool_Flag:                 .res  6
+Cannon_Timer:                   .res  6
+Whirlpool_Flag                = Cannon_Timer
 
 BowserHitPoints:                .res  1
 StompChainCounter:              .res  12
 Player_CollisionBits:           .res  1
 Enemy_CollisionBits:            .res  8
 
-Player_BoundBoxCtrl:
 SprObj_BoundBoxCtrl:            .res  1
+Player_BoundBoxCtrl           = SprObj_BoundBoxCtrl
 
 Enemy_BoundBoxCtrl:             .res  6
 Fireball_BoundBoxCtrl:          .res  2
 Misc_BoundBoxCtrl:              .res  10
 
-BoundingBox_UL_XPos:
 BoundingBox_UL_Corner:          .res  1
+BoundingBox_UL_XPos           = BoundingBox_UL_Corner
 
 BoundingBox_UL_YPos:            .res  1
 
-BoundingBox_DR_XPos:
 BoundingBox_LR_Corner:          .res  1
+BoundingBox_DR_XPos           = BoundingBox_LR_Corner
 
 BoundingBox_DR_YPos:            .res  1
 EnemyBoundingBoxCoord:          .res  80
@@ -342,21 +341,21 @@ ChangeAreaTimer:                .res  2
 SprShuffleAmtOffset:            .res  1
 SprShuffleAmt:                  .res  3
 
-SprDataOffset:
-Player_SprDataOffset:           .res  1
+SprDataOffset:                  .res  1
+Player_SprDataOffset          = SprDataOffset
 
 Enemy_SprDataOffset:            .res  7
 
-Alt_SprDataOffset:
 Block_SprDataOffset:            .res  2
+Alt_SprDataOffset             = Block_SprDataOffset
 
 Bubble_SprDataOffset:           .res  3
 FBall_SprDataOffset:            .res  2
 
 Misc_SprDataOffset:             .res  9
 
-SavedJoypad1Bits:
 SavedJoypadBits:                .res  1
+SavedJoypad1Bits              = SavedJoypadBits
 
 SavedJoypad2Bits:               .res  2
 Player_X_Scroll:                .res  1
@@ -387,13 +386,13 @@ DemoAction:                     .res  1
 DemoActionTimer:                .res  1
 PrimaryMsgCounter:              .res  1
 
-ScreenEdge_PageLoc:
 ScreenLeft_PageLoc:             .res  1
+ScreenEdge_PageLoc            = ScreenLeft_PageLoc
 
 ScreenRight_PageLoc:            .res  1
 
-ScreenEdge_X_Pos:
 ScreenLeft_X_Pos:               .res  1
+ScreenEdge_X_Pos              = ScreenLeft_X_Pos
 
 ScreenRight_X_Pos:              .res  1
 ColumnSets:                     .res  1
@@ -436,13 +435,12 @@ JoypadBitMask:                  .res  4 ; .proc InitializeArea clears the 1st tw
 
 AreaType:                       .res  1 ; 074e
 
-    ; notes:
-
-    ; AreaType:
-    ; Water = 0
-    ; Ground = 1
-    ; UnderGround = 2
-    ; Castle = 3
+; notes:
+; AreaType:
+; Water = 0
+; Ground = 1
+; UnderGround = 2
+; Castle = 3
 
 AreaAddrsLOffset:               .res  1
 AreaPointer:                    .res  1
@@ -456,8 +454,8 @@ FetchNewGameTimerFlag:          .res  1
 JoypadOverride:                 .res  1
 GameTimerExpiredFlag:           .res  1
 
-OnscreenPlayerInfo:
 NumberofLives:                  .res  1
+OnscreenPlayerInfo            = NumberofLives
 
 HalfwayPage:                    .res  1
 LevelNumber:                    .res  1
@@ -466,8 +464,8 @@ CoinTally:                      .res  1
 WorldNumber:                    .res  1
 AreaNumber:                     .res  1
 
-OffscreenPlayerInfo:
 OffScr_NumberofLives:           .res  1
+OffscreenPlayerInfo           = OffScr_NumberofLives
 
 OffScr_HalfwayPage:             .res  1
 OffScr_LevelNumber:             .res  1
@@ -494,7 +492,7 @@ Mirror_PPU_MASK:                .res  1
 NumberOfPlayers:                .res  5
 IntervalTimerControl:           .res  1
 
-Timers:
+Timers                        = SelectTimer
 SelectTimer:                    .res  1
 PlayerAnimTimer:                .res  1
 JumpSwimTimer:                  .res  1
@@ -520,7 +518,7 @@ WorldEndTimer:                  .res  1
 DemoTimer:                      .res  5
 PseudoRandomBitReg:             .res  9
 
-SoundMemory = MusicOffset_Noise
+SoundMemory                   = MusicOffset_Noise
 MusicOffset_Noise:              .res  1
 EventMusicBuffer:               .res  1
 PauseSoundBuffer:               .res  1
@@ -548,10 +546,10 @@ AltRegContentFlag:              .res  12
     _WarmBootOffset:            .res  1   ; Warm boot offset
 
 DisplayDigits:                  .res  6
-TopScoreDisplay = DisplayDigits
+TopScoreDisplay               = DisplayDigits
 
-PlayerScoreDisplay:
 ScoreAndCoinDisplay:            .res  27
+PlayerScoreDisplay            = ScoreAndCoinDisplay
 
 GameTimerDisplay:               .res  4
 WorldSelectEnableFlag:          .res  1
