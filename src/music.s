@@ -344,9 +344,6 @@ PowerUpGrabFreqData:
       .byte $28, $4a, $50, $4a, $64, $3c, $32, $3c, $32
       .byte $2c, $24, $3a, $64, $3a, $34, $2c, $22, $2c
 
-;residual frequency data
-      .byte $22, $1c, $14
-
 PUp_VGrow_FreqData:
       .byte $14, $04, $22, $24, $16, $04, $24, $26 ;used by both
       .byte $18, $04, $26, $28, $1a, $04, $28, $2a
@@ -999,7 +996,6 @@ MusicHeaderData:
 TimeRunningOutHdr:    .byte $08, <TimeRunOutMusData, >TimeRunOutMusData, $27, $18
 Star_CloudHdr:        .byte $20, <Star_CloudMData, >Star_CloudMData, $2e, $1a, $40
 EndOfLevelMusHdr:     .byte $20, <WinLevelMusData, >WinLevelMusData, $3d, $21
-ResidualHeaderData:   .byte $20, $c4, $fc, $3f, $1d
 UndergroundMusHdr:    .byte $18, <UndergroundMusData, >UndergroundMusData, $00, $00
 SilenceHdr:           .byte $08, <SilenceData, >SilenceData, $00
 CastleMusHdr:         .byte $00, <CastleMusData, >CastleMusData, $93, $62
@@ -1214,7 +1210,6 @@ WinLevelMusData:
       .byte $cd, $d5, $dd, $e3, $ed, $f5, $bb, $b5, $cf, $d5
       .byte $db, $e5, $ed, $f3, $bd, $b3, $d1, $d9, $df, $e9
       .byte $f1, $f7, $bf, $ff, $ff, $ff, $34
-      .byte $00 ;unused byte
 
       .byte $86, $04, $87, $14, $1c, $22, $86, $34, $84, $2c
       .byte $04, $04, $04, $87, $14, $1a, $24, $86, $32, $84
@@ -1291,9 +1286,6 @@ VictoryMusData:
 
       .byte $83, $12, $14, $04, $18, $1a, $1c, $14
       .byte $26, $22, $1e, $1c, $18, $1e, $22, $0c, $14
-
-;unused space
-      .byte $ff, $ff, $ff
 
 FreqRegLookupTbl:
       .byte $00, $88, $00, $2f, $00, $00

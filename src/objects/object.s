@@ -1084,42 +1084,42 @@ MoveBoundBoxOffscreen:
       rts
 
 BoundingBoxCore:
-      stx $00                     ;save offset here
-      lda SprObject_Rel_YPos,y    ;store object coordinates relative to screen
-      sta $02                     ;vertically and horizontally, respectively
-      lda SprObject_Rel_XPos,y
-      sta $01
-      txa                         ;multiply offset by four and save to stack
-      asl
-      asl
-      pha
-      tay                         ;use as offset for Y, X is left alone
-      lda SprObj_BoundBoxCtrl,x   ;load value here to be used as offset for X
-      asl                         ;multiply that by four and use as X
-      asl
-      tax
-      lda $01                     ;add the first number in the bounding box data to the
-      clc                         ;relative horizontal coordinate using enemy object offset
-      adc BoundBoxCtrlData,x      ;and store somewhere using same offset * 4
-      sta BoundingBox_UL_Corner,y ;store here
-      lda $01
-      clc
-      adc BoundBoxCtrlData+2,x    ;add the third number in the bounding box data to the
-      sta BoundingBox_LR_Corner,y ;relative horizontal coordinate and store
-      inx                         ;increment both offsets
-      iny
-      lda $02                     ;add the second number to the relative vertical coordinate
-      clc                         ;using incremented offset and store using the other
-      adc BoundBoxCtrlData,x      ;incremented offset
-      sta BoundingBox_UL_Corner,y
-      lda $02
-      clc
-      adc BoundBoxCtrlData+2,x    ;add the fourth number to the relative vertical coordinate
-      sta BoundingBox_LR_Corner,y ;and store
-      pla                         ;get original offset loaded into $00 * y from stack
-      tay                         ;use as Y
-      ldx $00                     ;get original offset and use as X again
-      rts
+  stx $00                     ;save offset here
+  lda SprObject_Rel_YPos,y    ;store object coordinates relative to screen
+  sta $02                     ;vertically and horizontally, respectively
+  lda SprObject_Rel_XPos,y
+  sta $01
+  txa                         ;multiply offset by four and save to stack
+  asl
+  asl
+  pha
+    tay                         ;use as offset for Y, X is left alone
+    lda SprObj_BoundBoxCtrl,x   ;load value here to be used as offset for X
+    asl                         ;multiply that by four and use as X
+    asl
+    tax
+    lda $01                     ;add the first number in the bounding box data to the
+    clc                         ;relative horizontal coordinate using enemy object offset
+    adc BoundBoxCtrlData,x      ;and store somewhere using same offset * 4
+    sta BoundingBox_UL_Corner,y ;store here
+    lda $01
+    clc
+    adc BoundBoxCtrlData+2,x    ;add the third number in the bounding box data to the
+    sta BoundingBox_LR_Corner,y ;relative horizontal coordinate and store
+    inx                         ;increment both offsets
+    iny
+    lda $02                     ;add the second number to the relative vertical coordinate
+    clc                         ;using incremented offset and store using the other
+    adc BoundBoxCtrlData,x      ;incremented offset
+    sta BoundingBox_UL_Corner,y
+    lda $02
+    clc
+    adc BoundBoxCtrlData+2,x    ;add the fourth number to the relative vertical coordinate
+    sta BoundingBox_LR_Corner,y ;and store
+  pla                         ;get original offset loaded into $00 * y from stack
+  tay                         ;use as Y
+  ldx $00                     ;get original offset and use as X again
+  rts
 
 CheckRightScreenBBox:
        lda ScreenLeft_X_Pos       ;add 128 pixels to left side of screen

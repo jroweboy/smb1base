@@ -889,9 +889,11 @@ WriteBlankMT:
 .endproc
 
 .proc ReplaceBlockMetatile
-  jsr WriteBlockMetatile    ;write metatile to vram buffer to replace block object
-  inc Block_ResidualCounter ;increment unused counter (residual code)
-  dec Block_RepFlag,x       ;decrement flag (residual code)
+  ; jsr WriteBlockMetatile    ;write metatile to vram buffer to replace block object
+  ; inc Block_ResidualCounter ;increment unused counter (residual code)
+  ; dec Block_RepFlag,x       ;decrement flag (residual code)
+  ; rts
+  jmp WriteBlockMetatile    ;write metatile to vram buffer to replace block object
   rts                       ;leave
 .endproc
 

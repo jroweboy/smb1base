@@ -173,7 +173,16 @@ PlayerSubs: jsr ScrollHandler           ;move the screen if necessary
             jsr RelativePlayerPosition  ;get coordinates relative to the screen
             ldx #$00                    ;set offset for player object
             jsr BoundingBoxCore         ;get player's bounding box coordinates
+            ; Add to the upper left offset based on current neck size
+            lda PlayerNeckLength
+            sta PlayerNeckTemp
+            lda BoundingBox_UL_YPos, x
+            sec
+            sbc PlayerNeckLength
+            sta BoundingBox_UL_YPos, x
             jsr PlayerBGCollision       ;do collision detection and process
+            lda #0
+            sta PlayerNeckTemp
             lda Player_Y_Position
             cmp #$40                    ;check to see if player is higher than 64th pixel
             bcc PlayerHole              ;if so, branch ahead

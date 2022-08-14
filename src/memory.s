@@ -156,8 +156,9 @@ Square1SoundQueue:              .res  1
 
 .segment "STACK"
 ; start $0100
-
-blank_stack:                    .res  9 ; not used
+PlayerNeckLength:               .res  1
+PlayerNeckTemp:                 .res  1
+blank_stack:                    .res  7 ; not used
 VerticalFlipFlag:               .res  4
 FlagpoleFNum_Y_Pos:             .res  1
 FlagpoleFNum_YMFDummy:          .res  1

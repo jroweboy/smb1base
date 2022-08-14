@@ -140,7 +140,7 @@ __MEMORY_INC = 1
 
 ; .segment "STACK"
 
-.global blank_stack
+.global PlayerNeckLength, PlayerNeckTemp
 .global VerticalFlipFlag
 .global FlagpoleFNum_Y_Pos
 .global FlagpoleFNum_YMFDummy
@@ -225,7 +225,6 @@ __MEMORY_INC = 1
 .global Block_PageLoc2
 .global Block_RepFlag
 .global SprDataOffset_Ctrl
-.global Block_ResidualCounter
 .global Block_Orig_XPos
 .global AttributeBuffer
 .global SprObject_X_MoveForce

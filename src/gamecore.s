@@ -196,42 +196,47 @@ UpdSte:    sta Block_State,x          ;store contents of A in block object state
 ;-------------------------------------------------------------------------------------
 
 RunGameTimer:
-           lda OperMode               ;get primary mode of operation
-           beq ExGTimer               ;branch to leave if in title screen mode
-           lda GameEngineSubroutine
-           cmp #$08                   ;if routine number less than eight running,
-           bcc ExGTimer               ;branch to leave
-           cmp #$0b                   ;if running death routine,
-           beq ExGTimer               ;branch to leave
-           lda Player_Y_HighPos
-           cmp #$02                   ;if player below the screen,
-           bcs ExGTimer               ;branch to leave regardless of level type
-           lda GameTimerCtrlTimer     ;if game timer control not yet expired,
-           bne ExGTimer               ;branch to leave
-           lda GameTimerDisplay
-           ora GameTimerDisplay+1     ;otherwise check game timer digits
-           ora GameTimerDisplay+2
-           beq TimeUpOn               ;if game timer digits at 000, branch to time-up code
-           ldy GameTimerDisplay       ;otherwise check first digit
-           dey                        ;if first digit not on 1,
-           bne ResGTCtrl              ;branch to reset game timer control
-           lda GameTimerDisplay+1     ;otherwise check second and third digits
-           ora GameTimerDisplay+2
-           bne ResGTCtrl              ;if timer not at 100, branch to reset game timer control
-           lda #TimeRunningOutMusic
-           sta EventMusicQueue        ;otherwise load time running out music
-ResGTCtrl: lda #$18                   ;reset game timer control
-           sta GameTimerCtrlTimer
-           ldy #$23                   ;set offset for last digit
-           lda #$ff                   ;set value to decrement game timer digit
-           sta DigitModifier+5
-           jsr DigitsMathRoutine      ;do sub to decrement game timer slowly
-           lda #$a4                   ;set status nybbles to update game timer display
-           jmp PrintStatusBarNumbers  ;do sub to update the display
-TimeUpOn:  sta PlayerStatus           ;init player status (note A will always be zero here)
-           jsr ForceInjury            ;do sub to kill the player (note player is small here)
-           inc GameTimerExpiredFlag   ;set game timer expiration flag
-ExGTimer:  rts                        ;leave
+  lda OperMode               ;get primary mode of operation
+  beq ExGTimer               ;branch to leave if in title screen mode
+  lda GameEngineSubroutine
+  cmp #$08                   ;if routine number less than eight running,
+  bcc ExGTimer               ;branch to leave
+  cmp #$0b                   ;if running death routine,
+  beq ExGTimer               ;branch to leave
+  lda Player_Y_HighPos
+  cmp #$02                   ;if player below the screen,
+  bcs ExGTimer               ;branch to leave regardless of level type
+  lda GameTimerCtrlTimer     ;if game timer control not yet expired,
+  bne ExGTimer               ;branch to leave
+  lda GameTimerDisplay
+  ora GameTimerDisplay+1     ;otherwise check game timer digits
+  ora GameTimerDisplay+2
+  beq TimeUpOn               ;if game timer digits at 000, branch to time-up code
+  ldy GameTimerDisplay       ;otherwise check first digit
+  dey                        ;if first digit not on 1,
+  bne ResGTCtrl              ;branch to reset game timer control
+  lda GameTimerDisplay+1     ;otherwise check second and third digits
+  ora GameTimerDisplay+2
+  bne ResGTCtrl              ;if timer not at 100, branch to reset game timer control
+  lda #TimeRunningOutMusic
+  sta EventMusicQueue        ;otherwise load time running out music
+ResGTCtrl: 
+  ; increase the player neck length by one.
+  inc PlayerNeckLength
+  lda #$18                   ;reset game timer control
+  sta GameTimerCtrlTimer
+  ldy #$23                   ;set offset for last digit
+  lda #$ff                   ;set value to decrement game timer digit
+  sta DigitModifier+5
+  jsr DigitsMathRoutine      ;do sub to decrement game timer slowly
+  lda #$a4                   ;set status nybbles to update game timer display
+  jmp PrintStatusBarNumbers  ;do sub to update the display
+TimeUpOn:
+  sta PlayerStatus           ;init player status (note A will always be zero here)
+  jsr ForceInjury            ;do sub to kill the player (note player is small here)
+  inc GameTimerExpiredFlag   ;set game timer expiration flag
+ExGTimer:
+  rts                        ;leave
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used in WhirlpoolActivate to store whirlpool length / 2, page location of center of whirlpool

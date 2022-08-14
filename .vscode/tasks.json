@@ -3,8 +3,8 @@
     "tasks": [
         {
             "label": "compile_one",
+            "runOptions": {"instanceLimit": 20},
             "type": "process",
-            "runOptions": {"instanceLimit": 10},
             "command": "${config:cmake.cmakePath}",
             "args": ["--build", "${config:cmake.buildDirectory}", "--target", "${input:fileAsTarget}^"],
             "presentation": {
@@ -120,7 +120,7 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
         {
@@ -138,7 +138,7 @@
                 "reveal": "never",
                 "focus": false,
                 "panel": "shared",
-                "close": true,
+                "close": false,
                 "showReuseMessage": false,
                 "clear": true
             },
