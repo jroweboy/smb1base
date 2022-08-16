@@ -159,7 +159,7 @@ Square1SoundQueue:              .res  1
 PlayerNeckLength:               .res  1
 PlayerNeckTemp:                 .res  1
 blank_stack:                    .res  7 ; not used
-VerticalFlipFlag:               .res  4
+VerticalFlipFlag:               .res  4 ; jroweboy: this is acutally only one byte?
 FlagpoleFNum_Y_Pos:             .res  1
 FlagpoleFNum_YMFDummy:          .res  1
 FlagpoleScore:                  .res  1

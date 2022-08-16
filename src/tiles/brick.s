@@ -51,11 +51,13 @@ DrawQBlk: lda BrickQBlockMetatiles,y  ;get appropriate metatile for brick (quest
           jmp DrawRow                 ;now render the object
 
 GetAreaObjectID:
-              lda $00    ;get value saved from area parser routine
-              sec
-              sbc #$00   ;possibly residual code
-              tay        ;save to Y
-ExitDecBlock: rts
+  ;   lda $00    ;get value saved from area parser routine
+  ;   sec
+  ;   sbc #$00   ;possibly residual code
+  ;   tay        ;save to Y
+  ldy $00
+ExitDecBlock:
+  rts
 
 
 ;--------------------------------

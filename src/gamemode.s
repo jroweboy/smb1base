@@ -270,7 +270,6 @@ TerminateGame:
   lda WorldNumber       ;otherwise put world number of current
   sta ContinueWorld     ;player into secret continue function variable
   lda #$00
-  asl                   ;residual ASL instruction
   sta OperMode_Task     ;reset all modes to title screen and
   sta ScreenTimer       ;leave
   sta OperMode
@@ -529,8 +528,6 @@ DontIncModeTask:
   bne IncMsgCounter         ;if set, branch to increment message counters
   lda PrimaryMsgCounter     ;otherwise load primary message counter
   beq ThankPlayer           ;if set to zero, branch to print first message
-  ; cmp #$09                  ;if at 9 or above, branch elsewhere (this comparison
-  ; bcs IncMsgCounter         ;is residual code, counter never reaches 9)
   ldy WorldNumber           ;check world number
   cpy #World8
   bne MRetainerMsg          ;if not at world 8, skip to next part

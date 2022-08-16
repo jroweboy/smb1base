@@ -399,7 +399,7 @@ EnemyGraphicsTable:
       .byte $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
       .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1
       .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2
-      .byte $fc, $fc, $70, $71, $72, $73  ;goomba
+      .byte $fc, $fc, $70, $70, $72, $73  ;goomba
       .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down)
       .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2
       .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup)
@@ -714,108 +714,129 @@ CheckDefeatedState:
       sty $ec               ;init saved value here
 
 DrawEnemyObject:
-      ldy $eb                    ;load sprite data offset
-      jsr DrawEnemyObjRow        ;draw six tiles of data
-      jsr DrawEnemyObjRow        ;into sprite data
-      jsr DrawEnemyObjRow
-      ldx ObjectOffset           ;get enemy object offset
-      ldy Enemy_SprDataOffset,x  ;get sprite data offset
-      lda $ef
-      cmp #$08                   ;get saved enemy object and check
-      bne CheckForVerticalFlip   ;for bullet bill, branch if not found
-
+  ldy $eb                    ;load sprite data offset
+  jsr DrawEnemyObjRow        ;draw six tiles of data
+  jsr DrawEnemyObjRow        ;into sprite data
+  jsr DrawEnemyObjRow
+  ldx ObjectOffset           ;get enemy object offset
+  ldy Enemy_SprDataOffset,x  ;get sprite data offset
+  lda $ef
+  cmp #$08                   ;get saved enemy object and check
+  bne CheckForVerticalFlip   ;for bullet bill, branch if not found
 
 SkipToOffScrChk:
-      jmp SprObjectOffscrChk     ;jump if found
+  jmp SprObjectOffscrChk     ;jump if found
 
 CheckForVerticalFlip:
-      lda VerticalFlipFlag       ;check if vertical flip flag is set here
-      beq CheckForESymmetry      ;branch if not
-      lda Sprite_Attributes,y    ;get attributes of first sprite we dealt with
-      ora #%10000000             ;set bit for vertical flip
-      iny
-      iny                        ;increment two bytes so that we store the vertical flip
-      jsr DumpSixSpr             ;in attribute bytes of enemy obj sprite data
-      dey
-      dey                        ;now go back to the Y coordinate offset
-      tya
-      tax                        ;give offset to X
-      lda $ef
-      cmp #HammerBro             ;check saved enemy object for hammer bro
-      beq FlipEnemyVertically
-      cmp #Lakitu                ;check saved enemy object for lakitu
-      beq FlipEnemyVertically    ;branch for hammer bro or lakitu
-      cmp #$15
-      bcs FlipEnemyVertically    ;also branch if enemy object => $15
-      txa
-      clc
-      adc #$08                   ;if not selected objects or => $15, set
-      tax                        ;offset in X for next row
+  lda VerticalFlipFlag       ;check if vertical flip flag is set here
+  beq CheckForESymmetry      ;branch if not
+  lda Sprite_Attributes,y    ;get attributes of first sprite we dealt with
+  ora #%10000000             ;set bit for vertical flip
+  iny
+  iny                        ;increment two bytes so that we store the vertical flip
+  jsr DumpSixSpr             ;in attribute bytes of enemy obj sprite data
+  dey
+  dey                        ;now go back to the Y coordinate offset
+  tya
+  tax                        ;give offset to X
+  lda $ef
+  cmp #HammerBro             ;check saved enemy object for hammer bro
+  beq FlipEnemyVertically
+  cmp #Lakitu                ;check saved enemy object for lakitu
+  beq FlipEnemyVertically    ;branch for hammer bro or lakitu
+  cmp #$15
+  bcs FlipEnemyVertically    ;also branch if enemy object => $15
+  txa
+  clc
+  adc #$08                   ;if not selected objects or => $15, set
+  tax                        ;offset in X for next row
 
 FlipEnemyVertically:
-      lda Sprite_Tilenumber,x     ;load first or second row tiles
-      pha                         ;and save tiles to the stack
-      lda Sprite_Tilenumber+4,x
-      pha
+  lda Sprite_Tilenumber,x     ;load first or second row tiles
+  pha                         ;and save tiles to the stack
+    lda Sprite_Tilenumber+4,x
+    pha
       lda Sprite_Tilenumber+16,y  ;exchange third row tiles
       sta Sprite_Tilenumber,x     ;with first or second row tiles
       lda Sprite_Tilenumber+20,y
       sta Sprite_Tilenumber+4,x
-      pla                         ;pull first or second row tiles from stack
-      sta Sprite_Tilenumber+20,y  ;and save in third row
-      pla
-      sta Sprite_Tilenumber+16,y
+    pla                         ;pull first or second row tiles from stack
+    sta Sprite_Tilenumber+20,y  ;and save in third row
+  pla
+  sta Sprite_Tilenumber+16,y
 
 CheckForESymmetry:
-        lda BowserGfxFlag           ;are we drawing bowser at all?
-        bne SkipToOffScrChk         ;branch if so
-        lda $ef       
-        ldx $ec                     ;get alternate enemy state
-        cmp #$05                    ;check for hammer bro object
-        bne ContES
-        jmp SprObjectOffscrChk      ;jump if found
-ContES: cmp #Bloober                ;check for bloober object
-        beq MirrorEnemyGfx
-        cmp #PiranhaPlant           ;check for piranha plant object
-        beq MirrorEnemyGfx
-        cmp #Podoboo                ;check for podoboo object
-        beq MirrorEnemyGfx          ;branch if either of three are found
-        cmp #Spiny                  ;check for spiny object
-        bne ESRtnr                  ;branch closer if not found
-        cpx #$05                    ;check spiny's state
-        bne CheckToMirrorLakitu     ;branch if not an egg, otherwise
-ESRtnr: cmp #$15                    ;check for princess/mushroom retainer object
-        bne SpnySC
-        lda #$42                    ;set horizontal flip on bottom right sprite
-        sta Sprite_Attributes+20,y  ;note that palette bits were already set earlier
-SpnySC: cpx #$02                    ;if alternate enemy state set to 1 or 0, branch
-        bcc CheckToMirrorLakitu
-
+  lda BowserGfxFlag           ;are we drawing bowser at all?
+  bne SkipToOffScrChk         ;branch if so
+  lda $ef
+  ldx $ec                     ;get alternate enemy state
+  cmp #$05                    ;check for hammer bro object
+  bne ContES
+  jmp SprObjectOffscrChk      ;jump if found
+ContES:
+  cmp #Goomba                 ;check for goomba object
+  beq MirrorGoomba
+  cmp #Bloober                ;check for bloober object
+  beq MirrorEnemyGfx
+  cmp #PiranhaPlant           ;check for piranha plant object
+  beq MirrorEnemyGfx
+  cmp #Podoboo                ;check for podoboo object
+  beq MirrorEnemyGfx          ;branch if either of three are found
+  cmp #Spiny                  ;check for spiny object
+  bne ESRtnr                  ;branch closer if not found
+  cpx #$05                    ;check spiny's state
+  bne CheckToMirrorLakitu     ;branch if not an egg, otherwise
+ESRtnr:
+  cmp #$15                    ;check for princess/mushroom retainer object
+  bne SpnySC
+  lda #$42                    ;set horizontal flip on bottom right sprite
+  sta Sprite_Attributes+20,y  ;note that palette bits were already set earlier
+SpnySC:
+  cpx #$02                    ;if alternate enemy state set to 1 or 0, branch
+  bcc CheckToMirrorLakitu
 MirrorEnemyGfx:
-        lda BowserGfxFlag           ;if enemy object is bowser, skip all of this
-        bne CheckToMirrorLakitu
-        lda Sprite_Attributes,y     ;load attribute bits of first sprite
-        and #%10100011
-        sta Sprite_Attributes,y     ;save vertical flip, priority, and palette bits
-        sta Sprite_Attributes+8,y   ;in left sprite column of enemy object OAM data
-        sta Sprite_Attributes+16,y
-        ora #%01000000              ;set horizontal flip
-        cpx #$05                    ;check for state used by spiny's egg
-        bne EggExc                  ;if alternate state not set to $05, branch
-        ora #%10000000              ;otherwise set vertical flip
-EggExc: sta Sprite_Attributes+4,y   ;set bits of right sprite column
-        sta Sprite_Attributes+12,y  ;of enemy object sprite data
-        sta Sprite_Attributes+20,y
-        cpx #$04                    ;check alternate enemy state
-        bne CheckToMirrorLakitu     ;branch if not $04
-        lda Sprite_Attributes+8,y   ;get second row left sprite attributes
-        ora #%10000000
-        sta Sprite_Attributes+8,y   ;store bits with vertical flip in
-        sta Sprite_Attributes+16,y  ;second and third row left sprites
-        ora #%01000000
-        sta Sprite_Attributes+12,y  ;store with horizontal and vertical flip in
-        sta Sprite_Attributes+20,y  ;second and third row right sprites
-
+  lda BowserGfxFlag           ;if enemy object is bowser, skip all of this
+  bne CheckToMirrorLakitu
+  lda Sprite_Attributes,y     ;load attribute bits of first sprite
+  and #%10100011
+  sta Sprite_Attributes,y     ;save vertical flip, priority, and palette bits
+  sta Sprite_Attributes+8,y   ;in left sprite column of enemy object OAM data
+  sta Sprite_Attributes+16,y
+  ora #%01000000              ;set horizontal flip
+  cpx #$05                    ;check for state used by spiny's egg
+  bne EggExc                  ;if alternate state not set to $05, branch
+    ora #%10000000            ;otherwise set vertical flip
+EggExc:
+  sta Sprite_Attributes+4,y   ;set bits of right sprite column
+  sta Sprite_Attributes+12,y  ;of enemy object sprite data
+  sta Sprite_Attributes+20,y
+  cpx #$04                    ;check alternate enemy state
+  bne CheckToMirrorLakitu     ;branch if not $04
+  lda Sprite_Attributes+8,y   ;get second row left sprite attributes
+  ora #%10000000
+  sta Sprite_Attributes+8,y   ;store bits with vertical flip in
+  sta Sprite_Attributes+16,y  ;second and third row left sprites
+  ora #%01000000
+  sta Sprite_Attributes+12,y  ;store with horizontal and vertical flip in
+  sta Sprite_Attributes+20,y  ;second and third row right sprites
+  bne CheckToMirrorLakitu ; unconditional
+MirrorGoomba:
+  cpx #$02              ;check for defeated state
+  bcs MirrorEnemyGfx
+  ; if its not already defeated, then
+  ; Flip the top left or top right head sprite of a goomba (depending on animation frame)
+  lda $03
+  and #%00000001
+  bne @TopRight
+@TopLeft:
+    lda Sprite_Attributes+8,y
+    eor #%01000000
+    sta Sprite_Attributes+8,y
+    bne CheckToMirrorLakitu ; uncoditional
+@TopRight:
+    lda Sprite_Attributes+12,y
+    eor #%01000000
+    sta Sprite_Attributes+12,y
 CheckToMirrorLakitu:
         lda $ef                     ;check for lakitu enemy object
         cmp #Lakitu
@@ -893,7 +914,6 @@ AllRowC: pla                       ;get from stack once more
          cmp #$02                  ;if not yet past the bottom of the screen, branch
          bne ExEGHandler
          jsr EraseEnemyObject      ;what it says
-
 ExEGHandler:
       rts
 

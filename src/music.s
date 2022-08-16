@@ -648,7 +648,6 @@ HandleAreaMusicLoopB:
 
 FindAreaMusicHeader:
         ldy #$08                   ;load Y for offset of area music
-        sty MusicOffset_Square2    ;residual instruction here
 
 FindEventMusicHeader:
         iny                       ;increment Y pointer based on previously loaded queue contents

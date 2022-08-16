@@ -385,7 +385,7 @@ Save8Bits:
 ;-------------------------------------------------------------------------------------
 ;$00 - used for preset value
 .proc SpriteShuffler
-  ldy AreaType                ;load level type, likely residual code
+  ; ldy AreaType                ;load level type, likely residual code
   lda #$28                    ;load preset value which will put it at
   sta $00                     ;sprite #10
   ldx #$0e                    ;start at the end of OAM data offsets

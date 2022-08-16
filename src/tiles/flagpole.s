@@ -7,10 +7,10 @@
 ;--------------------------------
 
 FlagBalls_Residual:
-      jsr GetLrgObjAttrib  ;get low nybble from object byte
-      ldx #$02             ;render flag balls on third row from top
-      lda #$6d             ;of screen downwards based on low nybble
-      jmp RenderUnderPart
+;       jsr GetLrgObjAttrib  ;get low nybble from object byte
+;       ldx #$02             ;render flag balls on third row from top
+;       lda #$6d             ;of screen downwards based on low nybble
+;       jmp RenderUnderPart
 
 ;--------------------------------
 

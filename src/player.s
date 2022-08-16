@@ -925,9 +925,9 @@ ExitDeath:
 ;-------------------------------------------------------------------------------------
 
 FlagpoleSlide:
-             lda Enemy_ID+5           ;check special use enemy slot
-             cmp #FlagpoleFlagObject  ;for flagpole flag object
-             bne NoFPObj              ;if not found, branch to something residual
+            ;  lda Enemy_ID+5           ;check special use enemy slot
+            ;  cmp #FlagpoleFlagObject  ;for flagpole flag object
+            ;  bne NoFPObj              ;if not found, branch to something residual
              lda FlagpoleSoundQueue   ;load flagpole sound
              sta Square1SoundQueue    ;into square 1's sfx queue
              lda #$00
@@ -937,8 +937,8 @@ FlagpoleSlide:
              bcs SlidePlayer          ;far enough, and if so, branch with no controller bits set
              lda #$04                 ;otherwise force player to climb down (to slide)
 SlidePlayer: jmp AutoControlPlayer    ;jump to player control routine
-NoFPObj:     inc GameEngineSubroutine ;increment to next routine (this may
-             rts                      ;be residual code)
+; NoFPObj:     inc GameEngineSubroutine ;increment to next routine (this may
+;              rts                      ;be residual code)
 
 ;-------------------------------------------------------------------------------------
 
@@ -1471,8 +1471,8 @@ ScrollScreen:
               ora $00                   ;get saved bit here and save in PPU register 1
               sta Mirror_PPU_CTRL       ;mirror to be used to set name table later
               jsr GetScreenPosition     ;figure out where the right side is
-              lda #$08
-              sta ScrollIntervalTimer   ;set scroll timer (residual, not used elsewhere)
+            ;   lda #$08
+            ;   sta ScrollIntervalTimer   ;set scroll timer (residualremoved, not used elsewhere)
               jmp ChkPOffscr            ;skip this part
 InitScrlAmt:  lda #$00
               sta ScrollAmount          ;initialize value here

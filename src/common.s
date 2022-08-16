@@ -524,9 +524,6 @@ MovePlatformUp:
            ldy Enemy_ID,x  ;get enemy object identifier
            inx             ;increment offset for enemy object
            lda #$05        ;load default value here
-          ;  cpy #$29        ;residual comparison, object #29 never executes
-          ;  bne SetDplSpd   ;this code, thus unconditional branch here
-          ;  lda #$09        ;residual code
 SetDplSpd: sta $00         ;save downward movement amount here
            lda #$0a        ;save upward movement amount here
            sta $01
