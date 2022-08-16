@@ -174,15 +174,16 @@ PlayerSubs: jsr ScrollHandler           ;move the screen if necessary
             ldx #$00                    ;set offset for player object
             jsr BoundingBoxCore         ;get player's bounding box coordinates
             ; Add to the upper left offset based on current neck size
-            lda PlayerNeckLength
-            sta PlayerNeckTemp
             lda BoundingBox_UL_YPos, x
+            cmp #$f0 ; check if mario's head is offscreen already
+            bcs :+
             sec
             sbc PlayerNeckLength
-            sta BoundingBox_UL_YPos, x
+            bcs :+
+              ; If we screenwrapped, we don't want the box to go off the top
+              lda #1
+:           sta BoundingBox_UL_YPos, x
             jsr PlayerBGCollision       ;do collision detection and process
-            lda #0
-            sta PlayerNeckTemp
             lda Player_Y_Position
             cmp #$40                    ;check to see if player is higher than 64th pixel
             bcc PlayerHole              ;if so, branch ahead
@@ -299,8 +300,8 @@ EnterSidePipe:
            sta Player_X_Speed     ;if lower nybble = 0, set as horizontal speed
            tay                    ;and nullify controller bit override here
 RightPipe: tya                    ;use contents of Y to
-           jsr AutoControlPlayer  ;execute player control routine with ctrl bits nulled
-           rts
+           jmp AutoControlPlayer  ;execute player control routine with ctrl bits nulled
+           rts ; TODO check this RTS can be removed
 
 ;-------------------------------------------------------------------------------------
 
@@ -852,8 +853,8 @@ PlayerChangeSize:
              jmp InitChangeSize  ;otherwise run code to get growing/shrinking going
 EndChgSize:  cmp #$c4            ;check again for another specific moment
              bne ExitChgSize     ;and branch to leave if before or after that point
-             jsr DonePlayerTask  ;otherwise do sub to init timer control and set routine
-ExitChgSize: rts                 ;and then leave
+             jmp DonePlayerTask  ;otherwise do sub to init timer control and set routine
+ExitChgSize: rts ; TODO check this RTS can be removed                 ;and then leave
 
 ;-------------------------------------------------------------------------------------
 

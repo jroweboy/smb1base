@@ -180,8 +180,8 @@ CheckTopOfBlock:
        sta ($06),y             ;otherwise put blank metatile where coin was
        jsr RemoveCoin_Axe      ;write blank metatile to vram buffer
        ldx SprDataOffset_Ctrl  ;get control bit
-       jsr SetupJumpCoin       ;create jumping coin object and update coin variables
-TopEx: rts                     ;leave!
+       jmp SetupJumpCoin       ;create jumping coin object and update coin variables
+TopEx: rts ; TODO check this RTS can be removed                     ;leave!
 
 ;--------------------------------
 

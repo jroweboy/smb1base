@@ -159,8 +159,8 @@ RenderH:    lda Misc_Rel_YPos           ;get relative vertical coordinate
             lda #$00
             sta Misc_State,x            ;otherwise nullify misc object state
             lda #$f8
-            jsr DumpTwoSpr              ;do sub to move hammer sprites offscreen
-NoHOffscr:  rts                         ;leave
+            jmp DumpTwoSpr              ;do sub to move hammer sprites offscreen
+NoHOffscr:  rts ; TODO check this RTS can be removed                         ;leave
 
 ;-------------------------------------------------------------------------------------
 
@@ -241,8 +241,8 @@ SChk6:  pla                         ;get bits from stack
 SLChk:  lda Enemy_OffscreenBits     ;check d7 of offscreen bits
         asl                         ;and if d7 is not set, skip sub
         bcc ExDLPl
-        jsr MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
-ExDLPl: rts
+        jmp MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
+ExDLPl: rts ; TODO check this RTS can be removed
 
 ;-------------------------------------------------------------------------------------
 

@@ -23,6 +23,7 @@ local hammer_ch= 0x002A;
 local power_ch = 0x0014;
 
 local mario_x  = 0x0086;
+local hscroll  = 0x073f; -- emu.getLabelAddress("HorizontalScroll");
 local mario_y  = 0x00ce;
 
 local colorGreen = 0xAA00FF00;
@@ -42,7 +43,8 @@ function frame_start()
     a,b,c,d = emu.read(mario_hb,emu.memType.cpuDebug),emu.read(mario_hb+1,emu.memType.cpuDebug),emu.read(mario_hb+2,emu.memType.cpuDebug),emu.read(mario_hb+3,emu.memType.cpuDebug);
     box(a,b,c,d, colorGreen);
     a,b = emu.read(mario_x,emu.memType.cpuDebug),emu.read(mario_y,emu.memType.cpuDebug);
-    box(a,b,a+1,b+1,colorRed);
+    offset = emu.read(hscroll, emu.memType.cpuDebug);
+    box(a - offset,b+32,a+2 - offset,b+2+32,colorRed);
   end;
   
   -- enemies

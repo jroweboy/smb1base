@@ -372,8 +372,8 @@ GiveFPScr: ldy FlagpoleScore         ;get score offset from earlier (when player
            sta GameEngineSubroutine  ;set to run end-of-level subroutine on next frame
 FPGfx:     jsr GetEnemyOffscreenBits ;get offscreen information
            jsr RelativeEnemyPosition ;get relative coordinates
-           jsr FlagpoleGfxHandler    ;draw flagpole flag and floatey number
-ExitFlagP: rts
+           jmp FlagpoleGfxHandler    ;draw flagpole flag and floatey number
+ExitFlagP: rts ; TODO check this RTS can be removed
 
 ;-------------------------------------------------------------------------------------
 

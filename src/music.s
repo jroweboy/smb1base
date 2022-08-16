@@ -525,8 +525,8 @@ ContinueGrowItems:
         lda #$9d                  ;load contents of other reg directly
         sta SND_SQUARE2_REG
         lda PUp_VGrow_FreqData,y  ;use secondary counter / 2 as offset for frequency regs
-        jsr SetFreq_Squ2
-        rts
+        jmp SetFreq_Squ2
+        rts ; TODO check this RTS can be removed
 
 StopGrowItems:
         jmp EmptySfx2Buffer       ;branch to stop playing sounds

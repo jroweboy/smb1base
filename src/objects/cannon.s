@@ -131,5 +131,5 @@ RunBBSubs: jsr GetEnemyOffscreenBits ;get offscreen information
            jsr GetEnemyBoundBox      ;get bounding box coordinates
            jsr PlayerEnemyCollision  ;handle player to enemy collisions
            jmp EnemyGfxHandler       ;draw the bullet bill and leave
-KillBB:    jsr EraseEnemyObject      ;kill bullet bill and leave
-           rts
+KillBB:    jmp EraseEnemyObject      ;kill bullet bill and leave
+           rts ; TODO check this RTS can be removed

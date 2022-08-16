@@ -25,8 +25,8 @@ SetupExpl: jsr RelativeEnemyPosition   ;get relative coordinates of explosion
            sta Fireball_Rel_XPos
            ldy Enemy_SprDataOffset,x   ;get OAM data offset
            lda ExplosionGfxCounter,x   ;get explosion graphics counter
-           jsr DrawExplosion_Fireworks ;do a sub to draw the explosion then leave
-           rts
+           jmp DrawExplosion_Fireworks ;do a sub to draw the explosion then leave
+           rts ; TODO check this RTS can be removed
 
 FireworksSoundScore:
       lda #$00               ;disable enemy buffer flag

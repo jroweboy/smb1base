@@ -479,8 +479,8 @@ YMDown: jsr MovePlatformDown         ;start slowing ascent/moving downwards
 ChkYPCollision:
        lda PlatformCollisionFlag,x  ;if collision flag not set here, branch
        bmi ExYPl                    ;to leave
-       jsr PositionPlayerOnVPlat    ;otherwise position player appropriately
-ExYPl: rts                          ;leave
+       jmp PositionPlayerOnVPlat    ;otherwise position player appropriately
+ExYPl: rts ; TODO check this RTS can be removed                          ;leave
 
 ;--------------------------------
 ;$00 - used as adder to position player hotizontally
@@ -505,8 +505,8 @@ PositionPlayerOnHPlat:
 PPHSubt: sbc #$00                  ;subtract borrow from page location
 SetPVar: sta Player_PageLoc        ;save result to player's page location
          sty Platform_X_Scroll     ;put saved value from second sub here to be used later
-         jsr PositionPlayerOnVPlat ;position player vertically and appropriately
-ExXMP:   rts                       ;and we are done here
+         jmp PositionPlayerOnVPlat ;position player vertically and appropriately
+ExXMP:   rts ; TODO check this RTS can be removed                       ;and we are done here
 
 ;--------------------------------
 
@@ -514,8 +514,8 @@ DropPlatform:
        lda PlatformCollisionFlag,x  ;if no collision between platform and player
        bmi ExDPl                    ;occurred, just leave without moving anything
        jsr MoveDropPlatform         ;otherwise do a sub to move platform down very quickly
-       jsr PositionPlayerOnVPlat    ;do a sub to position player appropriately
-ExDPl: rts                          ;leave
+       jmp PositionPlayerOnVPlat    ;do a sub to position player appropriately
+ExDPl: rts ; TODO check this RTS can be removed                          ;leave
 
 ;--------------------------------
 ;$00 - residual value from sub
@@ -527,8 +527,8 @@ RightPlatform:
        bmi ExRPl                     ;and platform, branch ahead, leave speed unaltered
        lda #$10
        sta Enemy_X_Speed,x           ;otherwise set new speed (gets moving if motionless)
-       jsr PositionPlayerOnHPlat     ;use saved value from earlier sub to position player
-ExRPl: rts                           ;then leave
+       jmp PositionPlayerOnHPlat     ;use saved value from earlier sub to position player
+ExRPl: rts ; TODO check this RTS can be removed                           ;then leave
 
 ;--------------------------------
 
@@ -555,8 +555,8 @@ MoveLiftPlatforms:
 ChkSmallPlatCollision:
          lda PlatformCollisionFlag,x ;get bounding box counter saved in collision flag
          beq ExLiftP                 ;if none found, leave player position alone
-         jsr PositionPlayerOnS_Plat  ;use to position player correctly
-ExLiftP: rts                         ;then leave
+         jmp PositionPlayerOnS_Plat  ;use to position player correctly
+ExLiftP: rts ; TODO check this RTS can be removed                         ;then leave
 
 
 

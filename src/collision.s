@@ -100,15 +100,6 @@ CollisionFound:
 ;$05 - modified x coordinate
 ;$06-$07 - block buffer address
 
-BlockBufferChk_Enemy:
-  pha        ;save contents of A to stack
-    txa
-    clc        ;add 1 to X to run sub with enemy offset in mind
-    adc #$01
-    tax
-  pla        ;pull A from stack and jump elsewhere
-  jmp BBChk_E
-
 BlockBufferChk_FBall:
   ldy #$1a                  ;set offset for block buffer adder data
   txa
@@ -139,15 +130,19 @@ BlockBuffer_Y_Adder:
 
 BlockBufferColli_Feet:
   iny            ;if branched here, increment to next set of adders
-
+  bne SkipNeckLength ; unconditional
 BlockBufferColli_Head:
+  lda PlayerNeckLength
+  sta PlayerNeckTemp
+SkipNeckLength:
   lda #$00       ;set flag to return vertical coordinate
-  .byte $2c        ;BIT instruction opcode
-
+  beq BlockBufferPlayerCollision ; Unconditional
 BlockBufferColli_Side:
+  lda PlayerNeckLength
+  sta PlayerNeckTemp
   lda #$01       ;set flag to return horizontal coordinate
+BlockBufferPlayerCollision:
   ldx #$00       ;set offset for player object
-
 BlockBufferCollision:
   pha                         ;save contents of A to stack
     sty $04                     ;save contents of Y here
@@ -167,16 +162,22 @@ BlockBufferCollision:
     jsr GetBlockBufferAddr      ;get address of block buffer into $06, $07
     ldy $04                     ;get old contents of Y
     lda SprObject_Y_Position,x  ;get vertical coordinate of object
-    sec
-    sbc PlayerNeckLength
     clc
     adc BlockBuffer_Y_Adder,y   ;add it to value obtained using Y as offset
+    sec
+    sbc PlayerNeckTemp
+    bcc HeadWrapped
     and #%11110000              ;mask out low nybble
     sec
     sbc #$20                    ;subtract 32 pixels for the status bar
+    bcc HeadWrapped
     sta $02                     ;store result here
     tay                         ;use as offset for block buffer
     lda ($06),y                 ;check current content of block buffer
+    jmp NoHeadWrap
+HeadWrapped:
+    lda #0
+NoHeadWrap:
     sta $03                     ;and store here
     ldy $04                     ;get old contents of Y again
   pla                         ;pull A from stack
@@ -188,6 +189,8 @@ RetXC:
 RetYC:
   and #%00001111              ;and mask out high nybble
   sta $04                     ;store masked out result here
+  lda #0
+  sta PlayerNeckTemp
   lda $03                     ;get saved content of block buffer
   rts                         ;and leave
 
@@ -352,8 +355,8 @@ HandlePECollisions:
        cpy #$03                     ;if above a certain point, branch using the points
        bcs KSPts                    ;data obtained from the stomp counter + 3
        lda KickedShellPtsData,y     ;otherwise, set points based on proximity to timer expiration
-KSPts: jsr SetupFloateyNumber       ;set values for floatey number now
-ExPEC: rts                          ;leave!!!
+KSPts: jmp SetupFloateyNumber       ;set values for floatey number now
+ExPEC: rts ; TODO check this RTS can be removed                          ;leave!!!
 
 ChkForPlayerInjury:
           lda Player_Y_Speed     ;check player's vertical speed
@@ -969,8 +972,8 @@ UpToSuper:
 
 UpToFiery:
        ldy #$00         ;set value to be used as new player state
-       jsr SetPRout     ;set values to stop certain things in motion
-NoPUp: rts
+       jmp SetPRout     ;set values to stop certain things in motion
+NoPUp: rts ; TODO check this RTS can be removed
 
 ;-------------------------------------------------------------------------------------
 
@@ -1057,10 +1060,6 @@ HeadChk: lda Player_Y_Position       ;get player's vertical coordinate
          cmp PlayerBGUpperExtent,x   ;compare with upper extent value based on offset
          bcc DoFootCheck             ;if player is too high, skip this part
          jsr BlockBufferColli_Head   ;do player-to-bg collision detection on top of
-         pha
-          lda #0
-          sta PlayerNeckTemp
-         pla
          beq DoFootCheck             ;player, and branch if nothing above player's head
          jsr CheckForCoinMTiles      ;check to see if player touched coin with their head
          bcs AwardTouchedCoin        ;if so, branch to some other part of code
@@ -1076,7 +1075,7 @@ HeadChk: lda Player_Y_Position       ;get player's vertical coordinate
          ldy BlockBounceTimer        ;if block bounce timer not expired,
          bne NYSpd                   ;branch ahead, do not process collision
          jsr PlayerHeadCollision     ;otherwise do a sub to process collision
-         jmp DoFootCheck             ;jump ahead to skip these other parts here
+         jmp DoFootCheck             ;jump ahead to skip these other parts
 
 SolidOrClimb:
        cmp #$26               ;if climbing metatile,
@@ -1227,8 +1226,8 @@ ChkGERtn: lda GameEngineSubroutine   ;get number of game engine routine running
 ;$06-$07 - block buffer address
 
 StopPlayerMove:
-       jsr ImpedePlayerMove      ;stop player's movement
-ExCSM: rts                       ;leave
+       jmp ImpedePlayerMove      ;stop player's movement
+ExCSM: rts ; TODO check this RTS can be removed                       ;leave
       
 AreaChangeTimerData:
       .byte $a0, $34
@@ -1429,8 +1428,8 @@ ChkLandedEnemyState:
 SetForStn: sta EnemyIntervalTimer,x  ;set timer here
            lda #$03                  ;set state here, apparently used to render
            sta Enemy_State,x         ;upside-down koopas and buzzy beetles
-           jsr EnemyLanding          ;then land it properly
-ExSteChk:  rts                       ;then leave
+           jmp EnemyLanding          ;then land it properly
+ExSteChk:  rts ; TODO check this RTS can be removed                       ;then leave
 
 ProcEnemyDirection:
          lda Enemy_ID,x            ;check enemy identifier for goomba
@@ -1502,7 +1501,9 @@ SdeCLoop: lda $eb                    ;check value
           cmp Enemy_MovingDir,x      ;compare value against moving direction
           bne NextSdeC               ;branch if different and do not seek block there
           lda #$01                   ;set flag in A for save horizontal coordinate 
-          jsr BlockBufferChk_Enemy   ;find block to left or right of enemy object
+          ; jroweboy(inlined BlockBufferChk_Enemy)
+          inx
+          jsr BBChk_E   ;find block to left or right of enemy object
           beq NextSdeC               ;if nothing found, branch
           jsr ChkForNonSolids        ;check for non-solid blocks
           bne ChkForBump_HammerBroJ  ;branch if not found
@@ -1763,6 +1764,8 @@ PutMTileB: sta Block_Metatile,x     ;store whatever metatile be appropriate here
            beq BigBP                ;if so, branch to use default offset
 SmallBP:   iny                      ;increment for small or big and crouching
 BigBP:     lda Player_Y_Position    ;get player's vertical coordinate
+           sec
+           sbc PlayerNeckLength
            clc
            adc BlockYPosAdderData,y ;add value determined by size
            and #$f0                 ;mask out low nybble to get 16-pixel correspondence
@@ -1846,5 +1849,6 @@ NoUnderHammerBro:
 ChkUnderEnemy:
       lda #$00                  ;set flag in A for save vertical coordinate
       ldy #$15                  ;set Y to check the bottom middle (8,18) of enemy object
-      jmp BlockBufferChk_Enemy  ;hop to it!
+      inx ; jroweboy(inlined BlockBufferChk_Enemy)
+      jmp BBChk_E  ;hop to it!
 

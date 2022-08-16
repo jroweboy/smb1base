@@ -333,8 +333,8 @@ StrFre: sta Enemy_ID,x           ;store contents of frenzy buffer into enemy ide
 InitEnemyObject:
         lda #$00                 ;initialize enemy state
         sta Enemy_State,x
-        jsr CheckpointEnemyID    ;jump ahead to run jump engine and subroutines
-ExEPar: rts                      ;then leave
+        jmp CheckpointEnemyID    ;jump ahead to run jump engine and subroutines
+ExEPar: rts ; TODO check this RTS can be removed                      ;then leave
 
 DoGroup:
         jmp HandleGroupEnemies   ;handle enemy group objects
@@ -662,8 +662,8 @@ RunAllH:  jsr PlayerHammerCollision  ;handle collisions
 RunHSubs: jsr GetMiscOffscreenBits   ;get offscreen information
           jsr RelativeMiscPosition   ;get relative coordinates
           jsr GetMiscBoundBox        ;get bounding box coordinates
-          jsr DrawHammer             ;draw the hammer
-          rts                        ;and we are done here
+          jmp DrawHammer             ;draw the hammer
+          rts ; TODO check this RTS can be removed                        ;and we are done here
 
 
 ;-------------------------------------------------------------------------------------
@@ -836,8 +836,8 @@ ExtendLB: sbc #$48                ;subtract 72 pixels regardless of enemy object
           beq ExScrnBd
           cpy #JumpspringObject   ;if jumpspring, do not erase
           beq ExScrnBd            ;erase all others too far to the right
-TooFar:   jsr EraseEnemyObject    ;erase object if necessary
-ExScrnBd: rts                     ;leave
+TooFar:   jmp EraseEnemyObject    ;erase object if necessary
+ExScrnBd: rts ; TODO check this RTS can be removed                     ;leave
 
 .proc RelativeMiscPosition
   ldy #$02                ;set for misc object offsets

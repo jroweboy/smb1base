@@ -107,8 +107,8 @@ DoAPTasks:    dey
               jsr AreaParserTasks
               dec AreaParserTaskNum     ;if all tasks not complete do not
               bne SkipATRender          ;render attribute table yet
-              jsr RenderAttributeTables
-SkipATRender: rts
+              jmp RenderAttributeTables
+SkipATRender: rts ; TODO check this RTS can be removed
 
 AreaParserTasks:
       jsr JumpEngine

@@ -190,5 +190,5 @@ ChkKillGoomba:
         lda Enemy_ID,x
         cmp #Goomba           ;check for goomba object
         bne NKGmba            ;branch if not found
-        jsr EraseEnemyObject  ;otherwise, kill this goomba object
-NKGmba: rts                   ;leave!
+        jmp EraseEnemyObject  ;otherwise, kill this goomba object
+NKGmba: rts ; TODO check this RTS can be removed                   ;leave!
