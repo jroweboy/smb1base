@@ -162,13 +162,13 @@ SetOffscrBitsOffset:
 GetOffScreenBitsSet:
   tya                         ;save offscreen bits offset to stack for now
   pha
-  jsr RunOffscrBitsSubs
-  asl                         ;move low nybble to high nybble
-  asl
-  asl
-  asl
-  ora $00                     ;mask together with previously saved low nybble
-  sta $00                     ;store both here
+    jsr RunOffscrBitsSubs
+    asl                         ;move low nybble to high nybble
+    asl
+    asl
+    asl
+    ora $00                     ;mask together with previously saved low nybble
+    sta $00                     ;store both here
   pla                         ;get offscreen bits offset from stack
   tay
   lda $00                     ;get value here and store elsewhere
@@ -197,37 +197,38 @@ GetOffScreenBitsSet:
   stx $04                     ;save position in buffer to here
   ldy #$01                    ;start with right side of screen
 XOfsLoop:
-  lda ScreenEdge_X_Pos,y      ;get pixel coordinate of edge
-  sec                         ;get difference between pixel coordinate of edge
-  sbc SprObject_X_Position,x  ;and pixel coordinate of object position
-  sta $07                     ;store here
-  lda ScreenEdge_PageLoc,y    ;get page location of edge
-  sbc SprObject_PageLoc,x     ;subtract page location of object position from it
-  ldx DefaultXOnscreenOfs,y   ;load offset value here
-  cmp #$00
-  bmi XLdBData                ;if beyond right edge or in front of left edge, branch
-  ldx DefaultXOnscreenOfs+1,y ;if not, load alternate offset value here
-  cmp #$01      
-  bpl XLdBData                ;if one page or more to the left of either edge, branch
-  lda #$38                    ;if no branching, load value here and store
-  sta $06
-  lda #$08                    ;load some other value and execute subroutine
-  jsr DividePDiff
+    lda ScreenEdge_X_Pos,y      ;get pixel coordinate of edge
+    sec                         ;get difference between pixel coordinate of edge
+    sbc SprObject_X_Position,x  ;and pixel coordinate of object position
+    sta $07                     ;store here
+    lda ScreenEdge_PageLoc,y    ;get page location of edge
+    sbc SprObject_PageLoc,x     ;subtract page location of object position from it
+    ldx DefaultXOnscreenOfs,y   ;load offset value here
+    cmp #$00
+    bmi XLdBData                ;if beyond right edge or in front of left edge, branch
+      ldx DefaultXOnscreenOfs+1,y ;if not, load alternate offset value here
+      cmp #$01      
+      bpl XLdBData                ;if one page or more to the left of either edge, branch
+        lda #$38                    ;if no branching, load value here and store
+        sta $06
+        lda #$08                    ;load some other value and execute subroutine
+        jsr DividePDiff
 XLdBData:
-  lda XOffscreenBitsData,x    ;get bits here
-  ldx $04                     ;reobtain position in buffer
-  cmp #$00                    ;if bits not zero, branch to leave
-  bne ExXOfsBS
-  dey                         ;otherwise, do left side of screen now
-  bpl XOfsLoop                ;branch if not already done with left side
-ExXOfsBS: rts
+    lda XOffscreenBitsData,x    ;get bits here
+    ldx $04                     ;reobtain position in buffer
+    cmp #$00                    ;if bits not zero, branch to leave
+    bne ExXOfsBS
+    dey                         ;otherwise, do left side of screen now
+    bpl XOfsLoop                ;branch if not already done with left side
+ExXOfsBS:
+  rts
 
 XOffscreenBitsData:
-        .byte $7f, $3f, $1f, $0f, $07, $03, $01, $00
-        .byte $80, $c0, $e0, $f0, $f8, $fc, $fe, $ff
+  .byte $7f, $3f, $1f, $0f, $07, $03, $01, $00
+  .byte $80, $c0, $e0, $f0, $f8, $fc, $fe, $ff
 
 DefaultXOnscreenOfs:
-        .byte $07, $0f, $07
+  .byte $07, $0f, $07
 .endproc
 
 ;--------------------------------
@@ -420,7 +421,7 @@ ExVMove:
 .endproc
 
 Bitmasks:
-      .byte %00000001, %00000010, %00000100, %00001000, %00010000, %00100000, %01000000, %10000000
+  .byte %00000001, %00000010, %00000100, %00001000, %00010000, %00100000, %01000000, %10000000
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store high nybble of horizontal speed as adder

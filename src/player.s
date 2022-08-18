@@ -57,82 +57,89 @@
 ;-------------------------------------------------------------------------------------
 
 PlayerEntrance:
-            lda AltEntranceControl    ;check for mode of alternate entry
-            cmp #$02
-            beq EntrMode2             ;if found, branch to enter from pipe or with vine
-            lda #$00       
-            ldy Player_Y_Position     ;if vertical position above a certain
-            cpy #$30                  ;point, nullify controller bits and continue
-            bcc AutoControlPlayer     ;with player movement code, do not return
-            lda PlayerEntranceCtrl    ;check player entry bits from header
-            cmp #$06
-            beq ChkBehPipe            ;if set to 6 or 7, execute pipe intro code
-            cmp #$07                  ;otherwise branch to normal entry
-            bne PlayerRdy
-ChkBehPipe: lda Player_SprAttrib      ;check for sprite attributes
-            bne IntroEntr             ;branch if found
-            lda #$01
-            jmp AutoControlPlayer     ;force player to walk to the right
-IntroEntr:  jsr EnterSidePipe         ;execute sub to move player to the right
-            dec ChangeAreaTimer       ;decrement timer for change of area
-            bne ExitEntr              ;branch to exit if not yet expired
-            inc DisableIntermediate   ;set flag to skip world and lives display
-            jmp NextArea              ;jump to increment to next area and set modes
-EntrMode2:  lda JoypadOverride        ;if controller override bits set here,
-            bne VineEntr              ;branch to enter with vine
-            lda #$ff                  ;otherwise, set value here then execute sub
-            jsr MovePlayerYAxis       ;to move player upwards
-            lda Player_Y_Position     ;check to see if player is at a specific coordinate
-            cmp #$91                  ;if player risen to a certain point (this requires pipes
-            bcc PlayerRdy             ;to be at specific height to look/function right) branch
-            rts                       ;to the last part, otherwise leave
-VineEntr:   lda Vine_Height
-            cmp #$60                  ;check vine height
-            bne ExitEntr              ;if vine not yet reached maximum height, branch to leave
-            lda Player_Y_Position     ;get player's vertical coordinate
-            cmp #$99                  ;check player's vertical coordinate against preset value
-            ldy #$00                  ;load default values to be written to 
-            lda #$01                  ;this value moves player to the right off the vine
-            bcc OffVine               ;if vertical coordinate < preset value, use defaults
-            lda #$03
-            sta Player_State          ;otherwise set player state to climbing
-            iny                       ;increment value in Y
-            lda #$08                  ;set block in block buffer to cover hole, then 
-            sta Block_Buffer_1+$b4    ;use same value to force player to climb
-OffVine:    sty DisableCollisionDet   ;set collision detection disable flag
-            jsr AutoControlPlayer     ;use contents of A to move player up or right, execute sub
-            lda Player_X_Position
-            cmp #$48                  ;check player's horizontal position
-            bcc ExitEntr              ;if not far enough to the right, branch to leave
-PlayerRdy:  lda #$08                  ;set routine to be executed by game engine next frame
-            sta GameEngineSubroutine
-            lda #$01                  ;set to face player to the right
-            sta PlayerFacingDir
-            lsr                       ;init A
-            sta AltEntranceControl    ;init mode of entry
-            sta DisableCollisionDet   ;init collision detection disable flag
-            sta JoypadOverride        ;nullify controller override bits
-ExitEntr:   rts                       ;leave!
+  lda AltEntranceControl    ;check for mode of alternate entry
+  cmp #$02
+  beq EntrMode2             ;if found, branch to enter from pipe or with vine
+  lda #$00       
+  ldy Player_Y_Position     ;if vertical position above a certain
+  cpy #$30                  ;point, nullify controller bits and continue
+  bcc AutoControlPlayer     ;with player movement code, do not return
+    lda PlayerEntranceCtrl    ;check player entry bits from header
+    cmp #$06
+    beq ChkBehPipe            ;if set to 6 or 7, execute pipe intro code
+    cmp #$07                  ;otherwise branch to normal entry
+    bne PlayerRdy
+ChkBehPipe:
+  lda Player_SprAttrib      ;check for sprite attributes
+  bne IntroEntr             ;branch if found
+    lda #$01
+    jmp AutoControlPlayer     ;force player to walk to the right
+IntroEntr:
+  jsr EnterSidePipe         ;execute sub to move player to the right
+  dec ChangeAreaTimer       ;decrement timer for change of area
+  bne ExitEntr              ;branch to exit if not yet expired
+    inc DisableIntermediate   ;set flag to skip world and lives display
+    jmp NextArea              ;jump to increment to next area and set modes
+EntrMode2:
+  lda JoypadOverride        ;if controller override bits set here,
+  bne VineEntr              ;branch to enter with vine
+  lda #$ff                  ;otherwise, set value here then execute sub
+  jsr MovePlayerYAxis       ;to move player upwards
+  lda Player_Y_Position     ;check to see if player is at a specific coordinate
+  cmp #$91                  ;if player risen to a certain point (this requires pipes
+  bcc PlayerRdy             ;to be at specific height to look/function right) branch
+    rts                       ;to the last part, otherwise leave
+VineEntr:
+  lda Vine_Height
+  cmp #$60                  ;check vine height
+  bne ExitEntr              ;if vine not yet reached maximum height, branch to leave
+  lda Player_Y_Position     ;get player's vertical coordinate
+  cmp #$99                  ;check player's vertical coordinate against preset value
+  ldy #$00                  ;load default values to be written to 
+  lda #$01                  ;this value moves player to the right off the vine
+  bcc OffVine               ;if vertical coordinate < preset value, use defaults
+  lda #$03
+  sta Player_State          ;otherwise set player state to climbing
+  iny                       ;increment value in Y
+  lda #$08                  ;set block in block buffer to cover hole, then 
+  sta Block_Buffer_1+$b4    ;use same value to force player to climb
+OffVine:
+  sty DisableCollisionDet   ;set collision detection disable flag
+  jsr AutoControlPlayer     ;use contents of A to move player up or right, execute sub
+  lda Player_X_Position
+  cmp #$48                  ;check player's horizontal position
+  bcc ExitEntr              ;if not far enough to the right, branch to leave
+PlayerRdy:
+  lda #$08                  ;set routine to be executed by game engine next frame
+  sta GameEngineSubroutine
+  lda #$01                  ;set to face player to the right
+  sta PlayerFacingDir
+  lsr                       ;init A
+  sta AltEntranceControl    ;init mode of entry
+  sta DisableCollisionDet   ;init collision detection disable flag
+  sta JoypadOverride        ;nullify controller override bits
+ExitEntr:
+  rts                       ;leave!
 
 
 ;-------------------------------------------------------------------------------------
 ;$07 - used to hold upper limit of high byte when player falls down hole
 
 AutoControlPlayer:
-      sta SavedJoypadBits         ;override controller bits with contents of A if executing here
+  sta SavedJoypadBits         ;override controller bits with contents of A if executing here
 
 PlayerCtrlRoutine:
-            lda GameEngineSubroutine    ;check task here
-            cmp #$0b                    ;if certain value is set, branch to skip controller bit loading
-            beq SizeChk
-            lda AreaType                ;are we in a water type area?
-            bne SaveJoyp                ;if not, branch
-            ldy Player_Y_HighPos
-            dey                         ;if not in vertical area between
-            bne DisJoyp                 ;status bar and bottom, branch
-            lda Player_Y_Position
-            cmp #$d0                    ;if nearing the bottom of the screen or
-            bcc SaveJoyp                ;not in the vertical area between status bar or bottom,
+  lda GameEngineSubroutine    ;check task here
+  cmp #$0b                    ;if certain value is set, branch to skip controller bit loading
+  beq SizeChk
+  lda AreaType                ;are we in a water type area?
+  bne SaveJoyp                ;if not, branch
+  ldy Player_Y_HighPos
+  dey                         ;if not in vertical area between
+  bne DisJoyp                 ;status bar and bottom, branch
+  lda Player_Y_Position
+  cmp #$d0                    ;if nearing the bottom of the screen or
+  bcc SaveJoyp                ;not in the vertical area between status bar or bottom,
 DisJoyp:    lda #$00                    ;disable controller bits
             sta SavedJoypadBits
 SaveJoyp:   lda SavedJoypadBits         ;otherwise store A and B buttons in $0a
@@ -622,8 +629,8 @@ PIntLoop:
   ora #%01000000                 ;set horizontal flip bit for bottom-right sprite
   sta Sprite_Attributes+32       ;store and leave
   rts
-  IntermediatePlayerData:
-        .byte $58, $01, $00, $60, $ff, $04
+IntermediatePlayerData:
+  .byte $58, $01, $00, $60, $ff, $04
 
 .endproc
 
@@ -651,12 +658,12 @@ RenderPlayerSub:
   ldy Player_SprDataOffset     ;get player's sprite data offset
 
 DrawPlayerLoop:
-  lda PlayerGraphicsTable,x    ;load player's left side
-  sta $00
-  lda PlayerGraphicsTable+1,x  ;now load right side
-  jsr DrawOneSpriteRow
-  dec $07                      ;decrement rows of sprites to draw
-  bne DrawPlayerLoop           ;do this until all rows are drawn
+    lda PlayerGraphicsTable,x    ;load player's left side
+    sta $00
+    lda PlayerGraphicsTable+1,x  ;now load right side
+    jsr DrawOneSpriteRow
+    dec $07                      ;decrement rows of sprites to draw
+    bne DrawPlayerLoop           ;do this until all rows are drawn  
   rts
 
 ;tiles arranged in order, 2 tiles per row, top to bottom
@@ -664,39 +671,39 @@ SwimTileRepOffset     = PlayerGraphicsTable + $9e
 
 PlayerGraphicsTable:
 ;big player table
-      .byte $00, $01, $02, $03, $04, $05, $06, $07 ;walking frame 1
-      .byte $08, $09, $0a, $0b, $0c, $0d, $0e, $0f ;        frame 2
-      .byte $10, $11, $12, $13, $14, $15, $16, $17 ;        frame 3
-      .byte $18, $19, $1a, $1b, $1c, $1d, $1e, $1f ;skidding
-      .byte $20, $21, $22, $23, $24, $25, $26, $27 ;jumping
-      .byte $08, $09, $28, $29, $2a, $2b, $2c, $2d ;swimming frame 1
-      .byte $08, $09, $0a, $0b, $0c, $30, $2c, $2d ;         frame 2
-      .byte $08, $09, $0a, $0b, $2e, $2f, $2c, $2d ;         frame 3
-      .byte $08, $09, $28, $29, $2a, $2b, $5c, $5d ;climbing frame 1
-      .byte $08, $09, $0a, $0b, $0c, $0d, $5e, $5f ;         frame 2
-      .byte $fc, $fc, $08, $09, $58, $59, $5a, $5a ;crouching
-      .byte $08, $09, $28, $29, $2a, $2b, $0e, $0f ;fireball throwing
+  .byte $00, $01, $02, $03, $04, $05, $06, $07 ;walking frame 1
+  .byte $08, $09, $0a, $0b, $0c, $0d, $0e, $0f ;        frame 2
+  .byte $10, $11, $12, $13, $14, $15, $16, $17 ;        frame 3
+  .byte $18, $19, $1a, $1b, $1c, $1d, $1e, $1f ;skidding
+  .byte $20, $21, $22, $23, $24, $25, $26, $27 ;jumping
+  .byte $08, $09, $28, $29, $2a, $2b, $2c, $2d ;swimming frame 1
+  .byte $08, $09, $0a, $0b, $0c, $30, $2c, $2d ;         frame 2
+  .byte $08, $09, $0a, $0b, $2e, $2f, $2c, $2d ;         frame 3
+  .byte $08, $09, $28, $29, $2a, $2b, $5c, $5d ;climbing frame 1
+  .byte $08, $09, $0a, $0b, $0c, $0d, $5e, $5f ;         frame 2
+  .byte $fc, $fc, $08, $09, $58, $59, $5a, $5a ;crouching
+  .byte $08, $09, $28, $29, $2a, $2b, $0e, $0f ;fireball throwing
 
 ;small player table
-      .byte $fc, $fc, $fc, $fc, $32, $33, $34, $35 ;walking frame 1
-      .byte $fc, $fc, $fc, $fc, $36, $37, $38, $39 ;        frame 2
-      .byte $fc, $fc, $fc, $fc, $3a, $37, $3b, $3c ;        frame 3
-      .byte $fc, $fc, $fc, $fc, $3d, $3e, $3f, $40 ;skidding
-      .byte $fc, $fc, $fc, $fc, $32, $41, $42, $43 ;jumping
-      .byte $fc, $fc, $fc, $fc, $32, $33, $44, $45 ;swimming frame 1
-      .byte $fc, $fc, $fc, $fc, $32, $33, $44, $47 ;         frame 2
-      .byte $fc, $fc, $fc, $fc, $32, $33, $48, $49 ;         frame 3
-      .byte $fc, $fc, $fc, $fc, $32, $33, $90, $91 ;climbing frame 1
-      .byte $fc, $fc, $fc, $fc, $3a, $37, $92, $93 ;         frame 2
-      .byte $fc, $fc, $fc, $fc, $9e, $9e, $9f, $9f ;killed
+  .byte $fc, $fc, $fc, $fc, $32, $33, $34, $35 ;walking frame 1
+  .byte $fc, $fc, $fc, $fc, $36, $37, $38, $39 ;        frame 2
+  .byte $fc, $fc, $fc, $fc, $3a, $37, $3b, $3c ;        frame 3
+  .byte $fc, $fc, $fc, $fc, $3d, $3e, $3f, $40 ;skidding
+  .byte $fc, $fc, $fc, $fc, $32, $41, $42, $43 ;jumping
+  .byte $fc, $fc, $fc, $fc, $32, $33, $44, $45 ;swimming frame 1
+  .byte $fc, $fc, $fc, $fc, $32, $33, $44, $47 ;         frame 2
+  .byte $fc, $fc, $fc, $fc, $32, $33, $48, $49 ;         frame 3
+  .byte $fc, $fc, $fc, $fc, $32, $33, $90, $91 ;climbing frame 1
+  .byte $fc, $fc, $fc, $fc, $3a, $37, $92, $93 ;         frame 2
+  .byte $fc, $fc, $fc, $fc, $9e, $9e, $9f, $9f ;killed
 
 ;used by both player sizes
-      .byte $fc, $fc, $fc, $fc, $3a, $37, $4f, $4f ;small player standing
-      .byte $fc, $fc, $00, $01, $4c, $4d, $4e, $4e ;intermediate grow frame
-      .byte $00, $01, $4c, $4d, $4a, $4a, $4b, $4b ;big player standing
+  .byte $fc, $fc, $fc, $fc, $3a, $37, $4f, $4f ;small player standing
+  .byte $fc, $fc, $00, $01, $4c, $4d, $4e, $4e ;intermediate grow frame
+  .byte $00, $01, $4c, $4d, $4a, $4a, $4b, $4b ;big player standing
 
 SwimKickTileNum:
-      .byte $31, $46
+  .byte $31, $46
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store player's vertical offscreen bits
@@ -715,302 +722,339 @@ CntPl:
   ldy SwimmingFlag            ;if swimming flag set, branch to
   beq FindPlayerAction        ;different part, do not return
   lda Player_State
-  cmp #$00                    ;if player status normal,
+  ; cmp #$00                    ;if player status normal,
   beq FindPlayerAction        ;branch and do not return
   jsr FindPlayerAction        ;otherwise jump and return
   lda FrameCounter
   and #%00000100              ;check frame counter for d2 set (8 frames every
   bne ExPGH                   ;eighth frame), and branch if set to leave
-  tax                         ;initialize X to zero
-  ldy Player_SprDataOffset    ;get player sprite data offset
-  lda PlayerFacingDir         ;get player's facing direction
-  lsr
-  bcs SwimKT                  ;if player facing to the right, use current offset
-  iny
-  iny                         ;otherwise move to next OAM data
-  iny
-  iny
+    tax                         ;initialize X to zero
+    ldy Player_SprDataOffset    ;get player sprite data offset
+    lda PlayerFacingDir         ;get player's facing direction
+    lsr
+    bcs SwimKT                  ;if player facing to the right, use current offset
+      iny
+      iny                         ;otherwise move to next OAM data
+      iny
+      iny
 SwimKT:
-  lda PlayerSize              ;check player's size
-        beq BigKTS                  ;if big, use first tile
-        lda Sprite_Tilenumber+24,y  ;check tile number of seventh/eighth sprite
-        cmp SwimTileRepOffset       ;against tile number in player graphics table
-        beq ExPGH                   ;if spr7/spr8 tile number = value, branch to leave
+    lda PlayerSize              ;check player's size
+    beq BigKTS                  ;if big, use first tile
+      lda Sprite_Tilenumber+24,y  ;check tile number of seventh/eighth sprite
+      cmp SwimTileRepOffset       ;against tile number in player graphics table
+      beq ExPGH                   ;if spr7/spr8 tile number = value, branch to leave
         inx                         ;otherwise increment X for second tile
-BigKTS: lda SwimKickTileNum,x       ;overwrite tile number in sprite 7/8
-        sta Sprite_Tilenumber+24,y  ;to animate player's feet when swimming
-ExPGH:  rts                         ;then leave
+BigKTS:
+    lda SwimKickTileNum,x       ;overwrite tile number in sprite 7/8
+    sta Sprite_Tilenumber+24,y  ;to animate player's feet when swimming
+ExPGH:
+  rts                         ;then leave
 
 FindPlayerAction:
-      jsr ProcessPlayerAction       ;find proper offset to graphics table by player's actions
-      jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
+  jsr ProcessPlayerAction       ;find proper offset to graphics table by player's actions
+  jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
 
 DoChangeSize:
-      jsr HandleChangeSize          ;find proper offset to graphics table for grow/shrink
-      jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
+  jsr HandleChangeSize          ;find proper offset to graphics table for grow/shrink
+  jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
 
 PlayerKilled:
-      ldy #$0e                      ;load offset for player killed
-      lda PlayerGfxTblOffsets,y     ;get offset to graphics table
+  ldy #$0e                      ;load offset for player killed
+  lda PlayerGfxTblOffsets,y     ;get offset to graphics table
 
 PlayerGfxProcessing:
-       sta PlayerGfxOffset           ;store offset to graphics table here
-       lda #$04
-       jsr RenderPlayerSub           ;draw player based on offset loaded
-       jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
-       lda FireballThrowingTimer
-       beq PlayerOffscreenChk        ;if fireball throw timer not set, skip to the end
-       ldy #$00                      ;set value to initialize by default
-       lda PlayerAnimTimer           ;get animation frame timer
-       cmp FireballThrowingTimer     ;compare to fireball throw timer
-       sty FireballThrowingTimer     ;initialize fireball throw timer
-       bcs PlayerOffscreenChk        ;if animation frame timer => fireball throw timer skip to end
-       sta FireballThrowingTimer     ;otherwise store animation timer into fireball throw timer
-       ldy #$07                      ;load offset for throwing
-       lda PlayerGfxTblOffsets,y     ;get offset to graphics table
-       sta PlayerGfxOffset           ;store it for use later
-       ldy #$04                      ;set to update four sprite rows by default
-       lda Player_X_Speed
-       ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
-       beq SUpdR                     ;if no speed or button press, branch using set value in Y
-       dey                           ;otherwise set to update only three sprite rows
-SUpdR: tya                           ;save in A for use
-       jsr RenderPlayerSub           ;in sub, draw player object again
-
+  sta PlayerGfxOffset           ;store offset to graphics table here
+  lda #$04
+  jsr RenderPlayerSub           ;draw player based on offset loaded
+  jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
+  lda FireballThrowingTimer
+  beq UpdatePlayerNeck          ;if fireball throw timer not set, skip to the end
+  ldy #$00                      ;set value to initialize by default
+  lda PlayerAnimTimer           ;get animation frame timer
+  cmp FireballThrowingTimer     ;compare to fireball throw timer
+  sty FireballThrowingTimer     ;initialize fireball throw timer
+  bcs UpdatePlayerNeck          ;if animation frame timer => fireball throw timer skip to end
+  sta FireballThrowingTimer     ;otherwise store animation timer into fireball throw timer
+  ldy #$07                      ;load offset for throwing
+  lda PlayerGfxTblOffsets,y     ;get offset to graphics table
+  sta PlayerGfxOffset           ;store it for use later
+  ldy #$04                      ;set to update four sprite rows by default
+  lda Player_X_Speed
+  ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
+  beq SUpdR                     ;if no speed or button press, branch using set value in Y
+    dey                         ;otherwise set to update only three sprite rows
+SUpdR:
+  tya                           ;save in A for use
+  jsr RenderPlayerSub           ;in sub, draw player object again
+UpdatePlayerNeck:
+  ; move the player's head up based on neck length
+  ldx Player_SprDataOffset
+  lda PlayerSize
+  beq @NotBig
+@IsBig:
+    lda Sprite_Y_Position,x
+    sec
+    sbc PlayerNeckLength
+    sta Sprite_Y_Position,x
+    sta Sprite_Y_Position+4,x
+    jmp PlayerOffscreenChk
+@NotBig:
+    lda Sprite_Y_Position,x
+    sec
+    sbc PlayerNeckLength
+    sta Sprite_Y_Position+16,x
+    sta Sprite_Y_Position+20,x
 PlayerOffscreenChk:
-           lda Player_OffscreenBits      ;get player's offscreen bits
-           lsr
-           lsr                           ;move vertical bits to low nybble
-           lsr
-           lsr
-           sta $00                       ;store here
-           ldx #$03                      ;check all four rows of player sprites
-           lda Player_SprDataOffset      ;get player's sprite data offset
-           clc
-           adc #$18                      ;add 24 bytes to start at bottom row
-           tay                           ;set as offset here
-PROfsLoop: lda #$f8                      ;load offscreen Y coordinate just in case
-           lsr $00                       ;shift bit into carry
-           bcc NPROffscr                 ;if bit not set, skip, do not move sprites
-           jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
-NPROffscr: tya
-           sec                           ;subtract eight bytes to do
-           sbc #$08                      ;next row up
-           tay
-           dex                           ;decrement row counter
-           bpl PROfsLoop                 ;do this until all sprite rows are checked
-           rts                           ;then we are done!
+  lda Player_OffscreenBits      ;get player's offscreen bits
+  lsr
+  lsr                           ;move vertical bits to low nybble
+  lsr
+  lsr
+  sta $00                       ;store here
+  ldx #$03                      ;check all four rows of player sprites
+  lda Player_SprDataOffset      ;get player's sprite data offset
+  clc
+  adc #$18                      ;add 24 bytes to start at bottom row
+  tay                           ;set as offset here
+PROfsLoop:
+    lda #$f8                      ;load offscreen Y coordinate just in case
+    lsr $00                       ;shift bit into carry
+    bcc NPROffscr                 ;if bit not set, skip, do not move sprites
+    jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
+NPROffscr:
+    tya
+    sec                           ;subtract eight bytes to do
+    sbc #$08                      ;next row up
+    tay
+    dex                           ;decrement row counter
+    bpl PROfsLoop                 ;do this until all sprite rows are checked
+  rts                           ;then we are done!
 
 PlayerGfxTblOffsets:
-      .byte $20, $28, $c8, $18, $00, $40, $50, $58
-      .byte $80, $88, $b8, $78, $60, $a0, $b0, $b8
+  .byte $20, $28, $c8, $18, $00, $40, $50, $58
+  .byte $80, $88, $b8, $78, $60, $a0, $b0, $b8
 
 HandleChangeSize:
-         ldy PlayerAnimCtrl           ;get animation frame control
-         lda FrameCounter
-         and #%00000011               ;get frame counter and execute this code every
-         bne GorSLog                  ;fourth frame, otherwise branch ahead
-         iny                          ;increment frame control
-         cpy #$0a                     ;check for preset upper extent
-         bcc CSzNext                  ;if not there yet, skip ahead to use
-         ldy #$00                     ;otherwise initialize both grow/shrink flag
-         sty PlayerChangeSizeFlag     ;and animation frame control
-CSzNext: sty PlayerAnimCtrl           ;store proper frame control
-GorSLog: lda PlayerSize               ;get player's size
-         bne ShrinkPlayer             ;if player small, skip ahead to next part
-         lda ChangeSizeOffsetAdder,y  ;get offset adder based on frame control as offset
-         ldy #$0f                     ;load offset for player growing
+  ldy PlayerAnimCtrl           ;get animation frame control
+  lda FrameCounter
+  and #%00000011               ;get frame counter and execute this code every
+  bne GorSLog                  ;fourth frame, otherwise branch ahead
+    iny                          ;increment frame control
+    cpy #$0a                     ;check for preset upper extent
+    bcc CSzNext                  ;if not there yet, skip ahead to use
+      ldy #$00                     ;otherwise initialize both grow/shrink flag
+      sty PlayerChangeSizeFlag     ;and animation frame control
+CSzNext:
+    sty PlayerAnimCtrl           ;store proper frame control
+GorSLog:
+  lda PlayerSize               ;get player's size
+  bne ShrinkPlayer             ;if player small, skip ahead to next part
+    lda ChangeSizeOffsetAdder,y  ;get offset adder based on frame control as offset
+    ldy #$0f                     ;load offset for player growing
 
 GetOffsetFromAnimCtrl:
-        asl                        ;multiply animation frame control
-        asl                        ;by eight to get proper amount
-        asl                        ;to add to our offset
-        adc PlayerGfxTblOffsets,y  ;add to offset to graphics table
-        rts                        ;and return with result in A
+    asl                        ;multiply animation frame control
+    asl                        ;by eight to get proper amount
+    asl                        ;to add to our offset
+    adc PlayerGfxTblOffsets,y  ;add to offset to graphics table
+    rts                        ;and return with result in A
 ChangeSizeOffsetAdder:
-        .byte $00, $01, $00, $01, $00, $01, $02, $00, $01, $02
-        .byte $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
+  .byte $00, $01, $00, $01, $00, $01, $02, $00, $01, $02
+  .byte $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
 
 ShrinkPlayer:
-        tya                          ;add ten bytes to frame control as offset
-        clc
-        adc #$0a                     ;this thing apparently uses two of the swimming frames
-        tax                          ;to draw the player shrinking
-        ldy #$09                     ;load offset for small player swimming
-        lda ChangeSizeOffsetAdder,x  ;get what would normally be offset adder
-        bne ShrPlF                   ;and branch to use offset if nonzero
-        ldy #$01                     ;otherwise load offset for big player swimming
-ShrPlF: lda PlayerGfxTblOffsets,y    ;get offset to graphics table based on offset loaded
-        rts                          ;and leave
+  tya                          ;add ten bytes to frame control as offset
+  clc
+  adc #$0a                     ;this thing apparently uses two of the swimming frames
+  tax                          ;to draw the player shrinking
+  ldy #$09                     ;load offset for small player swimming
+  lda ChangeSizeOffsetAdder,x  ;get what would normally be offset adder
+  bne ShrPlF                   ;and branch to use offset if nonzero
+    ldy #$01                     ;otherwise load offset for big player swimming
+ShrPlF:
+  lda PlayerGfxTblOffsets,y    ;get offset to graphics table based on offset loaded
+  rts                          ;and leave
 
 
 ;-------------------------------------------------------------------------------------
 
 PlayerChangeSize:
-             lda TimerControl    ;check master timer control
-             cmp #$f8            ;for specific moment in time
-             bne EndChgSize      ;branch if before or after that point
-             jmp InitChangeSize  ;otherwise run code to get growing/shrinking going
-EndChgSize:  cmp #$c4            ;check again for another specific moment
-             bne ExitChgSize     ;and branch to leave if before or after that point
-             jmp DonePlayerTask  ;otherwise do sub to init timer control and set routine
-ExitChgSize: rts ; TODO check this RTS can be removed                 ;and then leave
+  lda TimerControl    ;check master timer control
+  cmp #$f8            ;for specific moment in time
+  bne EndChgSize      ;branch if before or after that point
+  jmp InitChangeSize  ;otherwise run code to get growing/shrinking going
+EndChgSize:
+  cmp #$c4            ;check again for another specific moment
+  bne ExitChgSize     ;and branch to leave if before or after that point
+  jmp DonePlayerTask  ;otherwise do sub to init timer control and set routine
+ExitChgSize:
+  rts ; TODO check this RTS can be removed                 ;and then leave
 
 ;-------------------------------------------------------------------------------------
 
 PlayerInjuryBlink:
-           lda TimerControl       ;check master timer control
-           cmp #$f0               ;for specific moment in time
-           bcs ExitBlink          ;branch if before that point
-           cmp #$c8               ;check again for another specific point
-           beq DonePlayerTask     ;branch if at that point, and not before or after
-           jmp PlayerCtrlRoutine  ;otherwise run player control routine
-ExitBlink: bne ExitBoth           ;do unconditional branch to leave
+  lda TimerControl       ;check master timer control
+  cmp #$f0               ;for specific moment in time
+  bcs ExitBlink          ;branch if before that point
+  cmp #$c8               ;check again for another specific point
+  beq DonePlayerTask     ;branch if at that point, and not before or after
+  jmp PlayerCtrlRoutine  ;otherwise run player control routine
+ExitBlink:
+  bne ExitBoth           ;do unconditional branch to leave
 
 InitChangeSize:
-          ldy PlayerChangeSizeFlag  ;if growing/shrinking flag already set
-          bne ExitBoth              ;then branch to leave
-          sty PlayerAnimCtrl        ;otherwise initialize player's animation frame control
-          inc PlayerChangeSizeFlag  ;set growing/shrinking flag
-          lda PlayerSize
-          eor #$01                  ;invert player's size
-          sta PlayerSize
-ExitBoth: rts                       ;leave
+  ldy PlayerChangeSizeFlag  ;if growing/shrinking flag already set
+  bne ExitBoth              ;then branch to leave
+  sty PlayerAnimCtrl        ;otherwise initialize player's animation frame control
+  inc PlayerChangeSizeFlag  ;set growing/shrinking flag
+  lda PlayerSize
+  eor #$01                  ;invert player's size
+  sta PlayerSize
+ExitBoth:
+  rts                       ;leave
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used in CyclePlayerPalette to store current palette to cycle
 
 PlayerDeath:
-      lda TimerControl       ;check master timer control
-      cmp #$f0               ;for specific moment in time
-      bcs ExitDeath          ;branch to leave if before that point
-      jmp PlayerCtrlRoutine  ;otherwise run player control routine
+  lda TimerControl       ;check master timer control
+  cmp #$f0               ;for specific moment in time
+  bcs ExitDeath          ;branch to leave if before that point
+  jmp PlayerCtrlRoutine  ;otherwise run player control routine
 
 DonePlayerTask:
-      lda #$00
-      sta TimerControl          ;initialize master timer control to continue timers
-      lda #$08
-      sta GameEngineSubroutine  ;set player control routine to run next frame
-      rts                       ;leave
+  lda #$00
+  sta TimerControl          ;initialize master timer control to continue timers
+  lda #$08
+  sta GameEngineSubroutine  ;set player control routine to run next frame
+  rts                       ;leave
 
 PlayerFireFlower: 
-      lda TimerControl       ;check master timer control
-      cmp #$c0               ;for specific moment in time
-      beq ResetPalFireFlower ;branch if at moment, not before or after
-      lda FrameCounter       ;get frame counter
-      lsr
-      lsr                    ;divide by four to change every four frames
+  lda TimerControl       ;check master timer control
+  cmp #$c0               ;for specific moment in time
+  beq ResetPalFireFlower ;branch if at moment, not before or after
+  lda FrameCounter       ;get frame counter
+  lsr
+  lsr                    ;divide by four to change every four frames
 
 CyclePlayerPalette:
-      and #$03              ;mask out all but d1-d0 (previously d3-d2)
-      sta $00               ;store result here to use as palette bits
-      lda Player_SprAttrib  ;get player attributes
-      and #%11111100        ;save any other bits but palette bits
-      ora $00               ;add palette bits
-      sta Player_SprAttrib  ;store as new player attributes
-      rts                   ;and leave
+  and #$03              ;mask out all but d1-d0 (previously d3-d2)
+  sta $00               ;store result here to use as palette bits
+  lda Player_SprAttrib  ;get player attributes
+  and #%11111100        ;save any other bits but palette bits
+  ora $00               ;add palette bits
+  sta Player_SprAttrib  ;store as new player attributes
+  rts                   ;and leave
 
 ResetPalFireFlower:
-      jsr DonePlayerTask    ;do sub to init timer control and run player control routine
+  jsr DonePlayerTask    ;do sub to init timer control and run player control routine
 
 ResetPalStar:
-      lda Player_SprAttrib  ;get player attributes
-      and #%11111100        ;mask out palette bits to force palette 0
-      sta Player_SprAttrib  ;store as new player attributes
-      rts                   ;and leave
+  lda Player_SprAttrib  ;get player attributes
+  and #%11111100        ;mask out palette bits to force palette 0
+  sta Player_SprAttrib  ;store as new player attributes
+  rts                   ;and leave
 
 ExitDeath:
-      rts          ;leave from death routine
+  rts          ;leave from death routine
 
 ;-------------------------------------------------------------------------------------
 
 FlagpoleSlide:
-            ;  lda Enemy_ID+5           ;check special use enemy slot
-            ;  cmp #FlagpoleFlagObject  ;for flagpole flag object
-            ;  bne NoFPObj              ;if not found, branch to something residual
-             lda FlagpoleSoundQueue   ;load flagpole sound
-             sta Square1SoundQueue    ;into square 1's sfx queue
-             lda #$00
-             sta FlagpoleSoundQueue   ;init flagpole sound queue
-             ldy Player_Y_Position
-             cpy #$9e                 ;check to see if player has slid down
-             bcs SlidePlayer          ;far enough, and if so, branch with no controller bits set
-             lda #$04                 ;otherwise force player to climb down (to slide)
-SlidePlayer: jmp AutoControlPlayer    ;jump to player control routine
+  ;  lda Enemy_ID+5           ;check special use enemy slot
+  ;  cmp #FlagpoleFlagObject  ;for flagpole flag object
+  ;  bne NoFPObj              ;if not found, branch to something residual
+  lda FlagpoleSoundQueue   ;load flagpole sound
+  sta Square1SoundQueue    ;into square 1's sfx queue
+  lda #$00
+  sta FlagpoleSoundQueue   ;init flagpole sound queue
+  ldy Player_Y_Position
+  cpy #$9e                 ;check to see if player has slid down
+  bcs SlidePlayer          ;far enough, and if so, branch with no controller bits set
+  lda #$04                 ;otherwise force player to climb down (to slide)
+SlidePlayer:
+  jmp AutoControlPlayer    ;jump to player control routine
 ; NoFPObj:     inc GameEngineSubroutine ;increment to next routine (this may
 ;              rts                      ;be residual code)
 
 ;-------------------------------------------------------------------------------------
 
 Hidden1UpCoinAmts:
-      .byte $15, $23, $16, $1b, $17, $18, $23, $63
+  .byte $15, $23, $16, $1b, $17, $18, $23, $63
 
 PlayerEndLevel:
-          lda #$01                  ;force player to walk to the right
-          jsr AutoControlPlayer
-          lda Player_Y_Position     ;check player's vertical position
-          cmp #$ae
-          bcc ChkStop               ;if player is not yet off the flagpole, skip this part
-          lda ScrollLock            ;if scroll lock not set, branch ahead to next part
-          beq ChkStop               ;because we only need to do this part once
-          lda #EndOfLevelMusic
-          sta EventMusicQueue       ;load win level music in event music queue
-          lda #$00
-          sta ScrollLock            ;turn off scroll lock to skip this part later
-ChkStop:  lda Player_CollisionBits  ;get player collision bits
-          lsr                       ;check for d0 set
-          bcs RdyNextA              ;if d0 set, skip to next part
-          lda StarFlagTaskControl   ;if star flag task control already set,
-          bne InCastle              ;go ahead with the rest of the code
-          inc StarFlagTaskControl   ;otherwise set task control now (this gets ball rolling!)
-InCastle: lda #%00100000            ;set player's background priority bit to
-          sta Player_SprAttrib      ;give illusion of being inside the castle
-RdyNextA: lda StarFlagTaskControl
-          cmp #$05                  ;if star flag task control not yet set
-          bne ExitNA                ;beyond last valid task number, branch to leave
-          inc LevelNumber           ;increment level number used for game logic
-          lda LevelNumber
-          cmp #$03                  ;check to see if we have yet reached level -4
-          bne NextArea              ;and skip this last part here if not
-          ldy WorldNumber           ;get world number as offset
-          lda CoinTallyFor1Ups      ;check third area coin tally for bonus 1-ups
-          cmp Hidden1UpCoinAmts,y   ;against minimum value, if player has not collected
-          bcc NextArea              ;at least this number of coins, leave flag clear
-          inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
-NextArea: inc AreaNumber            ;increment area number used for address loader
-          jsr LoadAreaPointer       ;get new level pointer
-          inc FetchNewGameTimerFlag ;set flag to load new game timer
-          jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0
-          sta HalfwayPage           ;reset halfway page to 0 (beginning)
-          lda #Silence
-          sta EventMusicQueue       ;silence music and leave
-ExitNA:   rts
+  lda #$01                  ;force player to walk to the right
+  jsr AutoControlPlayer
+  lda Player_Y_Position     ;check player's vertical position
+  cmp #$ae
+  bcc ChkStop               ;if player is not yet off the flagpole, skip this part
+  lda ScrollLock            ;if scroll lock not set, branch ahead to next part
+  beq ChkStop               ;because we only need to do this part once
+  lda #EndOfLevelMusic
+  sta EventMusicQueue       ;load win level music in event music queue
+  lda #$00
+  sta ScrollLock            ;turn off scroll lock to skip this part later
+ChkStop:
+  lda Player_CollisionBits  ;get player collision bits
+  lsr                       ;check for d0 set
+  bcs RdyNextA              ;if d0 set, skip to next part
+  lda StarFlagTaskControl   ;if star flag task control already set,
+  bne InCastle              ;go ahead with the rest of the code
+  inc StarFlagTaskControl   ;otherwise set task control now (this gets ball rolling!)
+InCastle:
+  lda #%00100000            ;set player's background priority bit to
+  sta Player_SprAttrib      ;give illusion of being inside the castle
+RdyNextA:
+  lda StarFlagTaskControl
+  cmp #$05                  ;if star flag task control not yet set
+  bne ExitNA                ;beyond last valid task number, branch to leave
+  inc LevelNumber           ;increment level number used for game logic
+  lda LevelNumber
+  cmp #$03                  ;check to see if we have yet reached level -4
+  bne NextArea              ;and skip this last part here if not
+  ldy WorldNumber           ;get world number as offset
+  lda CoinTallyFor1Ups      ;check third area coin tally for bonus 1-ups
+  cmp Hidden1UpCoinAmts,y   ;against minimum value, if player has not collected
+  bcc NextArea              ;at least this number of coins, leave flag clear
+  inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
+NextArea:
+  inc AreaNumber            ;increment area number used for address loader
+  jsr LoadAreaPointer       ;get new level pointer
+  inc FetchNewGameTimerFlag ;set flag to load new game timer
+  jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0
+  sta HalfwayPage           ;reset halfway page to 0 (beginning)
+  lda #Silence
+  sta EventMusicQueue       ;silence music and leave
+ExitNA:
+  rts
 
 ;-------------------------------------------------------------------------------------
 
 PlayerMovementSubs:
-           lda #$00                  ;set A to init crouch flag by default
-           ldy PlayerSize            ;is player small?
-           bne SetCrouch             ;if so, branch
-           lda Player_State          ;check state of player
-           bne ProcMove              ;if not on the ground, branch
-           lda Up_Down_Buttons       ;load controller bits for up and down
-           and #%00000100            ;single out bit for down button
-SetCrouch: sta CrouchingFlag         ;store value in crouch flag
-ProcMove:  jsr PlayerPhysicsSub      ;run sub related to jumping and swimming
-           lda PlayerChangeSizeFlag  ;if growing/shrinking flag set,
-           bne NoMoveSub             ;branch to leave
-           lda Player_State
-           cmp #$03                  ;get player state
-           beq MoveSubs              ;if climbing, branch ahead, leave timer unset
-           ldy #$18
-           sty ClimbSideTimer        ;otherwise reset timer now
-MoveSubs:  jsr JumpEngine
-
-      .word OnGroundStateSub
-      .word JumpSwimSub
-      .word FallingSub
-      .word ClimbingSub
+  lda #$00                  ;set A to init crouch flag by default
+  ldy PlayerSize            ;is player small?
+  bne SetCrouch             ;if so, branch
+  lda Player_State          ;check state of player
+  bne ProcMove              ;if not on the ground, branch
+  lda Up_Down_Buttons       ;load controller bits for up and down
+  and #%00000100            ;single out bit for down button
+SetCrouch:
+  sta CrouchingFlag         ;store value in crouch flag
+ProcMove:
+  jsr PlayerPhysicsSub      ;run sub related to jumping and swimming
+  lda PlayerChangeSizeFlag  ;if growing/shrinking flag set,
+  bne NoMoveSub             ;branch to leave
+  lda Player_State
+  cmp #$03                  ;get player state
+  beq MoveSubs              ;if climbing, branch ahead, leave timer unset
+  ldy #$18
+  sty ClimbSideTimer        ;otherwise reset timer now
+MoveSubs:
+  jsr JumpEngine
+.word OnGroundStateSub
+.word JumpSwimSub
+.word FallingSub
+.word ClimbingSub
 
 NoMoveSub: rts
 
@@ -1018,49 +1062,53 @@ NoMoveSub: rts
 ;$00 - used by ClimbingSub to store high vertical adder
 
 OnGroundStateSub:
-         jsr GetPlayerAnimSpeed     ;do a sub to set animation frame timing
-         lda Left_Right_Buttons
-         beq GndMove                ;if left/right controller bits not set, skip instruction
-         sta PlayerFacingDir        ;otherwise set new facing direction
-GndMove: jsr ImposeFriction         ;do a sub to impose friction on player's walk/run
-         jsr MovePlayerHorizontally ;do another sub to move player horizontally
-         sta Player_X_Scroll        ;set returned value as player's movement speed for scroll
-         rts
+  jsr GetPlayerAnimSpeed     ;do a sub to set animation frame timing
+  lda Left_Right_Buttons
+  beq GndMove                ;if left/right controller bits not set, skip instruction
+  sta PlayerFacingDir        ;otherwise set new facing direction
+GndMove:
+  jsr ImposeFriction         ;do a sub to impose friction on player's walk/run
+  jsr MovePlayerHorizontally ;do another sub to move player horizontally
+  sta Player_X_Scroll        ;set returned value as player's movement speed for scroll
+  rts
 
 ;--------------------------------
 
 FallingSub:
-      lda VerticalForceDown
-      sta VerticalForce      ;dump vertical movement force for falling into main one
-      jmp LRAir              ;movement force, then skip ahead to process left/right movement
+  lda VerticalForceDown
+  sta VerticalForce      ;dump vertical movement force for falling into main one
+  jmp LRAir              ;movement force, then skip ahead to process left/right movement
 
 ;--------------------------------
 
 JumpSwimSub:
-          ldy Player_Y_Speed         ;if player's vertical speed zero
-          bpl DumpFall               ;or moving downwards, branch to falling
-          lda A_B_Buttons
-          and #A_Button              ;check to see if A button is being pressed
-          and PreviousA_B_Buttons    ;and was pressed in previous frame
-          bne ProcSwim               ;if so, branch elsewhere
-          lda JumpOrigin_Y_Position  ;get vertical position player jumped from
-          sec
-          sbc Player_Y_Position      ;subtract current from original vertical coordinate
-          cmp DiffToHaltJump         ;compare to value set here to see if player is in mid-jump
-          bcc ProcSwim               ;or just starting to jump, if just starting, skip ahead
-DumpFall: lda VerticalForceDown      ;otherwise dump falling into main fractional
-          sta VerticalForce
-ProcSwim: lda SwimmingFlag           ;if swimming flag not set,
-          beq LRAir                  ;branch ahead to last part
-          jsr GetPlayerAnimSpeed     ;do a sub to get animation frame timing
-          lda Player_Y_Position
-          cmp #$14                   ;check vertical position against preset value
-          bcs LRWater                ;if not yet reached a certain position, branch ahead
-          lda #$18
-          sta VerticalForce          ;otherwise set fractional
-LRWater:  lda Left_Right_Buttons     ;check left/right controller bits (check for swimming)
-          beq LRAir                  ;if not pressing any, skip
-          sta PlayerFacingDir        ;otherwise set facing direction accordingly
+  ldy Player_Y_Speed         ;if player's vertical speed zero
+  bpl DumpFall               ;or moving downwards, branch to falling
+  lda A_B_Buttons
+  and #A_Button              ;check to see if A button is being pressed
+  and PreviousA_B_Buttons    ;and was pressed in previous frame
+  bne ProcSwim               ;if so, branch elsewhere
+  lda JumpOrigin_Y_Position  ;get vertical position player jumped from
+  sec
+  sbc Player_Y_Position      ;subtract current from original vertical coordinate
+  cmp DiffToHaltJump         ;compare to value set here to see if player is in mid-jump
+  bcc ProcSwim               ;or just starting to jump, if just starting, skip ahead
+DumpFall:
+  lda VerticalForceDown      ;otherwise dump falling into main fractional
+  sta VerticalForce
+ProcSwim:
+  lda SwimmingFlag           ;if swimming flag not set,
+  beq LRAir                  ;branch ahead to last part
+  jsr GetPlayerAnimSpeed     ;do a sub to get animation frame timing
+  lda Player_Y_Position
+  cmp #$14                   ;check vertical position against preset value
+  bcs LRWater                ;if not yet reached a certain position, branch ahead
+  lda #$18
+  sta VerticalForce          ;otherwise set fractional
+LRWater:
+  lda Left_Right_Buttons     ;check left/right controller bits (check for swimming)
+  beq LRAir                  ;if not pressing any, skip
+  sta PlayerFacingDir        ;otherwise set facing direction accordingly
 LRAir:    lda Left_Right_Buttons     ;check left/right controller bits (check for jumping/falling)
           beq JSMove                 ;if not pressing any, skip
           jsr ImposeFriction         ;otherwise process horizontal movement
@@ -1400,22 +1448,23 @@ SetAbsSpd: sta Player_XSpeedAbsolute ;store walking/running speed here and leave
 ;-------------------------------------------------------------------------------------
 
 DrawBubble:
-        ldy Player_Y_HighPos        ;if player's vertical high position
-        dey                         ;not within screen, skip all of this
-        bne ExDBub
-        lda Bubble_OffscreenBits    ;check air bubble's offscreen bits
-        and #%00001000
-        bne ExDBub                  ;if bit set, branch to leave
-        ldy Bubble_SprDataOffset,x  ;get air bubble's OAM data offset
-        lda Bubble_Rel_XPos         ;get relative horizontal coordinate
-        sta Sprite_X_Position,y     ;store as X coordinate here
-        lda Bubble_Rel_YPos         ;get relative vertical coordinate
-        sta Sprite_Y_Position,y     ;store as Y coordinate here
-        lda #$74
-        sta Sprite_Tilenumber,y     ;put air bubble tile into OAM data
-        lda #$02
-        sta Sprite_Attributes,y     ;set attribute byte
-ExDBub: rts                         ;leave
+  ldy Player_Y_HighPos        ;if player's vertical high position
+  dey                         ;not within screen, skip all of this
+  bne ExDBub
+  lda Bubble_OffscreenBits    ;check air bubble's offscreen bits
+  and #%00001000
+  bne ExDBub                  ;if bit set, branch to leave
+  ldy Bubble_SprDataOffset,x  ;get air bubble's OAM data offset
+  lda Bubble_Rel_XPos         ;get relative horizontal coordinate
+  sta Sprite_X_Position,y     ;store as X coordinate here
+  lda Bubble_Rel_YPos         ;get relative vertical coordinate
+  sta Sprite_Y_Position,y     ;store as Y coordinate here
+  lda #$74
+  sta Sprite_Tilenumber,y     ;put air bubble tile into OAM data
+  lda #$02
+  sta Sprite_Attributes,y     ;set attribute byte
+ExDBub:
+  rts                         ;leave
 
 .proc GetFireballOffscreenBits
   ldy #$00                 ;set for fireball offsets

@@ -12,7 +12,7 @@
 
 .export DumpTwoSpr, FloateyNumbersRoutine
 
-.segment "CODE"
+.segment "RENDER"
 
 ;-------------------------------------------------------------------------------------
 ;$00 - offset to vine Y coordinate adder

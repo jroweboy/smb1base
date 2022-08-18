@@ -703,7 +703,6 @@ HammerEnemyOfsData:
 HammerXSpdData:
       .byte $10, $f0
 
-
 ;--------------------------------
 .proc DuplicateEnemyObj
   ldy #$ff                ;start at beginning of enemy slots

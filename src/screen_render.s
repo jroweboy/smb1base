@@ -12,7 +12,7 @@
 .export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
 .export RemBridge, GiveOneCoin, ReplaceBlockMetatile, DrawMushroomIcon
 
-.segment "CODE"
+.segment "RENDER"
 
 ;-------------------------------------------------------------------------------------
 
@@ -894,7 +894,7 @@ WriteBlankMT:
   ; dec Block_RepFlag,x       ;decrement flag (residual code)
   ; rts
   jmp WriteBlockMetatile    ;write metatile to vram buffer to replace block object
-  rts                       ;leave
+  ; rts                       ;leave
 .endproc
 
 DestroyBlockMetatile:

@@ -96,7 +96,7 @@ FirebarSpin:
       sta $07                     ;save spinning speed here
       lda FirebarSpinDirection,x  ;check spinning direction
       bne SpinCounterClockwise    ;if moving counter-clockwise, branch to other part
-      ldy #$18                    ;possibly residual ldy
+      ; ldy #$18                    ;possibly residual ldy
       lda FirebarSpinState_Low,x
       clc                         ;add spinning speed to what would normally be
       adc $07                     ;the horizontal speed
@@ -106,7 +106,7 @@ FirebarSpin:
       rts
 
 SpinCounterClockwise:
-      ldy #$08                    ;possibly residual ldy
+      ; ldy #$08                    ;possibly residual ldy
       lda FirebarSpinState_Low,x
       sec                         ;subtract spinning speed to what would normally be
       sbc $07                     ;the horizontal speed

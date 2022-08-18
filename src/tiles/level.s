@@ -8,7 +8,7 @@
 
 .export AreaParserTaskHandler, GetAreaDataAddrs
 
-.segment "CODE"
+.segment "LEVEL"
 
 .proc GetAreaDataAddrs
 
@@ -144,77 +144,77 @@ NoColWrap: inc BlockBufferColumnPos ;increment column offset where we're at
 ;$06-$07 - used to store block buffer address
 
 BSceneDataOffsets:
-      .byte $00, $30, $60 
+  .byte $00, $30, $60
 
 BackSceneryData:
-   .byte $93, $00, $00, $11, $12, $12, $13, $00 ;clouds
-   .byte $00, $51, $52, $53, $00, $00, $00, $00
-   .byte $00, $00, $01, $02, $02, $03, $00, $00
-   .byte $00, $00, $00, $00, $91, $92, $93, $00
-   .byte $00, $00, $00, $51, $52, $53, $41, $42
-   .byte $43, $00, $00, $00, $00, $00, $91, $92
+  .byte $93, $00, $00, $11, $12, $12, $13, $00 ;clouds
+  .byte $00, $51, $52, $53, $00, $00, $00, $00
+  .byte $00, $00, $01, $02, $02, $03, $00, $00
+  .byte $00, $00, $00, $00, $91, $92, $93, $00
+  .byte $00, $00, $00, $51, $52, $53, $41, $42
+  .byte $43, $00, $00, $00, $00, $00, $91, $92
 
-   .byte $97, $87, $88, $89, $99, $00, $00, $00 ;mountains and bushes
-   .byte $11, $12, $13, $a4, $a5, $a5, $a5, $a6
-   .byte $97, $98, $99, $01, $02, $03, $00, $a4
-   .byte $a5, $a6, $00, $11, $12, $12, $12, $13
-   .byte $00, $00, $00, $00, $01, $02, $02, $03
-   .byte $00, $a4, $a5, $a5, $a6, $00, $00, $00
+  .byte $97, $87, $88, $89, $99, $00, $00, $00 ;mountains and bushes
+  .byte $11, $12, $13, $a4, $a5, $a5, $a5, $a6
+  .byte $97, $98, $99, $01, $02, $03, $00, $a4
+  .byte $a5, $a6, $00, $11, $12, $12, $12, $13
+  .byte $00, $00, $00, $00, $01, $02, $02, $03
+  .byte $00, $a4, $a5, $a5, $a6, $00, $00, $00
 
-   .byte $11, $12, $12, $13, $00, $00, $00, $00 ;trees and fences
-   .byte $00, $00, $00, $9c, $00, $8b, $aa, $aa
-   .byte $aa, $aa, $11, $12, $13, $8b, $00, $9c
-   .byte $9c, $00, $00, $01, $02, $03, $11, $12
-   .byte $12, $13, $00, $00, $00, $00, $aa, $aa
-   .byte $9c, $aa, $00, $8b, $00, $01, $02, $03
+  .byte $11, $12, $12, $13, $00, $00, $00, $00 ;trees and fences
+  .byte $00, $00, $00, $9c, $00, $8b, $aa, $aa
+  .byte $aa, $aa, $11, $12, $13, $8b, $00, $9c
+  .byte $9c, $00, $00, $01, $02, $03, $11, $12
+  .byte $12, $13, $00, $00, $00, $00, $aa, $aa
+  .byte $9c, $aa, $00, $8b, $00, $01, $02, $03
 
 BackSceneryMetatiles:
-   .byte $80, $83, $00 ;cloud left
-   .byte $81, $84, $00 ;cloud middle
-   .byte $82, $85, $00 ;cloud right
-   .byte $02, $00, $00 ;bush left
-   .byte $03, $00, $00 ;bush middle
-   .byte $04, $00, $00 ;bush right
-   .byte $00, $05, $06 ;mountain left
-   .byte $07, $06, $0a ;mountain middle
-   .byte $00, $08, $09 ;mountain right
-   .byte $4d, $00, $00 ;fence
-   .byte $0d, $0f, $4e ;tall tree
-   .byte $0e, $4e, $4e ;short tree
+  .byte $80, $83, $00 ;cloud left
+  .byte $81, $84, $00 ;cloud middle
+  .byte $82, $85, $00 ;cloud right
+  .byte $02, $00, $00 ;bush left
+  .byte $03, $00, $00 ;bush middle
+  .byte $04, $00, $00 ;bush right
+  .byte $00, $05, $06 ;mountain left
+  .byte $07, $06, $0a ;mountain middle
+  .byte $00, $08, $09 ;mountain right
+  .byte $4d, $00, $00 ;fence
+  .byte $0d, $0f, $4e ;tall tree
+  .byte $0e, $4e, $4e ;short tree
 
 FSceneDataOffsets:
-      .byte $00, $0d, $1a
+  .byte $00, $0d, $1a
 
 ForeSceneryData:
-   .byte $86, $87, $87, $87, $87, $87, $87   ;in water
-   .byte $87, $87, $87, $87, $69, $69
+  .byte $86, $87, $87, $87, $87, $87, $87   ;in water
+  .byte $87, $87, $87, $87, $69, $69
 
-   .byte $00, $00, $00, $00, $00, $45, $47   ;wall
-   .byte $47, $47, $47, $47, $00, $00
+  .byte $00, $00, $00, $00, $00, $45, $47   ;wall
+  .byte $47, $47, $47, $47, $00, $00
 
-   .byte $00, $00, $00, $00, $00, $00, $00   ;over water
-   .byte $00, $00, $00, $00, $86, $87
+  .byte $00, $00, $00, $00, $00, $00, $00   ;over water
+  .byte $00, $00, $00, $00, $86, $87
 
 TerrainMetatiles:
-      .byte $69, $54, $52, $62
+  .byte $69, $54, $52, $62
 
 TerrainRenderBits:
-      .byte %00000000, %00000000 ;no ceiling or floor
-      .byte %00000000, %00011000 ;no ceiling, floor 2
-      .byte %00000001, %00011000 ;ceiling 1, floor 2
-      .byte %00000111, %00011000 ;ceiling 3, floor 2
-      .byte %00001111, %00011000 ;ceiling 4, floor 2
-      .byte %11111111, %00011000 ;ceiling 8, floor 2
-      .byte %00000001, %00011111 ;ceiling 1, floor 5
-      .byte %00000111, %00011111 ;ceiling 3, floor 5
-      .byte %00001111, %00011111 ;ceiling 4, floor 5
-      .byte %10000001, %00011111 ;ceiling 1, floor 6
-      .byte %00000001, %00000000 ;ceiling 1, no floor
-      .byte %10001111, %00011111 ;ceiling 4, floor 6
-      .byte %11110001, %00011111 ;ceiling 1, floor 9
-      .byte %11111001, %00011000 ;ceiling 1, middle 5, floor 2
-      .byte %11110001, %00011000 ;ceiling 1, middle 4, floor 2
-      .byte %11111111, %00011111 ;completely solid top to bottom
+  .byte %00000000, %00000000 ;no ceiling or floor
+  .byte %00000000, %00011000 ;no ceiling, floor 2
+  .byte %00000001, %00011000 ;ceiling 1, floor 2
+  .byte %00000111, %00011000 ;ceiling 3, floor 2
+  .byte %00001111, %00011000 ;ceiling 4, floor 2
+  .byte %11111111, %00011000 ;ceiling 8, floor 2
+  .byte %00000001, %00011111 ;ceiling 1, floor 5
+  .byte %00000111, %00011111 ;ceiling 3, floor 5
+  .byte %00001111, %00011111 ;ceiling 4, floor 5
+  .byte %10000001, %00011111 ;ceiling 1, floor 6
+  .byte %00000001, %00000000 ;ceiling 1, no floor
+  .byte %10001111, %00011111 ;ceiling 4, floor 6
+  .byte %11110001, %00011111 ;ceiling 1, floor 9
+  .byte %11111001, %00011000 ;ceiling 1, middle 5, floor 2
+  .byte %11110001, %00011000 ;ceiling 1, middle 4, floor 2
+  .byte %11111111, %00011111 ;completely solid top to bottom
 
 AreaParserCore:
       lda BackloadingFlag       ;check to see if we are starting right of start

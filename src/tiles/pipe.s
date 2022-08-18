@@ -9,7 +9,7 @@
 
 WaterPipe:
       jsr GetLrgObjAttrib     ;get row and lower nybble
-      ldy AreaObjectLength,x  ;get length (residual code, water pipe is 1 col thick)
+      ; ldy AreaObjectLength,x  ;get length (residual code, water pipe is 1 col thick)
       ldx $07                 ;get row
       lda #$6b
       sta MetatileBuffer,x    ;draw something here and below it
