@@ -8,7 +8,7 @@
 ; frenzy.s
 .export PutAtRightExtent
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 

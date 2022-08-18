@@ -10,5 +10,6 @@ __COMMON_INC = 1
 .include "memory.inc"
 .include "constants.inc"
 .include "globals.inc"
+.include "mmc3.inc"
 
 .endif ;__COMMON_INC

@@ -490,7 +490,12 @@ GamePauseStatus:                .res  1
 GamePauseTimer:                 .res  1
 Mirror_PPU_CTRL:                .res  1
 Mirror_PPU_MASK:                .res  1
-NumberOfPlayers:                .res  5
+NumberOfPlayers:                .res  1 ; jroweboy( this is only 1 byte, was 5)
+
+CurrentBank:    .res 1
+TargetAddrJmp:  .res 1
+TargetAddress:  .res 2
+
 IntervalTimerControl:           .res  1
 
 Timers                        = SelectTimer
@@ -549,9 +554,11 @@ AltRegContentFlag:              .res  12
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits
 
-ScoreAndCoinDisplay:            .res  27
+ScoreAndCoinDisplay:            .res  23
 PlayerScoreDisplay            = ScoreAndCoinDisplay
 
+CurrentA:                       .res  1
+NextBank:                       .res  1
 GameTimerDisplay:               .res  4
 WorldSelectEnableFlag:          .res  1
 

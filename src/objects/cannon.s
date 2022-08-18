@@ -6,7 +6,7 @@
 .export ProcessCannons
 
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 

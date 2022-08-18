@@ -3,8 +3,10 @@
 
 
 
+.import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
 .import OperModeExecutionTree, MoveSpritesOffscreen, UpdateTopScore
 .import InitScroll, UpdateScreen, SoundEngine, PauseRoutine
+.import FarCallInit
 
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
@@ -19,7 +21,6 @@
 ;-------------------------------------------------------------------------------------
 
 .proc Start
-.import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
   sei                          ;pretty standard 6502 type init here
   cld
   lda #%00010000               ;init PPU control register 1 
@@ -46,6 +47,27 @@ ColdBoot:
   jsr InitializeMemory         ;clear memory using pointer in Y
   sta SND_DELTA_REG+1          ;reset delta counter load register
   sta OperMode                 ;reset primary mode of operation
+MMC3Init:
+  ; setup the jmp instruction for the FarBank Target
+  jsr FarCallInit
+  ldx #5
+  CHRBankInitLoop:
+    txa
+    ora PRG_FIXED_8
+    sta BANK_SELECT
+    lda BankInitValues,x
+    sta BANK_DATA
+    dex
+    bpl CHRBankInitLoop
+
+  ; Now set the initial A bank
+  BankPRGA #0
+  ; disable scanline counter, $6000 ram, and IRQ
+  lda #0
+  sta NMT_MIRROR
+  sta RAM_PROTECT
+  sta IRQDISABLE
+FinializeMarioInit:
   lda #$a5                     ;set warm boot flag
   sta WarmBootValidation     
   sta PseudoRandomBitReg       ;set seed for pseudorandom register
@@ -61,6 +83,9 @@ ColdBoot:
   jsr WritePPUReg1
 EndlessLoop:
   jmp EndlessLoop              ;endless loop, need I say more?
+
+BankInitValues:
+  .byte $00, $02, $04, $05, $06, $07
 .endproc
 
 .proc NonMaskableInterrupt
@@ -105,7 +130,7 @@ InitBuffer:
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
   lda Mirror_PPU_MASK       ;copy mirror of $2001 to register
   sta PPU_MASK
-  jsr SoundEngine           ;play sound
+  farcall SoundEngine           ;play sound
   jsr ReadJoypads           ;read joypads
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore

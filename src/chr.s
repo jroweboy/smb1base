@@ -6,5 +6,5 @@
 
 
 
-.segment "CHREDIT"
-.incbin "../chr/neck.chr"
+; .segment "CHREDIT"
+; .incbin "../chr/neck.chr"

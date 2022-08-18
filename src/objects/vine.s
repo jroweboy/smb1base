@@ -8,7 +8,7 @@
 ; collision.s
 .import BlockBufferCollision
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;-------------------------------------------------------------------------------------
 

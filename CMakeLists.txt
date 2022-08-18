@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}
   inc/globals.inc
   inc/level.inc
   inc/memory.inc
+  inc/mmc3.inc
   inc/nes2header.inc
   inc/object.inc
 
@@ -20,6 +21,7 @@ add_executable(${PROJECT_NAME}
   src/gamecore.s
   src/gamemode.s
   src/player.s
+  src/mmc3.s
   src/memory.s
   src/music.s
   src/nesheader.s
@@ -64,6 +66,7 @@ add_executable(${PROJECT_NAME}
   src/tiles/staircase.s
 
   src/nes.cfg
+  chr/lanky_mario.chr
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC inc/)

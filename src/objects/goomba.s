@@ -3,7 +3,7 @@
 .include "object.inc"
 
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 

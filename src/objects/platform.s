@@ -17,7 +17,7 @@
 .import DrawLargePlatform, DrawSmallPlatform
 
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 

@@ -27,7 +27,7 @@
 ; gamecore.s
 .export ForceInjury
 
-.segment "CODE"
+.segment "COLLISION"
 
 ;-------------------------------------------------------------------------------------
 ;$06 - second object's offset

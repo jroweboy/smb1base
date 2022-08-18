@@ -14,7 +14,7 @@
 
 .export BlockBumpedChk, InitBlock_XY_Pos, BrickShatter, BumpBlock, PwrUpJmp
 
-.segment "CODE"
+.segment "LOWCODE"
 
 ;--------------------------------
 ;$07 - used to save ID of brick object

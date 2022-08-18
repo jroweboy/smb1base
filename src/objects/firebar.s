@@ -8,7 +8,7 @@
 ; sprite_render.s
 .import DrawFirebar
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 

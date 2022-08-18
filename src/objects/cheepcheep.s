@@ -3,7 +3,7 @@
 .include "object.inc"
 
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 ;$02 - used to hold preset values

@@ -15,7 +15,7 @@
 ; gamecore.s
 .export MiscObjectsCore
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;-------------------------------------------------------------------------------------
 

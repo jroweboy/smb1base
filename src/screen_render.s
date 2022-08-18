@@ -213,7 +213,7 @@ DisplayIntermediate:
   lda DisableIntermediate      ;if this flag is set, skip intermediate lives display
   bne NoInter                  ;and jump to specific task, otherwise
 PlayerInter:
-  jsr DrawPlayer_Intermediate  ;put player in appropriate place for
+  farcall DrawPlayer_Intermediate  ;put player in appropriate place for
   lda #$01                     ;lives display, then output lives display to buffer
 OutputInter:
   jsr WriteGameText
@@ -239,7 +239,7 @@ NoInter:
 
   inc DisableScreenFlag     ;turn off screen
 TaskLoop:
-    jsr AreaParserTaskHandler ;render column set of current area
+    farcall AreaParserTaskHandler ;render column set of current area
     lda AreaParserTaskNum     ;check number of tasks
     bne TaskLoop              ;if tasks still not all done, do another one
   dec ColumnSets            ;do we need to render more column sets?

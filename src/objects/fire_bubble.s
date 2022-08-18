@@ -1,3 +1,3 @@
 .include "common.inc"
 
-.segment "CODE"
+.segment "OBJECT"

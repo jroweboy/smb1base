@@ -1,7 +1,7 @@
 
 .include "common.inc"
 
-.segment "CODE"
+.segment "LOWCODE"
 
 ;-------------------------------------------------------------------------------------
 ;$04 - address low to jump address

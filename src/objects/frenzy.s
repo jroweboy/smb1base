@@ -6,7 +6,7 @@
 .import InitBowserFlame, PutAtRightExtent
 
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 

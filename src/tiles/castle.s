@@ -2,7 +2,7 @@
 .include "common.inc"
 .include "level.inc"
 
-.segment "CODE"
+.segment "LEVEL"
 
 ;--------------------------------
 ;$06 - used to store upper limit of rows for CastleObject

@@ -11,7 +11,6 @@
 .segment "LEVEL"
 
 .proc GetAreaDataAddrs
-
   lda AreaPointer          ;use 2 MSB for Y
   jsr GetAreaType
   tay

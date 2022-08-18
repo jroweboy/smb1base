@@ -32,23 +32,24 @@ GameCoreRoutine:
   ldx CurrentPlayer          ;get which player is on the screen
   lda SavedJoypadBits,x      ;use appropriate player's controller bits
   sta SavedJoypadBits        ;as the master controller bits
-  jsr GameRoutines           ;execute one of many possible subs
+  farcall GameRoutines           ;execute one of many possible subs
   lda OperMode_Task          ;check major task of operating mode
   cmp #$03                   ;if we are supposed to be here,
   bcs GameEngine             ;branch to the game engine itself
     rts
 GameEngine:
-  jsr ProcFireball_Bubble    ;process fireballs and air bubbles
+  farcall ProcFireball_Bubble    ;process fireballs and air bubbles
   ldx #$00
-ProcELoop:    stx ObjectOffset           ;put incremented offset in X as enemy object offset
-  jsr EnemiesAndLoopsCore    ;process enemy objects
-  jsr FloateyNumbersRoutine  ;process floatey numbers
-  inx
-  cpx #$06                   ;do these two subroutines until the whole buffer is done
-  bne ProcELoop
+ProcELoop:
+    stx ObjectOffset           ;put incremented offset in X as enemy object offset
+    farcall EnemiesAndLoopsCore    ;process enemy objects
+    jsr FloateyNumbersRoutine  ;process floatey numbers
+    inx
+    cpx #$06                   ;do these two subroutines until the whole buffer is done
+    bne ProcELoop
   jsr GetPlayerOffscreenBits ;get offscreen bits for player object
   jsr RelativePlayerPosition ;get relative coordinates for player object
-  jsr PlayerGfxHandler       ;draw the player
+  farcall PlayerGfxHandler       ;draw the player
   jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
   ldx #$01
   stx ObjectOffset           ;set offset for second
@@ -56,8 +57,9 @@ ProcELoop:    stx ObjectOffset           ;put incremented offset in X as enemy o
   dex
   stx ObjectOffset           ;set offset for first
   jsr BlockObjectsCore       ;process first block object
-  jsr MiscObjectsCore        ;process misc objects (hammer, jumping coins)
-  jsr ProcessCannons         ;process bullet bill cannons
+  ; TODO consolidate these farcalls
+  farcall MiscObjectsCore        ;process misc objects (hammer, jumping coins)
+  farcall ProcessCannons         ;process bullet bill cannons
   jsr ProcessWhirlpools      ;process whirlpools
   jsr FlagpoleRoutine        ;process the flagpole
   jsr RunGameTimer           ;count down the game timer
@@ -83,7 +85,7 @@ CycleTwo:     lsr                        ;if branched here, divide by 2 to cycle
   jsr CyclePlayerPalette     ;do sub to cycle the palette (note: shares fire flower code)
   jmp SaveAB                 ;then skip this sub to finish up the game engine
 ClrPlrPal:
-  jsr ResetPalStar           ;do sub to clear player's palette bits in attributes
+  farcall ResetPalStar           ;do sub to clear player's palette bits in attributes
 SaveAB:
   lda A_B_Buttons            ;save current A and B button
   sta PreviousA_B_Buttons    ;into temp variable to be used on next frame
@@ -104,7 +106,7 @@ UpdScrollVar:
   lda #$00                   ;reset vram buffer offset used in conjunction with
   sta VRAM_Buffer2_Offset    ;level graphics buffer at $0341-$035f
 RunParser:
-  jsr AreaParserTaskHandler  ;update the name table with more level graphics
+  farcall AreaParserTaskHandler  ;update the name table with more level graphics
 ExitEng:
   rts                        ;and after all that, we're finally done!
 

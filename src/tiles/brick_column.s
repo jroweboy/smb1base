@@ -3,7 +3,7 @@
 
 .export DrawRow
 
-.segment "CODE"
+.segment "LEVEL"
 
 ;--------------------------------
 

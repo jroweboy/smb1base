@@ -31,7 +31,7 @@
 ; gamecore.s
 .export ResetPalStar
 
-.segment "CODE"
+.segment "PLAYER"
 
 ;-------------------------------------------------------------------------------------
 
@@ -179,7 +179,7 @@ PlayerSubs: jsr ScrollHandler           ;move the screen if necessary
             jsr GetPlayerOffscreenBits  ;get player's offscreen bits
             jsr RelativePlayerPosition  ;get coordinates relative to the screen
             ldx #$00                    ;set offset for player object
-            jsr BoundingBoxCore         ;get player's bounding box coordinates
+            farcall BoundingBoxCore         ;get player's bounding box coordinates
             ; Add to the upper left offset based on current neck size
             lda BoundingBox_UL_YPos, x
             cmp #$f0 ; check if mario's head is offscreen already
@@ -437,7 +437,7 @@ ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to ski
           sta Block_Y_Position
           ldx #$05                    ;set offset in X for last enemy object buffer slot
           ldy #$00                    ;set offset in Y for object coordinates used earlier
-          jsr Setup_Vine              ;do a sub to grow vine
+          farcall Setup_Vine              ;do a sub to grow vine
 ChkSwimE: ldy AreaType                ;if level not water-type,
           bne SetPESub                ;skip this subroutine
           jsr SetupBubble             ;otherwise, execute sub to set up air bubbles

@@ -3,7 +3,7 @@
 
 .import InitPiranhaPlant
 
-.segment "CODE"
+.segment "LEVEL"
 
 ;--------------------------------
 

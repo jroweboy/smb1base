@@ -7,7 +7,7 @@
 ; collision.s
 .export SetHJ
 
-.segment "CODE"
+.segment "OBJECT"
 
 ;--------------------------------
 

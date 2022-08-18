@@ -60,7 +60,7 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   and #$01                  ;mask out all but LSB of page location
   ror                       ;rotate LSB of page location into carry then onto mirror
   rol Mirror_PPU_CTRL       ;this is to set the proper PPU name table
-  jsr GetAreaMusic          ;load proper music into queue
+  farcall GetAreaMusic          ;load proper music into queue
   lda #$38                  ;load sprite shuffle amounts to be used later
   sta SprShuffleAmt+2
   lda #$48
@@ -200,7 +200,7 @@ SetInitNTHigh:
   dec AreaObjectLength+2
   lda #$0b                 ;set value for renderer to update 12 column sets
   sta ColumnSets           ;12 column sets = 24 metatile columns = 1 1/2 screens
-  jsr GetAreaDataAddrs     ;get enemy and level addresses and load header
+  farcall GetAreaDataAddrs     ;get enemy and level addresses and load header
   lda PrimaryHardMode      ;check to see if primary hard mode has been activated
   bne SetSecHard           ;if so, activate the secondary no matter where we're at
   lda WorldNumber          ;otherwise check world number
@@ -215,9 +215,10 @@ SetSecHard:
 CheckHalfway:
   lda HalfwayPage
   beq DoneInitArea
-  lda #$02                 ;if halfway page set, overwrite start position from header
-  sta PlayerEntranceCtrl
-DoneInitArea:  lda #Silence             ;silence music
+    lda #$02                 ;if halfway page set, overwrite start position from header
+    sta PlayerEntranceCtrl
+DoneInitArea:
+  lda #Silence             ;silence music
   sta AreaMusicQueue
   lda #$01                 ;disable screen output
   sta DisableScreenFlag
@@ -449,7 +450,7 @@ DemoTimingData:
   beq AutoPlayer              ;if on bridge collapse, skip enemy processing
   ldx #$00
   stx ObjectOffset            ;otherwise reset enemy object offset 
-  jsr EnemiesAndLoopsCore     ;and run enemy code
+  farcall EnemiesAndLoopsCore     ;and run enemy code
 AutoPlayer:
   jsr RelativePlayerPosition  ;get player's relative coordinates
   jmp PlayerGfxHandler        ;draw the player, then leave
@@ -481,7 +482,7 @@ AutoPlayer:
 .endproc
 
 ;-------------------------------------------------------------------------------------
-
+; TODO jroweboy move this to player.s maybe
 .proc PlayerVictoryWalk
   ldy #$00                ;set value here to not walk player by default
   sty VictoryWalkControl
@@ -496,7 +497,7 @@ PerformWalk:
   iny                     ;note Y will be used to walk the player
 DontWalk:
   tya                     ;put contents of Y in A and
-  jsr AutoControlPlayer   ;use A to move player to the right or not
+  farcall AutoControlPlayer   ;use A to move player to the right or not
   lda ScreenLeft_PageLoc  ;check page location of left side of screen
   cmp DestinationPageLoc  ;against set value here
   beq ExitVWalk           ;branch if equal to change modes if necessary
@@ -507,7 +508,7 @@ DontWalk:
   lda #$01                ;set 1 pixel per frame
   adc #$00                ;add carry from previous addition
   tay                     ;use as scroll amount
-  jsr ScrollScreen        ;do sub to scroll the screen
+  farcall ScrollScreen        ;do sub to scroll the screen
   jsr UpdScrollVar        ;do another sub to update screen and scroll variables
   inc VictoryWalkControl  ;increment value to stay in this routine
 ExitVWalk:
