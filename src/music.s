@@ -10,7 +10,6 @@ MusicSelectData:
 
 .proc GetAreaMusic
 .export GetAreaMusic
-
   lda OperMode           ;if in title screen mode, leave
   beq ExitGetM
   lda AltEntranceControl ;check for specific alternate mode of entry

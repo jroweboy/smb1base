@@ -10,7 +10,7 @@
 ; objects/bowser.s
 .import BridgeCollapse
 ; player.s
-.import AutoControlPlayer, ScrollScreen
+.import PlayerCtrlRoutine, ScrollScreen
 ; level.s
 .import GetAreaDataAddrs
 
@@ -453,7 +453,7 @@ DemoTimingData:
   farcall EnemiesAndLoopsCore     ;and run enemy code
 AutoPlayer:
   jsr RelativePlayerPosition  ;get player's relative coordinates
-  jmp PlayerGfxHandler        ;draw the player, then leave
+  farcall PlayerGfxHandler        ;draw the player, then leave
 .endproc
 
 .proc VictoryModeSubroutines
@@ -497,7 +497,8 @@ PerformWalk:
   iny                     ;note Y will be used to walk the player
 DontWalk:
   tya                     ;put contents of Y in A and
-  farcall AutoControlPlayer   ;use A to move player to the right or not
+  sta SavedJoypadBits
+  farcall PlayerCtrlRoutine   ;use A to move player to the right or not
   lda ScreenLeft_PageLoc  ;check page location of left side of screen
   cmp DestinationPageLoc  ;against set value here
   beq ExitVWalk           ;branch if equal to change modes if necessary

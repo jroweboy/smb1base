@@ -61,14 +61,19 @@ IRQENABLE   = $e001
 .endscope
 .endmacro
 
-.macro farcall loc
+.macro farcall loc, usejmp
 .scope
+.import loc
   lda #<loc
   sta TargetAddress
   lda #>loc
   sta TargetAddress+1
   lda #.lobyte(.bank(loc))
   sta NextBank
+.ifblank usejmp
   jsr FarCallCommon
+.else
+  jmp FarCallCommon
+.endif
 .endscope
 .endmacro

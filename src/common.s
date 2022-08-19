@@ -516,27 +516,27 @@ SetXMoveAmt: sty $00                 ;set movement amount here
 ;--------------------------------
 
 MovePlatformDown:
-      lda #$00    ;save value to stack (if branching here, execute next
-      .byte $2c     ;part as BIT instruction)
-
+  lda #$00    ;save value to stack (if branching here, execute next
+  .byte $2c     ;part as BIT instruction)
 MovePlatformUp:
-           lda #$01        ;save value to stack
-           pha
-           ldy Enemy_ID,x  ;get enemy object identifier
-           inx             ;increment offset for enemy object
-           lda #$05        ;load default value here
-SetDplSpd: sta $00         ;save downward movement amount here
-           lda #$0a        ;save upward movement amount here
-           sta $01
-           lda #$03        ;save maximum vertical speed here
-           sta $02
-           pla             ;get value from stack
-           tay             ;use as Y, then move onto code shared by red koopa
+  lda #$01        ;save value to stack
+  pha
+    ldy Enemy_ID,x  ;get enemy object identifier
+    inx             ;increment offset for enemy object
+    lda #$05        ;load default value here
+SetDplSpd:
+    sta $00         ;save downward movement amount here
+    lda #$0a        ;save upward movement amount here
+    sta $01
+    lda #$03        ;save maximum vertical speed here
+    sta $02
+  pla             ;get value from stack
+  tay             ;use as Y, then move onto code shared by red koopa
 
 RedPTroopaGrav:
-      jsr ImposeGravity  ;do a sub to move object gradually
-      ldx ObjectOffset   ;get enemy object offset and leave
-      rts
+  jsr ImposeGravity  ;do a sub to move object gradually
+  ldx ObjectOffset   ;get enemy object offset and leave
+  rts
 
 ;------------------------------------------------
 ; Moved from object handler since this is common code
@@ -566,16 +566,16 @@ NoKillE:
 ;-------------------------------------------------------------------------------------
 
 EraseEnemyObject:
-      lda #$00                 ;clear all enemy object variables
-      sta Enemy_Flag,x
-      sta Enemy_ID,x
-      sta Enemy_State,x
-      sta FloateyNum_Control,x
-      sta EnemyIntervalTimer,x
-      sta ShellChainCounter,x
-      sta Enemy_SprAttrib,x
-      sta EnemyFrameTimer,x
-      rts
+  lda #$00                 ;clear all enemy object variables
+  sta Enemy_Flag,x
+  sta Enemy_ID,x
+  sta Enemy_State,x
+  sta FloateyNum_Control,x
+  sta EnemyIntervalTimer,x
+  sta ShellChainCounter,x
+  sta Enemy_SprAttrib,x
+  sta EnemyFrameTimer,x
+  rts
 
 WorldAddrOffsets:
       .byte World1Areas-AreaAddrOffsets, World2Areas-AreaAddrOffsets

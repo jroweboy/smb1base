@@ -3,7 +3,7 @@
 .include "player.inc"
 
 ; objects/object.s
-.import EnemiesAndLoopsCore, FloateyNumbersRoutine, MiscObjectsCore
+.import FloateyNumbersRoutine, MiscObjectsCore
 ; objects/cannon.s
 .import ProcessCannons
 ; music.s
@@ -39,14 +39,7 @@ GameCoreRoutine:
     rts
 GameEngine:
   farcall ProcFireball_Bubble    ;process fireballs and air bubbles
-  ldx #$00
-ProcELoop:
-    stx ObjectOffset           ;put incremented offset in X as enemy object offset
-    farcall EnemiesAndLoopsCore    ;process enemy objects
-    jsr FloateyNumbersRoutine  ;process floatey numbers
-    inx
-    cpx #$06                   ;do these two subroutines until the whole buffer is done
-    bne ProcELoop
+  farcall ProcessAllEnemies
   jsr GetPlayerOffscreenBits ;get offscreen bits for player object
   jsr RelativePlayerPosition ;get relative coordinates for player object
   farcall PlayerGfxHandler       ;draw the player
@@ -81,8 +74,10 @@ NoChgMus:
   bcs CycleTwo               ;branch to cycle player's palette quickly
   lsr                        ;otherwise, divide by 8 to cycle every eighth frame
   lsr
-CycleTwo:     lsr                        ;if branched here, divide by 2 to cycle every other frame
-  jsr CyclePlayerPalette     ;do sub to cycle the palette (note: shares fire flower code)
+CycleTwo:
+  lsr                        ;if branched here, divide by 2 to cycle every other frame
+  sta $00
+  farcall CyclePlayerPalette     ;do sub to cycle the palette (note: shares fire flower code)
   jmp SaveAB                 ;then skip this sub to finish up the game engine
 ClrPlrPal:
   farcall ResetPalStar           ;do sub to clear player's palette bits in attributes
@@ -116,27 +111,29 @@ ExitEng:
 ;$06-$07 - used to store block buffer address
 .import ReplaceBlockMetatile
 BlockObjMT_Updater:
-            ldx #$01                  ;set offset to start with second block object
-UpdateLoop: stx ObjectOffset          ;set offset here
-            lda VRAM_Buffer1          ;if vram buffer already being used here,
-            bne NextBUpd              ;branch to move onto next block object
-            lda Block_RepFlag,x       ;if flag for block object already clear,
-            beq NextBUpd              ;branch to move onto next block object
-            lda Block_BBuf_Low,x      ;get low byte of block buffer
-            sta $06                   ;store into block buffer address
-            lda #$05
-            sta $07                   ;set high byte of block buffer address
-            lda Block_Orig_YPos,x     ;get original vertical coordinate of block object
-            sta $02                   ;store here and use as offset to block buffer
-            tay
-            lda Block_Metatile,x      ;get metatile to be written
-            sta ($06),y               ;write it to the block buffer
-            jsr ReplaceBlockMetatile  ;do sub to replace metatile where block object is
-            lda #$00
-            sta Block_RepFlag,x       ;clear block object flag
-NextBUpd:   dex                       ;decrement block object offset
-            bpl UpdateLoop            ;do this until both block objects are dealt with
-            rts                       ;then leave
+  ldx #$01                  ;set offset to start with second block object
+UpdateLoop:
+    stx ObjectOffset          ;set offset here
+    lda VRAM_Buffer1          ;if vram buffer already being used here,
+    bne NextBUpd              ;branch to move onto next block object
+    lda Block_RepFlag,x       ;if flag for block object already clear,
+    beq NextBUpd              ;branch to move onto next block object
+      lda Block_BBuf_Low,x      ;get low byte of block buffer
+      sta $06                   ;store into block buffer address
+      lda #$05
+      sta $07                   ;set high byte of block buffer address
+      lda Block_Orig_YPos,x     ;get original vertical coordinate of block object
+      sta $02                   ;store here and use as offset to block buffer
+      tay
+      lda Block_Metatile,x      ;get metatile to be written
+      sta ($06),y               ;write it to the block buffer
+      jsr ReplaceBlockMetatile  ;do sub to replace metatile where block object is
+      lda #$00
+      sta Block_RepFlag,x       ;clear block object flag
+NextBUpd:
+    dex                       ;decrement block object offset
+    bpl UpdateLoop            ;do this until both block objects are dealt with
+  rts                       ;then leave
 
 ;-------------------------------------------------------------------------------------
 

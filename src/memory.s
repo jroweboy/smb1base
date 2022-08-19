@@ -547,18 +547,19 @@ AreaMusicBuffer_Alt:            .res  1
 
 PauseModeFlag:                  .res  1
 GroundMusicHeaderOfs:           .res  3
-AltRegContentFlag:              .res  12
+AltRegContentFlag:              .res  10  ; jroweboy this is only one byte (original 12)
+
+CurrentA:                       .res  1
+NextBank:                       .res  1
 
     _WarmBootOffset:            .res  1   ; Warm boot offset
 
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits
 
-ScoreAndCoinDisplay:            .res  23
+ScoreAndCoinDisplay:            .res  27
 PlayerScoreDisplay            = ScoreAndCoinDisplay
 
-CurrentA:                       .res  1
-NextBank:                       .res  1
 GameTimerDisplay:               .res  4
 WorldSelectEnableFlag:          .res  1
 

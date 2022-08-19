@@ -1,6 +1,6 @@
 
 .include "common.inc"
-.include "object.inc"
+; .include "object.inc"
 
 ; screen_render.s
 .import AddToScore

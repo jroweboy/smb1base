@@ -236,12 +236,8 @@ NoInter:
 ;-------------------------------------------------------------------------------------
 
 .proc AreaParserTaskControl
-
   inc DisableScreenFlag     ;turn off screen
-TaskLoop:
-    farcall AreaParserTaskHandler ;render column set of current area
-    lda AreaParserTaskNum     ;check number of tasks
-    bne TaskLoop              ;if tasks still not all done, do another one
+  farcall AreaParserTaskLoop
   dec ColumnSets            ;do we need to render more column sets?
   bpl OutputCol
     inc ScreenRoutineTask     ;if not, move on to the next task

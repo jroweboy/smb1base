@@ -1514,36 +1514,37 @@ NextSdeC: dec $eb                    ;move to the next direction
 ExESdeC:  rts
 
 ChkForBump_HammerBroJ: 
-        cpx #$05               ;check if we're on the special use slot
-        beq NoBump             ;and if so, branch ahead and do not play sound
-        lda Enemy_State,x      ;if enemy state d7 not set, branch
-        asl                    ;ahead and do not play sound
-        bcc NoBump
-        lda #Sfx_Bump          ;otherwise, play bump sound
-        sta Square1SoundQueue  ;sound will never be played if branching from ChkForRedKoopa
-NoBump: lda Enemy_ID,x         ;check for hammer bro
-        cmp #$05
-        bne InvEnemyDir        ;branch if not found
-        lda #$00
-        sta $00                ;initialize value here for bitmask  
-        ldy #$fa               ;load default vertical speed for jumping
-        jmp SetHJ              ;jump to code that makes hammer bro jump
+  cpx #$05               ;check if we're on the special use slot
+  beq NoBump             ;and if so, branch ahead and do not play sound
+  lda Enemy_State,x      ;if enemy state d7 not set, branch
+  asl                    ;ahead and do not play sound
+  bcc NoBump
+    lda #Sfx_Bump          ;otherwise, play bump sound
+    sta Square1SoundQueue  ;sound will never be played if branching from ChkForRedKoopa
+NoBump:
+  lda Enemy_ID,x         ;check for hammer bro
+  cmp #$05
+  bne InvEnemyDir        ;branch if not found
+    lda #$00
+    sta $00                ;initialize value here for bitmask  
+    ldy #$fa               ;load default vertical speed for jumping
+    jmp SetHJ              ;jump to code that makes hammer bro jump
 
 InvEnemyDir:
-      jmp RXSpd     ;jump to turn the enemy around
+  jmp RXSpd     ;jump to turn the enemy around
 
 
 ImpedePlayerMove:
-       lda #$00                  ;initialize value here
-       ldy Player_X_Speed        ;get player's horizontal speed
-       ldx $00                   ;check value set earlier for
-       dex                       ;left side collision
-       bne RImpd                 ;if right side collision, skip this part
-       inx                       ;return value to X
-       cpy #$00                  ;if player moving to the left,
-       bmi ExIPM                 ;branch to invert bit and leave
-       lda #$ff                  ;otherwise load A with value to be used later
-       jmp NXSpd                 ;and jump to affect movement
+  lda #$00                  ;initialize value here
+  ldy Player_X_Speed        ;get player's horizontal speed
+  ldx $00                   ;check value set earlier for
+  dex                       ;left side collision
+  bne RImpd                 ;if right side collision, skip this part
+  inx                       ;return value to X
+  cpy #$00                  ;if player moving to the left,
+  bmi ExIPM                 ;branch to invert bit and leave
+  lda #$ff                  ;otherwise load A with value to be used later
+  jmp NXSpd                 ;and jump to affect movement
 RImpd: ldx #$02                  ;return $02 to X
        cpy #$01                  ;if player moving to the right,
        bpl ExIPM                 ;branch to invert bit and leave

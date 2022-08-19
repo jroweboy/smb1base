@@ -26,7 +26,7 @@
 .export DrawPlayer_Intermediate
 
 ; gamemode.s
-.export GameRoutines, AutoControlPlayer, ScrollScreen
+.export GameRoutines, PlayerCtrlRoutine, ScrollScreen
 
 ; gamecore.s
 .export ResetPalStar
@@ -451,7 +451,6 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
 ;$07 - used to store pseudorandom bit in BubbleCheck
 
 ProcFireball_Bubble:
-
   lda PlayerStatus           ;check player's status
   cmp #$02
   bcc ProcAirBubbles         ;if not fiery, branch
@@ -790,7 +789,7 @@ UpdatePlayerNeck:
   ; move the player's head up based on neck length
   ldx Player_SprDataOffset
   lda PlayerSize
-  beq @NotBig
+  bne @NotBig
 @IsBig:
     lda Sprite_Y_Position,x
     sec
@@ -799,7 +798,7 @@ UpdatePlayerNeck:
     sta Sprite_Y_Position+4,x
     jmp PlayerOffscreenChk
 @NotBig:
-    lda Sprite_Y_Position,x
+    lda Sprite_Y_Position+16,x
     sec
     sbc PlayerNeckLength
     sta Sprite_Y_Position+16,x
@@ -938,6 +937,7 @@ PlayerFireFlower:
   lsr                    ;divide by four to change every four frames
 
 CyclePlayerPalette:
+  lda $00
   and #$03              ;mask out all but d1-d0 (previously d3-d2)
   sta $00               ;store result here to use as palette bits
   lda Player_SprAttrib  ;get player attributes
