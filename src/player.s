@@ -799,6 +799,7 @@ UpdatePlayerNeck:
     jmp PlayerOffscreenChk
 @NotBig:
     lda Sprite_Y_Position+16,x
+    ; sta PlayerNeckYOffset
     sec
     sbc PlayerNeckLength
     sta Sprite_Y_Position+16,x

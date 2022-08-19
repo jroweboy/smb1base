@@ -1,3 +1,4 @@
+.setcpu "6502X"
 
 .include "common.inc"
 ; .include "object.inc"
@@ -13,6 +14,53 @@
 .export DumpTwoSpr, FloateyNumbersRoutine
 
 .segment "RENDER"
+
+.export DrawPlayerNeck
+DrawPlayerNeck:
+  lda Player_State
+  lda #$05
+  clc
+  adc Sprite_Y_Position+4
+  sta $00
+  lda #$05
+  clc
+  adc Sprite_X_Position+4
+  sta $01
+  lda PlayerNeckLength
+  sta $02
+  lda Sprite_Attributes+4
+  tay
+
+  ldx #$fc
+@DrawingNeckLoop:
+    lda Sprite_Y_Position, x
+    cmp #$f8
+    bcc @NextSprite
+      ; Time to draw a neck sprite here
+      lda #$71
+      sta Sprite_Tilenumber, x
+      lda $01
+      sta Sprite_X_Position, x
+      tya
+      sta Sprite_Attributes, x
+      lda $00
+      sta Sprite_Y_Position, x
+      sec
+      sbc #8
+      bcs @Exit
+      sta $00
+      lda $02
+      sec
+      sbc #8
+      sta $02
+      ; fallthrough
+@NextSprite:
+    ; subtract 4 from x
+    txa
+    axs #$04
+    bne @DrawingNeckLoop
+@Exit:
+  rts
 
 ;-------------------------------------------------------------------------------------
 ;$00 - offset to vine Y coordinate adder

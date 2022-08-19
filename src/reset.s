@@ -6,7 +6,7 @@
 .import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
 .import OperModeExecutionTree, MoveSpritesOffscreen, UpdateTopScore
 .import InitScroll, UpdateScreen, SoundEngine, PauseRoutine
-.import FarCallInit
+.import FarCallInit, DrawPlayerNeck
 
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
@@ -205,6 +205,7 @@ SkipSprite0:
     lsr
     bcs SkipMainOper
     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+    jsr DrawPlayerNeck
 SkipMainOper:
     lda PPU_STATUS            ;reset flip-flop
   pla
