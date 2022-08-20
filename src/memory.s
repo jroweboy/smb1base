@@ -547,8 +547,10 @@ AreaMusicBuffer_Alt:            .res  1
 
 PauseModeFlag:                  .res  1
 GroundMusicHeaderOfs:           .res  3
-AltRegContentFlag:              .res  10  ; jroweboy this is only one byte (original 12)
+AltRegContentFlag:              .res  8  ; jroweboy this is only one byte (original 12)
 
+PlayerNeckXOffset:              .res  1
+PlayerNeckYOffset:              .res  1
 CurrentA:                       .res  1
 NextBank:                       .res  1
 

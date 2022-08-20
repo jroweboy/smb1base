@@ -205,7 +205,6 @@ SkipSprite0:
     lsr
     bcs SkipMainOper
     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
-    jsr DrawPlayerNeck
 SkipMainOper:
     lda PPU_STATUS            ;reset flip-flop
   pla

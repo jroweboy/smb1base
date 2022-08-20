@@ -513,6 +513,9 @@ __MEMORY_INC = 1
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
 
+.global PlayerNeckXOffset
+.global PlayerNeckYOffset
+
 .global _WarmBootOffset
 
 .global DisplayDigits

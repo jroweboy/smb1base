@@ -36,22 +36,22 @@
 ;-------------------------------------------------------------------------------------
 
 .proc GameRoutines
-      lda GameEngineSubroutine  ;run routine based on number (a few of these routines are   
-      jsr JumpEngine            ;merely placeholders as conditions for other routines)
+  lda GameEngineSubroutine  ;run routine based on number (a few of these routines are   
+  jsr JumpEngine            ;merely placeholders as conditions for other routines)
 
-      .word Entrance_GameTimerSetup
-      .word Vine_AutoClimb
-      .word SideExitPipeEntry
-      .word VerticalPipeEntry
-      .word FlagpoleSlide
-      .word PlayerEndLevel
-      .word PlayerLoseLife
-      .word PlayerEntrance
-      .word PlayerCtrlRoutine
-      .word PlayerChangeSize
-      .word PlayerInjuryBlink
-      .word PlayerDeath
-      .word PlayerFireFlower
+  .word Entrance_GameTimerSetup
+  .word Vine_AutoClimb
+  .word SideExitPipeEntry
+  .word VerticalPipeEntry
+  .word FlagpoleSlide
+  .word PlayerEndLevel
+  .word PlayerLoseLife
+  .word PlayerEntrance
+  .word PlayerCtrlRoutine
+  .word PlayerChangeSize
+  .word PlayerInjuryBlink
+  .word PlayerDeath
+  .word PlayerFireFlower
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -765,6 +765,7 @@ PlayerGfxProcessing:
   sta PlayerGfxOffset           ;store offset to graphics table here
   lda #$04
   jsr RenderPlayerSub           ;draw player based on offset loaded
+  jsr DrawPlayerNeck
   jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
   lda FireballThrowingTimer
   beq UpdatePlayerNeck          ;if fireball throw timer not set, skip to the end
@@ -792,6 +793,7 @@ UpdatePlayerNeck:
   bne @NotBig
 @IsBig:
     lda Sprite_Y_Position,x
+    sta PlayerNeckYOffset
     sec
     sbc PlayerNeckLength
     sta Sprite_Y_Position,x
@@ -799,7 +801,7 @@ UpdatePlayerNeck:
     jmp PlayerOffscreenChk
 @NotBig:
     lda Sprite_Y_Position+16,x
-    ; sta PlayerNeckYOffset
+    sta PlayerNeckYOffset
     sec
     sbc PlayerNeckLength
     sta Sprite_Y_Position+16,x
@@ -1709,3 +1711,59 @@ NoJSChk: lda VerticalForce       ;dump vertical force
          sta $00
          lda #$04                ;set maximum vertical speed here
          jmp ImposeGravitySprObj ;then jump to move player vertically
+
+.proc DrawPlayerNeck
+.setcpu "6502X"
+
+  lda Player_State
+  lda PlayerNeckYOffset
+  sta $00
+  ; offset neck by 3 or 5px depending on facing direction
+  ; maybe i need to do some other things depending on 
+  ; lda PlayerNeckXOffset
+  lda PlayerFacingDir
+  asl
+  bcc FacingLeft
+    lda #$03
+    .byte $2c ; OPC_BIT_abs
+FacingLeft:
+    lda #$05
+  clc
+  adc Sprite_X_Position+4
+  sta $01
+  lda PlayerNeckLength
+  sta $02
+  lda Sprite_Attributes+4
+  tay
+
+  ldx #$fc
+DrawingNeckLoop:
+    lda Sprite_Y_Position, x
+    cmp #$f8
+    bcc NextSprite
+      ; Time to draw a neck sprite here
+      lda #$71
+      sta Sprite_Tilenumber, x
+      lda $01
+      sta Sprite_X_Position, x
+      tya
+      sta Sprite_Attributes, x
+      lda $00
+      sta Sprite_Y_Position, x
+      sec
+      sbc #8
+      bcs Exit
+      sta $00
+      lda $02
+      sec
+      sbc #8
+      sta $02
+      ; fallthrough
+NextSprite:
+    ; subtract 4 from x
+    txa
+    axs #$04
+    bne DrawingNeckLoop
+Exit:
+  rts
+.endproc
