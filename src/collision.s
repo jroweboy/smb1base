@@ -497,6 +497,8 @@ RevivalRateData:
       .byte $10, $0b
 
 HandleStompedShellE:
+       ; when an enemy is stomped cut neck length in half
+       lsr PlayerNeckLength
        lda #$04                   ;set defeated state for enemy
        sta Enemy_State,x
        inc StompChainCounter      ;increment the stomp counter

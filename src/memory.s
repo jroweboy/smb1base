@@ -156,9 +156,8 @@ Square1SoundQueue:              .res  1
 
 .segment "STACK"
 ; start $0100
-PlayerNeckLength:               .res  1
 PlayerNeckTemp:                 .res  1
-blank_stack:                    .res  7 ; not used
+blank_stack:                    .res  8 ; not used
 VerticalFlipFlag:               .res  4 ; jroweboy: this is acutally only one byte?
 FlagpoleFNum_Y_Pos:             .res  1
 FlagpoleFNum_YMFDummy:          .res  1
@@ -547,10 +546,11 @@ AreaMusicBuffer_Alt:            .res  1
 
 PauseModeFlag:                  .res  1
 GroundMusicHeaderOfs:           .res  3
-AltRegContentFlag:              .res  9  ; jroweboy this is only one byte (original 12)
+AltRegContentFlag:              .res  7  ; jroweboy this is only one byte (original 12)
 
+ShouldDrawNeck:                 .res  1
 PlayerNeckXOffset:              .res  1
-; PlayerNeckYOffset:              .res  1
+PlayerNeckLength:               .res  1
 CurrentA:                       .res  1
 NextBank:                       .res  1
 

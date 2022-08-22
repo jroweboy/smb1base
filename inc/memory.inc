@@ -513,6 +513,7 @@ __MEMORY_INC = 1
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
 
+.global ShouldDrawNeck
 .global PlayerNeckXOffset
 ; .global PlayerNeckYOffset
 

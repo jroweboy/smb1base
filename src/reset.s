@@ -8,6 +8,8 @@
 .import InitScroll, UpdateScreen, SoundEngine, PauseRoutine
 .import FarCallInit
 
+.import DrawNeck
+
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
 
@@ -205,12 +207,146 @@ SkipSprite0:
     lsr
     bcs SkipMainOper
     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+    ; before the frame ends, lets check to see if the neck should be drawn and update it
+    lda ShouldDrawNeck
+    beq SkipMainOper
+      jsr DrawNeck
+      dec ShouldDrawNeck
 SkipMainOper:
     lda PPU_STATUS            ;reset flip-flop
   pla
   ora #%10000000            ;reactivate NMIs
   sta PPU_CTRL
   rti                       ;we are done until the next frame!
+
+.proc DrawNeck
+.setcpu "6502X"
+
+  lda PlayerGfxOffset
+  lsr
+  lsr
+  lsr
+  tay
+  ; move the head based on the adjustment
+  lda HeadAdjusmentOffset,y
+  tax
+  lda Sprite_Y_Position+4,x
+  sta $00
+  sec
+  sbc PlayerNeckLength
+  bcs :+
+    ; we are offscreen now so make the head offscreen
+    lda #$f8 
+:
+  sta Sprite_Y_Position+4,x
+  sta Sprite_Y_Position+8,x
+  
+  ; offset the neck Y position by one so its below the head bobs
+  inc $00
+  ; if the player is facing left then we want to offset moving sprites
+  ; that arent centered
+  lda #4
+  cpy #4 ; special case the off center sprites
+  bcs SetXOffset
+    lda PlayerFacingDir
+    lsr
+    asl
+    asl
+    sta $01
+    tya
+    adc $01
+    tax
+    lda PlayerNeckXOffsetTable, x
+SetXOffset:
+  clc
+  adc Sprite_X_Position+4
+  sta $01
+  ; divide the neck length by 8 to determine the number of neck sprites
+  lda PlayerNeckLength
+  lsr
+  lsr
+  lsr
+  clc
+  adc #1
+  sta $02
+
+  ldx #$24
+DrawingNeckLoop:
+    lda Sprite_Y_Position, x
+    cmp #$f8
+    bcc NextSprite
+      ; Time to draw a neck sprite here
+      lda #$10
+      sta Sprite_Tilenumber, x
+      lda $01
+      sta Sprite_X_Position, x
+      lda Sprite_Attributes+4
+      sta Sprite_Attributes, x
+      lda $00
+      sta Sprite_Y_Position, x
+      sec
+      sbc #8
+      ; if this current neck sprite has gone off the screen we are done
+      bcc Exit
+      sta $00
+      ; decrement the loop counter and go again
+      dec $02
+      beq Exit
+      ; fallthrough
+NextSprite:
+    ; add 4 to x
+    txa
+    axs #$fc
+    bne DrawingNeckLoop
+Exit:
+  rts
+
+PlayerNeckXOffsetTable:
+; ;big player table facing right
+  .byte $03 ;walking frame 1
+  .byte $04 ;        frame 2
+  .byte $03 ;        frame 3
+  .byte $06 ;skidding
+; facing left
+  .byte $05 ;walking frame 1
+  .byte $04 ;        frame 2
+  .byte $05 ;        frame 3
+  .byte $02 ;skidding
+
+HeadAdjusmentOffset:
+;big player table
+  .byte $00 ;walking frame 1
+  .byte $00 ;        frame 2
+  .byte $00 ;        frame 3
+  .byte $00 ;skidding
+  .byte $00 ;jumping
+  .byte $00 ;swimming frame 1
+  .byte $00 ;         frame 2
+  .byte $00 ;         frame 3
+  .byte $00 ;climbing frame 1
+  .byte $00 ;         frame 2
+  .byte $08 ;crouching
+  .byte $00 ;fireball throwing
+
+;small player table
+  .byte $10 ;walking frame 1
+  .byte $10 ;        frame 2
+  .byte $10 ;        frame 3
+  .byte $10 ;skidding
+  .byte $10 ;jumping
+  .byte $10 ;swimming frame 1
+  .byte $10 ;         frame 2
+  .byte $10 ;         frame 3
+  .byte $10 ;climbing frame 1
+  .byte $10 ;         frame 2
+  .byte $10 ;killed
+
+;used by both player sizes
+  .byte $10 ;small player standing
+  .byte $08 ;intermediate grow frame
+  .byte $00 ;big player standing
+
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - vram buffer address table low, also used for pseudorandom bit

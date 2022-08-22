@@ -328,6 +328,7 @@ HalfwayPageNybbles:
 .proc PlayerLoseLife
   inc DisableScreenFlag    ;disable screen and sprite 0 check
   lda #$00
+  sta PlayerNeckLength      ; reset the player neck length
   sta Sprite0HitDetectFlag
   lda #Silence             ;silence music
   sta EventMusicQueue
@@ -365,6 +366,7 @@ MaskHPNyb:
 SetHalfway:
   sta HalfwayPage          ;store as halfway page for player
   jsr TransposePlayers     ;switch players around if 2-player game
+
   jmp ContinueGame         ;continue the game
 .endproc
 
@@ -678,7 +680,7 @@ PlayerGraphicsTable:
 ;big player table
   .byte $00, $01, $02, $03, $04, $05, $06, $07 ;walking frame 1
   .byte $08, $09, $0a, $0b, $0c, $0d, $0e, $0f ;        frame 2
-  .byte $10, $11, $12, $13, $14, $15, $16, $17 ;        frame 3
+  .byte $08, $09, $12, $13, $14, $15, $16, $17 ;        frame 3
   .byte $18, $19, $1a, $1b, $1c, $1d, $1e, $1f ;skidding
   .byte $20, $21, $22, $23, $24, $25, $26, $27 ;jumping
   .byte $08, $09, $28, $29, $2a, $2b, $2c, $2d ;swimming frame 1
@@ -815,7 +817,8 @@ NPROffscr:
     tay
     dex                           ;decrement row counter
     bpl PROfsLoop                 ;do this until all sprite rows are checked
-  jmp DrawPlayerNeck
+  ; Determine if the player neck should be drawn now
+  jmp QueueDrawPlayerNeck
   ; rts                           ;then we are done!
 
 PlayerGfxTblOffsets:
@@ -907,7 +910,7 @@ ExitBoth:
 PlayerDeath:
   lda TimerControl       ;check master timer control
   cmp #$f0               ;for specific moment in time
-  bcs ExitTask          ;branch to leave if before that point
+  bcs ExitTask           ;branch to leave if before that point
   jmp PlayerCtrlRoutine  ;otherwise run player control routine
 
 DonePlayerTask:
@@ -1714,156 +1717,37 @@ NoJSChk:
   lda #$04                ;set maximum vertical speed here
   jmp ImposeGravitySprObj ;then jump to move player vertically
 
-
-PlayerNeckXOffsetTable:
-;big player table
-  .byte $03 ;walking frame 1
-  .byte $04 ;        frame 2
-  .byte $03 ;        frame 3
-  .byte $04 ;skidding
-  .byte $04 ;jumping
-  .byte $04 ;swimming frame 1
-  .byte $04 ;         frame 2
-  .byte $04 ;         frame 3
-  .byte $04 ;climbing frame 1
-  .byte $04 ;         frame 2
-  .byte $04 ;crouching
-  .byte $04 ;fireball throwing
-
-;small player table
-  .byte $04 ;walking frame 1
-  .byte $04 ;        frame 2
-  .byte $04 ;        frame 3
-  .byte $04 ;skidding
-  .byte $04 ;jumping
-  .byte $04 ;swimming frame 1
-  .byte $04 ;         frame 2
-  .byte $04 ;         frame 3
-  .byte $04 ;climbing frame 1
-  .byte $04 ;         frame 2
-  .byte $04 ;killed
-
-;used by both player sizes
-  .byte $04 ;small player standing
-  .byte $04 ;intermediate grow frame
-  .byte $04 ;big player standing
-
-HeadAdjusmentOffset:
-;big player table
-  .byte $00 ;walking frame 1
-  .byte $00 ;        frame 2
-  .byte $00 ;        frame 3
-  .byte $00 ;skidding
-  .byte $00 ;jumping
-  .byte $00 ;swimming frame 1
-  .byte $00 ;         frame 2
-  .byte $00 ;         frame 3
-  .byte $00 ;climbing frame 1
-  .byte $00 ;         frame 2
-  .byte $08 ;crouching
-  .byte $00 ;fireball throwing
-
-;small player table
-  .byte $10 ;walking frame 1
-  .byte $10 ;        frame 2
-  .byte $10 ;        frame 3
-  .byte $10 ;skidding
-  .byte $10 ;jumping
-  .byte $10 ;swimming frame 1
-  .byte $10 ;         frame 2
-  .byte $10 ;         frame 3
-  .byte $10 ;climbing frame 1
-  .byte $10 ;         frame 2
-  .byte $10 ;killed
-
-;used by both player sizes
-  .byte $10 ;small player standing
-  .byte $08 ;intermediate grow frame
-  .byte $00 ;big player standing
-
-.proc DrawPlayerNeck
-.setcpu "6502X"
-
+.proc QueueDrawPlayerNeck
 UpdatePlayerNeck:
   ; if there is no neck just quit
   lda PlayerNeckLength
   beq EarlyExit
-  ; two checks to see if mario is offscreen. i hope one of these works ;P
-  ldy Player_Y_HighPos
-  dey
-  bne EarlyExit
-  ; if mario is offscreen don't draw the neck
+  ; if mario is offscreen don't draw the neck (checks when mario dies to an enemy)
   ldx Player_SprDataOffset
   lda Sprite_Y_Position+4,x
   cmp #$f8
-  bne :+
+  bne CheckYPosition
+    ; mario is offscreen, if they are dead don't draw the neck
+    lda GameEngineSubroutine
+    cmp #$0b
+    beq EarlyExit
+CheckYPosition:
+  ; final offscreen check. if the high y value is offscreen
+  ; and we are small mario then we need to draw 
+  lda Player_Y_HighPos
+  cmp #1
+  beq ShouldDraw
+  cmp #2
+  bcs EarlyExit
+    lda PlayerSize
+    beq EarlyExit ; if big then the whole head is now offscreen and we are done
+    ; if small then we need to check if the head is offscreen
+    ; by seeing if the Y position is < 16
+    lda Player_Y_Position
+    cmp #$f0
+    bcc EarlyExit
+ShouldDraw:
+  inc ShouldDrawNeck
 EarlyExit:
-    rts
-:
-DrawNeck:
-  lda PlayerGfxOffset
-  lsr
-  lsr
-  lsr
-  tay
-  ; move the head based on the adjustment
-  lda HeadAdjusmentOffset,y
-  tax
-  lda Sprite_Y_Position+4,x
-  sta $00
-  sec
-  sbc PlayerNeckLength
-  bcs :+
-    ; we are offscreen now so make the head offscreen
-    lda #$f8 
-:
-  sta Sprite_Y_Position+4,x
-  sta Sprite_Y_Position+8,x
-  
-  ; offset the neck Y position by one so its below the head bobs
-  inc $00
-
-  lda PlayerNeckXOffsetTable,y
-  clc
-  adc Sprite_X_Position+4
-  sta $01
-  ; divide the neck length by 8 to determine the number of neck sprites
-  lda PlayerNeckLength
-  lsr
-  lsr
-  lsr
-  clc
-  adc #1
-  sta $02
-
-  ldx #$24
-DrawingNeckLoop:
-    lda Sprite_Y_Position, x
-    cmp #$f8
-    bcc NextSprite
-      ; Time to draw a neck sprite here
-      lda #$71
-      sta Sprite_Tilenumber, x
-      lda $01
-      sta Sprite_X_Position, x
-      lda Sprite_Attributes+4
-      sta Sprite_Attributes, x
-      lda $00
-      sta Sprite_Y_Position, x
-      sec
-      sbc #8
-      ; if this current neck sprite has gone off the screen we are done
-      bcc Exit
-      sta $00
-      ; decrement the loop counter and go again
-      dec $02
-      beq Exit
-      ; fallthrough
-NextSprite:
-    ; add 4 to x
-    txa
-    axs #$fc
-    bne DrawingNeckLoop
-Exit:
   rts
 .endproc

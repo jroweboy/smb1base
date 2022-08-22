@@ -74,6 +74,7 @@ InitBlock_XY_Pos:
       sta Block_PageLoc2,x    ;save elsewhere to be used later
       lda Player_Y_HighPos
       sta Block_Y_HighPos,x   ;save vertical high byte of player into
+ExitBlockChk:
       rts                     ;vertical high byte of block object and leave
 
 ;--------------------------------
@@ -125,10 +126,7 @@ ExtraLifeMushBlock:
 VineBlock:
       ldx #$05                ;load last slot for enemy object buffer
       ldy SprDataOffset_Ctrl  ;get control bit
-      jsr Setup_Vine          ;set up vine object
-
-ExitBlockChk:
-      rts                     ;leave
+      farcall Setup_Vine, jmp ;set up vine object
 
 ;--------------------------------
 

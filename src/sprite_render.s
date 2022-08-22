@@ -399,7 +399,7 @@ EnemyGraphicsTable:
       .byte $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
       .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1
       .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2
-      .byte $fc, $fc, $70, $70, $72, $73  ;goomba
+      .byte $fc, $fc, $70, $71, $72, $73  ;goomba
       .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down)
       .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2
       .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup)
@@ -774,8 +774,6 @@ CheckForESymmetry:
   bne ContES
   jmp SprObjectOffscrChk      ;jump if found
 ContES:
-  cmp #Goomba                 ;check for goomba object
-  beq MirrorGoomba
   cmp #Bloober                ;check for bloober object
   beq MirrorEnemyGfx
   cmp #PiranhaPlant           ;check for piranha plant object
@@ -820,23 +818,23 @@ EggExc:
   sta Sprite_Attributes+12,y  ;store with horizontal and vertical flip in
   sta Sprite_Attributes+20,y  ;second and third row right sprites
   bne CheckToMirrorLakitu ; unconditional
-MirrorGoomba:
-  cpx #$02              ;check for defeated state
-  bcs MirrorEnemyGfx
-  ; if its not already defeated, then
-  ; Flip the top left or top right head sprite of a goomba (depending on animation frame)
-  lda $03
-  and #%00000001
-  bne @TopRight
-@TopLeft:
-    lda Sprite_Attributes+8,y
-    eor #%01000000
-    sta Sprite_Attributes+8,y
-    bne CheckToMirrorLakitu ; uncoditional
-@TopRight:
-    lda Sprite_Attributes+12,y
-    eor #%01000000
-    sta Sprite_Attributes+12,y
+; MirrorGoomba:
+;   cpx #$02              ;check for defeated state
+;   bcs MirrorEnemyGfx
+;   ; if its not already defeated, then
+;   ; Flip the top left or top right head sprite of a goomba (depending on animation frame)
+;   lda $03
+;   and #%00000001
+;   bne @TopRight
+; @TopLeft:
+;     lda Sprite_Attributes+8,y
+;     eor #%01000000
+;     sta Sprite_Attributes+8,y
+;     bne CheckToMirrorLakitu ; uncoditional
+; @TopRight:
+;     lda Sprite_Attributes+12,y
+;     eor #%01000000
+;     sta Sprite_Attributes+12,y
 CheckToMirrorLakitu:
         lda $ef                     ;check for lakitu enemy object
         cmp #Lakitu
