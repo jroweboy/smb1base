@@ -111,7 +111,7 @@ WarpPipe: tya                      ;save value in stack
           sta Enemy_Y_Position,x
           lda #PiranhaPlant        ;write piranha plant's value into buffer
           sta Enemy_ID,x
-          jsr InitPiranhaPlant
+          farcall InitPiranhaPlant
 DrawPipe: pla                      ;get value saved earlier and use as Y
           tay
           ldx $07                  ;get buffer offset

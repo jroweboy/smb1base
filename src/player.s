@@ -506,13 +506,17 @@ BublExit: rts                         ;then leave
 FireballXSpdData:
       .byte $40, $c0
 
+FireballExplosion:
+      jsr RelativeFireballPosition
+      jmp DrawExplosion_Fireball
+
 FireballObjCore:
          stx ObjectOffset             ;store offset as current object
          lda Fireball_State,x         ;check for d7 = 1
          asl
          bcs FireballExplosion        ;if so, branch to get relative coordinates and draw explosion
          ldy Fireball_State,x         ;if fireball inactive, branch to leave
-         beq NoFBall
+         beq BublExit
          dey                          ;if fireball state set to 1, skip this part and just run it
          beq RunFB
          lda Player_X_Position        ;get player's horizontal position
@@ -522,6 +526,9 @@ FireballObjCore:
          adc #$00                     ;add carry and store as fireball's page location
          sta Fireball_PageLoc,x
          lda Player_Y_Position        ;get player's vertical position and store
+         sec
+         sbc PlayerNeckLength
+         bcc BublExit
          sta Fireball_Y_Position,x
          lda #$01                     ;set high byte of vertical position
          sta Fireball_Y_HighPos,x
@@ -548,8 +555,9 @@ RunFB:   txa                          ;add 7 to offset to use
          ldx ObjectOffset             ;return fireball offset to X
          jsr RelativeFireballPosition ;get relative coordinates
          jsr GetFireballOffscreenBits ;get offscreen information
-         jsr GetFireballBoundBox      ;get bounding box coordinates
-         jsr FireballBGCollision      ;do fireball to background collision detection
+         ; TODO merge farcall
+         farcall GetFireballBoundBox      ;get bounding box coordinates
+         farcall FireballBGCollision      ;do fireball to background collision detection
          lda FBall_OffscreenBits      ;get fireball offscreen bits
          and #%11001100               ;mask out certain bits
          bne EraseFB                  ;if any bits still set, branch to kill fireball
@@ -558,10 +566,6 @@ RunFB:   txa                          ;add 7 to offset to use
 EraseFB: lda #$00                     ;erase fireball state
          sta Fireball_State,x
 NoFBall: rts                          ;leave
-
-FireballExplosion:
-      jsr RelativeFireballPosition
-      jmp DrawExplosion_Fireball
 
 BubbleCheck:
       lda PseudoRandomBitReg+1,x  ;get part of LSFR
@@ -767,7 +771,6 @@ PlayerGfxProcessing:
   sta PlayerGfxOffset           ;store offset to graphics table here
   lda #$04
   jsr RenderPlayerSub           ;draw player based on offset loaded
-  jsr DrawPlayerNeck
   jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
   lda FireballThrowingTimer
   beq PlayerOffscreenChk        ;if fireball throw timer not set, skip to the end
@@ -812,7 +815,8 @@ NPROffscr:
     tay
     dex                           ;decrement row counter
     bpl PROfsLoop                 ;do this until all sprite rows are checked
-  rts                           ;then we are done!
+  jmp DrawPlayerNeck
+  ; rts                           ;then we are done!
 
 PlayerGfxTblOffsets:
   .byte $20, $28, $c8, $18, $00, $40, $50, $58
@@ -903,7 +907,7 @@ ExitBoth:
 PlayerDeath:
   lda TimerControl       ;check master timer control
   cmp #$f0               ;for specific moment in time
-  bcs ExitDeath          ;branch to leave if before that point
+  bcs ExitTask          ;branch to leave if before that point
   jmp PlayerCtrlRoutine  ;otherwise run player control routine
 
 DonePlayerTask:
@@ -911,7 +915,12 @@ DonePlayerTask:
   sta TimerControl          ;initialize master timer control to continue timers
   lda #$08
   sta GameEngineSubroutine  ;set player control routine to run next frame
+ExitTask:
   rts                       ;leave
+
+CyclePlayerPalettePreload:
+  lda $00
+  jmp CyclePlayerPalette
 
 PlayerFireFlower: 
   lda TimerControl       ;check master timer control
@@ -922,7 +931,6 @@ PlayerFireFlower:
   lsr                    ;divide by four to change every four frames
 
 CyclePlayerPalette:
-  lda $00
   and #$03              ;mask out all but d1-d0 (previously d3-d2)
   sta $00               ;store result here to use as palette bits
   lda Player_SprAttrib  ;get player attributes
@@ -939,9 +947,6 @@ ResetPalStar:
   and #%11111100        ;mask out palette bits to force palette 0
   sta Player_SprAttrib  ;store as new player attributes
   rts                   ;and leave
-
-ExitDeath:
-  rts          ;leave from death routine
 
 ;-------------------------------------------------------------------------------------
 
@@ -1743,62 +1748,95 @@ PlayerNeckXOffsetTable:
   .byte $04 ;intermediate grow frame
   .byte $04 ;big player standing
 
+HeadAdjusmentOffset:
+;big player table
+  .byte $00 ;walking frame 1
+  .byte $00 ;        frame 2
+  .byte $00 ;        frame 3
+  .byte $00 ;skidding
+  .byte $00 ;jumping
+  .byte $00 ;swimming frame 1
+  .byte $00 ;         frame 2
+  .byte $00 ;         frame 3
+  .byte $00 ;climbing frame 1
+  .byte $00 ;         frame 2
+  .byte $08 ;crouching
+  .byte $00 ;fireball throwing
+
+;small player table
+  .byte $10 ;walking frame 1
+  .byte $10 ;        frame 2
+  .byte $10 ;        frame 3
+  .byte $10 ;skidding
+  .byte $10 ;jumping
+  .byte $10 ;swimming frame 1
+  .byte $10 ;         frame 2
+  .byte $10 ;         frame 3
+  .byte $10 ;climbing frame 1
+  .byte $10 ;         frame 2
+  .byte $10 ;killed
+
+;used by both player sizes
+  .byte $10 ;small player standing
+  .byte $08 ;intermediate grow frame
+  .byte $00 ;big player standing
+
 .proc DrawPlayerNeck
 .setcpu "6502X"
 
 UpdatePlayerNeck:
-  ; move the player's head up based on neck length
+  ; if there is no neck just quit
+  lda PlayerNeckLength
+  beq EarlyExit
+  ; two checks to see if mario is offscreen. i hope one of these works ;P
+  ldy Player_Y_HighPos
+  dey
+  bne EarlyExit
+  ; if mario is offscreen don't draw the neck
   ldx Player_SprDataOffset
-  lda PlayerSize
-  bne @NotBig
-@IsBig:
-    lda Sprite_Y_Position,x
-    sta PlayerNeckYOffset
-    sec
-    sbc PlayerNeckLength
-    sta Sprite_Y_Position,x
-    sta Sprite_Y_Position+4,x
-    jmp PlayerOffscreenChk
-@NotBig:
-    lda Sprite_Y_Position+16,x
-    sta PlayerNeckYOffset
-    sec
-    sbc PlayerNeckLength
-    sta Sprite_Y_Position+16,x
-    sta Sprite_Y_Position+20,x
-
-  lda Player_State
-  lda PlayerNeckYOffset
-  sta $00
-  ; offset neck by 3 or 5px depending on facing direction
-  ; maybe i need to do some other things depending on animation frame
-;   lda PlayerFacingDir
-;   lsr
-;   bcc FacingLeft
-;     lda #$03
-;     .byte $2c ; OPC_BIT_abs
-; FacingLeft:
-;     lda #$05
-;   clc
-;   adc PlayerNeckXOffset
-  ; lda #$04
-  ; clc
-  ; adc PlayerNeckXOffset
+  lda Sprite_Y_Position+4,x
+  cmp #$f8
+  bne :+
+EarlyExit:
+    rts
+:
+DrawNeck:
   lda PlayerGfxOffset
   lsr
   lsr
   lsr
   tay
+  ; move the head based on the adjustment
+  lda HeadAdjusmentOffset,y
+  tax
+  lda Sprite_Y_Position+4,x
+  sta $00
+  sec
+  sbc PlayerNeckLength
+  bcs :+
+    ; we are offscreen now so make the head offscreen
+    lda #$f8 
+:
+  sta Sprite_Y_Position+4,x
+  sta Sprite_Y_Position+8,x
+  
+  ; offset the neck Y position by one so its below the head bobs
+  inc $00
+
   lda PlayerNeckXOffsetTable,y
   clc
   adc Sprite_X_Position+4
   sta $01
+  ; divide the neck length by 8 to determine the number of neck sprites
   lda PlayerNeckLength
+  lsr
+  lsr
+  lsr
+  clc
+  adc #1
   sta $02
-  lda Sprite_Attributes+4
-  tay
 
-  ldx #$fc
+  ldx #$24
 DrawingNeckLoop:
     lda Sprite_Y_Position, x
     cmp #$f8
@@ -1808,24 +1846,23 @@ DrawingNeckLoop:
       sta Sprite_Tilenumber, x
       lda $01
       sta Sprite_X_Position, x
-      tya
+      lda Sprite_Attributes+4
       sta Sprite_Attributes, x
       lda $00
       sta Sprite_Y_Position, x
       sec
       sbc #8
+      ; if this current neck sprite has gone off the screen we are done
       bcc Exit
       sta $00
-      lda $02
-      sec
-      sbc #8
-      sta $02
-      bcc Exit
+      ; decrement the loop counter and go again
+      dec $02
+      beq Exit
       ; fallthrough
 NextSprite:
-    ; subtract 4 from x
+    ; add 4 to x
     txa
-    axs #$04
+    axs #$fc
     bne DrawingNeckLoop
 Exit:
   rts

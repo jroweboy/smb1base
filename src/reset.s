@@ -6,7 +6,7 @@
 .import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
 .import OperModeExecutionTree, MoveSpritesOffscreen, UpdateTopScore
 .import InitScroll, UpdateScreen, SoundEngine, PauseRoutine
-.import FarCallInit, DrawPlayerNeck
+.import FarCallInit
 
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS

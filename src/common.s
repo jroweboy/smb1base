@@ -40,7 +40,13 @@
 
 ;-------------------------------------------------------------------------------------
 LoadAreaPointer:
-  jsr FindAreaPointer  ;find it and store it here
+  ; jroweboy inlined FindAreaPointer
+  ldy WorldNumber        ;load offset from world variable
+  lda WorldAddrOffsets,y
+  clc                    ;add area number used to find data
+  adc AreaNumber
+  tay
+  lda AreaAddrOffsets,y  ;from there we have our area pointer
   sta AreaPointer
 GetAreaType:
   and #%01100000       ;mask out all but d6 and d5
@@ -50,17 +56,6 @@ GetAreaType:
   rol                  ;make %0xx00000 into %000000xx
   sta AreaType         ;save 2 MSB as area type
   rts
-
-.proc FindAreaPointer
-  ldy WorldNumber        ;load offset from world variable
-  lda WorldAddrOffsets,y
-  clc                    ;add area number used to find data
-  adc AreaNumber
-  tay
-  lda AreaAddrOffsets,y  ;from there we have our area pointer
-  rts
-.endproc
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used in adding to get proper offset
@@ -337,8 +332,6 @@ ImposeGravitySprObj:
       sta $02            ;set maximum speed here
       lda #$00           ;set value to move downwards
       jmp ImposeGravity  ;jump to the code that actually moves it
-
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used for downward force

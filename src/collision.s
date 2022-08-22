@@ -114,19 +114,36 @@ BBChk_E:
   rts
 
 BlockBufferAdderData:
-  .byte $00, $07, $0e
+  .byte (BlockBuffer_Swimming_X_Adder - BlockBuffer_X_Adder)
+  .byte (BlockBuffer_Big_X_Adder      - BlockBuffer_X_Adder)
+  .byte (BlockBuffer_Small_X_Adder    - BlockBuffer_X_Adder)
+
+; misc objects use hardcoded offsets
+MISC_BLOCK_BUFFER_START = $16
+
+BLOCK_BUFFER_ADDER_NECK_OFFSET = BlockBufferNeck_X_Adder - BlockBuffer_X_Adder
 
 BlockBuffer_X_Adder:
-  .byte $08, $03, $0c, $02, $02, $0d, $0d, $08
-  .byte $03, $0c, $02, $02, $0d, $0d, $08, $03
-  .byte $0c, $02, $02, $0d, $0d, $08, $00, $10
-  .byte $04, $14, $04, $04
+; Added to the sprite position to get the location to check for tile collision
+;     head, foot l, r, side 1 2    3,   4, neck
+BlockBuffer_Swimming_X_Adder:
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; swimming
+BlockBuffer_Big_X_Adder:
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; big
+BlockBuffer_Small_X_Adder:
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; small
+BlockBuffer_Misc_X_Adder:
+  .byte $08, $00, $10, $04, $14, $04, $04 ; misc
+BlockBufferNeck_X_Adder:
+  .byte $06, $09 
 
 BlockBuffer_Y_Adder:
-  .byte $04, $20, $20, $08, $18, $08, $18, $02
-  .byte $20, $20, $08, $18, $08, $18, $12, $20
-  .byte $20, $18, $18, $18, $18, $18, $14, $14
-  .byte $06, $06, $08, $10
+  .byte $04, $20, $20, $08, $18, $08, $18 ; swimming
+  .byte $02, $20, $20, $08, $18, $08, $18 ; big
+  .byte $12, $20, $20, $18, $18, $18, $18 ; small
+  .byte $18, $14, $14, $06, $06, $08, $10 ; misc
+BlockBufferNeck_Y_Adder:
+  .byte $00, $00
 
 BlockBufferColli_Feet:
   iny            ;if branched here, increment to next set of adders
@@ -138,8 +155,6 @@ SkipNeckLength:
   lda #$00       ;set flag to return vertical coordinate
   beq BlockBufferPlayerCollision ; Unconditional
 BlockBufferColli_Side:
-  lda PlayerNeckLength
-  sta PlayerNeckTemp
   lda #$01       ;set flag to return horizontal coordinate
 BlockBufferPlayerCollision:
   ldx #$00       ;set offset for player object
@@ -945,13 +960,14 @@ HandlePowerUpCollision:
       sta StarInvincibleTimer ;timer, and load the star mario music
       lda #StarPowerMusic     ;into the area music queue, then leave
       sta AreaMusicQueue
+NearbyRTS:
       rts
 
 Shroom_Flower_PUp:
       lda PlayerStatus    ;if player status = small, branch
       beq UpToSuper
       cmp #$01            ;if player status not super, leave
-      bne NoPUp
+      bne NearbyRTS
       ldx ObjectOffset    ;get enemy offset, not necessary
       lda #$02            ;set player status to fiery
       sta PlayerStatus
@@ -973,7 +989,6 @@ UpToSuper:
 UpToFiery:
        ldy #$00         ;set value to be used as new player state
        jmp SetPRout     ;set values to stop certain things in motion
-NoPUp: rts ; TODO check this RTS can be removed
 
 ;-------------------------------------------------------------------------------------
 
@@ -1010,215 +1025,295 @@ GetEnemyBoundBoxOfsArg:
 ;$eb - used to hold block buffer adder
 
 PlayerBGUpperExtent:
-      .byte $20, $10
+  .byte $20, $10
 
 PlayerBGCollision:
-          lda DisableCollisionDet   ;if collision detection disabled flag set,
-          bne ExPBGCol              ;branch to leave
-          lda GameEngineSubroutine
-          cmp #$0b                  ;if running routine #11 or $0b
-          beq ExPBGCol              ;branch to leave
-          cmp #$04
-          bcc ExPBGCol              ;if running routines $00-$03 branch to leave
-          lda #$01                  ;load default player state for swimming
-          ldy SwimmingFlag          ;if swimming flag set,
-          bne SetPSte               ;branch ahead to set default state
-          lda Player_State          ;if player in normal state,
-          beq SetFallS              ;branch to set default state for falling
-          cmp #$03
-          bne ChkOnScr              ;if in any other state besides climbing, skip to next part
-SetFallS: lda #$02                  ;load default player state for falling
-SetPSte:  sta Player_State          ;set whatever player state is appropriate
-ChkOnScr: lda Player_Y_HighPos
-          cmp #$01                  ;check player's vertical high byte for still on the screen
-          bne ExPBGCol              ;branch to leave if not
-          lda #$ff
-          sta Player_CollisionBits  ;initialize player's collision flag
-          lda Player_Y_Position
-          cmp #$cf                  ;check player's vertical coordinate
-          bcc ChkCollSize           ;if not too close to the bottom of screen, continue
-ExPBGCol: rts                       ;otherwise leave
+  lda DisableCollisionDet   ;if collision detection disabled flag set,
+  bne ExPBGCol              ;branch to leave
+  lda GameEngineSubroutine
+  cmp #$0b                  ;if running routine #11 or $0b
+  beq ExPBGCol              ;branch to leave
+  cmp #$04
+  bcc ExPBGCol              ;if running routines $00-$03 branch to leave
+  lda #$01                  ;load default player state for swimming
+  ldy SwimmingFlag          ;if swimming flag set,
+  bne SetPSte               ;branch ahead to set default state
+  lda Player_State          ;if player in normal state,
+  beq SetFallS              ;branch to set default state for falling
+  cmp #$03
+  bne ChkOnScr              ;if in any other state besides climbing, skip to next part
+SetFallS:
+  lda #$02                  ;load default player state for falling
+SetPSte:
+  sta Player_State          ;set whatever player state is appropriate
+ChkOnScr:
+  lda Player_Y_HighPos
+  cmp #$01                  ;check player's vertical high byte for still on the screen
+  bne ExPBGCol              ;branch to leave if not
+  lda #$ff
+  sta Player_CollisionBits  ;initialize player's collision flag
+  lda Player_Y_Position
+  cmp #$cf                  ;check player's vertical coordinate
+  bcc ChkCollSize           ;if not too close to the bottom of screen, continue
+ExPBGCol:
+  rts                       ;otherwise leave
 
 ChkCollSize:
-         ldy #$02                    ;load default offset
-         lda CrouchingFlag
-         bne GBBAdr                  ;if player crouching, skip ahead
-         lda PlayerSize
-         bne GBBAdr                  ;if player small, skip ahead
-         dey                         ;otherwise decrement offset for big player not crouching
-         lda SwimmingFlag
-         bne GBBAdr                  ;if swimming flag set, skip ahead
-         dey                         ;otherwise decrement offset
-GBBAdr:  lda BlockBufferAdderData,y  ;get value using offset
-         sta $eb                     ;store value here
-         tay                         ;put value into Y, as offset for block buffer routine
-         ldx PlayerSize              ;get player's size as offset
-         lda CrouchingFlag
-         beq HeadChk                 ;if player not crouching, branch ahead
-         inx                         ;otherwise increment size as offset
-HeadChk: lda Player_Y_Position       ;get player's vertical coordinate
-         cmp PlayerBGUpperExtent,x   ;compare with upper extent value based on offset
-         bcc DoFootCheck             ;if player is too high, skip this part
-         jsr BlockBufferColli_Head   ;do player-to-bg collision detection on top of
-         beq DoFootCheck             ;player, and branch if nothing above player's head
-         jsr CheckForCoinMTiles      ;check to see if player touched coin with their head
-         bcs AwardTouchedCoin        ;if so, branch to some other part of code
-         ldy Player_Y_Speed          ;check player's vertical speed
-         bpl DoFootCheck             ;if player not moving upwards, branch elsewhere
-         ldy $04                     ;check lower nybble of vertical coordinate returned
-         cpy #$04                    ;from collision detection routine
-         bcc DoFootCheck             ;if low nybble < 4, branch
-         jsr CheckForSolidMTiles     ;check to see what player's head bumped on
-         bcs SolidOrClimb            ;if player collided with solid metatile, branch
-         ldy AreaType                ;otherwise check area type
-         beq NYSpd                   ;if water level, branch ahead
-         ldy BlockBounceTimer        ;if block bounce timer not expired,
-         bne NYSpd                   ;branch ahead, do not process collision
-         jsr PlayerHeadCollision     ;otherwise do a sub to process collision
-         jmp DoFootCheck             ;jump ahead to skip these other parts
+  ldy #$02                    ;load default offset
+  lda CrouchingFlag
+  bne GBBAdr                  ;if player crouching, skip ahead
+    lda PlayerSize
+    bne GBBAdr                  ;if player small, skip ahead
+      dey                         ;otherwise decrement offset for big player not crouching
+      lda SwimmingFlag
+      bne GBBAdr                  ;if swimming flag set, skip ahead
+        dey                         ;otherwise decrement offset
+GBBAdr:
+  lda BlockBufferAdderData,y  ;get value using offset
+  sta $eb                     ;store value here
+  tay                         ;put value into Y, as offset for block buffer routine
+  ldx PlayerSize              ;get player's size as offset
+  lda CrouchingFlag
+  beq HeadChk                 ;if player not crouching, branch ahead
+    inx                         ;otherwise increment size as offset
+HeadChk:
+  lda Player_Y_Position       ;get player's vertical coordinate
+  cmp PlayerBGUpperExtent,x   ;compare with upper extent value based on offset
+  bcc DoFootCheck             ;if player is too high, skip this part
+    jsr BlockBufferColli_Head   ;do player-to-bg collision detection on top of
+    beq DoFootCheck             ;player, and branch if nothing above player's head
+      jsr CheckForCoinMTiles      ;check to see if player touched coin with their head
+      bcs AwardTouchedCoin        ;if so, branch to some other part of code
+        ldy Player_Y_Speed          ;check player's vertical speed
+        bpl DoFootCheck             ;if player not moving upwards, branch elsewhere
+        ldy $04                     ;check lower nybble of vertical coordinate returned
+        cpy #$04                    ;from collision detection routine
+        bcc DoFootCheck             ;if low nybble < 4, branch
+          jsr CheckForSolidMTiles     ;check to see what player's head bumped on
+          bcs SolidOrClimb            ;if player collided with solid metatile, branch
+          ldy AreaType                ;otherwise check area type
+          beq NYSpd                   ;if water level, branch ahead
+          ldy BlockBounceTimer        ;if block bounce timer not expired,
+          bne NYSpd                   ;branch ahead, do not process collision
+          jsr PlayerHeadCollision     ;otherwise do a sub to process collision
+          jmp DoFootCheck             ;jump ahead to skip these other parts
 
 SolidOrClimb:
-       cmp #$26               ;if climbing metatile,
-       beq NYSpd              ;branch ahead and do not play sound
-       lda #Sfx_Bump
-       sta Square1SoundQueue  ;otherwise load bump sound
-NYSpd: lda #$01               ;set player's vertical speed to nullify
-       sta Player_Y_Speed     ;jump or swim
+  cmp #$26               ;if climbing metatile,
+  beq NYSpd              ;branch ahead and do not play sound
+    lda #Sfx_Bump
+    sta Square1SoundQueue  ;otherwise load bump sound
+NYSpd:
+  lda #$01               ;set player's vertical speed to nullify
+  sta Player_Y_Speed     ;jump or swim
 
 DoFootCheck:
-      ldy $eb                    ;get block buffer adder offset
-      lda Player_Y_Position
-      cmp #$cf                   ;check to see how low player is
-      bcs DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
-      jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
-      jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
-      bcs AwardTouchedCoin       ;if so, branch to some other part of code
+  ldy $eb                    ;get block buffer adder offset
+  lda Player_Y_Position
+  cmp #$cf                   ;check to see how low player is
+  bcs DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
+    jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
+    jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
+    bcs AwardTouchedCoin       ;if so, branch to some other part of code
       pha                        ;save bottom left metatile to stack
-      jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom right of player
-      sta $00                    ;save bottom right metatile here
+        jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom right of player
+        sta $00                    ;save bottom right metatile here
       pla
       sta $01                    ;pull bottom left metatile and save here
       bne ChkFootMTile           ;if anything here, skip this part
-      lda $00                    ;otherwise check for anything in bottom right metatile
-      beq DoPlayerSideCheck      ;and skip ahead if not
-      jsr CheckForCoinMTiles     ;check to see if player touched coin with their right foot
-      bcc ChkFootMTile           ;if not, skip unconditional jump and continue code
-
+        lda $00                    ;otherwise check for anything in bottom right metatile
+        beq DoPlayerSideCheck      ;and skip ahead if not
+          jsr CheckForCoinMTiles     ;check to see if player touched coin with their right foot
+          bcc ChkFootMTile           ;if not, skip unconditional jump and continue code
 AwardTouchedCoin:
-      jmp HandleCoinMetatile     ;follow the code to erase coin and award to player 1 coin
+  jmp HandleCoinMetatile     ;follow the code to erase coin and award to player 1 coin
+  ;implicit rts
 
 ChkFootMTile:
-          jsr CheckForClimbMTiles    ;check to see if player landed on climbable metatiles
-          bcs DoPlayerSideCheck      ;if so, branch
-          ldy Player_Y_Speed         ;check player's vertical speed
-          bmi DoPlayerSideCheck      ;if player moving upwards, branch
-          cmp #$c5
-          bne ContChk                ;if player did not touch axe, skip ahead
-          jmp HandleAxeMetatile      ;otherwise jump to set modes of operation
-ContChk:  jsr ChkInvisibleMTiles     ;do sub to check for hidden coin or 1-up blocks
-          beq DoPlayerSideCheck      ;if either found, branch
-          ldy JumpspringAnimCtrl     ;if jumpspring animating right now,
-          bne InitSteP               ;branch ahead
-          ldy $04                    ;check lower nybble of vertical coordinate returned
-          cpy #$05                   ;from collision detection routine
-          bcc LandPlyr               ;if lower nybble < 5, branch
-          lda Player_MovingDir
-          sta $00                    ;use player's moving direction as temp variable
-          jmp ImpedePlayerMove       ;jump to impede player's movement in that direction
-LandPlyr: jsr ChkForLandJumpSpring   ;do sub to check for jumpspring metatiles and deal with it
-          lda #$f0
-          and Player_Y_Position      ;mask out lower nybble of player's vertical position
-          sta Player_Y_Position      ;and store as new vertical position to land player properly
-          jsr HandlePipeEntry        ;do sub to process potential pipe entry
-          lda #$00
-          sta Player_Y_Speed         ;initialize vertical speed and fractional
-          sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
-          sta StompChainCounter      ;initialize enemy stomp counter
-InitSteP: lda #$00
-          sta Player_State           ;set player's state to normal
+  jsr CheckForClimbMTiles    ;check to see if player landed on climbable metatiles
+  bcs DoPlayerSideCheck      ;if so, branch
+    ldy Player_Y_Speed         ;check player's vertical speed
+    bmi DoPlayerSideCheck      ;if player moving upwards, branch
+    cmp #$c5
+    bne ContChk                ;if player did not touch axe, skip ahead
+      jmp HandleAxeMetatile      ;otherwise jump to set modes of operation
+ContChk:
+  jsr ChkInvisibleMTiles     ;do sub to check for hidden coin or 1-up blocks
+  beq DoPlayerSideCheck      ;if either found, branch
+    ldy JumpspringAnimCtrl     ;if jumpspring animating right now,
+    bne InitSteP               ;branch ahead
+      ldy $04                    ;check lower nybble of vertical coordinate returned
+      cpy #$05                   ;from collision detection routine
+      bcc LandPlyr               ;if lower nybble < 5, branch
+        lda Player_MovingDir
+        sta $00                    ;use player's moving direction as temp variable
+        jmp ImpedePlayerMove       ;jump to impede player's movement in that direction
+LandPlyr:
+  jsr ChkForLandJumpSpring   ;do sub to check for jumpspring metatiles and deal with it
+  lda #$f0
+  and Player_Y_Position      ;mask out lower nybble of player's vertical position
+  sta Player_Y_Position      ;and store as new vertical position to land player properly
+  jsr HandlePipeEntry        ;do sub to process potential pipe entry
+  lda #$00
+  sta Player_Y_Speed         ;initialize vertical speed and fractional
+  sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
+  sta StompChainCounter      ;initialize enemy stomp counter
+InitSteP:
+  lda #$00
+  sta Player_State           ;set player's state to normal
+  ; fallthrough
 
 DoPlayerSideCheck:
-      ldy $eb       ;get block buffer adder offset
-      iny
-      iny           ;increment offset 2 bytes to use adders for side collisions
-      lda #$02      ;set value here to be used as counter
-      sta $00
 
+; Split the side check into two parts, the first is the neck which can't be used to grab poles
+; or anything like that. its just checking for left right solid block collision
+PlayerSideNeckCheck:
+  lda PlayerNeckLength
+  clc
+  adc #8 ; we want to start doing collision after 8px of neck
+  lsr
+  lsr
+  lsr
+  lsr
+  beq BasePlayerSideCheck ; if theres not enough neck to check skip it
+  sta $00
+  lda PlayerNeckLength
+  and #$0f
+  sta $01
+PlayerNeckSideCollisionLoop:
+    eor #$ff ; negate it to subtract from player y position
+    clc
+    adc Player_Y_Position
+    cmp #$20                  ;check player's neck vertical position
+    bcc BasePlayerSideCheck   ;if the neck is now out of bounds, skip to body check
+    
+    ldy #BLOCK_BUFFER_ADDER_NECK_OFFSET
+    jsr BlockBufferColli_Side ;do player-to-bg collision detection on one half of the neck
+    beq @OtherSideOfNeck
+      jsr CheckNeckCollison
+@OtherSideOfNeck:
+    ldy #BLOCK_BUFFER_ADDER_NECK_OFFSET+1
+    lda $01
+    sta PlayerNeckTemp
+    jsr BlockBufferColli_Side ;do player-to-bg collision detection on the other side
+    beq @LoopToNextNeckPart
+      jsr CheckNeckCollison
+@LoopToNextNeckPart:
+    lda $01
+    clc
+    adc #16 ; collision is every 16 blocks, so add it here every loop
+    sta $01 ; since the collision check removes the player neck temp, we just reload it from $1
+    sta PlayerNeckTemp
+    dec $00
+    bne PlayerNeckSideCollisionLoop
+    beq BasePlayerSideCheck
+CheckNeckCollison:
+  ; Trimmed down collision routine for the neck involving only things we care to check
+  jsr CheckForCoinMTiles     ;check to see if player touched coin
+  bcc @SkipAddingCoin
+    jmp HandleCoinMetatile     ;if so, execute code to erase coin and award to player 1 coin
+  @SkipAddingCoin:
+
+;   ldy Player_State           ;get player's state
+;   cpy #$00                   ;check for player's state set to normal
+;   beq @DontStopMovement
+;     jmp ImpedePlayerMove         ;if not, branch to impede player's movement
+; @DontStopMovement:
+  rts
+
+; After we run the loop for the player neck, we check the base for the main collision.
+BasePlayerSideCheck:
+  lda #0
+  sta PlayerNeckTemp
+  ldy $eb       ;get block buffer adder offset
+  iny
+  iny           ;increment offset 2 bytes to use adders for side collisions
+  lda #2
+  sta $00
 SideCheckLoop:
-       iny                       ;move onto the next one
-       sty $eb                   ;store it
-       lda Player_Y_Position
-       cmp #$20                  ;check player's vertical position
-       bcc BHalf                 ;if player is in status bar area, branch ahead to skip this part
-       cmp #$e4
-       bcs ExSCH                 ;branch to leave if player is too far down
-       jsr BlockBufferColli_Side ;do player-to-bg collision detection on one half of player
-       beq BHalf                 ;branch ahead if nothing found
-       cmp #$1c                  ;otherwise check for pipe metatiles
-       beq BHalf                 ;if collided with sideways pipe (top), branch ahead
-       cmp #$6b
-       beq BHalf                 ;if collided with water pipe (top), branch ahead
-       jsr CheckForClimbMTiles   ;do sub to see if player bumped into anything climbable
-       bcc CheckSideMTiles       ;if not, branch to alternate section of code
-BHalf: ldy $eb                   ;load block adder offset
-       iny                       ;increment it
-       lda Player_Y_Position     ;get player's vertical position
-       cmp #$08
-       bcc ExSCH                 ;if too high, branch to leave
-       cmp #$d0
-       bcs ExSCH                 ;if too low, branch to leave
-       jsr BlockBufferColli_Side ;do player-to-bg collision detection on other half of player
-       bne CheckSideMTiles       ;if something found, branch
-       dec $00                   ;otherwise decrement counter
-       bne SideCheckLoop         ;run code until both sides of player are checked
-ExSCH: rts                       ;leave
+  iny                       ;move onto the next one
+  sty $eb                   ;store it
+  lda Player_Y_Position
+  cmp #$20                  ;check player's vertical position
+  bcc BHalf                 ;if player is in status bar area, branch ahead to skip this part
+  cmp #$e4
+  bcs ExSCH                 ;branch to leave if player is too far down
+  jsr BlockBufferColli_Side ;do player-to-bg collision detection on one half of player
+  beq BHalf                 ;branch ahead if nothing found
+  cmp #$1c                  ;otherwise check for pipe metatiles
+  beq BHalf                 ;if collided with sideways pipe (top), branch ahead
+  cmp #$6b
+  beq BHalf                 ;if collided with water pipe (top), branch ahead
+    jsr CheckForClimbMTiles   ;do sub to see if player bumped into anything climbable
+    bcc CheckSideMTiles       ;if not, branch to alternate section of code
+BHalf:
+  ldy $eb                   ;load block adder offset
+  iny                       ;increment it
+  lda Player_Y_Position     ;get player's vertical position
+  cmp #$08
+  bcc ExSCH                 ;if too high, branch to leave
+  cmp #$d0
+  bcs ExSCH                 ;if too low, branch to leave
+    jsr BlockBufferColli_Side ;do player-to-bg collision detection on other half of player
+    bne CheckSideMTiles       ;if something found, branch
+      dec $00                   ;otherwise decrement counter
+      bne SideCheckLoop         ;run code until both sides of player are checked
+ExSCH:
+  rts                       ;leave
 
 CheckSideMTiles:
-          jsr ChkInvisibleMTiles     ;check for hidden or coin 1-up blocks
-          beq ExSCH                  ;branch to leave if either found
-          jsr CheckForClimbMTiles    ;check for climbable metatiles
-          bcc ContSChk               ;if not found, skip and continue with code
-          jmp HandleClimbing         ;otherwise jump to handle climbing
-ContSChk: jsr CheckForCoinMTiles     ;check to see if player touched coin
-          bcs HandleCoinMetatile     ;if so, execute code to erase coin and award to player 1 coin
-          jsr ChkJumpspringMetatiles ;check for jumpspring metatiles
-          bcc ChkPBtm                ;if not found, branch ahead to continue cude
-          lda JumpspringAnimCtrl     ;otherwise check jumpspring animation control
-          bne ExSCH                  ;branch to leave if set
-          jmp StopPlayerMove         ;otherwise jump to impede player's movement
-ChkPBtm:  ldy Player_State           ;get player's state
-          cpy #$00                   ;check for player's state set to normal
-          bne StopPlayerMove         ;if not, branch to impede player's movement
-          ldy PlayerFacingDir        ;get player's facing direction
-          dey
-          bne StopPlayerMove         ;if facing left, branch to impede movement
-          cmp #$6c                   ;otherwise check for pipe metatiles
-          beq PipeDwnS               ;if collided with sideways pipe (bottom), branch
-          cmp #$1f                   ;if collided with water pipe (bottom), continue
-          bne StopPlayerMove         ;otherwise branch to impede player's movement
-PipeDwnS: lda Player_SprAttrib       ;check player's attributes
-          bne PlyrPipe               ;if already set, branch, do not play sound again
-          ldy #Sfx_PipeDown_Injury
-          sty Square1SoundQueue      ;otherwise load pipedown/injury sound
-PlyrPipe: ora #%00100000
-          sta Player_SprAttrib       ;set background priority bit in player attributes
-          lda Player_X_Position
-          and #%00001111             ;get lower nybble of player's horizontal coordinate
-          beq ChkGERtn               ;if at zero, branch ahead to skip this part
-          ldy #$00                   ;set default offset for timer setting data
-          lda ScreenLeft_PageLoc     ;load page location for left side of screen
-          beq SetCATmr               ;if at page zero, use default offset
-          iny                        ;otherwise increment offset
-SetCATmr: lda AreaChangeTimerData,y  ;set timer for change of area as appropriate
-          sta ChangeAreaTimer
-ChkGERtn: lda GameEngineSubroutine   ;get number of game engine routine running
-          cmp #$07
-          beq ExCSM                  ;if running player entrance routine or
-          cmp #$08                   ;player control routine, go ahead and branch to leave
-          bne ExCSM
-          lda #$02
-          sta GameEngineSubroutine   ;otherwise set sideways pipe entry routine to run
-          rts                        ;and leave
+  jsr ChkInvisibleMTiles     ;check for hidden or coin 1-up blocks
+  beq ExSCH                  ;branch to leave if either found
+    jsr CheckForClimbMTiles    ;check for climbable metatiles
+    bcc ContSChk               ;if not found, skip and continue with code
+      jmp HandleClimbing         ;otherwise jump to handle climbing
+ContSChk:
+  jsr CheckForCoinMTiles     ;check to see if player touched coin
+  bcs HandleCoinMetatile     ;if so, execute code to erase coin and award to player 1 coin
+    jsr ChkJumpspringMetatiles ;check for jumpspring metatiles
+    bcc ChkPBtm                ;if not found, branch ahead to continue cude
+      lda JumpspringAnimCtrl     ;otherwise check jumpspring animation control
+      bne ExSCH                  ;branch to leave if set
+        jmp StopPlayerMove         ;otherwise jump to impede player's movement
+ChkPBtm:
+  ldy Player_State           ;get player's state
+  cpy #$00                   ;check for player's state set to normal
+  bne StopPlayerMove         ;if not, branch to impede player's movement
+    ldy PlayerFacingDir        ;get player's facing direction
+    dey
+    bne StopPlayerMove         ;if facing left, branch to impede movement
+    cmp #$6c                   ;otherwise check for pipe metatiles
+    beq PipeDwnS               ;if collided with sideways pipe (bottom), branch
+    cmp #$1f                   ;if collided with water pipe (bottom), continue
+    bne StopPlayerMove         ;otherwise branch to impede player's movement
+PipeDwnS:
+  lda Player_SprAttrib       ;check player's attributes
+  bne PlyrPipe               ;if already set, branch, do not play sound again
+    ldy #Sfx_PipeDown_Injury
+    sty Square1SoundQueue      ;otherwise load pipedown/injury sound
+PlyrPipe:
+  ora #%00100000
+  sta Player_SprAttrib       ;set background priority bit in player attributes
+  lda Player_X_Position
+  and #%00001111             ;get lower nybble of player's horizontal coordinate
+  beq ChkGERtn               ;if at zero, branch ahead to skip this part
+    ldy #$00                   ;set default offset for timer setting data
+    lda ScreenLeft_PageLoc     ;load page location for left side of screen
+    beq SetCATmr               ;if at page zero, use default offset
+      iny                        ;otherwise increment offset
+SetCATmr:
+  lda AreaChangeTimerData,y  ;set timer for change of area as appropriate
+  sta ChangeAreaTimer
+ChkGERtn:
+  lda GameEngineSubroutine   ;get number of game engine routine running
+  cmp #$07
+  beq ExCSM                  ;if running player entrance routine or
+  cmp #$08                   ;player control routine, go ahead and branch to leave
+  bne ExCSM
+  lda #$02
+  sta GameEngineSubroutine   ;otherwise set sideways pipe entry routine to run
+ExCSM:
+  rts                        ;and leave
 
 ;--------------------------------
 ;$02 - high nybble of vertical coordinate from block buffer
@@ -1226,68 +1321,70 @@ ChkGERtn: lda GameEngineSubroutine   ;get number of game engine routine running
 ;$06-$07 - block buffer address
 
 StopPlayerMove:
-       jmp ImpedePlayerMove      ;stop player's movement
-ExCSM: rts ; TODO check this RTS can be removed                       ;leave
+  jmp ImpedePlayerMove      ;stop player's movement
       
 AreaChangeTimerData:
-      .byte $a0, $34
+  .byte $a0, $34
 
 HandleCoinMetatile:
-      jsr ErACM             ;do sub to erase coin metatile from block buffer
-      inc CoinTallyFor1Ups  ;increment coin tally used for 1-up blocks
-      jmp GiveOneCoin       ;update coin amount and tally on the screen
+  jsr ErACM             ;do sub to erase coin metatile from block buffer
+  inc CoinTallyFor1Ups  ;increment coin tally used for 1-up blocks
+  jmp GiveOneCoin       ;update coin amount and tally on the screen
 
 HandleAxeMetatile:
-       lda #$00
-       sta OperMode_Task   ;reset secondary mode
-       lda #$02
-       sta OperMode        ;set primary mode to autoctrl mode
-       lda #$18
-       sta Player_X_Speed  ;set horizontal speed and continue to erase axe metatile
-ErACM: ldy $02             ;load vertical high nybble offset for block buffer
-       lda #$00            ;load blank metatile
-       sta ($06),y         ;store to remove old contents from block buffer
-       jmp RemoveCoin_Axe  ;update the screen accordingly
+  lda #$00
+  sta OperMode_Task   ;reset secondary mode
+  lda #$02
+  sta OperMode        ;set primary mode to autoctrl mode
+  lda #$18
+  sta Player_X_Speed  ;set horizontal speed and continue to erase axe metatile
+ErACM:
+  ldy $02             ;load vertical high nybble offset for block buffer
+  lda #$00            ;load blank metatile
+  sta ($06),y         ;store to remove old contents from block buffer
+  jmp RemoveCoin_Axe  ;update the screen accordingly
 
 
 ;--------------------------------
 
 SolidMTileUpperExt:
-      .byte $10, $61, $88, $c4
+  .byte $10, $61, $88, $c4
 
 CheckForSolidMTiles:
-      jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
-      cmp SolidMTileUpperExt,x  ;compare current metatile with solid metatiles
-      rts
+  jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
+  cmp SolidMTileUpperExt,x  ;compare current metatile with solid metatiles
+  rts
 
 ClimbMTileUpperExt:
-      .byte $24, $6d, $8a, $c6
+  .byte $24, $6d, $8a, $c6
 
 CheckForClimbMTiles:
-      jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
-      cmp ClimbMTileUpperExt,x  ;compare current metatile with climbable metatiles
-      rts
+  jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
+  cmp ClimbMTileUpperExt,x  ;compare current metatile with climbable metatiles
+  rts
 
 CheckForCoinMTiles:
-         cmp #$c2              ;check for regular coin
-         beq CoinSd            ;branch if found
-         cmp #$c3              ;check for underwater coin
-         beq CoinSd            ;branch if found
-         clc                   ;otherwise clear carry and leave
-         rts
-CoinSd:  lda #Sfx_CoinGrab
-         sta Square2SoundQueue ;load coin grab sound and leave
-         rts
+  cmp #$c2              ;check for regular coin
+  beq CoinSd            ;branch if found
+  cmp #$c3              ;check for underwater coin
+  beq CoinSd            ;branch if found
+  clc                   ;otherwise clear carry and leave
+  rts
+CoinSd:
+  lda #Sfx_CoinGrab
+  sta Square2SoundQueue ;load coin grab sound and leave
+  rts
 
 GetMTileAttrib:
-       tay            ;save metatile value into Y
-       and #%11000000 ;mask out all but 2 MSB
-       asl
-       rol            ;shift and rotate d7-d6 to d1-d0
-       rol
-       tax            ;use as offset for metatile data
-       tya            ;get original metatile value back
-ExEBG: rts            ;leave
+  tay            ;save metatile value into Y
+  and #%11000000 ;mask out all but 2 MSB
+  asl
+  rol            ;shift and rotate d7-d6 to d1-d0
+  rol
+  tax            ;use as offset for metatile data
+  tya            ;get original metatile value back
+ExEBG:
+  rts            ;leave
 
 
 ;-------------------------------------------------------------------------------------

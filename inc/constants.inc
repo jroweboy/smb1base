@@ -118,17 +118,17 @@ TallEnemy             = $09
 .endenum
 
 .enum
-    Level1
-    Level2
-    Level3
-    Level4
+  Level1
+  Level2
+  Level3
+  Level4
 .endenum
 
 .enum
-    MODE_TITLESCREEN
-    MODE_GAMEPLAY
-    MODE_VICTORY
-    MODE_GAMEOVER
+  MODE_TITLESCREEN
+  MODE_GAMEPLAY
+  MODE_VICTORY
+  MODE_GAMEOVER
 .endenum
 
 

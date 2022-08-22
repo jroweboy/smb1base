@@ -4,6 +4,7 @@
 ; core.s ???
 .import GameCoreRoutine, ScreenRoutines, UpdScrollVar
 .import EnemiesAndLoopsCore, RelativePlayerPosition, PlayerGfxHandler
+.import LoadAreaPointer, TerminateGame
 
 .import IncModeTask_B
 
@@ -450,10 +451,11 @@ DemoTimingData:
   beq AutoPlayer              ;if on bridge collapse, skip enemy processing
   ldx #$00
   stx ObjectOffset            ;otherwise reset enemy object offset 
+  ; TODO Consolidate farcall 
   farcall EnemiesAndLoopsCore     ;and run enemy code
 AutoPlayer:
-  jsr RelativePlayerPosition  ;get player's relative coordinates
-  farcall PlayerGfxHandler        ;draw the player, then leave
+  farcall RelativePlayerPosition  ;get player's relative coordinates
+  farcall PlayerGfxHandler, jmp   ;draw the player, then leave
 .endproc
 
 .proc VictoryModeSubroutines
@@ -589,7 +591,6 @@ ExitMsgs:
 ;-------------------------------------------------------------------------------------
 
 .proc PlayerEndWorld
-.import LoadAreaPointer, TerminateGame
 
   lda WorldEndTimer          ;check to see if world end timer expired
   bne EndExitOne             ;branch to leave if not

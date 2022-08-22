@@ -514,7 +514,7 @@ __MEMORY_INC = 1
 .global AltRegContentFlag
 
 .global PlayerNeckXOffset
-.global PlayerNeckYOffset
+; .global PlayerNeckYOffset
 
 .global _WarmBootOffset
 

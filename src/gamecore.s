@@ -38,6 +38,7 @@ GameCoreRoutine:
   bcs GameEngine             ;branch to the game engine itself
     rts
 GameEngine:
+  ; TODO consolidate farcalls
   farcall ProcFireball_Bubble    ;process fireballs and air bubbles
   farcall ProcessAllEnemies
   jsr GetPlayerOffscreenBits ;get offscreen bits for player object
@@ -66,7 +67,7 @@ GameEngine:
   bne NoChgMus               ;if not yet at a certain point, continue
   lda IntervalTimerControl   ;if interval timer not yet expired,
   bne NoChgMus               ;branch ahead, don't bother with the music
-  jsr GetAreaMusic           ;to re-attain appropriate level music
+  farcall GetAreaMusic       ;to re-attain appropriate level music
 NoChgMus:
   ldy StarInvincibleTimer    ;get invincibility timer
   lda FrameCounter           ;get frame counter
@@ -77,7 +78,7 @@ NoChgMus:
 CycleTwo:
   lsr                        ;if branched here, divide by 2 to cycle every other frame
   sta $00
-  farcall CyclePlayerPalette     ;do sub to cycle the palette (note: shares fire flower code)
+  farcall CyclePlayerPalettePreload     ;do sub to cycle the palette (note: shares fire flower code)
   jmp SaveAB                 ;then skip this sub to finish up the game engine
 ClrPlrPal:
   farcall ResetPalStar           ;do sub to clear player's palette bits in attributes
@@ -221,7 +222,12 @@ RunGameTimer:
   sta EventMusicQueue        ;otherwise load time running out music
 ResGTCtrl: 
   ; increase the player neck length by one.
-  inc PlayerNeckLength
+  lda PlayerNeckLength
+  cmp #PLAYER_NECK_MAX_SIZE ; arbitrarily limit the size of the neck
+  bcs @SkipNeckLength
+    adc #1
+    sta PlayerNeckLength
+@SkipNeckLength:
   lda #$18                   ;reset game timer control
   sta GameTimerCtrlTimer
   ldy #$23                   ;set offset for last digit
