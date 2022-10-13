@@ -512,6 +512,7 @@ FrenzyEnemyTimer:               .res  1
 BowserFireBreathTimer:          .res  1
 StompTimer:                     .res  1
 AirBubbleTimer:                 .res  3 ; 20 bytes away from Timer
+BowserDamageTimer:              .res  1
 
 ScrollIntervalTimer:            .res  1
 EnemyIntervalTimer:             .res  7
@@ -546,7 +547,7 @@ AreaMusicBuffer_Alt:            .res  1
 
 PauseModeFlag:                  .res  1
 GroundMusicHeaderOfs:           .res  3
-AltRegContentFlag:              .res  7  ; jroweboy this is only one byte (original 12)
+AltRegContentFlag:              .res  6  ; jroweboy this is only one byte (original 12)
 
 ShouldDrawNeck:                 .res  1
 PlayerNeckXOffset:              .res  1

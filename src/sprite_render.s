@@ -541,22 +541,38 @@ GmbaAnim: and #%00100000        ;check for d5 set in enemy object state
           sta $03               ;leave alone otherwise
 
 CheckBowserFront:
-             lda EnemyAttributeData,y    ;load sprite attribute using enemy object
-             ora $04                     ;as offset, and add to bits already loaded
-             sta $04
-             lda EnemyGfxTableOffsets,y  ;load value based on enemy object as offset
-             tax                         ;save as X
-             ldy $ec                     ;get previously saved value
-             lda BowserGfxFlag
-             beq CheckForSpiny           ;if not drawing bowser object at all, skip all of this
-             cmp #$01
-             bne CheckBowserRear         ;if not drawing front part, branch to draw the rear part
-             lda BowserBodyControls      ;check bowser's body control bits
-             bpl ChkFrontSte             ;branch if d7 not set (control's bowser's mouth)      
-             ldx #$de                    ;otherwise load offset for second frame
-ChkFrontSte: lda $ed                     ;check saved enemy state
-             and #%00100000              ;if bowser not defeated, do not set flag
-             beq DrawBowser
+  ; Check to see if the enemy we are drawing is bowser
+  ; If so we want to see if he's hurt and change the palette for him.
+  lda BowserGfxFlag
+  beq @LoadEnemyAttributes
+    ; we are bowser so lets check that he's hurt
+    ; If the timer has reached zero already then we don't want to use the custom palette
+    ; and we just load the original palette
+    lda BowserDamageTimer
+    beq @LoadEnemyAttributes
+      ; bowser has time left in the "hurt" state, so load whatever palette you want
+      ; and skip loading the original palette
+      lda #0 ; hardcoded mario palette for testing.
+      bpl @WriteEnemyAttributes ; unconditional
+@LoadEnemyAttributes:
+  lda EnemyAttributeData,y    ;load sprite attribute using enemy object
+@WriteEnemyAttributes:
+  ora $04                     ;as offset, and add to bits already loaded
+  sta $04
+  lda EnemyGfxTableOffsets,y  ;load value based on enemy object as offset
+  tax                         ;save as X
+  ldy $ec                     ;get previously saved value
+  lda BowserGfxFlag
+  beq CheckForSpiny           ;if not drawing bowser object at all, skip all of this
+  cmp #$01
+  bne CheckBowserRear         ;if not drawing front part, branch to draw the rear part
+  lda BowserBodyControls      ;check bowser's body control bits
+  bpl ChkFrontSte             ;branch if d7 not set (control's bowser's mouth)      
+  ldx #$de                    ;otherwise load offset for second frame
+ChkFrontSte:
+  lda $ed                     ;check saved enemy state
+  and #%00100000              ;if bowser not defeated, do not set flag
+  beq DrawBowser
 
 FlipBowserOver:
       stx VerticalFlipFlag  ;set vertical flip flag to nonzero

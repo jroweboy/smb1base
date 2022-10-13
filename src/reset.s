@@ -149,7 +149,8 @@ InitBuffer:
     bpl DecTimersLoop         ;if not expired, only frame timers will decrement
     lda #$14
     sta IntervalTimerControl  ;if control for interval timers expired,
-    ldx #$23                  ;interval timers will decrement along with frame timers
+    ; Add one to the number of timers since we added a new BowserDamageTimer
+    ldx #$23 + 1              ;interval timers will decrement along with frame timers
   DecTimersLoop:
       lda Timers,x              ;check current timer
       beq SkipExpTimer          ;if current timer expired, branch to skip,

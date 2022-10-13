@@ -477,6 +477,7 @@ __MEMORY_INC = 1
 .global BowserFireBreathTimer
 .global StompTimer
 .global AirBubbleTimer
+.global BowserDamageTimer
 
 .global ScrollIntervalTimer
 .global EnemyIntervalTimer

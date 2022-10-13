@@ -887,26 +887,30 @@ ChkBuzzyBeetle:
       bne ChkOtherEnemies        ;if not found, branch to check other enemies
 
 HurtBowser:
-          dec BowserHitPoints        ;decrement bowser's hit points
-          bne ExHCF                  ;if bowser still has hit points, branch to leave
-          jsr InitVStf               ;otherwise do sub to init vertical speed and movement force
-          sta Enemy_X_Speed,x        ;initialize horizontal speed
-          sta EnemyFrenzyBuffer      ;init enemy frenzy buffer
-          lda #$fe
-          sta Enemy_Y_Speed,x        ;set vertical speed to make defeated bowser jump a little
-          ldy WorldNumber            ;use world number as offset
-          lda BowserIdentities,y     ;get enemy identifier to replace bowser with
-          sta Enemy_ID,x             ;set as new enemy identifier
-          lda #$20                   ;set A to use starting value for state
-          cpy #$03                   ;check to see if using offset of 3 or more
-          bcs SetDBSte               ;branch if so
-          ora #$03                   ;otherwise add 3 to enemy state
-SetDBSte: sta Enemy_State,x          ;set defeated enemy state
-          lda #Sfx_BowserFall
-          sta Square2SoundQueue      ;load bowser defeat sound
-          ldx $01                    ;get enemy offset
-          lda #$09                   ;award 5000 points to player for defeating bowser
-          bne EnemySmackScore        ;unconditional branch to award points
+  ; set the boswer timer to change his palette.
+  lda #1 ; number of framerules apparently?
+  sta BowserDamageTimer
+  dec BowserHitPoints        ;decrement bowser's hit points
+  bne ExHCF                  ;if bowser still has hit points, branch to leave
+  jsr InitVStf               ;otherwise do sub to init vertical speed and movement force
+  sta Enemy_X_Speed,x        ;initialize horizontal speed
+  sta EnemyFrenzyBuffer      ;init enemy frenzy buffer
+  lda #$fe
+  sta Enemy_Y_Speed,x        ;set vertical speed to make defeated bowser jump a little
+  ldy WorldNumber            ;use world number as offset
+  lda BowserIdentities,y     ;get enemy identifier to replace bowser with
+  sta Enemy_ID,x             ;set as new enemy identifier
+  lda #$20                   ;set A to use starting value for state
+  cpy #$03                   ;check to see if using offset of 3 or more
+  bcs SetDBSte               ;branch if so
+    ora #$03                   ;otherwise add 3 to enemy state
+SetDBSte:
+  sta Enemy_State,x          ;set defeated enemy state
+  lda #Sfx_BowserFall
+  sta Square2SoundQueue      ;load bowser defeat sound
+  ldx $01                    ;get enemy offset
+  lda #$09                   ;award 5000 points to player for defeating bowser
+  bne EnemySmackScore        ;unconditional branch to award points
 
 ChkOtherEnemies:
       cmp #BulletBill_FrenzyVar

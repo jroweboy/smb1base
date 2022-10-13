@@ -168,7 +168,8 @@ InitializeArea:
 
   ldy #$4b                 ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
-  ldx #$21
+  ; Add one here to account for the new BowserDamageTimer
+  ldx #$21 + 1
   lda #$00
 ClrTimersLoop:
   sta Timers,x             ;clear out memory between
