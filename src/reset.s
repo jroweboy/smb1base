@@ -266,6 +266,7 @@ SetXOffset:
   lsr
   lsr
   lsr
+  ; we want ceil(necklen / 8) so add 1 to make it a ceiling
   clc
   adc #1
   sta $02
@@ -313,6 +314,8 @@ PlayerNeckXOffsetTable:
   .byte $05 ;        frame 3
   .byte $02 ;skidding
 
+; This could easily be changed to just a few branches to check for the
+; different cases but i didn't want to waste the time for that
 HeadAdjusmentOffset:
 ;big player table
   .byte $00 ;walking frame 1
