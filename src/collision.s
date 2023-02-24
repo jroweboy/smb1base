@@ -121,11 +121,9 @@ BlockBufferAdderData:
 ; misc objects use hardcoded offsets
 MISC_BLOCK_BUFFER_START = $16
 
-BLOCK_BUFFER_ADDER_NECK_OFFSET = BlockBufferNeck_X_Adder - BlockBuffer_X_Adder
-
 BlockBuffer_X_Adder:
 ; Added to the sprite position to get the location to check for tile collision
-;     head, foot l, r, side 1 2    3,   4, neck
+;     head, foot l, r, side 1 2    3,   4
 BlockBuffer_Swimming_X_Adder:
   .byte $08, $03, $0c, $02, $02, $0d, $0d ; swimming
 BlockBuffer_Big_X_Adder:
@@ -134,24 +132,16 @@ BlockBuffer_Small_X_Adder:
   .byte $08, $03, $0c, $02, $02, $0d, $0d ; small
 BlockBuffer_Misc_X_Adder:
   .byte $08, $00, $10, $04, $14, $04, $04 ; misc
-BlockBufferNeck_X_Adder:
-  .byte $06, $09 
 
 BlockBuffer_Y_Adder:
   .byte $04, $20, $20, $08, $18, $08, $18 ; swimming
   .byte $02, $20, $20, $08, $18, $08, $18 ; big
   .byte $12, $20, $20, $18, $18, $18, $18 ; small
   .byte $18, $14, $14, $06, $06, $08, $10 ; misc
-BlockBufferNeck_Y_Adder:
-  .byte $00, $00
 
 BlockBufferColli_Feet:
   iny            ;if branched here, increment to next set of adders
-  bne SkipNeckLength ; unconditional
 BlockBufferColli_Head:
-  lda PlayerNeckLength
-  sta PlayerNeckTemp
-SkipNeckLength:
   lda #$00       ;set flag to return vertical coordinate
   beq BlockBufferPlayerCollision ; Unconditional
 BlockBufferColli_Side:
@@ -179,9 +169,6 @@ BlockBufferCollision:
     lda SprObject_Y_Position,x  ;get vertical coordinate of object
     clc
     adc BlockBuffer_Y_Adder,y   ;add it to value obtained using Y as offset
-    sec
-    sbc PlayerNeckTemp
-    bcc HeadWrapped
     and #%11110000              ;mask out low nybble
     sec
     sbc #$20                    ;subtract 32 pixels for the status bar
@@ -204,8 +191,6 @@ RetXC:
 RetYC:
   and #%00001111              ;and mask out high nybble
   sta $04                     ;store masked out result here
-  lda #0
-  sta PlayerNeckTemp
   lda $03                     ;get saved content of block buffer
   rts                         ;and leave
 
@@ -497,8 +482,6 @@ RevivalRateData:
       .byte $10, $0b
 
 HandleStompedShellE:
-       ; when an enemy is stomped cut neck length in half
-       lsr PlayerNeckLength
        lda #$04                   ;set defeated state for enemy
        sta Enemy_State,x
        inc StompChainCounter      ;increment the stomp counter
@@ -1166,67 +1149,6 @@ InitSteP:
   ; fallthrough
 
 DoPlayerSideCheck:
-
-; Split the side check into two parts, the first is the neck which can't be used to grab poles
-; or anything like that. its just checking for left right solid block collision
-PlayerSideNeckCheck:
-  lda PlayerNeckLength
-  clc
-  adc #8 ; we want to start doing collision after 8px of neck
-  lsr
-  lsr
-  lsr
-  lsr
-  beq BasePlayerSideCheck ; if theres not enough neck to check skip it
-  sta $00
-  lda PlayerNeckLength
-  and #$0f
-  sta $01
-PlayerNeckSideCollisionLoop:
-    eor #$ff ; negate it to subtract from player y position
-    clc
-    adc Player_Y_Position
-    cmp #$20                  ;check player's neck vertical position
-    bcc BasePlayerSideCheck   ;if the neck is now out of bounds, skip to body check
-    
-    ldy #BLOCK_BUFFER_ADDER_NECK_OFFSET
-    jsr BlockBufferColli_Side ;do player-to-bg collision detection on one half of the neck
-    beq @OtherSideOfNeck
-      jsr CheckNeckCollison
-@OtherSideOfNeck:
-    ldy #BLOCK_BUFFER_ADDER_NECK_OFFSET+1
-    lda $01
-    sta PlayerNeckTemp
-    jsr BlockBufferColli_Side ;do player-to-bg collision detection on the other side
-    beq @LoopToNextNeckPart
-      jsr CheckNeckCollison
-@LoopToNextNeckPart:
-    lda $01
-    clc
-    adc #16 ; collision is every 16 blocks, so add it here every loop
-    sta $01 ; since the collision check removes the player neck temp, we just reload it from $1
-    sta PlayerNeckTemp
-    dec $00
-    bne PlayerNeckSideCollisionLoop
-    beq BasePlayerSideCheck
-CheckNeckCollison:
-  ; Trimmed down collision routine for the neck involving only things we care to check
-  jsr CheckForCoinMTiles     ;check to see if player touched coin
-  bcc @SkipAddingCoin
-    jmp HandleCoinMetatile     ;if so, execute code to erase coin and award to player 1 coin
-  @SkipAddingCoin:
-
-;   ldy Player_State           ;get player's state
-;   cpy #$00                   ;check for player's state set to normal
-;   beq @DontStopMovement
-;     jmp ImpedePlayerMove         ;if not, branch to impede player's movement
-; @DontStopMovement:
-  rts
-
-; After we run the loop for the player neck, we check the base for the main collision.
-BasePlayerSideCheck:
-  lda #0
-  sta PlayerNeckTemp
   ldy $eb       ;get block buffer adder offset
   iny
   iny           ;increment offset 2 bytes to use adders for side collisions
@@ -1864,8 +1786,6 @@ PutMTileB: sta Block_Metatile,x     ;store whatever metatile be appropriate here
            beq BigBP                ;if so, branch to use default offset
 SmallBP:   iny                      ;increment for small or big and crouching
 BigBP:     lda Player_Y_Position    ;get player's vertical coordinate
-           sec
-           sbc PlayerNeckLength
            clc
            adc BlockYPosAdderData,y ;add value determined by size
            and #$f0                 ;mask out low nybble to get 16-pixel correspondence

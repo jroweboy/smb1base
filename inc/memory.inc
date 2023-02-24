@@ -139,8 +139,6 @@ __MEMORY_INC = 1
 .globalzp Square1SoundQueue
 
 ; .segment "STACK"
-
-.global PlayerNeckLength, PlayerNeckTemp
 .global VerticalFlipFlag
 .global FlagpoleFNum_Y_Pos
 .global FlagpoleFNum_YMFDummy
@@ -512,10 +510,6 @@ __MEMORY_INC = 1
 .global PauseModeFlag
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
-
-.global ShouldDrawNeck
-.global PlayerNeckXOffset
-; .global PlayerNeckYOffset
 
 .global _WarmBootOffset
 

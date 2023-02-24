@@ -156,7 +156,6 @@ Square1SoundQueue:              .res  1
 
 .segment "STACK"
 ; start $0100
-PlayerNeckTemp:                 .res  1
 blank_stack:                    .res  8 ; not used
 VerticalFlipFlag:               .res  4 ; jroweboy: this is acutally only one byte?
 FlagpoleFNum_Y_Pos:             .res  1
@@ -548,9 +547,7 @@ PauseModeFlag:                  .res  1
 GroundMusicHeaderOfs:           .res  3
 AltRegContentFlag:              .res  7  ; jroweboy this is only one byte (original 12)
 
-ShouldDrawNeck:                 .res  1
-PlayerNeckXOffset:              .res  1
-PlayerNeckLength:               .res  1
+FILLER:                         .res  3
 CurrentA:                       .res  1
 NextBank:                       .res  1
 

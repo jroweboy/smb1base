@@ -180,12 +180,8 @@ PlayerSubs: jsr ScrollHandler           ;move the screen if necessary
             jsr RelativePlayerPosition  ;get coordinates relative to the screen
             ldx #$00                    ;set offset for player object
             farcall BoundingBoxCore         ;get player's bounding box coordinates
-            ; Add to the upper left offset based on current neck size
             lda BoundingBox_UL_YPos, x
             cmp #$f0 ; check if mario's head is offscreen already
-            bcs :+
-            sec
-            sbc PlayerNeckLength
             bcs :+
               ; If we screenwrapped, we don't want the box to go off the top
               lda #1
@@ -327,8 +323,6 @@ HalfwayPageNybbles:
 
 .proc PlayerLoseLife
   inc DisableScreenFlag    ;disable screen and sprite 0 check
-  lda #$00
-  sta PlayerNeckLength      ; reset the player neck length
   sta Sprite0HitDetectFlag
   lda #Silence             ;silence music
   sta EventMusicQueue
@@ -528,9 +522,6 @@ FireballObjCore:
          adc #$00                     ;add carry and store as fireball's page location
          sta Fireball_PageLoc,x
          lda Player_Y_Position        ;get player's vertical position and store
-         sec
-         sbc PlayerNeckLength
-         bcc BublExit
          sta Fireball_Y_Position,x
          lda #$01                     ;set high byte of vertical position
          sta Fireball_Y_HighPos,x
@@ -817,9 +808,7 @@ NPROffscr:
     tay
     dex                           ;decrement row counter
     bpl PROfsLoop                 ;do this until all sprite rows are checked
-  ; Determine if the player neck should be drawn now
-  jmp QueueDrawPlayerNeck
-  ; rts                           ;then we are done!
+  rts                             ;then we are done!
 
 PlayerGfxTblOffsets:
   .byte $20, $28, $c8, $18, $00, $40, $50, $58
@@ -1716,38 +1705,3 @@ NoJSChk:
   sta $00
   lda #$04                ;set maximum vertical speed here
   jmp ImposeGravitySprObj ;then jump to move player vertically
-
-.proc QueueDrawPlayerNeck
-UpdatePlayerNeck:
-  ; if there is no neck just quit
-  lda PlayerNeckLength
-  beq EarlyExit
-  ; if mario is offscreen don't draw the neck (checks when mario dies to an enemy)
-  ldx Player_SprDataOffset
-  lda Sprite_Y_Position+4,x
-  cmp #$f8
-  bne CheckYPosition
-    ; mario is offscreen, if they are dead don't draw the neck
-    lda GameEngineSubroutine
-    cmp #$0b
-    beq EarlyExit
-CheckYPosition:
-  ; final offscreen check. if the high y value is offscreen
-  ; and we are small mario then we need to draw 
-  lda Player_Y_HighPos
-  cmp #1
-  beq ShouldDraw
-  cmp #2
-  bcs EarlyExit
-    lda PlayerSize
-    beq EarlyExit ; if big then the whole head is now offscreen and we are done
-    ; if small then we need to check if the head is offscreen
-    ; by seeing if the Y position is < 16
-    lda Player_Y_Position
-    cmp #$f0
-    bcc EarlyExit
-ShouldDraw:
-  inc ShouldDrawNeck
-EarlyExit:
-  rts
-.endproc

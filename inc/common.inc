@@ -12,8 +12,4 @@ __COMMON_INC = 1
 .include "globals.inc"
 .include "mmc3.inc"
 
-; limit the neck size to 20 segments just cause
-; 19 causes softlocks in castles when small. 20 is just right
-PLAYER_NECK_MAX_SIZE = (20 * 8)
-
 .endif ;__COMMON_INC

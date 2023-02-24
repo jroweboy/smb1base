@@ -220,14 +220,7 @@ RunGameTimer:
   bne ResGTCtrl              ;if timer not at 100, branch to reset game timer control
   lda #TimeRunningOutMusic
   sta EventMusicQueue        ;otherwise load time running out music
-ResGTCtrl: 
-  ; increase the player neck length by one.
-  lda PlayerNeckLength
-  cmp #PLAYER_NECK_MAX_SIZE ; arbitrarily limit the size of the neck
-  bcs @SkipNeckLength
-    adc #1
-    sta PlayerNeckLength
-@SkipNeckLength:
+ResGTCtrl:
   lda #$18                   ;reset game timer control
   sta GameTimerCtrlTimer
   ldy #$23                   ;set offset for last digit
