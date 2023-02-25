@@ -14,6 +14,7 @@ ForceJump = false
 
 PlayerStateAddr = emu.getLabelAddress("Player_State").address
 VerticalForceAddr = emu.getLabelAddress("VerticalForce").address
+PlayerXSpeedAddr = emu.getLabelAddress("SprObject_X_Speed").address
 PlayerYSpeedAddr = emu.getLabelAddress("SprObject_Y_Speed").address
 PlayerXAddr = emu.getLabelAddress("SprObject_X_Position").address
 PlayerYAddr = emu.getLabelAddress("SprObject_Y_Position").address
@@ -65,17 +66,38 @@ function mouseDrawLine()
 		endX = mouse.x
 		endY = mouse.y
 	end
-	  
 	if drawingLine == true then
-		emu.drawLine(PlayerX, PlayerY, PlayerX - (startX - endX), PlayerY - (startY - endY))
+		local xmag = (endX-startX)
+		local ymag = (endY-startY)
+		local MAX_MAG = 32
+		local mag = math.sqrt( xmag * xmag + ymag * ymag )
+		local nx = mag == 0 and 0 or (xmag / mag * math.min(mag, MAX_MAG))
+		local ny = mag == 0 and 0 or (ymag / mag * math.min(mag, MAX_MAG))
+		local angle = math.deg(math.atan(ymag, xmag))
+		--emu.log("mag " .. mag .. " nx " .. nx .. " ny " .. ny .. " angle " .. angle)
+		emu.drawLine(PlayerX, PlayerY, PlayerX + nx, PlayerY + ny)
 	end
 	
 	previousMouse = mouse
 	
 	if ForceJump == true then
 		StartJump = 0x1
+		local xmag = (endX-startX)
+		local ymag = (endY-startY)
+		local MAX_MAG = 32
+		local mag = math.sqrt( xmag * xmag + ymag * ymag )
+		local nx = mag == 0 and 0 or (xmag / mag * math.min(mag, MAX_MAG))
+		local ny = mag == 0 and 0 or (ymag / mag * math.min(mag, MAX_MAG))
+		local angle = math.deg(math.atan(ymag, xmag))
+		
+		local xspd = -1 * math.floor(nx * 64 / MAX_MAG + 0.5)
+		local yspd = -1 * math.floor(ny * 8 / MAX_MAG + 0.5)
+		
+		emu.log("yspd " .. yspd)
+		
 		emu.write(PlayerStateAddr, StartJump, emu.memType.nesDebug)
-		emu.write(PlayerYSpeedAddr, PlayerYSpeed, emu.memType.nesDebug)
+		emu.write(PlayerXSpeedAddr, xspd, emu.memType.nesDebug)
+		emu.write(PlayerYSpeedAddr, yspd, emu.memType.nesDebug)
 		emu.write(VerticalForceAddr, VerticalForce, emu.memType.nesDebug)
 		ForceJump = false
 	end
