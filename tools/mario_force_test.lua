@@ -1,8 +1,5 @@
 ﻿
 local mario_hb = 0x04AC; -- 1x4
-local mario_x  = 0x0086;
-local hscroll  = 0x073f; -- emu.getLabelAddress("HorizontalScroll");
-local mario_y  = 0x00ce;
 local colorGreen = 0xAA00FF00;
 local colorRed   = 0xAAFF0000;
 
@@ -13,15 +10,18 @@ startY = 0
 endX = 0
 endY = 0
 
-
 ForceJump = false
+
 PlayerStateAddr = emu.getLabelAddress("Player_State").address
 VerticalForceAddr = emu.getLabelAddress("VerticalForce").address
 PlayerYSpeedAddr = emu.getLabelAddress("SprObject_Y_Speed").address
+PlayerXAddr = emu.getLabelAddress("SprObject_X_Position").address
+PlayerYAddr = emu.getLabelAddress("SprObject_Y_Position").address
+PlayerOffsetAddr = emu.getLabelAddress("HorizontalScroll").address
 
-PlayerX = emu.getLabelAddress("SprObject_X_Position").address
-PlayerY = emu.getLabelAddress("SprObject_Y_Position").address
-
+PlayerX = 0
+PlayerY = 0
+PlayerOffset = 0
 VerticalForce = 0x20
 PlayerYSpeed = 0xfc
 VerticalForceDown = 0x40
@@ -35,6 +35,14 @@ local function box(x1,y1,x2,y2,color)
 end;
 
 function mouseDrawLine()
+	if (emu.read(mario_hb,emu.memType.nesDebug) == 0) then
+		return
+	end
+	PlayerOffset = emu.read(PlayerOffsetAddr, emu.memType.nesDebug);
+	PlayerX = emu.read(PlayerXAddr, emu.memType.nesDebug) + 8 - PlayerOffset;
+	PlayerY = emu.read(PlayerYAddr, emu.memType.nesDebug) - 8 + 32;
+	-- box(PlayerX, PlayerY + 32, PlayerX + 2 - PlayerOffset, PlayerY + 2 + 32, colorRed);
+	
 	mouse = emu.getMouseState()
 	if previousMouse.left == false and mouse.left == true then
 		-- capture the current position and start drawing the line
@@ -57,19 +65,7 @@ function mouseDrawLine()
 		endX = mouse.x
 		endY = mouse.y
 	end
-	
-	if (emu.read(mario_hb,emu.memType.nesDebug) > 0) then 
-		a = emu.read(mario_hb,emu.memType.nesDebug);
-		b = emu.read(mario_hb+1,emu.memType.nesDebug);
-		c = emu.read(mario_hb+2,emu.memType.nesDebug);
-		d = emu.read(mario_hb+3,emu.memType.nesDebug);
-		box(a,b,c,d, colorGreen);
-		a = emu.read(mario_x, emu.memType.nesDebug);
-		b = emu.read(mario_y, emu.memType.nesDebug);
-		offset = emu.read(hscroll, emu.memType.nesDebug);
-		box(a - offset,b+32,a+2 - offset,b+2+32,colorRed);
-	end;
-  
+	  
 	if drawingLine == true then
 		emu.drawLine(PlayerX, PlayerY, PlayerX - (startX - endX), PlayerY - (startY - endY))
 	end

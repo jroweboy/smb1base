@@ -179,13 +179,7 @@ PlayerSubs: jsr ScrollHandler           ;move the screen if necessary
             jsr GetPlayerOffscreenBits  ;get player's offscreen bits
             jsr RelativePlayerPosition  ;get coordinates relative to the screen
             ldx #$00                    ;set offset for player object
-            farcall BoundingBoxCore         ;get player's bounding box coordinates
-            lda BoundingBox_UL_YPos, x
-            cmp #$f0 ; check if mario's head is offscreen already
-            bcs :+
-              ; If we screenwrapped, we don't want the box to go off the top
-              lda #1
-:           sta BoundingBox_UL_YPos, x
+            farcall BoundingBoxCore     ;get player's bounding box coordinates
             jsr PlayerBGCollision       ;do collision detection and process
             lda Player_Y_Position
             cmp #$40                    ;check to see if player is higher than 64th pixel
@@ -323,6 +317,7 @@ HalfwayPageNybbles:
 
 .proc PlayerLoseLife
   inc DisableScreenFlag    ;disable screen and sprite 0 check
+  lda #$00
   sta Sprite0HitDetectFlag
   lda #Silence             ;silence music
   sta EventMusicQueue
@@ -671,7 +666,7 @@ PlayerGraphicsTable:
 ;big player table
   .byte $00, $01, $02, $03, $04, $05, $06, $07 ;walking frame 1
   .byte $08, $09, $0a, $0b, $0c, $0d, $0e, $0f ;        frame 2
-  .byte $08, $09, $12, $13, $14, $15, $16, $17 ;        frame 3
+  .byte $10, $11, $12, $13, $14, $15, $16, $17 ;        frame 3
   .byte $18, $19, $1a, $1b, $1c, $1d, $1e, $1f ;skidding
   .byte $20, $21, $22, $23, $24, $25, $26, $27 ;jumping
   .byte $08, $09, $28, $29, $2a, $2b, $2c, $2d ;swimming frame 1
@@ -697,8 +692,8 @@ PlayerGraphicsTable:
 
 ;used by both player sizes
   .byte $fc, $fc, $fc, $fc, $3a, $37, $4f, $4f ;small player standing
-  .byte $fc, $fc, $20, $21, $4c, $4d, $4e, $4e ;intermediate grow frame
-  .byte $20, $21, $4c, $4d, $4a, $4a, $4b, $4b ;big player standing
+  .byte $fc, $fc, $00, $01, $4c, $4d, $4e, $4e ;intermediate grow frame
+  .byte $00, $01, $4c, $4d, $4a, $4a, $4b, $4b ;big player standing
 
 SwimKickTileNum:
   .byte $31, $46
