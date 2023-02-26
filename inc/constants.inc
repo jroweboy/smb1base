@@ -24,7 +24,8 @@ SND_NOISE_REG         = $400c
 SND_DELTA_REG         = $4010
 SND_MASTERCTRL_REG    = $4015
 
-SPR_DMA               = $4014
+OAM                   = $02
+OAM_DMA               = $4014
 JOYPAD_PORT           = $4016
 JOYPAD_PORT1          = $4016
 JOYPAD_PORT2          = $4017

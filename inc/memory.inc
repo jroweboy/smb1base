@@ -9,10 +9,20 @@ __MEMORY_INC = 1
 .globalzp temp_byte
 .globalzp ObjectOffset
 .globalzp FrameCounter
-.globalzp A_B_Buttons
-.globalzp Up_Down_Buttons
-.globalzp Left_Right_Buttons
-.globalzp PreviousA_B_Buttons
+
+; jroweboy moved to zp
+.globalzp SavedJoypadBits
+.globalzp SavedJoypad1Bits
+.globalzp SavedJoypad2Bits
+.globalzp NmiDisable
+.globalzp NmiSkipped
+
+; moved to abs 
+.global A_B_Buttons
+.global Up_Down_Buttons
+.global Left_Right_Buttons
+.global PreviousA_B_Buttons
+
 .globalzp GameEngineSubroutine
 .globalzp Enemy_Flag
 .globalzp Enemy_ID
@@ -329,10 +339,6 @@ __MEMORY_INC = 1
 
 .global Misc_SprDataOffset
 
-.global SavedJoypad1Bits
-.global SavedJoypadBits
-
-.global SavedJoypad2Bits
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute
 .global FrictionAdderHigh
@@ -510,6 +516,15 @@ __MEMORY_INC = 1
 .global PauseModeFlag
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
+
+.global StatTimer
+.global StatTimerLo
+.global StatTimerMd
+.global StatTimerHi
+.global IrqOldScroll
+.global IrqNewScroll
+.global IrqPPUCTRL
+; .global IrqPointer
 
 .global _WarmBootOffset
 

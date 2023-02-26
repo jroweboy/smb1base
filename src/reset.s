@@ -12,13 +12,33 @@
 ;INTERRUPT VECTORS
 
 .segment "VECTORS"
-    .word (NonMaskableInterrupt)
-    .word (Start)
-    .word ($fff0)  ;unused
+  .word (NonMaskableInterrupt)
+  .word (Start)
+  .word (IrqStatusBar)  ;unused
 
 .segment "FIXED"
 
 ;-------------------------------------------------------------------------------------
+.proc IrqStatusBar
+  pha
+    sta IRQDISABLE
+    lda IrqNewScroll  ; Combine bits 7-3 of new X with 2-0 of old X
+    eor IrqOldScroll
+    and #%11111000
+    eor IrqOldScroll
+    sta $2005  ; Write old fine X and new coarse X
+    bit $2002  ; Clear first/second write toggle
+    lda IrqNewScroll
+    sta IrqOldScroll
+    ; stall here
+    sta $2005  ; Write entire new X
+    bit $2002  ; Clear first/second write toggle
+    lda IrqPPUCTRL
+    sta PPU_CTRL
+  pla
+@Exit:
+  rti
+.endproc
 
 .proc Start
   sei                          ;pretty standard 6502 type init here
@@ -66,7 +86,10 @@ MMC3Init:
   lda #0
   sta NMT_MIRROR
   sta RAM_PROTECT
-  sta IRQDISABLE
+  sta IRQENABLE
+  lda #$ff
+  sta $4017 ; disable frame counter
+  cli
 FinializeMarioInit:
   lda #$a5                     ;set warm boot flag
   sta WarmBootValidation     
@@ -81,20 +104,42 @@ FinializeMarioInit:
   lda Mirror_PPU_CTRL
   ora #%10000000               ;enable NMIs
   jsr WritePPUReg1
-EndlessLoop:
-  jmp EndlessLoop              ;endless loop, need I say more?
+GameLoop:
+  lda NmiDisable
+  beq GameLoop
+  lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
+  lsr
+  bcs :+
+    jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+:
+  lda #0
+  sta NmiDisable
+  jmp GameLoop              ;endless loop, need I say more?
 
 BankInitValues:
   .byte $00, $02, $04, $05, $06, $07
 .endproc
 
 .proc NonMaskableInterrupt
-
+  inc StatTimerLo
+  bne @CheckIfNMIEnabled
+    inc StatTimerMd
+    bne @CheckIfNMIEnabled
+      inc StatTimerHi
+@CheckIfNMIEnabled:
+  bit NmiDisable
+  beq @ContinueNMI
+    inc NmiSkipped
+    rti
+@ContinueNMI:
+  pha
+  phx
+  phy
   lda Mirror_PPU_CTRL       ;disable NMIs in mirror reg
-  and #%01111111            ;save all other bits
-  sta Mirror_PPU_CTRL
-  and #%01111110            ;alter name table address to be $2800
-  sta PPU_CTRL         ;(essentially $2000) but save other bits
+  ; jroweboy turn off NMI through the soft disable instead
+  inc NmiDisable
+  and #%11111110            ;alter name table address to be $2800
+  sta PPU_CTRL              ;(essentially $2000) but save other bits
   lda Mirror_PPU_MASK       ;disable OAM and background display by default
   and #%11100110
   ldy DisableScreenFlag     ;get screen disable flag
@@ -108,9 +153,6 @@ ScreenOff:
   ldx PPU_STATUS            ;reset flip-flop and reset scroll registers to zero
   lda #$00
   jsr InitScroll
-  sta PPU_SPR_ADDR          ;reset spr-ram address register
-  lda #$02                  ;perform spr-ram DMA access on $0200-$02ff
-  sta SPR_DMA
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
   lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
   sta $00
@@ -130,8 +172,21 @@ InitBuffer:
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
   lda Mirror_PPU_MASK       ;copy mirror of $2001 to register
   sta PPU_MASK
-  farcall SoundEngine           ;play sound
-  jsr ReadJoypads           ;read joypads
+  
+  lda Sprite0HitDetectFlag  ;check for flag here
+  beq :+
+    ; jroweboy - set up Irq scroll split
+    lda HorizontalScroll
+    sta IrqNewScroll
+    lda #31 ; do the split 32 pixels from the top of the screen
+    sta IRQLATCH
+    sta IRQRELOAD
+    sta IRQENABLE
+:
+  lda #0
+  sta PPU_SPR_ADDR          ;reset spr-ram address register
+  jsr OAMandReadJoypad
+
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore
   lda GamePauseStatus       ;check for pause status
@@ -175,41 +230,39 @@ RotPRandomBit:
     dey                       ;decrement for loop
     bne RotPRandomBit
   lda Sprite0HitDetectFlag  ;check for flag here
-  beq SkipSprite0
-Sprite0Clr:
-    lda PPU_STATUS            ;wait for sprite 0 flag to clear, which will
-    and #%01000000            ;not happen until vblank has ended
-    bne Sprite0Clr
+  beq SkipIrq
   lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
   lsr
-  bcs Sprite0Hit
+  bcs SkipSprites
   jsr MoveSpritesOffscreen
   jsr SpriteShuffler
-Sprite0Hit:
-    lda PPU_STATUS            ;do sprite #0 hit detection
-    and #%01000000
-    beq Sprite0Hit
-  ldy #$14                  ;small delay, to wait until we hit horizontal blank time
-HBlankDelay:
-    dey
-    bne HBlankDelay
-SkipSprite0:
-  lda HorizontalScroll      ;set scroll registers from variables
-  sta PPU_SCROLL_REG
-  lda VerticalScroll
-  sta PPU_SCROLL_REG
+; Sprite0Hit:
+;     lda PPU_STATUS            ;do sprite #0 hit detection
+;     and #%01000000
+;     beq Sprite0Hit
+;   ldy #$14                  ;small delay, to wait until we hit horizontal blank time
+; HBlankDelay:
+;     dey
+;     bne HBlankDelay
+SkipSprites:
+SkipIrq:
+  farcall SoundEngine           ;play sound
   lda Mirror_PPU_CTRL       ;load saved mirror of $2000
-  pha
-    sta PPU_CTRL
-    lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
-    lsr
-    bcs SkipMainOper
-    jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+  sta IrqPPUCTRL
+  ; ; pha
+  ;   sta PPU_CTRL
+    ; lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
+    ; lsr
+    ; bcs SkipMainOper
+    ; jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
 SkipMainOper:
-    lda PPU_STATUS            ;reset flip-flop
+    ; lda PPU_STATUS            ;reset flip-flop
+  ; pla
+  ; ora #%10000000            ;reactivate NMIs
+  ; sta PPU_CTRL
+  ply
+  plx
   pla
-  ora #%10000000            ;reactivate NMIs
-  sta PPU_CTRL
   rti                       ;we are done until the next frame!
 
 ;-------------------------------------------------------------------------------------
@@ -372,40 +425,59 @@ SkipByte:
 
 ;-------------------------------------------------------------------------------------
 ;$00 - temp joypad bit
-ReadJoypads: 
-  lda #$01               ;reset and clear strobe of joypad ports
-  sta JOYPAD_PORT
-  lsr
-  tax                    ;start with joypad 1's port
-  sta JOYPAD_PORT
-  jsr ReadPortBits
-  inx                    ;increment for joypad 2's port
-ReadPortBits:
-  ldy #$08
-PortLoop:
-  pha                    ;push previous bit onto stack
-    lda JOYPAD_PORT,x      ;read current bit on joypad port
-    sta $00                ;check d1 and d0 of port output
-    lsr                    ;this is necessary on the old
-    ora $00                ;famicom systems in japan
-    lsr
-    pla                    ;read bits from stack
-    rol                    ;rotate bit from carry flag
-    dey
-    bne PortLoop           ;count down bits left
-    sta SavedJoypadBits,x  ;save controller status here always
-    pha
-      and #%00110000         ;check for select or start
-      and JoypadBitMask,x    ;if neither saved state nor current state
-      beq Save8Bits          ;have any of these two set, branch
-    pla
-    and #%11001111         ;otherwise store without select
-    sta SavedJoypadBits,x  ;or start bits and leave
-    rts
-Save8Bits:
-  pla
-  sta JoypadBitMask,x    ;save with all bits in another place and leave
-  rts
+; ReadJoypads: 
+;   lda #$01               ;reset and clear strobe of joypad ports
+;   sta JOYPAD_PORT
+;   lsr
+;   tax                    ;start with joypad 1's port
+;   sta JOYPAD_PORT
+;   jsr ReadPortBits
+;   inx                    ;increment for joypad 2's port
+; ReadPortBits:
+;   ldy #$08
+; PortLoop:
+;   pha                    ;push previous bit onto stack
+;     lda JOYPAD_PORT,x      ;read current bit on joypad port
+;     sta $00                ;check d1 and d0 of port output
+;     lsr                    ;this is necessary on the old
+;     ora $00                ;famicom systems in japan
+;     lsr
+;     pla                    ;read bits from stack
+;     rol                    ;rotate bit from carry flag
+;     dey
+;     bne PortLoop           ;count down bits left
+;     sta SavedJoypadBits,x  ;save controller status here always
+;     pha
+;       and #%00110000         ;check for select or start
+;       and JoypadBitMask,x    ;if neither saved state nor current state
+;       beq Save8Bits          ;have any of these two set, branch
+;     pla
+;     and #%11001111         ;otherwise store without select
+;     sta SavedJoypadBits,x  ;or start bits and leave
+;     rts
+; Save8Bits:
+;   pla
+;   sta JoypadBitMask,x    ;save with all bits in another place and leave
+;   rts
+OAMandReadJoypad:
+  lda #OAM
+  sta OAM_DMA          ; ------ OAM DMA ------
+  ldx #1             ; get put          <- strobe code must take an odd number of cycles total
+  stx SavedJoypad1Bits ; get put get
+  stx JOYPAD_PORT1   ; put get put get
+  dex                ; put get
+  stx JOYPAD_PORT1   ; put get put get
+read_loop:
+  lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
+  lda JOYPAD_PORT1   ; put get put GET
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad1Bits ; put get put get put
+  bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
+ASSERT_PAGE read_loop
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used for preset value

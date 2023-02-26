@@ -6,10 +6,15 @@
 temp_byte:                      .res  8 ; local  temp pointers and vars
 ObjectOffset:                   .res  1
 FrameCounter:                   .res  1
-A_B_Buttons:                    .res  1
-Up_Down_Buttons:                .res  1
-Left_Right_Buttons:             .res  1
-PreviousA_B_Buttons:            .res  1
+
+; jroweboy - swapped SavedJoypadBits with the computed saved buttons 
+; since the new joypad reading code must write to zeropage
+SavedJoypadBits:                .res  2
+SavedJoypad1Bits              = SavedJoypadBits
+SavedJoypad2Bits              = SavedJoypadBits + 1
+NmiDisable:                     .res  1
+NmiSkipped:                     .res  1
+
 GameEngineSubroutine:           .res  1
 Enemy_Flag:                     .res  7
 Enemy_ID:                       .res  7
@@ -353,10 +358,11 @@ FBall_SprDataOffset:            .res  2
 
 Misc_SprDataOffset:             .res  9
 
-SavedJoypadBits:                .res  1
-SavedJoypad1Bits              = SavedJoypadBits
+A_B_Buttons:                    .res  1
+Up_Down_Buttons:                .res  1
+Left_Right_Buttons:             .res  1
+PreviousA_B_Buttons:            .res  1
 
-SavedJoypad2Bits:               .res  2
 Player_X_Scroll:                .res  1
 Player_XSpeedAbsolute:          .res  1
 FrictionAdderHigh:              .res  1
@@ -420,7 +426,7 @@ EnemyObjectPageSel:             .res  1
 ScreenRoutineTask:              .res  1
 ScrollThirtyTwo:                .res  2
 HorizontalScroll:               .res  1
-VerticalScroll:                 .res  1
+VerticalScroll:                 .res  1 ; jroweboy unused?
 ForegroundScenery:              .res  1
 BackgroundScenery:              .res  1
 CloudTypeOverride:              .res  1
@@ -545,9 +551,19 @@ AreaMusicBuffer_Alt:            .res  1
 
 PauseModeFlag:                  .res  1
 GroundMusicHeaderOfs:           .res  3
-AltRegContentFlag:              .res  7  ; jroweboy this is only one byte (original 12)
+AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (original 12)
 
-FILLER:                         .res  3
+StatTimer:                      .res  3
+StatTimerLo                   = StatTimer
+StatTimerMd                   = StatTimer + 1
+StatTimerHi                   = StatTimer + 2
+
+IrqNewScroll:                   .res  1
+IrqOldScroll:                   .res  1
+IrqPPUCTRL:                     .res  1
+; IrqPointer:                     .res  2
+
+FILLER:                         .res  2
 CurrentA:                       .res  1
 NextBank:                       .res  1
 
