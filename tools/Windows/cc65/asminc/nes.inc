@@ -32,10 +32,10 @@ xsize           = charsperline
 
 ;; PPU defines
 
-PPU_CTRL1       = $2000
-PPU_CTRL2       = $2001
-PPU_STATUS      = $2002
-PPU_SPR_ADDR    = $2003
+PPUCTRL1       = $2000
+PPUCTRL2       = $2001
+PPUSTATUS      = $2002
+OAMADDR    = $2003
 PPU_SPR_IO      = $2004
 PPU_VRAM_ADDR1  = $2005
 PPU_VRAM_ADDR2  = $2006

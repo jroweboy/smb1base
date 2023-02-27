@@ -63,27 +63,24 @@ AreaPalette:
 
 
 ;-------------------------------------------------------------------------------------
-MoveAllSpritesOffscreen:
-
-  ldy #$00                ;this routine moves all sprites off the screen
-  .byte $2c                 ;BIT instruction opcode
 MoveSpritesOffscreen:
-  ldy #$04                ;this routine moves all but sprite 0
-  lda #$f8                ;off the screen
-@SprInitLoop:
-    sta Sprite_Y_Position,y ;write 248 into OAM data's Y coordinate
-    iny                     ;which will move it off the screen
-    iny
-    iny
-    iny
-    bne @SprInitLoop
+  lda #$f8
+  bne MoveSpriteOffscreenUnrolledWrites + 3
+MoveAllSpritesOffscreen:
+  lda #$f8
+MoveSpriteOffscreenUnrolledWrites:
+.repeat 64, I
+    sta Sprite_Y_Position + I*4 ;write 248 into OAM data's Y coordinate
+.endrepeat
+  ; original game uses y for looping, so keep it zero to be paranoid
+  ldy #0
   rts
 
 ;-------------------------------------------------------------------------------------
 InitializeNameTables:
 
-  lda PPU_STATUS            ;reset flip-flop
-  lda Mirror_PPU_CTRL       ;load mirror of ppu reg $2000
+  lda PPUSTATUS            ;reset flip-flop
+  lda Mirror_PPUCTRL       ;load mirror of ppu reg $2000
   ora #%00010000            ;set sprites for first 4k and background for second 4k
   and #%11110000            ;clear rest of lower nybble, leave higher alone
   jsr WritePPUReg1
@@ -91,14 +88,14 @@ InitializeNameTables:
   jsr WriteNTAddr
   lda #$20                  ;and then set it to name table 0
 WriteNTAddr:
-  sta PPU_ADDRESS
+  sta PPUADDR
   lda #$00
-  sta PPU_ADDRESS
+  sta PPUADDR
   ldx #$04                  ;clear name table with blank tile #24
   ldy #$c0
   lda #$24
 InitNTLoop:
-  sta PPU_DATA              ;count out exactly 768 tiles
+  sta PPUDATA              ;count out exactly 768 tiles
   dey
   bne InitNTLoop
   dex
@@ -108,7 +105,7 @@ InitNTLoop:
   sta VRAM_Buffer1_Offset   ;init vram buffer 1 offset
   sta VRAM_Buffer1          ;init vram buffer 1
 InitATLoop:
-  sta PPU_DATA
+  sta PPUDATA
   dey
   bne InitATLoop
   sta HorizontalScroll      ;reset scroll variables
@@ -336,16 +333,16 @@ DrawTitleScreen:
   lda OperMode                 ;are we in title screen mode?
   bne IncModeTask_B            ;if not, exit
   lda #>TitleScreenDataOffset  ;load address $1ec0 into
-  sta PPU_ADDRESS              ;the vram address register
+  sta PPUADDR              ;the vram address register
   lda #<TitleScreenDataOffset
-  sta PPU_ADDRESS
+  sta PPUADDR
   lda #$03                     ;put address $0300 into
   sta $01                      ;the indirect at $00
   ldy #$00
   sty $00
-  lda PPU_DATA                 ;do one garbage read
+  lda PPUDATA                 ;do one garbage read
 OutputTScr:
-  lda PPU_DATA                 ;get title screen from chr-rom
+  lda PPUDATA                 ;get title screen from chr-rom
   sta ($00),y                  ;store 256 bytes into buffer
   iny
   bne ChkHiByte                ;if not past 256 bytes, do not increment
@@ -408,8 +405,8 @@ MushroomIconData:
 ;-------------------------------------------------------------------------------------
 .proc WritePPUReg1
 
-  sta PPU_CTRL         ;write contents of A to PPU register 1
-  sta Mirror_PPU_CTRL       ;and its mirror
+  sta PPUCTRL         ;write contents of A to PPU register 1
+  sta Mirror_PPUCTRL       ;and its mirror
   rts
 .endproc
 
@@ -421,15 +418,15 @@ MushroomIconData:
 WriteBufferToScreen:
 .export UpdateScreen, InitScroll
 
-  sta PPU_ADDRESS           ;store high byte of vram address
+  sta PPUADDR           ;store high byte of vram address
   iny
   lda ($00),y               ;load next byte (second)
-  sta PPU_ADDRESS           ;store low byte of vram address
+  sta PPUADDR           ;store low byte of vram address
   iny
   lda ($00),y               ;load next byte (third)
   asl                       ;shift to left and save in stack
   pha
-    lda Mirror_PPU_CTRL     ;load mirror of $2000,
+    lda Mirror_PPUCTRL     ;load mirror of $2000,
     ora #%00000100            ;set ppu to increment by 32 by default
     bcs SetupWrites           ;if d7 of third byte was clear, ppu will
       and #%11111011            ;only increment by 1
@@ -449,7 +446,7 @@ OutputToVRAM:
     iny                       ;otherwise increment Y to load next byte
 RepeatByte:
   lda ($00),y               ;load more data from buffer and write to vram
-  sta PPU_DATA
+  sta PPUDATA
   dex                       ;done writing?
   bne OutputToVRAM
   sec          
@@ -460,20 +457,20 @@ RepeatByte:
   adc $01
   sta $01
   lda #$3f                  ;sets vram address to $3f00
-  sta PPU_ADDRESS
+  sta PPUADDR
   lda #$00
-  sta PPU_ADDRESS
-  sta PPU_ADDRESS           ;then reinitializes it for some reason
-  sta PPU_ADDRESS
+  sta PPUADDR
+  sta PPUADDR           ;then reinitializes it for some reason
+  sta PPUADDR
 
 UpdateScreen:
-  ldx PPU_STATUS            ;reset flip-flop
+  ldx PPUSTATUS            ;reset flip-flop
   ldy #$00                  ;load first byte from indirect as a pointer
   lda ($00),y  
   bne WriteBufferToScreen   ;if byte is zero we have no further updates to make here
 InitScroll:
-  sta PPU_SCROLL_REG        ;store contents of A into scroll registers
-  sta PPU_SCROLL_REG        ;and end whatever subroutine led us here
+  sta PPUSCROLL        ;store contents of A into scroll registers
+  sta PPUSCROLL        ;and end whatever subroutine led us here
   rts
 
 

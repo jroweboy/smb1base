@@ -2,7 +2,7 @@
 ;Rewritten for use with ca65 by FrankenGraphics.
 
 ;uses 4 bytes in zero page
-;decompress data from an address in X/Y to PPU_DATA
+;decompress data from an address in X/Y to PPUDATA
 
 
 ;put these 4 reservations where they belong in your project. 

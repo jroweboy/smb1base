@@ -492,8 +492,8 @@ DisableScreenFlag:              .res  1
 ScrollAmount:                   .res  1
 GamePauseStatus:                .res  1
 GamePauseTimer:                 .res  1
-Mirror_PPU_CTRL:                .res  1
-Mirror_PPU_MASK:                .res  1
+Mirror_PPUCTRL:                .res  1
+Mirror_PPUMASK:                .res  1
 NumberOfPlayers:                .res  1 ; jroweboy( this is only 1 byte, was 5)
 
 CurrentBank:    .res 1

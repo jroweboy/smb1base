@@ -26,17 +26,17 @@
     eor IrqOldScroll
     and #%11111000
     eor IrqOldScroll
-    sta $2005  ; Write old fine X and new coarse X
-    bit $2002  ; Clear first/second write toggle
+    sta PPUSCROLL  ; Write old fine X and new coarse X
+    bit PPUSTATUS  ; Clear first/second write toggle
     lda IrqNewScroll
     sta IrqOldScroll
-    ; stall here
-    sta $2005  ; Write entire new X
-    bit $2002  ; Clear first/second write toggle
+    ; stall here if needed. Right now this is on a blank line so its unimportant to deal with.
+    sta PPUSCROLL  ; Write entire new X
+    bit PPUSTATUS  ; Clear first/second write toggle
+    ; Write nametable to PPUCTRL as well
     lda IrqPPUCTRL
-    sta PPU_CTRL
+    sta PPUCTRL
   pla
-@Exit:
   rti
 .endproc
 
@@ -44,12 +44,12 @@
   sei                          ;pretty standard 6502 type init here
   cld
   lda #%00010000               ;init PPU control register 1 
-  sta PPU_CTRL
+  sta PPUCTRL
   ldx #$ff                     ;reset stack pointer
   txs
-: lda PPU_STATUS               ;wait two frames
+: lda PPUSTATUS               ;wait two frames
   bpl :-
-: lda PPU_STATUS
+: lda PPUSTATUS
   bpl :-
   ldy #ColdBootOffset          ;load default cold boot pointer
   ldx #$05                     ;this is where we check for a warm boot
@@ -89,6 +89,7 @@ MMC3Init:
   sta IRQENABLE
   lda #$ff
   sta $4017 ; disable frame counter
+  ; re-enable interrupts so the scanline irq can run
   cli
 FinializeMarioInit:
   lda #$a5                     ;set warm boot flag
@@ -97,11 +98,11 @@ FinializeMarioInit:
   lda #%00001111
   sta SND_MASTERCTRL_REG       ;enable all sound channels except dmc
   lda #%00000110
-  sta PPU_MASK            ;turn off clipping for OAM and background
+  sta PPUMASK            ;turn off clipping for OAM and background
   jsr MoveAllSpritesOffscreen
   jsr InitializeNameTables     ;initialize both name tables
   inc DisableScreenFlag        ;set flag to disable screen output
-  lda Mirror_PPU_CTRL
+  lda Mirror_PPUCTRL
   ora #%10000000               ;enable NMIs
   jsr WritePPUReg1
 GameLoop:
@@ -135,22 +136,23 @@ BankInitValues:
   pha
   phx
   phy
-  lda Mirror_PPU_CTRL       ;disable NMIs in mirror reg
-  ; jroweboy turn off NMI through the soft disable instead
+  ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
   inc NmiDisable
+  ; jroweboy switch the nametable back to nmt0 and force NMI to be enabled
+  lda Mirror_PPUCTRL
   and #%11111110            ;alter name table address to be $2800
-  sta PPU_CTRL              ;(essentially $2000) but save other bits
-  lda Mirror_PPU_MASK       ;disable OAM and background display by default
+  sta PPUCTRL              ;(essentially $2000) but save other bits
+  lda Mirror_PPUMASK       ;disable OAM and background display by default
   and #%11100110
   ldy DisableScreenFlag     ;get screen disable flag
   bne ScreenOff             ;if set, used bits as-is
-    lda Mirror_PPU_MASK     ;otherwise reenable bits and save them
+    lda Mirror_PPUMASK     ;otherwise reenable bits and save them
     ora #%00011110
 ScreenOff:
-  sta Mirror_PPU_MASK       ;save bits for later but not in register at the moment
+  sta Mirror_PPUMASK       ;save bits for later but not in register at the moment
   and #%11100111            ;disable screen for now
-  sta PPU_MASK
-  ldx PPU_STATUS            ;reset flip-flop and reset scroll registers to zero
+  sta PPUMASK
+  ldx PPUSTATUS            ;reset flip-flop and reset scroll registers to zero
   lda #$00
   jsr InitScroll
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
@@ -170,48 +172,49 @@ InitBuffer:
   sta VRAM_Buffer1_Offset,x        
   sta VRAM_Buffer1,x
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
-  lda Mirror_PPU_MASK       ;copy mirror of $2001 to register
-  sta PPU_MASK
+  lda Mirror_PPUMASK       ;copy mirror of $2001 to register
+  sta PPUMASK
   
   lda Sprite0HitDetectFlag  ;check for flag here
   beq :+
     ; jroweboy - set up Irq scroll split
     lda HorizontalScroll
     sta IrqNewScroll
-    lda #31 ; do the split 32 pixels from the top of the screen
+    lda #32 ; do the split 32 scanlines from the top of the screen
     sta IRQLATCH
     sta IRQRELOAD
     sta IRQENABLE
 :
   lda #0
-  sta PPU_SPR_ADDR          ;reset spr-ram address register
+  sta OAMADDR               ;reset spr-ram address register
   jsr OAMandReadJoypad
 
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore
+
   lda GamePauseStatus       ;check for pause status
   lsr
   bcs PauseSkip
-  lda TimerControl          ;if master timer control not set, decrement
-  beq DecTimers             ;all frame and interval timers
-    dec TimerControl
-  bne NoDecTimers
-  DecTimers:
-    ldx #$14                  ;load end offset for end of frame timers
-    dec IntervalTimerControl  ;decrement interval timer control,
-    bpl DecTimersLoop         ;if not expired, only frame timers will decrement
-    lda #$14
-    sta IntervalTimerControl  ;if control for interval timers expired,
-    ldx #$23                  ;interval timers will decrement along with frame timers
-  DecTimersLoop:
-      lda Timers,x              ;check current timer
-      beq SkipExpTimer          ;if current timer expired, branch to skip,
-        dec Timers,x              ;otherwise decrement the current timer
-    SkipExpTimer:
-      dex                       ;move onto next timer
-      bpl DecTimersLoop         ;do this until all timers are dealt with
-NoDecTimers:
-  inc FrameCounter          ;increment frame counter
+    lda TimerControl          ;if master timer control not set, decrement
+    beq DecTimers             ;all frame and interval timers
+      dec TimerControl
+    bne NoDecTimers
+    DecTimers:
+      ldx #$14                  ;load end offset for end of frame timers
+      dec IntervalTimerControl  ;decrement interval timer control,
+      bpl DecTimersLoop         ;if not expired, only frame timers will decrement
+      lda #$14
+      sta IntervalTimerControl  ;if control for interval timers expired,
+      ldx #$23                  ;interval timers will decrement along with frame timers
+    DecTimersLoop:
+        lda Timers,x              ;check current timer
+        beq SkipExpTimer          ;if current timer expired, branch to skip,
+          dec Timers,x              ;otherwise decrement the current timer
+      SkipExpTimer:
+        dex                       ;move onto next timer
+        bpl DecTimersLoop         ;do this until all timers are dealt with
+  NoDecTimers:
+    inc FrameCounter          ;increment frame counter
 PauseSkip:
   ldx #$00
   ldy #$07
@@ -231,35 +234,19 @@ RotPRandomBit:
     bne RotPRandomBit
   lda Sprite0HitDetectFlag  ;check for flag here
   beq SkipIrq
-  lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
-  lsr
+    lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
+    lsr
   bcs SkipSprites
-  jsr MoveSpritesOffscreen
-  jsr SpriteShuffler
-; Sprite0Hit:
-;     lda PPU_STATUS            ;do sprite #0 hit detection
-;     and #%01000000
-;     beq Sprite0Hit
-;   ldy #$14                  ;small delay, to wait until we hit horizontal blank time
-; HBlankDelay:
-;     dey
-;     bne HBlankDelay
+    jsr MoveSpritesOffscreen
+    jsr SpriteShuffler
 SkipSprites:
 SkipIrq:
-  farcall SoundEngine           ;play sound
-  lda Mirror_PPU_CTRL       ;load saved mirror of $2000
+  ; copy the PPUCTRL flags to the version that we will write in the IRQ.
+  ; this will restore the nmt select in the flags here.
+  lda Mirror_PPUCTRL
   sta IrqPPUCTRL
-  ; ; pha
-  ;   sta PPU_CTRL
-    ; lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
-    ; lsr
-    ; bcs SkipMainOper
-    ; jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+  farcall SoundEngine           ;play sound
 SkipMainOper:
-    ; lda PPU_STATUS            ;reset flip-flop
-  ; pla
-  ; ora #%10000000            ;reactivate NMIs
-  ; sta PPU_CTRL
   ply
   plx
   pla

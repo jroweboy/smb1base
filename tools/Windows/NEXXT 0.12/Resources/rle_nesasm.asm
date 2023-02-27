@@ -1,6 +1,6 @@
 ;RLE decompressor by Shiru (NESASM version)
 ;uses 4 bytes in zero page
-;decompress data from an address in X/Y to PPU_DATA
+;decompress data from an address in X/Y to PPUDATA
 
 RLE_LOW		equ $00
 RLE_HIGH	equ RLE_LOW+1
@@ -18,7 +18,7 @@ unrle
 	jsr rle_byte
 	cmp RLE_TAG
 	beq .2
-	sta PPU_DATA
+	sta PPUDATA
 	sta RLE_BYTE
 	bne .1
 .2
@@ -28,7 +28,7 @@ unrle
 	tax
 	lda RLE_BYTE
 .3
-	sta PPU_DATA
+	sta PPUDATA
 	dex
 	bne .3
 	beq .1

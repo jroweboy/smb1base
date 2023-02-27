@@ -7,14 +7,14 @@ __CONSTANTS_INC = 1
 
 ;NES specific hardware defines
 
-PPU_CTRL         = $2000
-PPU_MASK         = $2001
-PPU_STATUS            = $2002
-PPU_SPR_ADDR          = $2003
-PPU_SPR_DATA          = $2004
-PPU_SCROLL_REG        = $2005
-PPU_ADDRESS           = $2006
-PPU_DATA              = $2007
+PPUCTRL               = $2000
+PPUMASK               = $2001
+PPUSTATUS             = $2002
+OAMADDR               = $2003
+OAMDATA               = $2004
+PPUSCROLL             = $2005
+PPUADDR               = $2006
+PPUDATA               = $2007
 
 SND_REGISTER          = $4000
 SND_SQUARE1_REG       = $4000

@@ -1496,10 +1496,10 @@ ScrollScreen:
   sta ScreenLeft_PageLoc    ;side of the screen
   and #$01                  ;get LSB of page location
   sta $00                   ;save as temp variable for PPU register 1 mirror
-  lda Mirror_PPU_CTRL       ;get PPU register 1 mirror
+  lda Mirror_PPUCTRL       ;get PPU register 1 mirror
   and #%11111110            ;save all bits except d0
   ora $00                   ;get saved bit here and save in PPU register 1
-  sta Mirror_PPU_CTRL       ;mirror to be used to set name table later
+  sta Mirror_PPUCTRL       ;mirror to be used to set name table later
   jsr GetScreenPosition     ;figure out where the right side is
             ;   lda #$08
             ;   sta ScrollIntervalTimer   ;set scroll timer (residualremoved, not used elsewhere)

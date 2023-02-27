@@ -461,8 +461,8 @@ __MEMORY_INC = 1
 .global ScrollAmount
 .global GamePauseStatus
 .global GamePauseTimer
-.global Mirror_PPU_CTRL
-.global Mirror_PPU_MASK
+.global Mirror_PPUCTRL
+.global Mirror_PPUMASK
 .global NumberOfPlayers
 .global IntervalTimerControl
 

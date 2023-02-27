@@ -255,7 +255,7 @@
             "id": "inputId",
             "type": "command",
             "command": "watch-run.getFilename",
-            "args" : "compile_one"
+            "args" : "compile"
         },
         {
             "id": "fileAsTarget",
