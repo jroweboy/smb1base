@@ -175,16 +175,16 @@ InitBuffer:
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
   
-  lda Sprite0HitDetectFlag  ;check for flag here
-  beq :+
-    ; jroweboy - set up Irq scroll split
-    lda HorizontalScroll
-    sta IrqNewScroll
-    lda #32 ; do the split 32 scanlines from the top of the screen
-    sta IRQLATCH
-    sta IRQRELOAD
-    sta IRQENABLE
-:
+  ; lda Sprite0HitDetectFlag  ;check for flag here
+  ; beq :+
+  ; jroweboy - set up Irq scroll split
+  lda HorizontalScroll
+  sta IrqNewScroll
+  lda #32 ; do the split 32 scanlines from the top of the screen
+  sta IRQLATCH
+  sta IRQRELOAD
+  sta IRQENABLE
+; :
   lda #0
   sta OAMADDR               ;reset spr-ram address register
   jsr OAMandReadJoypad
@@ -233,14 +233,13 @@ RotPRandomBit:
     dey                       ;decrement for loop
     bne RotPRandomBit
   lda Sprite0HitDetectFlag  ;check for flag here
-  beq SkipIrq
+  beq SkipSprite0
     lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
     lsr
-  bcs SkipSprites
-    jsr MoveSpritesOffscreen
-    jsr SpriteShuffler
-SkipSprites:
-SkipIrq:
+    bcs SkipSprite0
+      jsr MoveSpritesOffscreen
+      jsr SpriteShuffler
+SkipSprite0:
   ; copy the PPUCTRL flags to the version that we will write in the IRQ.
   ; this will restore the nmt select in the flags here.
   lda Mirror_PPUCTRL
