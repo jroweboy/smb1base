@@ -120,7 +120,7 @@ StarBlock:
 
 ExtraLifeMushBlock:
       lda #$03         ;load 1-up mushroom into power-up type
-      sta $39          ;store correct power-up type
+      sta PowerUpType  ;store correct power-up type
       jmp SetupPowerUp
 
 VineBlock:
