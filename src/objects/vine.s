@@ -83,7 +83,7 @@ WrCMTile:  lda Vine_Height            ;check vine height
            lda #$01                  ;set A to obtain horizontal in $04, but we don't care
            ldy #$1b                  ;set Y to offset to get block at ($04, $10) of coordinates
            jsr BlockBufferCollision  ;do a sub to get block buffer address set, return contents
-           ldy $02
+           ldy R2
            cpy #$d0                  ;if vertical high nybble offset beyond extent of
            bcs ExitVH                ;current block buffer, branch to leave, do not write
            lda ($06),y               ;otherwise check contents of block buffer at 

@@ -18,16 +18,16 @@ MoveSwimmingCheepCheep:
         and #%00100000            ;for d5 set
         beq CCSwim                ;if not set, continue with movement code
         jmp MoveEnemySlowVert     ;otherwise jump to move defeated cheep-cheep downwards
-CCSwim: sta $03                   ;save enemy state in $03
+CCSwim: sta R3                   ;save enemy state in $03
         lda Enemy_ID,x            ;get enemy identifier
         sec
         sbc #$0a                  ;subtract ten for cheep-cheep identifiers
         tay                       ;use as offset
         lda SwimCCXMoveData,y     ;load value here
-        sta $02
+        sta R2
         lda Enemy_X_MoveForce,x   ;load horizontal force
         sec
-        sbc $02                   ;subtract preset value from horizontal force
+        sbc R2                   ;subtract preset value from horizontal force
         sta Enemy_X_MoveForce,x   ;store as new horizontal force
         lda Enemy_X_Position,x    ;get horizontal coordinate
         sbc #$00                  ;subtract borrow (thus moving it slowly)
@@ -36,7 +36,7 @@ CCSwim: sta $03                   ;save enemy state in $03
         sbc #$00                  ;subtract borrow again, this time from the
         sta Enemy_PageLoc,x       ;page location, then save
         lda #$20
-        sta $02                   ;save new value here
+        sta R2                   ;save new value here
         cpx #$02                  ;check enemy object offset
         bcc ExSwCC                ;if in first or second slot, branch to leave
         lda CheepCheepMoveMFlag,x ;check movement flag
@@ -44,10 +44,10 @@ CCSwim: sta $03                   ;save enemy state in $03
         bcc CCSwimUpwards         ;branch to move upwards
         lda Enemy_YMoveForceFractional,x
         clc
-        adc $02                   ;add preset value to dummy variable to get carry
+        adc R2                   ;add preset value to dummy variable to get carry
         sta Enemy_YMoveForceFractional,x     ;and save dummy
         lda Enemy_Y_Position,x    ;get vertical coordinate
-        adc $03                   ;add carry to it plus enemy state to slowly move it downwards
+        adc R3                   ;add carry to it plus enemy state to slowly move it downwards
         sta Enemy_Y_Position,x    ;save as new vertical coordinate
         lda Enemy_Y_HighPos,x
         adc #$00                  ;add carry to page location and
@@ -56,10 +56,10 @@ CCSwim: sta $03                   ;save enemy state in $03
 CCSwimUpwards:
         lda Enemy_YMoveForceFractional,x
         sec
-        sbc $02                   ;subtract preset value to dummy variable to get borrow
+        sbc R2                   ;subtract preset value to dummy variable to get borrow
         sta Enemy_YMoveForceFractional,x     ;and save dummy
         lda Enemy_Y_Position,x    ;get vertical coordinate
-        sbc $03                   ;subtract borrow to it plus enemy state to slowly move it upwards
+        sbc R3                   ;subtract borrow to it plus enemy state to slowly move it upwards
         sta Enemy_Y_Position,x    ;save as new vertical coordinate
         lda Enemy_Y_HighPos,x
         sbc #$00                  ;subtract borrow from page location

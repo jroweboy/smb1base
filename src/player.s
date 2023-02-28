@@ -200,7 +200,7 @@ PlayerHole: lda Player_Y_HighPos        ;check player's vertical high byte
             ldx #$01
             stx ScrollLock              ;set scroll lock
             ldy #$04
-            sty $07                     ;set value here
+            sty R7                     ;set value here
             ldx #$00                    ;use X as flag, and clear for cloud level
             ldy GameTimerExpiredFlag    ;check game timer expiration flag
             bne HoleDie                 ;if set, branch
@@ -216,8 +216,8 @@ HoleDie:    inx                         ;set flag in X for player death
             sty EventMusicQueue         ;otherwise play death music
             sty DeathMusicLoaded        ;and set value here
 HoleBottom: ldy #$06
-            sty $07                     ;change value here
-ChkHoleX:   cmp $07                     ;compare vertical high byte with value set here
+            sty R7                     ;change value here
+ChkHoleX:   cmp R7                     ;compare vertical high byte with value set here
             bmi ExitCtrl                ;if less, branch to leave
             dex                         ;otherwise decrement flag in X
             bmi CloudExit               ;if flag was clear, branch to set modes and other values
@@ -534,9 +534,9 @@ RunFB:   txa                          ;add 7 to offset to use
          adc #$07
          tax
          lda #$50                     ;set downward movement force here
-         sta $00
+         sta R0
          lda #$03                     ;set maximum speed here
-         sta $02
+         sta R2
          lda #$00
          jsr ImposeGravity            ;do sub here to impose gravity on fireball and move vertically
          jsr MoveObjectHorizontally   ;do another sub to move it horizontally
@@ -558,7 +558,7 @@ NoFBall: rts                          ;leave
 BubbleCheck:
       lda PseudoRandomBitReg+1,x  ;get part of LSFR
       and #$01
-      sta $07                     ;store pseudorandom bit here
+      sta R7                     ;store pseudorandom bit here
       lda Bubble_Y_Position,x     ;get vertical coordinate for air bubble
       cmp #$f8                    ;if offscreen coordinate not set,
       bne MoveBubl                ;branch to move air bubble
@@ -583,10 +583,10 @@ PosBubl:  tya                      ;use value loaded as adder
           sta Bubble_Y_Position,x  ;save as vertical position for air bubble
           lda #$01
           sta Bubble_Y_HighPos,x   ;set vertical high byte for air bubble
-          ldy $07                  ;get pseudorandom bit, use as offset
+          ldy R7                  ;get pseudorandom bit, use as offset
           lda BubbleTimerData,y    ;get data for air bubble timer
           sta AirBubbleTimer       ;set air bubble timer
-MoveBubl: ldy $07                  ;get pseudorandom bit again, use as offset
+MoveBubl: ldy R7                  ;get pseudorandom bit again, use as offset
           lda Bubble_YMoveForceFractional,x
           sec                      ;subtract pseudorandom amount from dummy variable
           sbc Bubble_MForceData,y
@@ -612,7 +612,7 @@ BubbleTimerData:
   ldx #$05                       ;store data into zero page memory
 PIntLoop:
     lda IntermediatePlayerData,x   ;load data to display player as he always
-    sta $02,x                      ;appears on world/lives display
+    sta R2,x                      ;appears on world/lives display
     dex
     bpl PIntLoop                   ;do this until all data is loaded
   ldx #$b8                       ;load offset for small standing
@@ -637,25 +637,25 @@ IntermediatePlayerData:
 ;these also used in IntermediatePlayerData
 
 RenderPlayerSub:
-  sta $07                      ;store number of rows of sprites to draw
+  sta R7                      ;store number of rows of sprites to draw
   lda Player_Rel_XPos
   sta Player_Pos_ForScroll     ;store player's relative horizontal position
-  sta $05                      ;store it here also
+  sta R5                      ;store it here also
   lda Player_Rel_YPos
-  sta $02                      ;store player's vertical position
+  sta R2                      ;store player's vertical position
   lda PlayerFacingDir
-  sta $03                      ;store player's facing direction
+  sta R3                      ;store player's facing direction
   lda Player_SprAttrib
-  sta $04                      ;store player's sprite attributes
+  sta R4                      ;store player's sprite attributes
   ldx PlayerGfxOffset          ;load graphics table offset
   ldy Player_SprDataOffset     ;get player's sprite data offset
 
 DrawPlayerLoop:
     lda PlayerGraphicsTable,x    ;load player's left side
-    sta $00
+    sta R0
     lda PlayerGraphicsTable+1,x  ;now load right side
     jsr DrawOneSpriteRow
-    dec $07                      ;decrement rows of sprites to draw
+    dec R7                      ;decrement rows of sprites to draw
     bne DrawPlayerLoop           ;do this until all rows are drawn  
   rts
 
@@ -785,7 +785,7 @@ PlayerOffscreenChk:
   lsr                           ;move vertical bits to low nybble
   lsr
   lsr
-  sta $00                       ;store here
+  sta R0                       ;store here
   ldx #$03                      ;check all four rows of player sprites
   lda Player_SprDataOffset      ;get player's sprite data offset
   clc
@@ -793,7 +793,7 @@ PlayerOffscreenChk:
   tay                           ;set as offset here
 PROfsLoop:
     lda #$f8                      ;load offscreen Y coordinate just in case
-    lsr $00                       ;shift bit into carry
+    lsr R0                       ;shift bit into carry
     bcc NPROffscr                 ;if bit not set, skip, do not move sprites
     jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
 NPROffscr:
@@ -906,7 +906,7 @@ ExitTask:
   rts                       ;leave
 
 CyclePlayerPalettePreload:
-  lda $00
+  lda R0
   jmp CyclePlayerPalette
 
 PlayerFireFlower: 
@@ -919,10 +919,10 @@ PlayerFireFlower:
 
 CyclePlayerPalette:
   and #$03              ;mask out all but d1-d0 (previously d3-d2)
-  sta $00               ;store result here to use as palette bits
+  sta R0               ;store result here to use as palette bits
   lda Player_SprAttrib  ;get player attributes
   and #%11111100        ;save any other bits but palette bits
-  ora $00               ;add palette bits
+  ora R0               ;add palette bits
   sta Player_SprAttrib  ;store as new player attributes
   rts                   ;and leave
 
@@ -1117,11 +1117,11 @@ ClimbingSub:
              lda Player_Y_Speed       ;get player's vertical speed
              bpl MoveOnVine           ;if not moving upwards, branch
              dey                      ;otherwise set adder to $ff
-MoveOnVine:  sty $00                  ;store adder here
+MoveOnVine:  sty R0                  ;store adder here
              adc Player_Y_Position    ;add carry to player's vertical position
              sta Player_Y_Position    ;and store to move player up or down
              lda Player_Y_HighPos
-             adc $00                  ;add carry to player's page location
+             adc R0                  ;add carry to player's page location
              sta Player_Y_HighPos     ;and store
              lda Left_Right_Buttons   ;compare left/right controller bits
              and Player_CollisionBits ;to collision flag
@@ -1282,7 +1282,7 @@ PJumpSnd:  lda #Sfx_BigJump           ;load big mario's jump sound by default
            lda #Sfx_SmallJump         ;if not, load small mario's jump sound
 SJumpSnd:  sta Square1SoundQueue      ;store appropriate jump sound in square 1 sfx queue
 X_Physics: ldy #$00
-           sty $00                    ;init value here
+           sty R0                    ;init value here
            lda Player_State           ;if mario is on the ground, branch
            beq ProcPRun
            lda Player_XSpeedAbsolute  ;check something that seems to be related
@@ -1302,13 +1302,13 @@ ProcPRun:  iny                        ;if mario on the ground, increment Y
            lda RunningTimer           ;check for running timer set
            bne GetXPhy                ;if set, branch
 ChkRFast:  iny                        ;if running timer not set or level type is water, 
-           inc $00                    ;increment Y again and temp variable in memory
+           inc R0                    ;increment Y again and temp variable in memory
            lda RunningSpeed
            bne FastXSp                ;if running speed set here, branch
            lda Player_XSpeedAbsolute
            cmp #$21                   ;otherwise check player's walking/running speed
            bcc GetXPhy                ;if less than a certain amount, branch ahead
-FastXSp:   inc $00                    ;if running speed set or speed => $21 increment $00
+FastXSp:   inc R0                    ;if running speed set or speed => $21 increment $00
            jmp GetXPhy                ;and jump ahead
 SetRTmr:   lda #$0a                   ;if b button pressed, set running timer
            sta RunningTimer
@@ -1320,7 +1320,7 @@ GetXPhy:   lda MaxLeftXSpdData,y      ;get maximum speed to the left
            ldy #$03                   ;otherwise set Y to 3
 GetXPhy2:  lda MaxRightXSpdData,y     ;get maximum speed to the right
            sta MaximumRightSpeed
-           ldy $00                    ;get other value in memory
+           ldy R0                    ;get other value in memory
            lda FrictionData,y         ;get value using value in memory as offset
            sta FrictionAdderLow
            lda #$00
@@ -1495,10 +1495,10 @@ ScrollScreen:
   adc #$00                  ;add carry to page location for left
   sta ScreenLeft_PageLoc    ;side of the screen
   and #$01                  ;get LSB of page location
-  sta $00                   ;save as temp variable for PPU register 1 mirror
+  sta R0                   ;save as temp variable for PPU register 1 mirror
   lda Mirror_PPUCTRL       ;get PPU register 1 mirror
   and #%11111110            ;save all bits except d0
-  ora $00                   ;get saved bit here and save in PPU register 1
+  ora R0                   ;get saved bit here and save in PPU register 1
   sta Mirror_PPUCTRL       ;mirror to be used to set name table later
   jsr GetScreenPosition     ;figure out where the right side is
             ;   lda #$08
@@ -1510,12 +1510,12 @@ InitScrlAmt:
 ChkPOffscr:
   ldx #$00                  ;set X for player offset
   jsr GetXOffscreenBits     ;get horizontal offscreen bits for player
-  sta $00                   ;save them here
+  sta R0                   ;save them here
   ldy #$00                  ;load default offset (left side)
   asl                       ;if d7 of offscreen bits are set,
   bcs KeepOnscr             ;branch with default offset
     iny                         ;otherwise use different offset (right side)
-    lda $00
+    lda R0
     and #%00100000              ;check offscreen bits for d5 set
     beq InitPlatScrl            ;if not set, branch ahead of this part
 KeepOnscr:
@@ -1622,7 +1622,7 @@ ThreeFrameExtent:
   lda #$02              ;load upper extent for frame control for climbing
 
 AnimationControl:
-  sta $00                   ;store upper extent here
+  sta R0                   ;store upper extent here
   jsr GetCurrentAnimOffset  ;get proper offset to graphics table
   pha                       ;save offset to stack
     lda PlayerAnimTimer       ;load animation frame timer
@@ -1632,7 +1632,7 @@ AnimationControl:
       lda PlayerAnimCtrl
       clc                       ;add one to animation frame control
       adc #$01
-      cmp $00                   ;compare to upper extent
+      cmp R0                   ;compare to upper extent
       bcc SetAnimC              ;if frame control + 1 < upper extent, use as next
         lda #$00                  ;otherwise initialize frame control
 SetAnimC:
@@ -1697,6 +1697,6 @@ MovePlayerVertically:
   bne ExPlyrAt             ;branch to leave if so
 NoJSChk:
   lda VerticalForce       ;dump vertical force 
-  sta $00
+  sta R0
   lda #$04                ;set maximum vertical speed here
   jmp ImposeGravitySprObj ;then jump to move player vertically

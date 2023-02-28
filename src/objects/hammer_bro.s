@@ -71,15 +71,15 @@ HammerBroJumpCode:
        cmp #$01                    ;check for d0 set (for jumping)
        beq MoveHammerBroXDir       ;if set, branch ahead to moving code
        lda #$00                    ;load default value here
-       sta $00                     ;save into temp variable for now
+       sta R0                     ;save into temp variable for now
        ldy #$fa                    ;set default vertical speed
        lda Enemy_Y_Position,x      ;check hammer bro's vertical coordinate
        bmi SetHJ                   ;if on the bottom half of the screen, use current speed
        ldy #$fd                    ;otherwise set alternate vertical speed
        cmp #$70                    ;check to see if hammer bro is above the middle of screen
-       inc $00                     ;increment preset value to $01
+       inc R0                     ;increment preset value to $01
        bcc SetHJ                   ;if above the middle of the screen, use current speed and $01
-       dec $00                     ;otherwise return value to $00
+       dec R0                     ;otherwise return value to $00
        lda PseudoRandomBitReg+1,x  ;get part of LSFR, mask out all but LSB
        and #$01
        bne SetHJ                   ;if d0 of LSFR set, branch and use current speed and $00
@@ -88,7 +88,7 @@ SetHJ: sty Enemy_Y_Speed,x         ;set vertical speed for jumping
        lda Enemy_State,x           ;set d0 in enemy state for jumping
        ora #$01
        sta Enemy_State,x
-       lda $00                     ;load preset value here to use as bitmask
+       lda R0                     ;load preset value here to use as bitmask
        and PseudoRandomBitReg+2,x  ;and do bit-wise comparison with part of LSFR
        tay                         ;then use as offset
        lda SecondaryHardMode       ;check secondary hard mode flag

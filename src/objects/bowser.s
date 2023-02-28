@@ -80,10 +80,10 @@ RemoveBridge:
   eor #$01                  ;invert bit to control bowser's feet
   sta BowserBodyControls
   lda #$22                  ;put high byte of name table address here for now
-  sta $05
+  sta R5
   ldy BridgeCollapseOffset  ;get bridge collapse offset here
   lda BridgeCollapseData,y  ;load low byte of name table address and store here
-  sta $04
+  sta R4
   ldy VRAM_Buffer1_Offset   ;increment vram buffer offset
   iny
   ldx #$0c                  ;set offset for tile data for sub to draw blank metatile
@@ -332,10 +332,10 @@ ProcBowserFlame:
          ldy SecondaryHardMode
          beq SFlmX                   ;if secondary hard mode flag not set, use default
          lda #$60                    ;otherwise load alternate movement force to go faster
-SFlmX:   sta $00                     ;store value here
+SFlmX:   sta R0                     ;store value here
          lda Enemy_X_MoveForce,x
          sec                         ;subtract value from movement force
-         sbc $00
+         sbc R0
          sta Enemy_X_MoveForce,x     ;save new value
          lda Enemy_X_Position,x
          sbc #$01                    ;subtract one from horizontal position to move
@@ -354,23 +354,23 @@ SetGfxF: jsr RelativeEnemyPosition   ;get new relative coordinates
          lda Enemy_State,x           ;if bowser's flame not in normal state,
          bne ExFl                    ;branch to leave
          lda #$51                    ;otherwise, continue
-         sta $00                     ;write first tile number
+         sta R0                     ;write first tile number
          ldy #$02                    ;load attributes without vertical flip by default
          lda FrameCounter
          and #%00000010              ;invert vertical flip bit every 2 frames
          beq FlmeAt                  ;if d1 not set, write default value
          ldy #$82                    ;otherwise write value with vertical flip bit set
-FlmeAt:  sty $01                     ;set bowser's flame sprite attributes here
+FlmeAt:  sty R1                     ;set bowser's flame sprite attributes here
          ldy Enemy_SprDataOffset,x   ;get OAM data offset
          ldx #$00
 
 DrawFlameLoop:
          lda Enemy_Rel_YPos         ;get Y relative coordinate of current enemy object
          sta Sprite_Y_Position,y    ;write into Y coordinate of OAM data
-         lda $00
+         lda R0
          sta Sprite_Tilenumber,y    ;write current tile number into OAM data
-         inc $00                    ;increment tile number to draw more bowser's flame
-         lda $01
+         inc R0                    ;increment tile number to draw more bowser's flame
+         lda R1
          sta Sprite_Attributes,y    ;write saved attributes into OAM data
          lda Enemy_Rel_XPos
          sta Sprite_X_Position,y    ;write X relative coordinate of current enemy object
@@ -482,7 +482,7 @@ SetMF: lda FlameYMFAdderData,y   ;get value here and save
        sta EnemyFrenzyBuffer     ;clear enemy frenzy buffer
 
 FinishFlame:
-      lda #$08                 ;set $08 for bounding box control
+      lda #$08                 ;set R8 for bounding box control
       sta Enemy_BoundBoxCtrl,x
       lda #$01                 ;set high byte of vertical and
       sta Enemy_Y_HighPos,x    ;enemy buffer flag

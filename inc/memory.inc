@@ -6,7 +6,15 @@ __MEMORY_INC = 1
 ; ------------------------------R -------A --------M ----------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------
 
-.globalzp temp_byte
+.globalzp R0
+.globalzp R1
+.globalzp R2
+.globalzp R3
+.globalzp R4
+.globalzp R5
+.globalzp R6
+.globalzp R7
+
 .globalzp ObjectOffset
 .globalzp FrameCounter
 
@@ -126,7 +134,12 @@ __MEMORY_INC = 1
 .globalzp EnemyDataLow
 .globalzp EnemyDataHigh
 
-.globalzp dummylabel
+.globalzp SpriteLocalTemp
+.globalzp Local_eb
+.globalzp Local_ec
+.globalzp Local_ed
+.globalzp Local_ee ; jroweboy: unused?
+.globalzp Local_ef
 
 .globalzp NoteLenLookupTblOfs
 .globalzp Square1SoundBuffer

@@ -3,7 +3,16 @@
 
 .segment "ZEROPAGE"
 
-temp_byte:                      .res  8 ; local  temp pointers and vars
+TempReg:                        .res  8 ; local  temp pointers and vars
+R0                             = TempReg
+R1                             = TempReg + 1
+R2                             = TempReg + 2
+R3                             = TempReg + 3
+R4                             = TempReg + 4
+R5                             = TempReg + 5
+R6                             = TempReg + 6
+R7                             = TempReg + 7
+
 ObjectOffset:                   .res  1
 FrameCounter:                   .res  1
 
@@ -137,7 +146,12 @@ EnemyData                     = EnemyDataLow
 EnemyDataLow:                   .res  1
 EnemyDataHigh:                  .res  1
 
-dummylabel:                     .res  5 ; = start at $EB, reserve 5 bytes for local use.
+SpriteLocalTemp:                .res  5
+Local_eb                      = SpriteLocalTemp
+Local_ec                      = SpriteLocalTemp + 1
+Local_ed                      = SpriteLocalTemp + 2
+Local_ee                      = SpriteLocalTemp + 3 ; jroweboy: unused?
+Local_ef                      = SpriteLocalTemp + 4
 
 NoteLenLookupTblOfs:            .res  1
 Square1SoundBuffer:             .res  1

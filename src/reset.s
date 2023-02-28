@@ -88,7 +88,7 @@ MMC3Init:
   sta RAM_PROTECT
   sta IRQENABLE
   lda #$ff
-  sta $4017 ; disable frame counter
+  sta APU_FRAMECOUNTER ; disable frame counter
   ; re-enable interrupts so the scanline irq can run
   cli
 FinializeMarioInit:
@@ -157,9 +157,9 @@ ScreenOff:
   jsr InitScroll
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
   lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
-  sta $00
+  sta R0
   lda VRAM_AddrTable_High,x
-  sta $01
+  sta R1
   jsr UpdateScreen          ;update screen with buffer contents
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
@@ -220,10 +220,10 @@ PauseSkip:
   ldy #$07
   lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
   and #%00000010            ;mask out all but d1
-  sta $00                   ;save here
+  sta R0                   ;save here
   lda PseudoRandomBitReg+1  ;get second memory location
   and #%00000010            ;mask out all but d1
-  eor $00                   ;perform exclusive-OR on d1 from first and second bytes
+  eor R0                   ;perform exclusive-OR on d1 from first and second bytes
   clc                       ;if neither or both are set, carry will be clear
   beq RotPRandomBit
   sec                       ;if one or the other is set, carry will be set
@@ -424,9 +424,9 @@ SkipByte:
 ; PortLoop:
 ;   pha                    ;push previous bit onto stack
 ;     lda JOYPAD_PORT,x      ;read current bit on joypad port
-;     sta $00                ;check d1 and d0 of port output
+;     sta R0                ;check d1 and d0 of port output
 ;     lsr                    ;this is necessary on the old
-;     ora $00                ;famicom systems in japan
+;     ora R0                ;famicom systems in japan
 ;     lsr
 ;     pla                    ;read bits from stack
 ;     rol                    ;rotate bit from carry flag
@@ -469,18 +469,18 @@ ASSERT_PAGE read_loop
 ;$00 - used for preset value
 .proc SpriteShuffler
   lda #$28                    ;load preset value which will put it at
-  sta $00                     ;sprite #10
+  sta R0                     ;sprite #10
   ldx #$0e                    ;start at the end of OAM data offsets
 ShuffleLoop:
     lda SprDataOffset,x         ;check for offset value against
-    cmp $00                     ;the preset value
+    cmp R0                     ;the preset value
     bcc NextSprOffset           ;if less, skip this part
     ldy SprShuffleAmtOffset     ;get current offset to preset value we want to add
     clc
     adc SprShuffleAmt,y         ;get shuffle amount, add to current sprite offset
     bcc StrSprOffset            ;if not exceeded $ff, skip second add
     clc
-    adc $00                     ;otherwise add preset value $28 to offset
+    adc R0                     ;otherwise add preset value $28 to offset
 StrSprOffset:
     sta SprDataOffset,x         ;store new offset here or old one if branched to here
 NextSprOffset: 

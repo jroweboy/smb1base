@@ -22,13 +22,13 @@ VineYPosAdder:
       .byte $00, $30
 
 DrawVine:
-         sty $00                    ;save offset here
+         sty R0                    ;save offset here
          lda Enemy_Rel_YPos         ;get relative vertical coordinate
          clc
          adc VineYPosAdder,y        ;add value using offset in Y to get value
          ldx Vine_ObjOffset,y        ;get offset to vine
          ldy Enemy_SprDataOffset,x  ;get sprite data offset
-         sty $02                    ;store sprite data offset here
+         sty R2                    ;store sprite data offset here
          jsr SixSpriteStacker       ;stack six sprites on top of each other vertically
          lda Enemy_Rel_XPos         ;get relative horizontal coordinate
          sta Sprite_X_Position,y    ;store in first, third and fifth sprites
@@ -56,8 +56,8 @@ VineTL:  lda #$e1                   ;set tile number for sprite
          iny
          dex                        ;move onto next sprite
          bpl VineTL                 ;loop until all sprites are done
-         ldy $02                    ;get original offset
-         lda $00                    ;get offset to vine adding data
+         ldy R2                    ;get original offset
+         lda R0                    ;get offset to vine adding data
          bne SkpVTop                ;if offset not zero, skip this part
          lda #$e0
          sta Sprite_Tilenumber,y    ;set other tile number for top of vine
@@ -76,7 +76,7 @@ NextVSp: iny                        ;move offset to next OAM data
          inx                        ;move onto next sprite
          cpx #$06                   ;do this until all sprites are checked
          bne ChkFTop
-         ldy $00                    ;return offset set earlier
+         ldy R0                    ;return offset set earlier
          rts
 
 SixSpriteStacker:
@@ -90,7 +90,7 @@ StkLp: sta Sprite_Data,y ;store X or Y coordinate into OAM data
        iny
        dex                ;do another sprite
        bne StkLp          ;do this until all sprites are done
-       ldy $02            ;get saved OAM data offset and leave
+       ldy R2            ;get saved OAM data offset and leave
        rts
 
 ;-------------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ NoHOffscr:  rts ; TODO check this RTS can be removed                         ;le
 
 DrawLargePlatform:
       ldy Enemy_SprDataOffset,x   ;get OAM data offset
-      sty $02                     ;store here
+      sty R2                     ;store here
       iny                         ;add 3 to it for offset
       iny                         ;to X coordinate
       iny
@@ -321,42 +321,42 @@ DrawPowerUp:
       lda Enemy_Rel_YPos         ;get relative vertical coordinate
       clc
       adc #$08                   ;add eight pixels
-      sta $02                    ;store result here
+      sta R2                    ;store result here
       lda Enemy_Rel_XPos         ;get relative horizontal coordinate
-      sta $05                    ;store here
+      sta R5                    ;store here
       ldx PowerUpType            ;get power-up type
       lda PowerUpAttributes,x    ;get attribute data for power-up type
       ora Enemy_SprAttrib+5      ;add background priority bit if set
-      sta $04                    ;store attributes here
+      sta R4                    ;store attributes here
       txa
       pha                        ;save power-up type to the stack
       asl
       asl                        ;multiply by four to get proper offset
       tax                        ;use as X
       lda #$01
-      sta $07                    ;set counter here to draw two rows of sprite object
-      sta $03                    ;init d1 of flip control
+      sta R7                    ;set counter here to draw two rows of sprite object
+      sta R3                    ;init d1 of flip control
 
 PUpDrawLoop:
         lda PowerUpGfxTable,x      ;load left tile of power-up object
-        sta $00
+        sta R0
         lda PowerUpGfxTable+1,x    ;load right tile
         jsr DrawOneSpriteRow       ;branch to draw one row of our power-up object
-        dec $07                    ;decrement counter
+        dec R7                    ;decrement counter
         bpl PUpDrawLoop            ;branch until two rows are drawn
         ldy Enemy_SprDataOffset+5  ;get sprite data offset again
         pla                        ;pull saved power-up type from the stack
         beq PUpOfs                 ;if regular mushroom, branch, do not change colors or flip
         cmp #$03
         beq PUpOfs                 ;if 1-up mushroom, branch, do not change colors or flip
-        sta $00                    ;store power-up type here now
+        sta R0                    ;store power-up type here now
         lda FrameCounter           ;get frame counter
         lsr                        ;divide by 2 to change colors every two frames
         and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
         ora Enemy_SprAttrib+5      ;add background priority bit if any set
         sta Sprite_Attributes,y    ;set as new palette bits for top left and
         sta Sprite_Attributes+4,y  ;top right sprites for fire flower and star
-        ldx $00
+        ldx R0
         dex                        ;check power-up type for fire flower
         beq FlipPUpRightSide       ;if found, skip this part
         sta Sprite_Attributes+8,y  ;otherwise set new palette bits  for bottom left
@@ -449,17 +449,17 @@ JumpspringFrameOffsets:
 
 EnemyGfxHandler:
       lda Enemy_Y_Position,x      ;get enemy object vertical position
-      sta $02
+      sta R2
       lda Enemy_Rel_XPos          ;get enemy object horizontal position
-      sta $05                     ;relative to screen
+      sta R5                     ;relative to screen
       ldy Enemy_SprDataOffset,x
-      sty $eb                     ;get sprite data offset
+      sty Local_eb                     ;get sprite data offset
       lda #$00
       sta VerticalFlipFlag        ;initialize vertical flip flag by default
       lda Enemy_MovingDir,x
-      sta $03                     ;get enemy object moving direction
+      sta R3                     ;get enemy object moving direction
       lda Enemy_SprAttrib,x
-      sta $04                     ;get enemy object sprite attributes
+      sta R4                     ;get enemy object sprite attributes
       lda Enemy_ID,x
       cmp #PiranhaPlant           ;is enemy object piranha plant?
       bne CheckForRetainerObj     ;if not, branch
@@ -471,7 +471,7 @@ EnemyGfxHandler:
 
 CheckForRetainerObj:
       lda Enemy_State,x           ;store enemy state
-      sta $ed
+      sta Local_ed
       and #%00011111              ;nullify all but 5 LSB and use as Y
       tay
       lda Enemy_ID,x              ;check for mushroom retainer/princess object
@@ -479,20 +479,20 @@ CheckForRetainerObj:
       bne CheckForBulletBillCV    ;if not found, branch
       ldy #$00                    ;if found, nullify saved state in Y
       lda #$01                    ;set value that will not be used
-      sta $03
+      sta R3
       lda #$15                    ;set value $15 as code for mushroom retainer/princess object
 
 CheckForBulletBillCV:
        cmp #BulletBill_CannonVar   ;otherwise check for bullet bill object
        bne CheckForJumpspring      ;if not found, branch again
-       dec $02                     ;decrement saved vertical position
+       dec R2                     ;decrement saved vertical position
        lda #$03
        ldy EnemyFrameTimer,x       ;get timer for enemy object
        beq SBBAt                   ;if expired, do not set priority bit
        ora #%00100000              ;otherwise do so
-SBBAt: sta $04                     ;set new sprite attributes
+SBBAt: sta R4                     ;set new sprite attributes
        ldy #$00                    ;nullify saved enemy state both in Y and in
-       sty $ed                     ;memory location here
+       sty Local_ed                     ;memory location here
        lda #$08                    ;set specific value to unconditionally branch once
 
 CheckForJumpspring:
@@ -503,8 +503,8 @@ CheckForJumpspring:
       lda JumpspringFrameOffsets,x ;load data using frame number as offset
 
 CheckForPodoboo:
-      sta $ef                 ;store saved enemy object value here
-      sty $ec                 ;and Y here (enemy state -2 MSB if not changed)
+      sta Local_ef                 ;store saved enemy object value here
+      sty Local_ec                 ;and Y here (enemy state -2 MSB if not changed)
       ldx ObjectOffset        ;get enemy object offset
       cmp #$0c                ;check for podoboo object
       bne CheckBowserGfxFlag  ;branch if not found
@@ -519,34 +519,34 @@ CheckBowserGfxFlag:
              cmp #$01
              beq SBwsrGfxOfs
              iny                 ;otherwise draw bowser's rear
-SBwsrGfxOfs: sty $ef
+SBwsrGfxOfs: sty Local_ef
 
 CheckForGoomba:
-          ldy $ef               ;check value for goomba object
+          ldy Local_ef               ;check value for goomba object
           cpy #Goomba
           bne CheckBowserFront  ;branch if not found
           lda Enemy_State,x
           cmp #$02              ;check for defeated state
           bcc GmbaAnim          ;if not defeated, go ahead and animate
           ldx #$04              ;if defeated, write new value here
-          stx $ec
+          stx Local_ec
 GmbaAnim: and #%00100000        ;check for d5 set in enemy object state 
           ora TimerControl      ;or timer disable flag set
           bne CheckBowserFront  ;if either condition true, do not animate goomba
           lda FrameCounter
           and #%00001000        ;check for every eighth frame
           bne CheckBowserFront
-          lda $03
+          lda R3
           eor #%00000011        ;invert bits to flip horizontally every eight frames
-          sta $03               ;leave alone otherwise
+          sta R3               ;leave alone otherwise
 
 CheckBowserFront:
              lda EnemyAttributeData,y    ;load sprite attribute using enemy object
-             ora $04                     ;as offset, and add to bits already loaded
-             sta $04
+             ora R4                     ;as offset, and add to bits already loaded
+             sta R4
              lda EnemyGfxTableOffsets,y  ;load value based on enemy object as offset
              tax                         ;save as X
-             ldy $ec                     ;get previously saved value
+             ldy Local_ec                     ;get previously saved value
              lda BowserGfxFlag
              beq CheckForSpiny           ;if not drawing bowser object at all, skip all of this
              cmp #$01
@@ -554,7 +554,7 @@ CheckBowserFront:
              lda BowserBodyControls      ;check bowser's body control bits
              bpl ChkFrontSte             ;branch if d7 not set (control's bowser's mouth)      
              ldx #$de                    ;otherwise load offset for second frame
-ChkFrontSte: lda $ed                     ;check saved enemy state
+ChkFrontSte: lda Local_ed                     ;check saved enemy state
              and #%00100000              ;if bowser not defeated, do not set flag
              beq DrawBowser
 
@@ -569,13 +569,13 @@ CheckBowserRear:
             and #$01
             beq ChkRearSte          ;branch if d0 not set (control's bowser's feet)
             ldx #$e4                ;otherwise load offset for second frame
-ChkRearSte: lda $ed                 ;check saved enemy state
+ChkRearSte: lda Local_ed                 ;check saved enemy state
             and #%00100000          ;if bowser not defeated, do not set flag
             beq DrawBowser
-            lda $02                 ;subtract 16 pixels from
+            lda R2                 ;subtract 16 pixels from
             sec                     ;saved vertical coordinate
             sbc #$10
-            sta $02
+            sta R2
             jmp FlipBowserOver      ;jump to set vertical flip flag
 
 CheckForSpiny:
@@ -585,15 +585,15 @@ CheckForSpiny:
         bne NotEgg             ;otherwise branch
         ldx #$30               ;set to spiny egg offset
         lda #$02
-        sta $03                ;set enemy direction to reverse sprites horizontally
+        sta R3                ;set enemy direction to reverse sprites horizontally
         lda #$05
-        sta $ec                ;set enemy state
+        sta Local_ec                ;set enemy state
 NotEgg: jmp CheckForHammerBro  ;skip a big chunk of this if we found spiny but not in egg
 
 CheckForLakitu:
         cpx #$90                  ;check value for lakitu's offset loaded
         bne CheckUpsideDownShell  ;branch if not loaded
-        lda $ed
+        lda Local_ed
         and #%00100000            ;check for d5 set in enemy state
         bne NoLAFr                ;branch if set
         lda FrenzyEnemyTimer
@@ -603,46 +603,46 @@ CheckForLakitu:
 NoLAFr: jmp CheckDefeatedState    ;skip this next part if we found lakitu but alt frame not needed
 
 CheckUpsideDownShell:
-      lda $ef                    ;check for enemy object => $04
+      lda Local_ef                    ;check for enemy object => $04
       cmp #$04
       bcs CheckRightSideUpShell  ;branch if true
       cpy #$02
       bcc CheckRightSideUpShell  ;branch if enemy state < $02
       ldx #$5a                   ;set for upside-down koopa shell by default
-      ldy $ef
+      ldy Local_ef
       cpy #BuzzyBeetle           ;check for buzzy beetle object
       bne CheckRightSideUpShell
       ldx #$7e                   ;set for upside-down buzzy beetle shell if found
-      inc $02                    ;increment vertical position by one pixel
+      inc R2                    ;increment vertical position by one pixel
 
 CheckRightSideUpShell:
-      lda $ec                ;check for value set here
+      lda Local_ec                ;check for value set here
       cmp #$04               ;if enemy state < $02, do not change to shell, if
       bne CheckForHammerBro  ;enemy state => $02 but not = $04, leave shell upside-down
       ldx #$72               ;set right-side up buzzy beetle shell by default
-      inc $02                ;increment saved vertical position by one pixel
-      ldy $ef
+      inc R2                ;increment saved vertical position by one pixel
+      ldy Local_ef
       cpy #BuzzyBeetle       ;check for buzzy beetle object
       beq CheckForDefdGoomba ;branch if found
       ldx #$66               ;change to right-side up koopa shell if not found
-      inc $02                ;and increment saved vertical position again
+      inc R2                ;and increment saved vertical position again
 
 CheckForDefdGoomba:
       cpy #Goomba            ;check for goomba object (necessary if previously
       bne CheckForHammerBro  ;failed buzzy beetle object test)
       ldx #$54               ;load for regular goomba
-      lda $ed                ;note that this only gets performed if enemy state => $02
+      lda Local_ed                ;note that this only gets performed if enemy state => $02
       and #%00100000         ;check saved enemy state for d5 set
       bne CheckForHammerBro  ;branch if set
       ldx #$8a               ;load offset for defeated goomba
-      dec $02                ;set different value and decrement saved vertical position
+      dec R2                ;set different value and decrement saved vertical position
 
 CheckForHammerBro:
       ldy ObjectOffset
-      lda $ef                  ;check for hammer bro object
+      lda Local_ef                  ;check for hammer bro object
       cmp #HammerBro
       bne CheckForBloober      ;branch if not found
-      lda $ed
+      lda Local_ed
       beq CheckToAnimateEnemy  ;branch if not in normal enemy state
       and #%00001000
       beq CheckDefeatedState   ;if d3 not set, branch further away
@@ -659,13 +659,13 @@ CheckForBloober:
       bne CheckToAnimateEnemy  ;branch if not found this time
       cmp #$01
       beq CheckDefeatedState   ;branch if timer is set to certain point
-      inc $02                  ;increment saved vertical coordinate three pixels
-      inc $02
-      inc $02
+      inc R2                  ;increment saved vertical coordinate three pixels
+      inc R2
+      inc R2
       jmp CheckAnimationStop   ;and do something else
 
 CheckToAnimateEnemy:
-      lda $ef                  ;check for specific enemy objects
+      lda Local_ef                  ;check for specific enemy objects
       cmp #Goomba
       beq CheckDefeatedState   ;branch if goomba
       cmp #$08
@@ -683,7 +683,7 @@ CheckToAnimateEnemy:
       bcs CheckDefeatedState   ;if so, leave the offset alone (use princess)
       ldx #$a2                 ;otherwise, set for mushroom retainer object instead
       lda #$03                 ;set alternate state here
-      sta $ec
+      sta Local_ec
       bne CheckDefeatedState   ;unconditional branch
 
 CheckForSecondFrame:
@@ -692,7 +692,7 @@ CheckForSecondFrame:
       bne CheckDefeatedState      ;branch if timing is off
 
 CheckAnimationStop:
-      lda $ed                 ;check saved enemy state
+      lda Local_ed                 ;check saved enemy state
       and #%10100000          ;for d7 or d5, or check for timers stopped
       ora TimerControl
       bne CheckDefeatedState  ;if either condition true, branch
@@ -702,25 +702,25 @@ CheckAnimationStop:
       tax                     ;to animate various enemy objects
 
 CheckDefeatedState:
-      lda $ed               ;check saved enemy state
+      lda Local_ed               ;check saved enemy state
       and #%00100000        ;for d5 set
       beq DrawEnemyObject   ;branch if not set
-      lda $ef
+      lda Local_ef
       cmp #$04              ;check for saved enemy object => $04
       bcc DrawEnemyObject   ;branch if less
       ldy #$01
       sty VerticalFlipFlag  ;set vertical flip flag
       dey
-      sty $ec               ;init saved value here
+      sty Local_ec               ;init saved value here
 
 DrawEnemyObject:
-  ldy $eb                    ;load sprite data offset
+  ldy Local_eb                    ;load sprite data offset
   jsr DrawEnemyObjRow        ;draw six tiles of data
   jsr DrawEnemyObjRow        ;into sprite data
   jsr DrawEnemyObjRow
   ldx ObjectOffset           ;get enemy object offset
   ldy Enemy_SprDataOffset,x  ;get sprite data offset
-  lda $ef
+  lda Local_ef
   cmp #$08                   ;get saved enemy object and check
   bne CheckForVerticalFlip   ;for bullet bill, branch if not found
 
@@ -739,7 +739,7 @@ CheckForVerticalFlip:
   dey                        ;now go back to the Y coordinate offset
   tya
   tax                        ;give offset to X
-  lda $ef
+  lda Local_ef
   cmp #HammerBro             ;check saved enemy object for hammer bro
   beq FlipEnemyVertically
   cmp #Lakitu                ;check saved enemy object for lakitu
@@ -768,8 +768,8 @@ FlipEnemyVertically:
 CheckForESymmetry:
   lda BowserGfxFlag           ;are we drawing bowser at all?
   bne SkipToOffScrChk         ;branch if so
-  lda $ef
-  ldx $ec                     ;get alternate enemy state
+  lda Local_ef
+  ldx Local_ec                     ;get alternate enemy state
   cmp #$05                    ;check for hammer bro object
   bne ContES
   jmp SprObjectOffscrChk      ;jump if found
@@ -823,7 +823,7 @@ EggExc:
 ;   bcs MirrorEnemyGfx
 ;   ; if its not already defeated, then
 ;   ; Flip the top left or top right head sprite of a goomba (depending on animation frame)
-;   lda $03
+;   lda R3
 ;   and #%00000001
 ;   bne @TopRight
 ; @TopLeft:
@@ -836,7 +836,7 @@ EggExc:
 ;     eor #%01000000
 ;     sta Sprite_Attributes+12,y
 CheckToMirrorLakitu:
-        lda $ef                     ;check for lakitu enemy object
+        lda Local_ef                     ;check for lakitu enemy object
         cmp #Lakitu
         bne CheckToMirrorJSpring    ;branch if not found
         lda VerticalFlipFlag
@@ -862,7 +862,7 @@ NVFLak: lda Sprite_Attributes,y     ;get first row left sprite attributes
         sta Sprite_Attributes+4,y   ;note that vertical flip is left as-is
 
 CheckToMirrorJSpring:
-      lda $ef                     ;check for jumpspring object (any frame)
+      lda Local_ef                     ;check for jumpspring object (any frame)
       cmp #$18
       bcc SprObjectOffscrChk      ;branch if not jumpspring object at all
       lda #$82
@@ -917,11 +917,11 @@ ExEGHandler:
 
 DrawEnemyObjRow:
       lda EnemyGraphicsTable,x    ;load two tiles of enemy graphics
-      sta $00
+      sta R0
       lda EnemyGraphicsTable+1,x
 
 DrawOneSpriteRow:
-      sta $01
+      sta R1
       jmp DrawSpriteObject        ;draw them
 
 MoveESprRowOffscreen:
@@ -951,17 +951,17 @@ DefaultBlockObjTiles:
 
 DrawBlock:
            lda Block_Rel_YPos            ;get relative vertical coordinate of block object
-           sta $02                       ;store here
+           sta R2                       ;store here
            lda Block_Rel_XPos            ;get relative horizontal coordinate of block object
-           sta $05                       ;store here
+           sta R5                       ;store here
            lda #$03
-           sta $04                       ;set attribute byte here
+           sta R4                       ;set attribute byte here
            lsr
-           sta $03                       ;set horizontal flip bit here (will not be used)
+           sta R3                       ;set horizontal flip bit here (will not be used)
            ldy Block_SprDataOffset,x     ;get sprite data offset
            ldx #$00                      ;reset X for use as offset to tile data
 DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
-           sta $00                       ;set here
+           sta R0                       ;set here
            lda DefaultBlockObjTiles+1,x  ;get right tile number
            jsr DrawOneSpriteRow          ;do sub to write tile numbers to first row of sprites
            cpx #$04                      ;check incremented offset
@@ -1016,13 +1016,13 @@ ExDBlk: rts
 
 DrawBrickChunks:
          lda #$02                   ;set palette bits here
-         sta $00
+         sta R0
          lda #$75                   ;set tile number for ball (something residual, likely)
          ldy GameEngineSubroutine
          cpy #$05                   ;if end-of-level routine running,
          beq DChunks                ;use palette and tile number assigned
          lda #$03                   ;otherwise set different palette bits
-         sta $00
+         sta R0
          lda #$84                   ;and set tile number for brick chunks
 DChunks: ldy Block_SprDataOffset,x  ;get OAM data offset
          iny                        ;increment to start with tile bytes in OAM
@@ -1033,7 +1033,7 @@ DChunks: ldy Block_SprDataOffset,x  ;get OAM data offset
          asl                        ;move low nybble to high
          asl
          and #$c0                   ;get what was originally d3-d2 of low nybble
-         ora $00                    ;add palette bits
+         ora R0                    ;add palette bits
          iny                        ;increment offset for attribute bytes
          jsr DumpFourSpr            ;do sub to dump attribute data into all four sprites
          dey
@@ -1045,10 +1045,10 @@ DChunks: ldy Block_SprDataOffset,x  ;get OAM data offset
          lda Block_Orig_XPos,x      ;get original horizontal coordinate
          sec
          sbc ScreenLeft_X_Pos       ;subtract coordinate of left side from original coordinate
-         sta $00                    ;store result as relative horizontal coordinate of original
+         sta R0                    ;store result as relative horizontal coordinate of original
          sec
          sbc Block_Rel_XPos         ;get difference of relative positions of original - current
-         adc $00                    ;add original relative position to result
+         adc R0                    ;add original relative position to result
          adc #$06                   ;plus 6 pixels to position second brick chunk correctly
          sta Sprite_X_Position+4,y  ;save into X coordinate of second sprite
          lda Block_Rel_YPos+1       ;get second block object's relative vertical coordinate
@@ -1056,10 +1056,10 @@ DChunks: ldy Block_SprDataOffset,x  ;get OAM data offset
          sta Sprite_Y_Position+12,y ;dump into Y coordinates of third and fourth sprites
          lda Block_Rel_XPos+1       ;get second block object's relative horizontal coordinate
          sta Sprite_X_Position+8,y  ;save into X coordinate of third sprite
-         lda $00                    ;use original relative horizontal position
+         lda R0                    ;use original relative horizontal position
          sec
          sbc Block_Rel_XPos+1       ;get difference of relative positions of original - current
-         adc $00                    ;add original relative position to result
+         adc R0                    ;add original relative position to result
          adc #$06                   ;plus 6 pixels to position fourth brick chunk correctly
          sta Sprite_X_Position+12,y ;save into X coordinate of fourth sprite
          lda Block_OffscreenBits    ;get offscreen bits for block object
@@ -1069,7 +1069,7 @@ DChunks: ldy Block_SprDataOffset,x  ;get OAM data offset
          bcc ChnkOfs                ;if d7 not set, branch to last part
          lda #$f8
          jsr DumpTwoSpr             ;otherwise move top sprites offscreen
-ChnkOfs: lda $00                    ;if relative position on left side of screen,
+ChnkOfs: lda R0                    ;if relative position on left side of screen,
          bpl ExBCDr                 ;go ahead and leave
          lda Sprite_X_Position,y    ;otherwise compare left-side X coordinate
          cmp Sprite_X_Position+4,y  ;to right-side X coordinate
@@ -1231,37 +1231,37 @@ ExSPl: ldx ObjectOffset            ;get enemy object offset and leave
 
 
 .proc DrawSpriteObject
-  lda $03                    ;get saved flip control bits
+  lda R3                    ;get saved flip control bits
   lsr
   lsr                        ;move d1 into carry
-  lda $00
+  lda R0
   bcc NoHFlip                ;if d1 not set, branch
   sta Sprite_Tilenumber+4,y  ;store first tile into second sprite
-  lda $01                    ;and second into first sprite
+  lda R1                    ;and second into first sprite
   sta Sprite_Tilenumber,y
   lda #$40                   ;activate horizontal flip OAM attribute
   bne SetHFAt                ;and unconditionally branch
 NoHFlip:
   sta Sprite_Tilenumber,y    ;store first tile into first sprite
-  lda $01                    ;and second into second sprite
+  lda R1                    ;and second into second sprite
   sta Sprite_Tilenumber+4,y
   lda #$00                   ;clear bit for horizontal flip
 SetHFAt:
-  ora $04                    ;add other OAM attributes if necessary
+  ora R4                    ;add other OAM attributes if necessary
   sta Sprite_Attributes,y    ;store sprite attributes
   sta Sprite_Attributes+4,y
-  lda $02                    ;now the y coordinates
+  lda R2                    ;now the y coordinates
   sta Sprite_Y_Position,y    ;note because they are
   sta Sprite_Y_Position+4,y  ;side by side, they are the same
-  lda $05       
+  lda R5       
   sta Sprite_X_Position,y    ;store x coordinate, then
   clc                        ;add 8 pixels and store another to
   adc #$08                   ;put them side by side
   sta Sprite_X_Position+4,y
-  lda $02                    ;add eight pixels to the next y
+  lda R2                    ;add eight pixels to the next y
   clc                        ;coordinate
   adc #$08
-  sta $02
+  sta R2
   tya                        ;add eight to the offset in Y to
   clc                        ;move to the next two sprites
   adc #$08
@@ -1400,16 +1400,16 @@ FlagpoleGfxHandler:
       sta Sprite_X_Position+8,y
       clc
       adc #$0c                       ;add twelve more pixels and
-      sta $05                        ;store here to be used later by floatey number
+      sta R5                        ;store here to be used later by floatey number
       lda Enemy_Y_Position,x         ;get vertical coordinate
       jsr DumpTwoSpr                 ;and do sub to dump into first and second sprites
       adc #$08                       ;add eight pixels
       sta Sprite_Y_Position+8,y      ;and store into third sprite
       lda FlagpoleFNum_Y_Pos         ;get vertical coordinate for floatey number
-      sta $02                        ;store it here
+      sta R2                        ;store it here
       lda #$01
-      sta $03                        ;set value for flip which will not be used, and
-      sta $04                        ;attribute byte for floatey number
+      sta R3                        ;set value for flip which will not be used, and
+      sta R4                        ;attribute byte for floatey number
       sta Sprite_Attributes,y        ;set attribute bytes for all three sprites
       sta Sprite_Attributes+4,y
       sta Sprite_Attributes+8,y
@@ -1428,7 +1428,7 @@ FlagpoleGfxHandler:
       asl                            ;multiply by 2 to get proper offset here
       tax
       lda FlagpoleScoreNumTiles,x    ;get appropriate tile data
-      sta $00
+      sta R0
       lda FlagpoleScoreNumTiles+1,x
       jsr DrawOneSpriteRow           ;use it to render floatey number
 

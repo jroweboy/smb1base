@@ -37,9 +37,9 @@ PlayerCollisionCore:
       ldx #$00     ;initialize X to use player's bounding box for comparison
 
 SprObjectCollisionCore:
-      sty $06      ;save contents of Y here
+      sty R6      ;save contents of Y here
       lda #$01
-      sta $07      ;save value 1 here as counter, compare horizontal coordinates first
+      sta R7      ;save value 1 here as counter, compare horizontal coordinates first
 
 CollisionCoreLoop:
       lda BoundingBox_UL_Corner,y  ;compare left/top coordinates
@@ -53,7 +53,7 @@ CollisionCoreLoop:
       bcc CollisionFound           ;if somehow less, vertical wrap collision, thus branch
       cmp BoundingBox_UL_Corner,x  ;otherwise compare bottom of first bounding box to the top
       bcs CollisionFound           ;of second box, and if equal or greater, collision, thus branch
-      ldy $06                      ;otherwise return with carry clear and Y = $0006
+      ldy R6                      ;otherwise return with carry clear and Y = $0006
       rts                          ;note horizontal wrapping never occurs
 
 SecondBoxVerticalChk:
@@ -63,7 +63,7 @@ SecondBoxVerticalChk:
       lda BoundingBox_LR_Corner,y  ;otherwise compare horizontal right or vertical bottom
       cmp BoundingBox_UL_Corner,x  ;of first box with horizontal left or vertical top of second box
       bcs CollisionFound           ;if equal or greater, collision, thus branch
-      ldy $06                      ;otherwise return with carry clear and Y = $0006
+      ldy R6                      ;otherwise return with carry clear and Y = $0006
       rts
 
 FirstBoxGreater:
@@ -81,16 +81,16 @@ FirstBoxGreater:
 
 NoCollisionFound:
   clc          ;clear carry, then load value set earlier, then leave
-  ldy $06      ;like previous ones, if horizontal coordinates do not collide, we do
+  ldy R6      ;like previous ones, if horizontal coordinates do not collide, we do
   rts          ;not bother checking vertical ones, because what's the point?
 
 CollisionFound:
   inx                    ;increment offsets on both objects to check
   iny                    ;the vertical coordinates
-  dec $07                ;decrement counter to reflect this
+  dec R7                ;decrement counter to reflect this
   bpl CollisionCoreLoop  ;if counter not expired, branch to loop
   sec                    ;otherwise we already did both sets, therefore collision, so set carry
-  ldy $06                ;load original value set here earlier, then leave
+  ldy R6                ;load original value set here earlier, then leave
   rts
 
 ;-------------------------------------------------------------------------------------
@@ -150,22 +150,22 @@ BlockBufferPlayerCollision:
   ldx #$00       ;set offset for player object
 BlockBufferCollision:
   pha                         ;save contents of A to stack
-    sty $04                     ;save contents of Y here
+    sty R4                     ;save contents of Y here
     lda BlockBuffer_X_Adder,y   ;add horizontal coordinate
     clc                         ;of object to value obtained using Y as offset
     adc SprObject_X_Position,x
-    sta $05                     ;store here
+    sta R5                     ;store here
     lda SprObject_PageLoc,x
     adc #$00                    ;add carry to page location
     and #$01                    ;get LSB, mask out all other bits
     lsr                         ;move to carry
-    ora $05                     ;get stored value
+    ora R5                     ;get stored value
     ror                         ;rotate carry to MSB of A
     lsr                         ;and effectively move high nybble to
     lsr                         ;lower, LSB which became MSB will be
     lsr                         ;d4 at this point
-    jsr GetBlockBufferAddr      ;get address of block buffer into $06, $07
-    ldy $04                     ;get old contents of Y
+    jsr GetBlockBufferAddr      ;get address of block buffer into R6, R7
+    ldy R4                     ;get old contents of Y
     lda SprObject_Y_Position,x  ;get vertical coordinate of object
     clc
     adc BlockBuffer_Y_Adder,y   ;add it to value obtained using Y as offset
@@ -173,15 +173,15 @@ BlockBufferCollision:
     sec
     sbc #$20                    ;subtract 32 pixels for the status bar
     bcc HeadWrapped
-    sta $02                     ;store result here
+    sta R2                     ;store result here
     tay                         ;use as offset for block buffer
     lda ($06),y                 ;check current content of block buffer
     jmp NoHeadWrap
 HeadWrapped:
     lda #0
 NoHeadWrap:
-    sta $03                     ;and store here
-    ldy $04                     ;get old contents of Y again
+    sta R3                     ;and store here
+    ldy R4                     ;get old contents of Y again
   pla                         ;pull A from stack
   bne RetXC                   ;if A = 1, branch
   lda SprObject_Y_Position,x  ;if A = 0, load vertical coordinate
@@ -190,8 +190,8 @@ RetXC:
   lda SprObject_X_Position,x  ;otherwise load horizontal coordinate
 RetYC:
   and #%00001111              ;and mask out high nybble
-  sta $04                     ;store masked out result here
-  lda $03                     ;get saved content of block buffer
+  sta R4                     ;store masked out result here
+  lda R3                     ;get saved content of block buffer
   rts                         ;and leave
 
 ;-------------------------------------------------------------------------------------
@@ -210,12 +210,12 @@ GetBlockBufferAddr:
     lsr
     tay                      ;use nybble as pointer to high byte
     lda BlockBufferAddr+2,y  ;of indirect here
-    sta $07
+    sta R7
   pla
   and #%00001111           ;pull from stack, mask out high nybble
   clc
   adc BlockBufferAddr,y    ;add to low byte
-  sta $06                  ;store here and leave
+  sta R6                  ;store here and leave
   rts
 
 
@@ -553,7 +553,7 @@ EnemiesCollision:
         jsr GetEnemyBoundBoxOfs     ;otherwise, do sub, get appropriate bounding box offset for
         dex                         ;first enemy we're going to compare, then decrement for second
         bmi ExitECRoutine           ;branch to leave if there are no other enemies
-ECLoop: stx $01                     ;save enemy object buffer offset for second enemy here
+ECLoop: stx R1                     ;save enemy object buffer offset for second enemy here
         tya                         ;save first enemy's bounding box offset to stack
         pha
         lda Enemy_Flag,x            ;check enemy object enable flag
@@ -575,7 +575,7 @@ ECLoop: stx $01                     ;save enemy object buffer offset for second 
         tax                         ;use as new contents of X
         jsr SprObjectCollisionCore  ;do collision detection using the two enemies here
         ldx ObjectOffset            ;use first enemy offset for X
-        ldy $01                     ;use second enemy offset for Y
+        ldy R1                     ;use second enemy offset for Y
         bcc NoEnemyCollision        ;if carry clear, no collision, branch ahead of this
         lda Enemy_State,x
         ora Enemy_State,y           ;check both enemy states for d7 set
@@ -598,7 +598,7 @@ NoEnemyCollision:
 ReadyNextEnemy:
       pla              ;get first enemy's bounding box offset from the stack
       tay              ;use as Y again
-      ldx $01          ;get and decrement second enemy's object buffer offset
+      ldx R1          ;get and decrement second enemy's object buffer offset
       dex
       bpl ECLoop       ;loop until all enemy slots have been checked
 
@@ -623,7 +623,7 @@ ProcEnemyCollisions:
       lda #$06
       jsr SetupFloateyNumber   ;award 1000 points for killing enemy
       jsr ShellOrBlockDefeat   ;then kill enemy, then load
-      ldy $01                  ;original offset of second enemy
+      ldy R1                  ;original offset of second enemy
 
 ShellCollisions:
       tya                      ;move Y to X
@@ -633,7 +633,7 @@ ShellCollisions:
       lda ShellChainCounter,x  ;get chain counter for shell
       clc
       adc #$04                 ;add four to get appropriate point offset
-      ldx $01
+      ldx R1
       jsr SetupFloateyNumber   ;award appropriate number of points for second enemy
       ldx ObjectOffset         ;load original offset of first enemy
       inc ShellChainCounter,x  ;increment chain counter for additional enemies
@@ -649,21 +649,21 @@ ProcSecondEnemyColl:
       cmp #HammerBro           ;if hammer bro found in alt state, branch to leave
       beq ExitProcessEColl
       jsr ShellOrBlockDefeat   ;otherwise, kill first enemy
-      ldy $01
+      ldy R1
       lda ShellChainCounter,y  ;get chain counter for shell
       clc
       adc #$04                 ;add four to get appropriate point offset
       ldx ObjectOffset
       jsr SetupFloateyNumber   ;award appropriate number of points for first enemy
-      ldx $01                  ;load original offset of second enemy
+      ldx R1                  ;load original offset of second enemy
       inc ShellChainCounter,x  ;increment chain counter for additional enemies
       rts                      ;leave!!!
 
 MoveEOfs:
       tya                      ;move Y ($01) to X
       tax
-      jsr EnemyTurnAround      ;do the sub here using value from $01
-      ldx ObjectOffset         ;then do it again using value from $08
+      jsr EnemyTurnAround      ;do the sub here using value from R1
+      ldx ObjectOffset         ;then do it again using value from ObjectOffset
 
 EnemyTurnAround:
        lda Enemy_ID,x           ;check for specific enemies
@@ -699,7 +699,7 @@ SmallPlatformCollision:
       jsr CheckPlayerVertical      ;do a sub to see if player is below a certain point
       bcs ExSPC                    ;or entirely offscreen, and branch to leave if true
       lda #$02
-      sta $00                      ;load counter here for 2 bounding boxes
+      sta R0                      ;load counter here for 2 bounding boxes
 
 ChkSmallPlatLoop:
       ldx ObjectOffset           ;get enemy object offset
@@ -721,7 +721,7 @@ MoveBoundBox:
        clc
        adc #$80
        sta BoundingBox_DR_YPos,y
-       dec $00                    ;decrement counter we set earlier
+       dec R0                    ;decrement counter we set earlier
        bne ChkSmallPlatLoop       ;loop back until both bounding boxes are checked
 ExSPC: ldx ObjectOffset           ;get enemy object buffer offset, then leave
        rts
@@ -750,7 +750,7 @@ ChkForTopCollision:
       bcs PlatformSideCollisions   ;if difference not close enough, skip all of this
       lda Player_Y_Speed
       bmi PlatformSideCollisions   ;if player's vertical speed moving upwards, skip this
-      lda $00                      ;get saved bounding box counter from earlier
+      lda R0                      ;get saved bounding box counter from earlier
       ldy Enemy_ID,x
       cpy #$2b                     ;if either of the two small platform objects are found,
       beq SetCollisionFlag         ;regardless of which one, branch to use bounding box counter
@@ -767,13 +767,13 @@ SetCollisionFlag:
 
 PlatformSideCollisions:
          lda #$01                   ;set value here to indicate possible horizontal
-         sta $00                    ;collision on left side of platform
+         sta R0                    ;collision on left side of platform
          lda BoundingBox_DR_XPos    ;get difference by subtracting platform's left edge
          sec                        ;from player's right edge
          sbc BoundingBox_UL_XPos,y
          cmp #$08                   ;if difference close enough, skip all of this
          bcc SideC
-         inc $00                    ;otherwise increment value set here for right side collision
+         inc R0                    ;otherwise increment value set here for right side collision
          lda BoundingBox_DR_XPos,y  ;get difference by subtracting player's left edge
          clc                        ;from platform's right edge
          sbc BoundingBox_UL_XPos
@@ -804,7 +804,7 @@ FireballEnemyCollision:
       ldx #$04
 
 FireballEnemyCDLoop:
-           stx $01                     ;store enemy object offset here
+           stx R1                     ;store enemy object offset here
            tya
            pha                         ;push fireball offset to the stack
            lda Enemy_State,x
@@ -835,11 +835,11 @@ NotGoomba: lda EnemyOffscrBitsMasked,x ;if any masked offscreen bits set,
            bcc NoFToECol               ;if carry clear, no collision, thus do next enemy slot
            lda #%10000000
            sta Fireball_State,x        ;set d7 in enemy state
-           ldx $01                     ;get enemy offset
+           ldx R1                     ;get enemy offset
            jsr HandleEnemyFBallCol     ;jump to handle fireball to enemy collision
 NoFToECol: pla                         ;pull fireball offset from stack
            tay                         ;put it in Y
-           ldx $01                     ;get enemy object offset
+           ldx R1                     ;get enemy object offset
            dex                         ;decrement it
            bpl FireballEnemyCDLoop     ;loop back until collision detection done on all enemies
 
@@ -852,7 +852,7 @@ BowserIdentities:
 
 HandleEnemyFBallCol:
       jsr RelativeEnemyPosition  ;get relative coordinate of enemy
-      ldx $01                    ;get current enemy object offset
+      ldx R1                    ;get current enemy object offset
       lda Enemy_Flag,x           ;check buffer flag for d7 set
       bpl ChkBuzzyBeetle         ;branch if not set to continue
       and #%00001111             ;otherwise mask out high nybble and
@@ -860,7 +860,7 @@ HandleEnemyFBallCol:
       lda Enemy_ID,x
       cmp #Bowser                ;check enemy identifier for bowser
       beq HurtBowser             ;branch if found
-      ldx $01                    ;otherwise retrieve current enemy offset
+      ldx R1                    ;otherwise retrieve current enemy offset
 
 ChkBuzzyBeetle:
       lda Enemy_ID,x
@@ -887,7 +887,7 @@ HurtBowser:
 SetDBSte: sta Enemy_State,x          ;set defeated enemy state
           lda #Sfx_BowserFall
           sta Square2SoundQueue      ;load bowser defeat sound
-          ldx $01                    ;get enemy offset
+          ldx R1                    ;get enemy offset
           lda #$09                   ;award 5000 points to player for defeating bowser
           bne EnemySmackScore        ;unconditional branch to award points
 
@@ -1055,7 +1055,7 @@ ChkCollSize:
         dey                         ;otherwise decrement offset
 GBBAdr:
   lda BlockBufferAdderData,y  ;get value using offset
-  sta $eb                     ;store value here
+  sta Local_eb                     ;store value here
   tay                         ;put value into Y, as offset for block buffer routine
   ldx PlayerSize              ;get player's size as offset
   lda CrouchingFlag
@@ -1071,7 +1071,7 @@ HeadChk:
       bcs AwardTouchedCoin        ;if so, branch to some other part of code
         ldy Player_Y_Speed          ;check player's vertical speed
         bpl DoFootCheck             ;if player not moving upwards, branch elsewhere
-        ldy $04                     ;check lower nybble of vertical coordinate returned
+        ldy R4                     ;check lower nybble of vertical coordinate returned
         cpy #$04                    ;from collision detection routine
         bcc DoFootCheck             ;if low nybble < 4, branch
           jsr CheckForSolidMTiles     ;check to see what player's head bumped on
@@ -1093,7 +1093,7 @@ NYSpd:
   sta Player_Y_Speed     ;jump or swim
 
 DoFootCheck:
-  ldy $eb                    ;get block buffer adder offset
+  ldy Local_eb                    ;get block buffer adder offset
   lda Player_Y_Position
   cmp #$cf                   ;check to see how low player is
   bcs DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
@@ -1102,11 +1102,11 @@ DoFootCheck:
     bcs AwardTouchedCoin       ;if so, branch to some other part of code
       pha                        ;save bottom left metatile to stack
         jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom right of player
-        sta $00                    ;save bottom right metatile here
+        sta R0                    ;save bottom right metatile here
       pla
-      sta $01                    ;pull bottom left metatile and save here
+      sta R1                    ;pull bottom left metatile and save here
       bne ChkFootMTile           ;if anything here, skip this part
-        lda $00                    ;otherwise check for anything in bottom right metatile
+        lda R0                    ;otherwise check for anything in bottom right metatile
         beq DoPlayerSideCheck      ;and skip ahead if not
           jsr CheckForCoinMTiles     ;check to see if player touched coin with their right foot
           bcc ChkFootMTile           ;if not, skip unconditional jump and continue code
@@ -1127,11 +1127,11 @@ ContChk:
   beq DoPlayerSideCheck      ;if either found, branch
     ldy JumpspringAnimCtrl     ;if jumpspring animating right now,
     bne InitSteP               ;branch ahead
-      ldy $04                    ;check lower nybble of vertical coordinate returned
+      ldy R4                    ;check lower nybble of vertical coordinate returned
       cpy #$05                   ;from collision detection routine
       bcc LandPlyr               ;if lower nybble < 5, branch
         lda Player_MovingDir
-        sta $00                    ;use player's moving direction as temp variable
+        sta R0                    ;use player's moving direction as temp variable
         jmp ImpedePlayerMove       ;jump to impede player's movement in that direction
 LandPlyr:
   jsr ChkForLandJumpSpring   ;do sub to check for jumpspring metatiles and deal with it
@@ -1139,24 +1139,31 @@ LandPlyr:
   and Player_Y_Position      ;mask out lower nybble of player's vertical position
   sta Player_Y_Position      ;and store as new vertical position to land player properly
   jsr HandlePipeEntry        ;do sub to process potential pipe entry
-  lda #$00
+  ; jroweboy - bounce the player after they land on the ground
+  lda Player_Y_Speed
+  lsr
+  eor #$ff
+  adc #1
   sta Player_Y_Speed         ;initialize vertical speed and fractional
-  sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
-  sta StompChainCounter      ;initialize enemy stomp counter
+  
+  ; jroweboy if theres some bounce left, then don't clear out move force or stomp chain
+  bne InitSteP
+    sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
+    sta StompChainCounter      ;initialize enemy stomp counter
 InitSteP:
   lda #$00
   sta Player_State           ;set player's state to normal
   ; fallthrough
 
 DoPlayerSideCheck:
-  ldy $eb       ;get block buffer adder offset
+  ldy Local_eb       ;get block buffer adder offset
   iny
   iny           ;increment offset 2 bytes to use adders for side collisions
   lda #2
-  sta $00
+  sta R0
 SideCheckLoop:
   iny                       ;move onto the next one
-  sty $eb                   ;store it
+  sty Local_eb                   ;store it
   lda Player_Y_Position
   cmp #$20                  ;check player's vertical position
   bcc BHalf                 ;if player is in status bar area, branch ahead to skip this part
@@ -1171,7 +1178,7 @@ SideCheckLoop:
     jsr CheckForClimbMTiles   ;do sub to see if player bumped into anything climbable
     bcc CheckSideMTiles       ;if not, branch to alternate section of code
 BHalf:
-  ldy $eb                   ;load block adder offset
+  ldy Local_eb                   ;load block adder offset
   iny                       ;increment it
   lda Player_Y_Position     ;get player's vertical position
   cmp #$08
@@ -1180,7 +1187,7 @@ BHalf:
   bcs ExSCH                 ;if too low, branch to leave
     jsr BlockBufferColli_Side ;do player-to-bg collision detection on other half of player
     bne CheckSideMTiles       ;if something found, branch
-      dec $00                   ;otherwise decrement counter
+      dec R0                   ;otherwise decrement counter
       bne SideCheckLoop         ;run code until both sides of player are checked
 ExSCH:
   rts                       ;leave
@@ -1263,7 +1270,7 @@ HandleAxeMetatile:
   lda #$18
   sta Player_X_Speed  ;set horizontal speed and continue to erase axe metatile
 ErACM:
-  ldy $02             ;load vertical high nybble offset for block buffer
+  ldy R2             ;load vertical high nybble offset for block buffer
   lda #$00            ;load blank metatile
   sta ($06),y         ;store to remove old contents from block buffer
   jmp RemoveCoin_Axe  ;update the screen accordingly
@@ -1360,7 +1367,7 @@ HandleEToBGCollision:
       beq NoEToBGCollision      ;if blank $26, coins, or hidden blocks, jump, enemy falls through
       cmp #$23
       bne LandEnemyProperly     ;check for blank metatile $23 and branch if not found
-      ldy $02                   ;get vertical coordinate used to find block
+      ldy R2                   ;get vertical coordinate used to find block
       lda #$00                  ;store default blank metatile in that spot so we won't
       sta ($06),y               ;trigger this routine accidentally again
       lda Enemy_ID,x
@@ -1418,7 +1425,7 @@ ExEBGChk: rts
 ;$04 - low nybble of vertical coordinate from block buffer routine
 
 LandEnemyProperly:
-       lda $04                 ;check lower nybble of vertical coordinate saved earlier
+       lda R4                 ;check lower nybble of vertical coordinate saved earlier
        sec
        sbc #$08                ;subtract eight pixels
        cmp #$05                ;used to determine whether enemy landed from falling
@@ -1517,8 +1524,8 @@ DoEnemySideCheck:
           bcc ExESdeC
           ldy #$16                   ;start by finding block to the left of enemy ($00,$14)
           lda #$02                   ;set value here in what is also used as
-          sta $eb                    ;OAM data offset
-SdeCLoop: lda $eb                    ;check value
+          sta Local_eb                    ;OAM data offset
+SdeCLoop: lda Local_eb                    ;check value
           cmp Enemy_MovingDir,x      ;compare value against moving direction
           bne NextSdeC               ;branch if different and do not seek block there
           lda #$01                   ;set flag in A for save horizontal coordinate 
@@ -1528,7 +1535,7 @@ SdeCLoop: lda $eb                    ;check value
           beq NextSdeC               ;if nothing found, branch
           jsr ChkForNonSolids        ;check for non-solid blocks
           bne ChkForBump_HammerBroJ  ;branch if not found
-NextSdeC: dec $eb                    ;move to the next direction
+NextSdeC: dec Local_eb               ;move to the next direction
           iny
           cpy #$18                   ;increment Y, loop only if Y < $18, thus we check
           bcc SdeCLoop               ;enemy ($00, $14) and ($10, $14) pixel coordinates
@@ -1547,7 +1554,7 @@ NoBump:
   cmp #$05
   bne InvEnemyDir        ;branch if not found
     lda #$00
-    sta $00                ;initialize value here for bitmask  
+    sta R0                ;initialize value here for bitmask  
     ldy #$fa               ;load default vertical speed for jumping
     jmp SetHJ              ;jump to code that makes hammer bro jump
 
@@ -1558,7 +1565,7 @@ InvEnemyDir:
 ImpedePlayerMove:
   lda #$00                  ;initialize value here
   ldy Player_X_Speed        ;get player's horizontal speed
-  ldx $00                   ;check value set earlier for
+  ldx R0                   ;check value set earlier for
   dex                       ;left side collision
   bne RImpd                 ;if right side collision, skip this part
   inx                       ;return value to X
@@ -1589,12 +1596,12 @@ NXSpd:
     bpl PlatF                 ;branch ahead, do not decrement Y
       dey                       ;otherwise decrement Y now
 PlatF: 
-    sty $00                   ;store Y as high bits of horizontal adder
+    sty R0                   ;store Y as high bits of horizontal adder
     clc
     adc Player_X_Position     ;add contents of A to player's horizontal
     sta Player_X_Position     ;position to move player left or right
     lda Player_PageLoc
-    adc $00                   ;add high bits and carry to
+    adc R0                   ;add high bits and carry to
     sta Player_PageLoc        ;page location if necessary
 ExIPM:
   txa                       ;invert contents of X
@@ -1618,7 +1625,7 @@ FlagpoleYPosData:
       .byte $18, $22, $50, $68, $90
 
 HandleClimbing:
-      ldy $04            ;check low nybble of horizontal coordinate returned from
+      ldy R4            ;check low nybble of horizontal coordinate returned from
       cpy #$06           ;collision detection routine against certain values, this
       bcc ExHC           ;makes actual physical part of vine or flagpole thinner
       cpy #$0a           ;than 16 pixels
@@ -1684,7 +1691,7 @@ PutPlayerOnVine:
          lda #$02
          sta PlayerFacingDir     ;otherwise force player to face left
 SetVXPl: ldy PlayerFacingDir     ;get current facing direction, use as offset
-         lda $06                 ;get low byte of block buffer address
+         lda R6                 ;get low byte of block buffer address
          asl
          asl                     ;move low nybble to high
          asl
@@ -1692,7 +1699,7 @@ SetVXPl: ldy PlayerFacingDir     ;get current facing direction, use as offset
          clc
          adc ClimbXPosAdder-1,y  ;add pixels depending on facing direction
          sta Player_X_Position   ;store as player's horizontal coordinate
-         lda $06                 ;get low byte of block buffer address again
+         lda R6                 ;get low byte of block buffer address again
          bne ExPVne              ;if not zero, branch
          lda ScreenRight_PageLoc ;load page location of right side of screen
          clc
@@ -1754,14 +1761,14 @@ PlayerHeadCollision:
 DBlockSte: sta Block_State,x        ;store into block object buffer
            jsr DestroyBlockMetatile ;store blank metatile in vram buffer to write to name table
            ldx SprDataOffset_Ctrl   ;load offset control bit
-           lda $02                  ;get vertical high nybble offset used in block buffer routine
+           lda R2                  ;get vertical high nybble offset used in block buffer routine
            sta Block_Orig_YPos,x    ;set as vertical coordinate for block object
            tay
-           lda $06                  ;get low byte of block buffer address used in same routine
+           lda R6                  ;get low byte of block buffer address used in same routine
            sta Block_BBuf_Low,x     ;save as offset here to be used later
            lda ($06),y              ;get contents of block buffer at old address at $06, $07
            jsr BlockBumpedChk       ;do a sub to check which block player bumped head on
-           sta $00                  ;store metatile here
+           sta R0                  ;store metatile here
            ldy PlayerSize           ;check player's size
            bne ChkBrick             ;if small, use metatile itself as contents of A
            tya                      ;otherwise init A (note: big = 0)
@@ -1769,7 +1776,7 @@ ChkBrick:  bcc PutMTileB            ;if no match was found in previous sub, skip
            ldy #$11                 ;otherwise load unbreakable state into block object buffer
            sty Block_State,x        ;note this applies to both player sizes
            lda #$c4                 ;load empty block metatile into A for now
-           ldy $00                  ;get metatile from before
+           ldy R0                  ;get metatile from before
            cpy #$58                 ;is it brick with coins (with line)?
            beq StartBTmr            ;if so, branch
            cpy #$5d                 ;is it brick with coins (without line)?
@@ -1785,13 +1792,13 @@ ContBTmr:  lda BrickCoinTimer       ;check brick coin timer
 PutOldMT:  tya                      ;put metatile into A
 PutMTileB: sta Block_Metatile,x     ;store whatever metatile be appropriate here
            jsr InitBlock_XY_Pos     ;get block object horizontal coordinates saved
-           ldy $02                  ;get vertical high nybble offset
+           ldy R2                  ;get vertical high nybble offset
            lda #$23
            sta ($06),y              ;write blank metatile $23 to block buffer
            lda #$10
            sta BlockBounceTimer     ;set block bounce timer
            pla                      ;pull original metatile from stack
-           sta $05                  ;and save here
+           sta R5                  ;and save here
            ldy #$00                 ;set default offset
            lda CrouchingFlag        ;is player crouching?
            bne SmallBP              ;if so, branch to increment offset

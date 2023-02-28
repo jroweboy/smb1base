@@ -25,7 +25,7 @@ TreeLedge:
           beq MidTreeL
           lda #$16                ;render start of tree ledge
           jmp NoUnder
-MidTreeL: ldx $07
+MidTreeL: ldx R7
           lda #$17                ;render middle of tree ledge
           sta MetatileBuffer,x    ;note that this is also used if ledge position is
           lda #$4c                ;at the start of level for continuous effect
@@ -35,7 +35,7 @@ EndTreeL: lda #$18                ;render end of tree ledge
 
 MushroomLedge:
           jsr ChkLrgObjLength        ;get shroom dimensions
-          sty $06                    ;store length here for now
+          sty R6                    ;store length here for now
           bcc EndMushL
           lda AreaObjectLength,x     ;divide length by 2 and store elsewhere
           lsr
@@ -46,11 +46,11 @@ EndMushL: lda #$1b                   ;if at the end, render end of mushroom
           ldy AreaObjectLength,x
           beq NoUnder
           lda MushroomLedgeHalfLen,x ;get divided length and store where length
-          sta $06                    ;was stored originally
-          ldx $07
+          sta R6                    ;was stored originally
+          ldx R7
           lda #$1a
           sta MetatileBuffer,x       ;render middle of mushroom
-          cpy $06                    ;are we smack dab in the center?
+          cpy R6                    ;are we smack dab in the center?
           bne CannonExit              ;if not, branch to leave
           inx
           lda #$4f
@@ -59,7 +59,7 @@ EndMushL: lda #$1b                   ;if at the end, render end of mushroom
 AllUnder: inx
           ldy #$0f                   ;set $0f to render all way down
           jmp RenderUnderPart        ;now render the stem of mushroom
-NoUnder:  ldx $07                    ;load row of ledge
+NoUnder:  ldx R7                    ;load row of ledge
           ldy #$00                   ;set 0 for no bottom on this part
           jmp RenderUnderPart
 
@@ -67,7 +67,7 @@ NoUnder:  ldx $07                    ;load row of ledge
 
 BulletBillCannon:
              jsr GetLrgObjAttrib      ;get row and length of bullet bill cannon
-             ldx $07                  ;start at first row
+             ldx R7                  ;start at first row
              lda #$64                 ;render bullet bill cannon
              sta MetatileBuffer,x
              inx

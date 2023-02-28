@@ -268,13 +268,13 @@ ChkFiery:
   ldy #$08
 StartClrGet:
   lda #$03                 ;do four colors
-  sta $00
+  sta R0
 ClrGetLoop:
   lda PlayerColors,y       ;fetch player colors and store them
   sta VRAM_Buffer1+3,x     ;in the buffer
   iny
   inx
-  dec $00
+  dec R0
   bpl ClrGetLoop
   ldx VRAM_Buffer1_Offset  ;load original offset from before
   ldy BackgroundColorCtrl  ;if this value is four or greater, it will be set
@@ -337,18 +337,18 @@ DrawTitleScreen:
   lda #<TitleScreenDataOffset
   sta PPUADDR
   lda #$03                     ;put address $0300 into
-  sta $01                      ;the indirect at $00
+  sta R1                      ;the indirect at $00
   ldy #$00
-  sty $00
+  sty R0
   lda PPUDATA                 ;do one garbage read
 OutputTScr:
   lda PPUDATA                 ;get title screen from chr-rom
   sta ($00),y                  ;store 256 bytes into buffer
   iny
   bne ChkHiByte                ;if not past 256 bytes, do not increment
-  inc $01                      ;otherwise increment high byte of indirect
+  inc R1                      ;otherwise increment high byte of indirect
 ChkHiByte:
-  lda $01                      ;check high byte?
+  lda R1                      ;check high byte?
   cmp #$04                     ;at $0400?
   bne OutputTScr               ;if not, loop back and do another
   cpy #$3a                     ;check if offset points past end of data
@@ -451,11 +451,11 @@ RepeatByte:
   bne OutputToVRAM
   sec          
   tya
-  adc $00                   ;add end length plus one to the indirect at $00
-  sta $00                   ;to allow this routine to read another set of updates
+  adc R0                   ;add end length plus one to the indirect at $00
+  sta R0                   ;to allow this routine to read another set of updates
   lda #$00
-  adc $01
-  sta $01
+  adc R1
+  sta R1
   lda #$3f                  ;sets vram address to $3f00
   sta PPUADDR
   lda #$00
@@ -626,10 +626,10 @@ HandlePipeEntry:
          lda Up_Down_Buttons       ;check saved controller bits from earlier
          and #%00000100            ;for pressing down
          beq ExPipeE               ;if not pressing down, branch to leave
-         lda $00
+         lda R0
          cmp #$11                  ;check right foot metatile for warp pipe right metatile
          bne ExPipeE               ;branch to leave if not found
-         lda $01
+         lda R1
          cmp #$10                  ;check left foot metatile for warp pipe left metatile
          bne ExPipeE               ;branch to leave if not found
          lda #$30
@@ -741,9 +741,9 @@ StatusBarOffset:
 
 .export PrintStatusBarNumbers
 .proc PrintStatusBarNumbers
-  sta $00            ;store player-specific offset
+  sta R0            ;store player-specific offset
   jsr OutputNumbers  ;use first nybble to print the coin display
-  lda $00            ;move high nybble to low
+  lda R0            ;move high nybble to low
   lsr                ;and print to score display
   lsr
   lsr
@@ -768,21 +768,21 @@ SetupNums:
     sta VRAM_Buffer1+1,x     ;we're printing to the buffer
     lda StatusBarData+1,y
     sta VRAM_Buffer1+2,x
-    sta $03                  ;save length byte in counter
-    stx $02                  ;and buffer pointer elsewhere for now
+    sta R3                  ;save length byte in counter
+    stx R2                  ;and buffer pointer elsewhere for now
   pla                      ;pull original incremented value from stack
   tax
   lda StatusBarOffset,x    ;load offset to value we want to write
   sec
   sbc StatusBarData+1,y    ;subtract from length byte we read before
   tay                      ;use value as offset to display digits
-  ldx $02
+  ldx R2
 DigitPLoop:
   lda DisplayDigits,y      ;write digits to the buffer
   sta VRAM_Buffer1+3,x    
   inx
   iny
-  dec $03                  ;do this until all the digits are written
+  dec R3                  ;do this until all the digits are written
   bne DigitPLoop
   lda #$00                 ;put null terminator at end
   sta VRAM_Buffer1+3,x
@@ -919,38 +919,38 @@ MoveVOffset:
   adc #10
   jmp SetVRAMOffset       ;branch to store as new vram buffer offset
 PutBlockMetatile:
-  stx $00               ;store control bit from SprDataOffset_Ctrl
-  sty $01               ;store vram buffer offset for next byte
+  stx R0               ;store control bit from SprDataOffset_Ctrl
+  sty R1               ;store vram buffer offset for next byte
   asl
   asl                   ;multiply A by four and use as X
   tax
   ldy #$20              ;load high byte for name table 0
-  lda $06               ;get low byte of block buffer pointer
+  lda R6               ;get low byte of block buffer pointer
   cmp #$d0              ;check to see if we're on odd-page block buffer
   bcc SaveHAdder        ;if not, use current high byte
   ldy #$24              ;otherwise load high byte for name table 1
 SaveHAdder:
-  sty $03               ;save high byte here
+  sty R3               ;save high byte here
   and #$0f              ;mask out high nybble of block buffer pointer
   asl                   ;multiply by 2 to get appropriate name table low byte
-  sta $04               ;and then store it here
+  sta R4               ;and then store it here
   lda #$00
-  sta $05               ;initialize temp high byte
-  lda $02               ;get vertical high nybble offset used in block buffer routine
+  sta R5               ;initialize temp high byte
+  lda R2               ;get vertical high nybble offset used in block buffer routine
   clc
   adc #$20              ;add 32 pixels for the status bar
   asl
-  rol $05               ;shift and rotate d7 onto d0 and d6 into carry
+  rol R5               ;shift and rotate d7 onto d0 and d6 into carry
   asl
-  rol $05               ;shift and rotate d6 onto d0 and d5 into carry
-  adc $04               ;add low byte of name table and carry to vertical high nybble
-  sta $04               ;and store here
-  lda $05               ;get whatever was in d7 and d6 of vertical high nybble
+  rol R5               ;shift and rotate d6 onto d0 and d5 into carry
+  adc R4               ;add low byte of name table and carry to vertical high nybble
+  sta R4               ;and store here
+  lda R5               ;get whatever was in d7 and d6 of vertical high nybble
   adc #$00              ;add carry
   clc
-  adc $03               ;then add high byte of name table
-  sta $05               ;store here
-  ldy $01               ;get vram buffer offset to be used
+  adc R3               ;then add high byte of name table
+  sta R5               ;store here
+  ldy R1               ;get vram buffer offset to be used
   ;fallthrough
 RemBridge:
   lda BlockGfxData,x    ;write top left and top right
@@ -961,12 +961,12 @@ RemBridge:
   sta VRAM_Buffer1+7,y  ;right tiles numbers into
   lda BlockGfxData+3,x  ;second spot
   sta VRAM_Buffer1+8,y
-  lda $04
+  lda R4
   sta VRAM_Buffer1,y    ;write low byte of name table
   clc                   ;into first slot as read
   adc #$20              ;add 32 bytes to value
   sta VRAM_Buffer1+5,y  ;write low byte of name table
-  lda $05               ;plus 32 bytes into second slot
+  lda R5               ;plus 32 bytes into second slot
   sta VRAM_Buffer1-1,y  ;write high byte of name
   sta VRAM_Buffer1+4,y  ;table address to both slots
   lda #$02
@@ -974,7 +974,7 @@ RemBridge:
   sta VRAM_Buffer1+6,y  ;both slots
   lda #$00
   sta VRAM_Buffer1+9,y  ;put null terminator at end
-  ldx $00               ;get offset control bit here
+  ldx R0               ;get offset control bit here
   rts                   ;and leave
 
 BlockGfxData:
@@ -998,9 +998,9 @@ BlockGfxData:
 RenderAreaGraphics:
             lda CurrentColumnPos         ;store LSB of where we're at
             and #$01
-            sta $05
+            sta R5
             ldy VRAM_Buffer2_Offset      ;store vram buffer offset
-            sty $00
+            sty R0
             lda CurrentNTAddr_Low        ;get current name table address we're supposed to render
             sta VRAM_Buffer2+1,y
             lda CurrentNTAddr_High
@@ -1008,67 +1008,67 @@ RenderAreaGraphics:
             lda #$9a                     ;store length byte of 26 here with d7 set
             sta VRAM_Buffer2+2,y         ;to increment by 32 (in columns)
             lda #$00                     ;init attribute row
-            sta $04
+            sta R4
             tax
-DrawMTLoop: stx $01                      ;store init value of 0 or incremented offset for buffer
+DrawMTLoop: stx R1                      ;store init value of 0 or incremented offset for buffer
             lda MetatileBuffer,x         ;get first metatile number, and mask out all but 2 MSB
             and #%11000000
-            sta $03                      ;store attribute table bits here
+            sta R3                      ;store attribute table bits here
             asl                          ;note that metatile format is:
             rol                          ;%xx000000 - attribute table bits, 
             rol                          ;%00xxxxxx - metatile number
             tay                          ;rotate bits to d1-d0 and use as offset here
             lda MetatileGraphics_Low,y   ;get address to graphics table from here
-            sta $06
+            sta R6
             lda MetatileGraphics_High,y
-            sta $07
+            sta R7
             lda MetatileBuffer,x         ;get metatile number again
             asl                          ;multiply by 4 and use as tile offset
             asl
-            sta $02
+            sta R2
             lda AreaParserTaskNum        ;get current task number for level processing and
             and #%00000001               ;mask out all but LSB, then invert LSB, multiply by 2
             eor #%00000001               ;to get the correct column position in the metatile,
             asl                          ;then add to the tile offset so we can draw either side
-            adc $02                      ;of the metatiles
+            adc R2                      ;of the metatiles
             tay
-            ldx $00                      ;use vram buffer offset from before as X
+            ldx R0                      ;use vram buffer offset from before as X
             lda ($06),y
             sta VRAM_Buffer2+3,x         ;get first tile number (top left or top right) and store
             iny
             lda ($06),y                  ;now get the second (bottom left or bottom right) and store
             sta VRAM_Buffer2+4,x
-            ldy $04                      ;get current attribute row
-            lda $05                      ;get LSB of current column where we're at, and
+            ldy R4                      ;get current attribute row
+            lda R5                      ;get LSB of current column where we're at, and
             bne RightCheck               ;branch if set (clear = left attrib, set = right)
-            lda $01                      ;get current row we're rendering
+            lda R1                      ;get current row we're rendering
             lsr                          ;branch if LSB set (clear = top left, set = bottom left)
             bcs LLeft
-            rol $03                      ;rotate attribute bits 3 to the left
-            rol $03                      ;thus in d1-d0, for upper left square
-            rol $03
+            rol R3                      ;rotate attribute bits 3 to the left
+            rol R3                      ;thus in d1-d0, for upper left square
+            rol R3
             jmp SetAttrib
-RightCheck: lda $01                      ;get LSB of current row we're rendering
+RightCheck: lda R1                      ;get LSB of current row we're rendering
             lsr                          ;branch if set (clear = top right, set = bottom right)
             bcs NextMTRow
-            lsr $03                      ;shift attribute bits 4 to the right
-            lsr $03                      ;thus in d3-d2, for upper right square
-            lsr $03
-            lsr $03
+            lsr R3                      ;shift attribute bits 4 to the right
+            lsr R3                      ;thus in d3-d2, for upper right square
+            lsr R3
+            lsr R3
             jmp SetAttrib
-LLeft:      lsr $03                      ;shift attribute bits 2 to the right
-            lsr $03                      ;thus in d5-d4 for lower left square
-NextMTRow:  inc $04                      ;move onto next attribute row  
+LLeft:      lsr R3                      ;shift attribute bits 2 to the right
+            lsr R3                      ;thus in d5-d4 for lower left square
+NextMTRow:  inc R4                      ;move onto next attribute row  
 SetAttrib:  lda AttributeBuffer,y        ;get previously saved bits from before
-            ora $03                      ;if any, and put new bits, if any, onto
+            ora R3                      ;if any, and put new bits, if any, onto
             sta AttributeBuffer,y        ;the old, and store
-            inc $00                      ;increment vram buffer offset by 2
-            inc $00
-            ldx $01                      ;get current gfx buffer row, and check for
+            inc R0                      ;increment vram buffer offset by 2
+            inc R0
+            ldx R1                      ;get current gfx buffer row, and check for
             inx                          ;the bottom of the screen
             cpx #$0d
             bcc DrawMTLoop               ;if not there yet, loop back
-            ldy $00                      ;get current vram buffer offset, increment by 3
+            ldy R0                      ;get current vram buffer offset, increment by 3
             iny                          ;(for name table address and length bytes)
             iny
             iny
@@ -1096,27 +1096,27 @@ RenderAttributeTables:
              sec                      ;subtract four 
              sbc #$04
              and #%00011111           ;mask out bits again and store
-             sta $01
+             sta R1
              lda CurrentNTAddr_High   ;get high byte and branch if borrow not set
              bcs SetATHigh
              eor #%00000100           ;otherwise invert d2
 SetATHigh:   and #%00000100           ;mask out all other bits
              ora #$23                 ;add $2300 to the high byte and store
-             sta $00
-             lda $01                  ;get low byte - 4, divide by 4, add offset for
+             sta R0
+             lda R1                  ;get low byte - 4, divide by 4, add offset for
              lsr                      ;attribute table and store
              lsr
              adc #$c0                 ;we should now have the appropriate block of
-             sta $01                  ;attribute table in our temp address
+             sta R1                  ;attribute table in our temp address
              ldx #$00
              ldy VRAM_Buffer2_Offset  ;get buffer offset
-AttribLoop:  lda $00
+AttribLoop:  lda R0
              sta VRAM_Buffer2,y       ;store high byte of attribute table address
-             lda $01
+             lda R1
              clc                      ;get low byte, add 8 because we want to start
              adc #$08                 ;below the status bar, and store
              sta VRAM_Buffer2+1,y
-             sta $01                  ;also store in temp again
+             sta R1                  ;also store in temp again
              lda AttributeBuffer,x    ;fetch current attribute table byte and store
              sta VRAM_Buffer2+3,y     ;in the buffer
              lda #$01

@@ -255,9 +255,9 @@ RendBack: asl                        ;move results to higher nybble
           and #$0f                   ;save to stack and clear high nybble
           sec
           sbc #$01                   ;subtract one (because low nybble is $01-$0c)
-          sta $00                    ;save low nybble
+          sta R0                    ;save low nybble
           asl                        ;multiply by three (shift to left and add result to old one)
-          adc $00                    ;note that since d7 was nulled, the carry flag is always clear
+          adc R0                    ;note that since d7 was nulled, the carry flag is always clear
           tax                        ;save as offset for background scenery metatile data
           pla                        ;get high nybble from stack, move low
           lsr
@@ -266,14 +266,14 @@ RendBack: asl                        ;move results to higher nybble
           lsr
           tay                        ;use as second offset (used to determine height)
           lda #$03                   ;use previously saved memory location for counter
-          sta $00
+          sta R0
 SceLoop1: lda BackSceneryMetatiles,x ;load metatile data from offset of (lsb - 1) * 3
           sta MetatileBuffer,y       ;store into buffer from offset of (msb / 16)
           inx
           iny
           cpy #$0b                   ;if at this location, leave loop
           beq RendFore
-          dec $00                    ;decrement until counter expires, barring exception
+          dec R0                    ;decrement until counter expires, barring exception
           bne SceLoop1
 RendFore: ldx ForegroundScenery      ;check for foreground data needed or not
           beq RendTerr               ;if not, skip this part
@@ -297,27 +297,27 @@ TerMTile: lda TerrainMetatiles,y     ;otherwise get appropriate metatile for are
           ldy CloudTypeOverride      ;check for cloud type override
           beq StoreMT                ;if not set, keep value otherwise
           lda #$88                   ;use cloud block terrain
-StoreMT:  sta $07                    ;store value here
+StoreMT:  sta R7                    ;store value here
           ldx #$00                   ;initialize X, use as metatile buffer offset
           lda TerrainControl         ;use yet another value from the header
           asl                        ;multiply by 2 and use as yet another offset
           tay
 TerrLoop: lda TerrainRenderBits,y    ;get one of the terrain rendering bit data
-          sta $00
+          sta R0
           iny                        ;increment Y and use as offset next time around
-          sty $01
+          sty R1
           lda CloudTypeOverride      ;skip if value here is zero
           beq NoCloud2
           cpx #$00                   ;otherwise, check if we're doing the ceiling byte
           beq NoCloud2
-          lda $00                    ;if not, mask out all but d3
+          lda R0                    ;if not, mask out all but d3
           and #%00001000
-          sta $00
+          sta R0
 NoCloud2: ldy #$00                   ;start at beginning of bitmasks
 TerrBChk: lda Bitmasks,y             ;load bitmask, then perform AND on contents of first byte
-          bit $00
+          bit R0
           beq NextTBit               ;if not set, skip this part (do not write terrain to buffer)
-          lda $07
+          lda R7
           sta MetatileBuffer,x       ;load terrain type metatile number and store into buffer here
 NextTBit: inx                        ;continue until end of buffer
           cpx #$0d
@@ -328,18 +328,18 @@ NextTBit: inx                        ;continue until end of buffer
           cpx #$0b
           bne EndUChk                ;if we're at the bottom of the screen, override
           lda #$54                   ;old terrain type with ground level terrain type
-          sta $07
+          sta R7
 EndUChk:  iny                        ;increment bitmasks offset in Y
           cpy #$08
           bne TerrBChk               ;if not all bits checked, loop back    
-          ldy $01
+          ldy R1
           bne TerrLoop               ;unconditional branch, use Y to load next byte
 RendBBuf: jsr ProcessAreaData        ;do the area data loading routine now
           lda BlockBufferColumnPos
           jsr GetBlockBufferAddr     ;get block buffer address from where we're at
           ldx #$00
           ldy #$00                   ;init index regs and start at beginning of smaller buffer
-ChkMTLow: sty $00
+ChkMTLow: sty R0
           lda MetatileBuffer,x       ;load stored metatile number
           and #%11000000             ;mask out all but 2 MSB
           asl
@@ -350,7 +350,7 @@ ChkMTLow: sty $00
           cmp BlockBuffLowBounds,y   ;check for certain values depending on bits set
           bcs StrBlock               ;if equal or greater, branch
           lda #$00                   ;if less, init value before storing
-StrBlock: ldy $00                    ;get offset for block buffer
+StrBlock: ldy R0                    ;get offset for block buffer
           sta ($06),y                ;store value into block buffer
           tya
           clc                        ;add 16 (move down one row) to offset
@@ -452,18 +452,18 @@ Chk1stB:  ldx #$10                   ;load offset of 16 for special row 15
           cmp #$0c                   ;row 12?
           beq ChkRow14               ;if so, keep the offset value of 8
           ldx #$00                   ;otherwise nullify value by default
-ChkRow14: stx $07                    ;store whatever value we just loaded here
+ChkRow14: stx R7                    ;store whatever value we just loaded here
           ldx ObjectOffset           ;get object offset again
           cmp #$0e                   ;row 14?
           bne ChkRow13
           lda #$00                   ;if so, load offset with $00
-          sta $07
+          sta R7
           lda #$2e                   ;and load A with another value
           bne NormObj                ;unconditional branch
 ChkRow13: cmp #$0d                   ;row 13?
           bne ChkSRows
           lda #$22                   ;if so, load offset with 34
-          sta $07
+          sta R7
           iny                        ;get next byte
           lda (AreaData),y
           and #%01000000             ;mask out all but d6 (page control obj bit)
@@ -482,19 +482,19 @@ ChkSRows: cmp #$0c                   ;row 12-15?
           and #%01110000             ;mask out all but d6-d4
           bne LrgObj                 ;if any bits set, branch to handle large object
           lda #$16
-          sta $07                    ;otherwise set offset of 24 for small object
+          sta R7                    ;otherwise set offset of 24 for small object
           lda (AreaData),y           ;reload second byte of level object
           and #%00001111             ;mask out higher nybble and jump
           jmp NormObj
-LrgObj:   sta $00                    ;store value here (branch for large objects)
+LrgObj:   sta R0                    ;store value here (branch for large objects)
           cmp #$70                   ;check for vertical pipe object
           bne NotWPipe
           lda (AreaData),y           ;if not, reload second byte
           and #%00001000             ;mask out all but d3 (usage control bit)
           beq NotWPipe               ;if d3 clear, branch to get original value
           lda #$00                   ;otherwise, nullify value for warp pipe
-          sta $00
-NotWPipe: lda $00                    ;get value and jump ahead
+          sta R0
+NotWPipe: lda R0                    ;get value and jump ahead
           jmp MoveAOId
 SpecObj:  iny                        ;branch here for rows 12-15
           lda (AreaData),y
@@ -503,7 +503,7 @@ MoveAOId: lsr                        ;move d6-d4 to lower nybble
           lsr
           lsr
           lsr
-NormObj:  sta $00                    ;store value here (branch for small objects and rows 13 and 14)
+NormObj:  sta R0                    ;store value here (branch for small objects and rows 13 and 14)
           lda AreaObjectLength,x     ;is there something stored here already?
           bpl RunAObj                ;if so, branch to do its particular sub
           lda AreaObjectPageLoc      ;otherwise check to see if the object we've loaded is on the
@@ -536,9 +536,9 @@ BackColC: ldy AreaDataOffset         ;get first byte again
 StrAObj:  lda AreaDataOffset         ;if so, load area obj offset and store in buffer
           sta AreaObjOffsetBuffer,x
           jsr IncAreaObjOffset       ;do sub to increment to next object data
-RunAObj:  lda $00                    ;get stored value and add offset to it
+RunAObj:  lda R0                    ;get stored value and add offset to it
           clc                        ;then use the jump engine with current contents of A
-          adc $07
+          adc R7
           jsr JumpEngine
 
 ;large objects (rows $00-$0b or 00-11, d6-d4 set)
@@ -662,7 +662,7 @@ ScrollLockObject:
 FrenzyIDData:
       .byte FlyCheepCheepFrenzy, BBill_CCheep_Frenzy, Stop_Frenzy
 
-AreaFrenzy:  ldx $00               ;use area object identifier bit as offset
+AreaFrenzy:  ldx R0               ;use area object identifier bit as offset
              lda FrenzyIDData-8,x  ;note that it starts at 8, thus weird address here
              ldy #$05
 FreCompLoop: dey                   ;check regular slots of enemy object buffer
@@ -694,7 +694,7 @@ GetLrgObjAttrib:
       ldy AreaObjOffsetBuffer,x ;get offset saved from area obj decoding routine
       lda (AreaData),y          ;get first byte of level object
       and #%00001111
-      sta $07                   ;save row location
+      sta R7                   ;save row location
       iny
       lda (AreaData),y          ;get next byte, save lower nybble (length or height)
       and #%00001111            ;as Y, then leave
@@ -714,7 +714,7 @@ GetAreaObjXPosition:
 ;--------------------------------
 
 GetAreaObjYPosition:
-      lda $07  ;multiply value by 16
+      lda R7  ;multiply value by 16
       asl
       asl      ;this will give us the proper vertical pixel coordinate
       asl
@@ -858,10 +858,10 @@ CheckRightBounds:
         clc
         adc #$30
         and #%11110000           ;store high nybble
-        sta $07
+        sta R7
         lda ScreenRight_PageLoc  ;add carry to page location of right boundary
         adc #$00
-        sta $06                  ;store page location + carry
+        sta R6                  ;store page location + carry
         ldy EnemyDataOffset
         iny
         lda (EnemyData),y        ;if MSB of enemy object is clear, branch to check for row $0f
@@ -906,9 +906,9 @@ PositionEnemyObj:
   jmp CheckThreeBytes      ;if not found, unconditional jump
 
 CheckRightExtBounds:
-  lda $07                  ;check right boundary + 48 against
+  lda R7                  ;check right boundary + 48 against
   cmp Enemy_X_Position,x   ;column position without subtracting,
-  lda $06                  ;then subtract borrow from page control temp
+  lda R6                  ;then subtract borrow from page control temp
   sbc Enemy_PageLoc,x      ;plus carry
   bcc CheckFrenzyBuffer    ;if enemy object beyond extended boundary, branch
   lda #$01                 ;store value in vertical high byte
@@ -1027,16 +1027,16 @@ HandleGroupEnemies:
         beq PullID                ;branch, otherwise change to value
         ldy #BuzzyBeetle          ;for buzzy beetle
 PullID: pla                       ;get second copy from stack
-SnglID: sty $01                   ;save enemy id here
+SnglID: sty R1                   ;save enemy id here
         ldy #$b0                  ;load default y coordinate
         and #$02                  ;check to see if d1 was set
         beq SetYGp                ;if so, move y coordinate up,
         ldy #$70                  ;otherwise branch and use default
-SetYGp: sty $00                   ;save y coordinate here
+SetYGp: sty R0                   ;save y coordinate here
         lda ScreenRight_PageLoc   ;get page number of right edge of screen
-        sta $02                   ;save here
+        sta R2                   ;save here
         lda ScreenRight_X_Pos     ;get pixel coordinate of right edge
-        sta $03                   ;save here
+        sta R3                   ;save here
         ldy #$02                  ;load two enemies by default
         pla                       ;get first copy from stack
         lsr                       ;check to see if d0 was set
@@ -1049,19 +1049,19 @@ GSltLp: inx                       ;increment and branch if past
         bcs NextED
         lda Enemy_Flag,x          ;check to see if enemy is already
         bne GSltLp                ;stored in buffer, and branch if so
-        lda $01
+        lda R1
         sta Enemy_ID,x            ;store enemy object identifier
-        lda $02
+        lda R2
         sta Enemy_PageLoc,x       ;store page location for enemy object
-        lda $03
+        lda R3
         sta Enemy_X_Position,x    ;store x coordinate for enemy object
         clc
         adc #$18                  ;add 24 pixels for next enemy
-        sta $03
-        lda $02                   ;add carry to page location for
+        sta R3
+        lda R2                   ;add carry to page location for
         adc #$00                  ;next enemy
-        sta $02
-        lda $00                   ;store y coordinate for enemy object
+        sta R2
+        lda R0                   ;store y coordinate for enemy object
         sta Enemy_Y_Position,x
         lda #$01                  ;activate flag for buffer, and
         sta Enemy_Y_HighPos,x     ;put enemy within the screen vertically

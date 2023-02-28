@@ -10,7 +10,7 @@
 WaterPipe:
       jsr GetLrgObjAttrib     ;get row and lower nybble
       ; ldy AreaObjectLength,x  ;get length (residual code, water pipe is 1 col thick)
-      ldx $07                 ;get row
+      ldx R7                 ;get row
       lda #$6b
       sta MetatileBuffer,x    ;draw something here and below it
       lda #$6c
@@ -55,19 +55,19 @@ ExitPipe:
 RenderSidewaysPipe:
               dey                       ;decrement twice to make room for shaft at bottom
               dey                       ;and store here for now as vertical length
-              sty $05
+              sty R5
               ldy AreaObjectLength,x    ;get length left over and store here
-              sty $06
-              ldx $05                   ;get vertical length plus one, use as buffer offset
+              sty R6
+              ldx R5                   ;get vertical length plus one, use as buffer offset
               inx
               lda SidePipeShaftData,y   ;check for value $00 based on horizontal offset
               cmp #$00
               beq DrawSidePart          ;if found, do not draw the vertical pipe shaft
               ldx #$00
-              ldy $05                   ;init buffer offset and get vertical length
+              ldy R5                   ;init buffer offset and get vertical length
               jsr RenderUnderPart       ;and render vertical shaft using tile number in A
               clc                       ;clear carry flag to be used by IntroPipe
-DrawSidePart: ldy $06                   ;render side pipe part at the bottom
+DrawSidePart: ldy R6                   ;render side pipe part at the bottom
               lda SidePipeTopPart,y
               sta MetatileBuffer,x      ;note that the pipe parts are stored
               lda SidePipeBottomPart,y  ;backwards horizontally
@@ -82,7 +82,7 @@ VerticalPipeData:
 
 VerticalPipe:
           jsr GetPipeHeight
-          lda $00                  ;check to see if value was nullified earlier
+          lda R0                  ;check to see if value was nullified earlier
           beq WarpPipe             ;(if d3, the usage control bit of second byte, was set)
           iny
           iny
@@ -114,12 +114,12 @@ WarpPipe: tya                      ;save value in stack
           farcall InitPiranhaPlant
 DrawPipe: pla                      ;get value saved earlier and use as Y
           tay
-          ldx $07                  ;get buffer offset
+          ldx R7                  ;get buffer offset
           lda VerticalPipeData,y   ;draw the appropriate pipe with the Y we loaded earlier
           sta MetatileBuffer,x     ;render the top of the pipe
           inx
           lda VerticalPipeData+2,y ;render the rest of the pipe
-          ldy $06                  ;subtract one from length and render the part underneath
+          ldy R6                  ;subtract one from length and render the part underneath
           dey
           jmp RenderUnderPart
       
@@ -129,7 +129,7 @@ GetPipeHeight:
       jsr GetLrgObjAttrib
       tya            ;get saved lower nybble as height
       and #$07       ;save only the three lower bits as
-      sta $06        ;vertical length, then load Y with
+      sta R6        ;vertical length, then load Y with
       ldy AreaObjectLength,x    ;length left over
       rts
 

@@ -20,7 +20,7 @@ Jumpspring:
       ldy #$01
       sty Enemy_Y_HighPos,x       ;store vertical high byte
       inc Enemy_Flag,x            ;set flag for enemy object buffer
-      ldx $07
+      ldx R7
       lda #$67                    ;draw metatiles in two rows where jumpspring is
       sta MetatileBuffer,x
       lda #$68
