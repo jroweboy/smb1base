@@ -1564,31 +1564,44 @@ ImpedePlayerMove:
   inx                       ;return value to X
   cpy #$00                  ;if player moving to the left,
   bmi ExIPM                 ;branch to invert bit and leave
-  lda #$ff                  ;otherwise load A with value to be used later
-  jmp NXSpd                 ;and jump to affect movement
-RImpd: ldx #$02                  ;return $02 to X
-       cpy #$01                  ;if player moving to the right,
-       bpl ExIPM                 ;branch to invert bit and leave
-       lda #$01                  ;otherwise load A with value to be used here
-NXSpd: ldy #$10
-       sty SideCollisionTimer    ;set timer of some sort
-       ldy #$00
-       sty Player_X_Speed        ;nullify player's horizontal speed
-       cmp #$00                  ;if value set in A not set to $ff,
-       bpl PlatF                 ;branch ahead, do not decrement Y
-       dey                       ;otherwise decrement Y now
-PlatF: sty $00                   ;store Y as high bits of horizontal adder
-       clc
-       adc Player_X_Position     ;add contents of A to player's horizontal
-       sta Player_X_Position     ;position to move player left or right
-       lda Player_PageLoc
-       adc $00                   ;add high bits and carry to
-       sta Player_PageLoc        ;page location if necessary
-ExIPM: txa                       ;invert contents of X
-       eor #$ff
-       and Player_CollisionBits  ;mask out bit that was set here
-       sta Player_CollisionBits  ;store to clear bit
-       rts
+    lda #$ff                  ;otherwise load A with value to be used later
+    jmp NXSpd                 ;and jump to affect movement
+RImpd:
+    ldx #$02                  ;return $02 to X
+    cpy #$01                  ;if player moving to the right,
+    bpl ExIPM                 ;branch to invert bit and leave
+    lda #$01                  ;otherwise load A with value to be used here
+NXSpd:
+    ; y == Player_X_Speed
+    ; jroweboy reverse the player direction when running into a wall
+    pha
+      tya
+      eor #$ff
+      clc
+      adc #1
+      sta Player_X_Speed
+    pla
+    ldy #$10
+    sty SideCollisionTimer    ;set timer of some sort
+    ldy #$00
+    ; sty Player_X_Speed        ;nullify player's horizontal speed
+    cmp #$00                  ;if value set in A not set to $ff,
+    bpl PlatF                 ;branch ahead, do not decrement Y
+      dey                       ;otherwise decrement Y now
+PlatF: 
+    sty $00                   ;store Y as high bits of horizontal adder
+    clc
+    adc Player_X_Position     ;add contents of A to player's horizontal
+    sta Player_X_Position     ;position to move player left or right
+    lda Player_PageLoc
+    adc $00                   ;add high bits and carry to
+    sta Player_PageLoc        ;page location if necessary
+ExIPM:
+  txa                       ;invert contents of X
+  eor #$ff
+  and Player_CollisionBits  ;mask out bit that was set here
+  sta Player_CollisionBits  ;store to clear bit
+  rts
 
 ;--------------------------------
 ;$02 - high nybble of vertical coordinate from block buffer
