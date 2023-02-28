@@ -445,7 +445,7 @@ SkipByte:
 ;   pla
 ;   sta JoypadBitMask,x    ;save with all bits in another place and leave
 ;   rts
-OAMandReadJoypad:
+.proc OAMandReadJoypad
   lda #OAM
   sta OAM_DMA          ; ------ OAM DMA ------
   ldx #1             ; get put          <- strobe code must take an odd number of cycles total
@@ -464,6 +464,8 @@ read_loop:
   rol SavedJoypad1Bits ; put get put get put
   bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
 ASSERT_PAGE read_loop
+  rts
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used for preset value
