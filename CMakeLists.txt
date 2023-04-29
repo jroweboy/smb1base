@@ -18,6 +18,7 @@ add_executable(${PROJECT_NAME}
   src/chr.s
   src/collision.s
   src/common.s
+  src/dpcm.s
   src/gamecore.s
   src/gamemode.s
   src/player.s

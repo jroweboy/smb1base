@@ -2,7 +2,7 @@
 
 nes2mapper 4 ; mmc3
 ; nes2mapper 5 ; mmc5
-nes2prg $10000
+nes2prg $20000
 nes2chr $2000
 nes2mirror 'V'
 nes2tv 'N'

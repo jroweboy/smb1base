@@ -14,5 +14,6 @@
     "cmake.parseBuildDiagnostics": false,
     "cmake.enabledOutputParsers": [],
     "editor.tabSize": 2,
-    "terminal.integrated.showExitAlert": false
+    "terminal.integrated.showExitAlert": false,
+    "cmake.configureOnOpen": true
 }

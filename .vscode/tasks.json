@@ -9,12 +9,12 @@
             "args": ["--build", "${config:cmake.buildDirectory}", "--target", "${input:fileAsTarget}^"],
             "presentation": {
                 "echo": true,
-                "reveal": "never",
-                "focus": false,
+                // "reveal": "never",
+                // "focus": false,
                 "panel": "shared",
-                "close": true,
+                // "close": true,
                 "showReuseMessage": false,
-                "clear": true
+                // "clear": true
             },
             "problemMatcher": [
                 {

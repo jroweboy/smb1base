@@ -52,12 +52,18 @@ IRQENABLE   = $e001
   ; set fixed $8000 bank bit
 	lda #select | PRG_FIXED_8
   sta BANK_SELECT
-  .if (.match (.left (1, {arg}), #))
-    lda #bank
+  .if .match(bank, x)
+    stx BANK_DATA
+  .elseif .match(bank, y)
+    sty BANK_DATA
   .else
-    lda bank
+    .if (.match (.left (1, {arg}), #))
+      lda #bank
+    .else
+      lda bank
+    .endif
+    sta BANK_DATA
   .endif
-  sta BANK_DATA
 .endscope
 .endmacro
 
