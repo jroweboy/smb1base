@@ -2,3 +2,4 @@ build/
 *.nes
 tools/Windows/emulator/*
 !tools/Windows/emulator/Mesen.exe
+__pycache__/

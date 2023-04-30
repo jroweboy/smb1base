@@ -9,12 +9,12 @@
             "args": ["--build", "${config:cmake.buildDirectory}", "--target", "${input:fileAsTarget}^"],
             "presentation": {
                 "echo": true,
-                // "reveal": "never",
-                // "focus": false,
+                "reveal": "silent",
+                "focus": false,
                 "panel": "shared",
                 // "close": true,
                 "showReuseMessage": false,
-                // "clear": true
+                "clear": true
             },
             "problemMatcher": [
                 {
@@ -263,7 +263,7 @@
             "command": "extension.commandvariable.transform",
             "args": {
                 "text": "${command:extension.commandvariable.file.filePosix}",
-                "find": "/c",
+                "find": "$/c",
                 "replace": "C:",
                 "flags": ""
             }

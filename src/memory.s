@@ -46,7 +46,7 @@ Misc_State:                     .res  9
 PlayerFacingDir:                .res  1 ; 1 = right, 2 = left
 DestinationPageLoc:             .res  1
 FirebarSpinDirection          = DestinationPageLoc
-VictoryWalkControl:             .res  4
+VictoryWalkControl:             .res  1 ; jroweboy was 4 bytes
 PowerUpType:                    .res  1 ; 0 = shroom, 1 = fireflower, 2 = star, 3 = 1up shroom
 FireballBouncingFlag:           .res  2
 HammerBroJumpTimer:             .res  9
@@ -172,6 +172,10 @@ EventMusicQueue:                .res  1
 NoiseSoundQueue:                .res  1
 Square2SoundQueue:              .res  1
 Square1SoundQueue:              .res  1
+
+IrqTemp:                        .res 2
+IrqR0 = IrqTemp
+IrqR1 = IrqTemp + 1
 
 .segment "STACK"
 ; start $0100

@@ -74,12 +74,12 @@ ShufAmtLoop:
     sta SprDataOffset,x
     dex                       ;do this until they're all set
     bpl ShufAmtLoop
-  ldy #$03                  ;set up sprite #0
-ISpr0Loop:
-    lda Sprite0Data,y
-    sta Sprite_Data,y
-    dey
-    bpl ISpr0Loop
+;   ldy #$03                  ;set up sprite #0
+; ISpr0Loop:
+;     lda Sprite0Data,y
+;     sta Sprite_Data,y
+;     dey
+;     bpl ISpr0Loop
   inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
   rts
@@ -88,8 +88,8 @@ DefaultSprOffsets:
       .byte $04, $30, $48, $60, $78, $90, $a8, $c0
       .byte $d8, $e8, $24, $f8, $fc, $28, $2c
 
-Sprite0Data:
-      .byte $18, $ff, $23, $58
+; Sprite0Data:
+;       .byte $18, $ff, $23, $58
 
 ;-------------------------------------------------------------------------------------
 .export PauseRoutine

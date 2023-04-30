@@ -15,6 +15,9 @@ __MEMORY_INC = 1
 .globalzp R6
 .globalzp R7
 
+.globalzp IrqR0
+.globalzp IrqR1
+
 .globalzp ObjectOffset
 .globalzp FrameCounter
 

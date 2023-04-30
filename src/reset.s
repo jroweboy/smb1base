@@ -43,7 +43,8 @@
 .proc Start
   sei                          ;pretty standard 6502 type init here
   cld
-  lda #%00010000               ;init PPU control register 1 
+  ; lda #%00010000               ;init PPU control register 1 
+  lda #%00001000
   sta PPUCTRL
   ldx #$ff                     ;reset stack pointer
   txs
@@ -157,9 +158,9 @@ ScreenOff:
   jsr InitScroll
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
   lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
-  sta R0
+  sta IrqR0
   lda VRAM_AddrTable_High,x
-  sta R1
+  sta IrqR1
   jsr UpdateScreen          ;update screen with buffer contents
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
@@ -180,7 +181,7 @@ InitBuffer:
   ; jroweboy - set up Irq scroll split
   lda HorizontalScroll
   sta IrqNewScroll
-  lda #32 ; do the split 32 scanlines from the top of the screen
+  lda #32 - 1 ; do the split 32 scanlines from the top of the screen. -1 to give us time to set the new scroll
   sta IRQLATCH
   sta IRQRELOAD
   sta IRQENABLE
@@ -220,10 +221,10 @@ PauseSkip:
   ldy #$07
   lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
   and #%00000010            ;mask out all but d1
-  sta R0                   ;save here
+  sta IrqR0                   ;save here
   lda PseudoRandomBitReg+1  ;get second memory location
   and #%00000010            ;mask out all but d1
-  eor R0                   ;perform exclusive-OR on d1 from first and second bytes
+  eor IrqR0                   ;perform exclusive-OR on d1 from first and second bytes
   clc                       ;if neither or both are set, carry will be clear
   beq RotPRandomBit
   sec                       ;if one or the other is set, carry will be set
@@ -471,18 +472,18 @@ ASSERT_PAGE read_loop
 ;$00 - used for preset value
 .proc SpriteShuffler
   lda #$28                    ;load preset value which will put it at
-  sta R0                     ;sprite #10
+  sta IrqR0                     ;sprite #10
   ldx #$0e                    ;start at the end of OAM data offsets
 ShuffleLoop:
     lda SprDataOffset,x         ;check for offset value against
-    cmp R0                     ;the preset value
+    cmp IrqR0                     ;the preset value
     bcc NextSprOffset           ;if less, skip this part
     ldy SprShuffleAmtOffset     ;get current offset to preset value we want to add
     clc
     adc SprShuffleAmt,y         ;get shuffle amount, add to current sprite offset
     bcc StrSprOffset            ;if not exceeded $ff, skip second add
     clc
-    adc R0                     ;otherwise add preset value $28 to offset
+    adc IrqR0                     ;otherwise add preset value $28 to offset
 StrSprOffset:
     sta SprDataOffset,x         ;store new offset here or old one if branched to here
 NextSprOffset: 

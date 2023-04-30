@@ -137,7 +137,8 @@ TallEnemy             = $09
 WarmBootOffset        = <_WarmBootOffset
 ColdBootOffset        = <_ColdBootOffset
 
-TitleScreenDataOffset = $1ec0                     ; address in CHR ROM for titlescreen nametable layout
+TitleScreenDataOffset = $0ec0                     ; swapped sprites and bg
+; TitleScreenDataOffset = $1ec0                     ; address in CHR ROM for titlescreen nametable layout
 
 A_Button              = %10000000
 B_Button              = %01000000

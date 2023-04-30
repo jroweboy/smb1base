@@ -81,8 +81,9 @@ InitializeNameTables:
 
   lda PPUSTATUS            ;reset flip-flop
   lda Mirror_PPUCTRL       ;load mirror of ppu reg $2000
-  ora #%00010000            ;set sprites for first 4k and background for second 4k
-  and #%11110000            ;clear rest of lower nybble, leave higher alone
+  ; ora #%00010000            ;set sprites for first 4k and background for second 4k
+  ora #%00001000
+  and #%11101000            ;clear rest of lower nybble, leave higher alone
   jsr WritePPUReg1
   lda #$24                  ;set vram address to start of name table 1
   jsr WriteNTAddr
@@ -343,7 +344,7 @@ DrawTitleScreen:
   lda PPUDATA                 ;do one garbage read
 OutputTScr:
   lda PPUDATA                 ;get title screen from chr-rom
-  sta ($00),y                  ;store 256 bytes into buffer
+  sta (R0),y                  ;store 256 bytes into buffer
   iny
   bne ChkHiByte                ;if not past 256 bytes, do not increment
   inc R1                      ;otherwise increment high byte of indirect
@@ -420,10 +421,10 @@ WriteBufferToScreen:
 
   sta PPUADDR           ;store high byte of vram address
   iny
-  lda ($00),y               ;load next byte (second)
+  lda (IrqR0),y               ;load next byte (second)
   sta PPUADDR           ;store low byte of vram address
   iny
-  lda ($00),y               ;load next byte (third)
+  lda (IrqR0),y               ;load next byte (third)
   asl                       ;shift to left and save in stack
   pha
     lda Mirror_PPUCTRL     ;load mirror of $2000,
@@ -445,17 +446,17 @@ OutputToVRAM:
   bcs RepeatByte            ;if carry set, repeat loading the same byte
     iny                       ;otherwise increment Y to load next byte
 RepeatByte:
-  lda ($00),y               ;load more data from buffer and write to vram
+  lda (IrqR0),y               ;load more data from buffer and write to vram
   sta PPUDATA
   dex                       ;done writing?
   bne OutputToVRAM
   sec          
   tya
-  adc R0                   ;add end length plus one to the indirect at $00
-  sta R0                   ;to allow this routine to read another set of updates
+  adc IrqR0                   ;add end length plus one to the indirect at $00
+  sta IrqR0                   ;to allow this routine to read another set of updates
   lda #$00
-  adc R1
-  sta R1
+  adc IrqR1
+  sta IrqR1
   lda #$3f                  ;sets vram address to $3f00
   sta PPUADDR
   lda #$00
@@ -466,7 +467,7 @@ RepeatByte:
 UpdateScreen:
   ldx PPUSTATUS            ;reset flip-flop
   ldy #$00                  ;load first byte from indirect as a pointer
-  lda ($00),y  
+  lda (IrqR0),y  
   bne WriteBufferToScreen   ;if byte is zero we have no further updates to make here
 InitScroll:
   sta PPUSCROLL        ;store contents of A into scroll registers
