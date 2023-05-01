@@ -179,8 +179,8 @@ IrqR1 = IrqTemp + 1
 
 .segment "STACK"
 ; start $0100
-blank_stack:                    .res  8 ; not used
-VerticalFlipFlag:               .res  4 ; jroweboy: this is acutally only one byte?
+; blank_stack:                    .res  8 ; not used
+VerticalFlipFlag:               .res  1 ; jroweboy: this is acutally only one byte?
 FlagpoleFNum_Y_Pos:             .res  1
 FlagpoleFNum_YMFDummy:          .res  1
 FlagpoleScore:                  .res  1
@@ -499,7 +499,7 @@ OffScr_AreaNumber:              .res  1
 ScrollFractional:               .res  1
 DisableIntermediate:            .res  1
 PrimaryHardMode:                .res  1
-WorldSelectNumber:              .res  5
+WorldSelectNumber:              .res  1 ; original (5)
 
 ; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
 
@@ -510,13 +510,13 @@ DisableScreenFlag:              .res  1
 ScrollAmount:                   .res  1
 GamePauseStatus:                .res  1
 GamePauseTimer:                 .res  1
-Mirror_PPUCTRL:                .res  1
-Mirror_PPUMASK:                .res  1
+Mirror_PPUCTRL:                 .res  1
+Mirror_PPUMASK:                 .res  1
 NumberOfPlayers:                .res  1 ; jroweboy( this is only 1 byte, was 5)
 
-CurrentBank:    .res 1
-TargetAddrJmp:  .res 1
-TargetAddress:  .res 2
+CurrentBank:                    .res  1
+TargetAddrJmp:                  .res  1
+TargetAddress:                  .res  2
 
 IntervalTimerControl:           .res  1
 
@@ -544,7 +544,7 @@ StarInvincibleTimer:            .res  1
 ScreenTimer:                    .res  1
 WorldEndTimer:                  .res  1
 DemoTimer:                      .res  5
-PseudoRandomBitReg:             .res  9
+PseudoRandomBitReg:             .res  8 ; probably actually 8 bytes (original 9)
 
 SoundMemory                   = MusicOffset_Noise
 MusicOffset_Noise:              .res  1
@@ -563,13 +563,18 @@ Squ2_SfxLenCounter:             .res  1
 Sfx_SecondaryCounter:           .res  1
 Noise_SfxLenCounter:            .res  1
 DAC_Counter:                    .res  1
-NoiseDataLoopbackOfs:           .res  3
+NoiseDataLoopbackOfs:           .res  1  ; this is only one byte (original 3)
 NoteLengthTblAdder:             .res  1
 AreaMusicBuffer_Alt:            .res  1
 
 PauseModeFlag:                  .res  1
-GroundMusicHeaderOfs:           .res  3
+GroundMusicHeaderOfs:           .res  1  ; this is only one byte (original 3)
 AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (original 12)
+
+HoldingSlingshot:                   .res  1
+
+SlingPull_Rel_XPos:             .res  1
+SlingPull_Rel_YPos:             .res  1
 
 StatTimer:                      .res  3
 StatTimerLo                   = StatTimer
@@ -580,8 +585,9 @@ IrqNewScroll:                   .res  1
 IrqOldScroll:                   .res  1
 IrqPPUCTRL:                     .res  1
 ; IrqPointer:                     .res  2
-
-FILLER:                         .res  2
+X_Magnitude:                    .res  1
+Y_Magnitude:                    .res  1
+; FILLER:                         .res  2
 CurrentA:                       .res  1
 NextBank:                       .res  1
 

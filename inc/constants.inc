@@ -149,4 +149,15 @@ Down_Dir              = %00000100
 Left_Dir              = %00000010
 Right_Dir             = %00000001
 
+
+MARIO_ROTATION_ANGLE_MAX = 64
+SLINGSHOT_MAGNITUDE_MAX = 64
+
+.enum PlayerState
+Normal = 0
+Jumping = 1
+Climbing = 3
+Slingshot = 4
+.endenum
+
 .endif ;__CONSTANTS_INC

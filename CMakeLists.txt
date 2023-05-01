@@ -67,7 +67,7 @@ add_executable(${PROJECT_NAME}
   src/tiles/staircase.s
 
   src/nes.cfg
-  chr/lanky_mario.chr
+  # chr/lanky_mario.chr
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC inc/)

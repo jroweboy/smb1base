@@ -533,6 +533,10 @@ __MEMORY_INC = 1
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
 
+.global HoldingSlingshot
+.global SlingPull_Rel_XPos
+.global SlingPull_Rel_YPos
+
 .global StatTimer
 .global StatTimerLo
 .global StatTimerMd
@@ -540,6 +544,13 @@ __MEMORY_INC = 1
 .global IrqOldScroll
 .global IrqNewScroll
 .global IrqPPUCTRL
+
+.global X_Magnitude
+; X_Magnitude_Lo = X_Magnitude
+; X_Magnitude_Hi = X_Magnitude + 1
+.global Y_Magnitude
+; Y_Magnitude_Lo = Y_Magnitude
+; Y_Magnitude_Hi = Y_Magnitude + 1
 ; .global IrqPointer
 
 .global _WarmBootOffset

@@ -153,15 +153,16 @@ SaveJoyp:
   lda SavedJoypadBits         ;store up and down buttons in $0b
   and #%00001100
   sta Up_Down_Buttons
-  and #%00000100              ;check for pressing down
-  beq SizeChk                 ;if not, branch
-    lda Player_State            ;check player's state
-    bne SizeChk                 ;if not on the ground, branch
-      ldy Left_Right_Buttons      ;check left and right
-      beq SizeChk                 ;if neither pressed, branch
-        lda #$00
-        sta Left_Right_Buttons      ;if pressing down while on the ground,
-        sta Up_Down_Buttons         ;nullify directional bits
+
+;   and #%00000100              ;check for pressing down
+;   beq SizeChk                 ;if not, branch
+;     lda Player_State            ;check player's state
+;     bne SizeChk                 ;if not on the ground, branch
+;       ldy Left_Right_Buttons      ;check left and right
+;       beq SizeChk                 ;if neither pressed, branch
+;         lda #$00
+;         sta Left_Right_Buttons      ;if pressing down while on the ground,
+;         sta Up_Down_Buttons         ;nullify directional bits
 SizeChk:
   jsr PlayerMovementSubs      ;run movement subroutines
   ldy #$01                    ;is player small?
@@ -649,21 +650,21 @@ RenderPlayerSub:
   ; ; cmp Player_SprDataOffset ; repurposed to be the "current" animation
   ; beq 
   ; if they aren't equal then we need to redraw
-  lda FrameCounter
-  and #%00000001
-  bne @skip
-    inc $120
-@skip:
-  ldy $120
-  cpy #8
-  bcc @setupy
-  cpy #8 + 48
-  bcc @skipsetup
-@setupy:
-    ldy #8
-    sty $120
-@skipsetup:
-  BankCHR10 y
+;   lda FrameCounter
+;   and #%00000001
+;   bne @skip
+;     inc $120
+; @skip:
+;   ldy $120
+;   cpy #8
+;   bcc @setupy
+;   cpy #8 + MARIO_ROTATION_ANGLE_MAX
+;   bcc @skipsetup
+; @setupy:
+;     ldy #8
+;     sty $120
+; @skipsetup:
+;   BankCHR10 y
   lda Player_Rel_XPos
   sta Player_Pos_ForScroll     ;store player's relative horizontal position
   lda Player_Rel_YPos
@@ -760,14 +761,14 @@ PlayerGraphicsTable:
 ; Good luck everybody.
 SmallMarioGraphics:
 ; small mario sideways
-.byte $03, $04, $05
-.byte $13, $14, $15
-.byte $23, $24, $25
+.byte $02, $03, $04
+.byte $12, $13, $14
+.byte $22, $23, $24
 SmallMarioHolstered:
 ; small mario holstered
-.byte $06, $07, $08
-.byte $16, $17, $18
-.byte $26, $27, $28
+.byte $05, $06, $07
+.byte $15, $16, $17
+.byte $25, $26, $27
 
 ; TODO small mario death animation rotated too
 
@@ -854,6 +855,9 @@ ExPGH:
 FindPlayerAction:
   ; jsr ProcessPlayerAction       ;find proper offset to graphics table by player's actions
   jsr ProcessPlayerAngle
+
+  ; do something with the angle?
+  lda #0
   jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
 
 DoChangeSize:
@@ -1143,6 +1147,7 @@ MoveSubs:
 .word JumpSwimSub
 .word FallingSub
 .word ClimbingSub
+.word InSlingshotSub
 
 NoMoveSub: rts
 
@@ -1150,10 +1155,10 @@ NoMoveSub: rts
 ;$00 - used by ClimbingSub to store high vertical adder
 
 OnGroundStateSub:
-  jsr GetPlayerAnimSpeed     ;do a sub to set animation frame timing
+  ; jsr GetPlayerAnimSpeed     ;do a sub to set animation frame timing
   lda Left_Right_Buttons
   beq GndMove                ;if left/right controller bits not set, skip instruction
-  sta PlayerFacingDir        ;otherwise set new facing direction
+    sta PlayerFacingDir        ;otherwise set new facing direction
 GndMove:
   jsr ImposeFriction         ;do a sub to impose friction on player's walk/run
   jsr MovePlayerHorizontally ;do another sub to move player horizontally
@@ -1187,7 +1192,7 @@ DumpFall:
 ProcSwim:
   lda SwimmingFlag           ;if swimming flag not set,
   beq LRAir                  ;branch ahead to last part
-  jsr GetPlayerAnimSpeed     ;do a sub to get animation frame timing
+  ; jsr GetPlayerAnimSpeed     ;do a sub to get animation frame timing
   lda Player_Y_Position
   cmp #$14                   ;check vertical position against preset value
   bcs LRWater                ;if not yet reached a certain position, branch ahead
@@ -1196,11 +1201,11 @@ ProcSwim:
 LRWater:
   lda Left_Right_Buttons     ;check left/right controller bits (check for swimming)
   beq LRAir                  ;if not pressing any, skip
-  sta PlayerFacingDir        ;otherwise set facing direction accordingly
+    sta PlayerFacingDir        ;otherwise set facing direction accordingly
 LRAir:
   lda Left_Right_Buttons     ;check left/right controller bits (check for jumping/falling)
   beq JSMove                 ;if not pressing any, skip
-  jsr ImposeFriction         ;otherwise process horizontal movement
+    jsr ImposeFriction         ;otherwise process horizontal movement
 JSMove:
   jsr MovePlayerHorizontally ;do a sub to move player horizontally
   sta Player_X_Scroll        ;set player's speed here, to be used for scroll later
@@ -1264,6 +1269,18 @@ ExitCSub:    rts                      ;then leave
 InitCSTimer: sta ClimbSideTimer       ;initialize timer here
              rts
 
+.proc InSlingshotSub
+  lda SlingPull_Rel_XPos
+  sta Sprite_X_Position+63*4
+  lda SlingPull_Rel_YPos
+  sta Sprite_Y_Position+63*4
+  lda #$74
+  sta Sprite_Tilenumber+63*4
+  lda #0
+  sta Sprite_Attributes+63*4
+  rts
+.endproc
+
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store offset to friction data
 
@@ -1297,8 +1314,8 @@ Climb_Y_MForceData:
 
 PlayerPhysicsSub:
   lda Player_State          ;check player state
-  cmp #$03
-  bne CheckForJumping       ;if not climbing, branch
+  cmp #PlayerState::Climbing
+  bne CheckForSlingShot       ;if not climbing, branch
     ldy #$00
     lda Up_Down_Buttons       ;get controller bits for up/down
     and Player_CollisionBits  ;check against player's collision detection bits
@@ -1319,223 +1336,361 @@ SetCAnim:
   sta PlayerAnimTimerSet    ;store animation timer setting and leave
   rts
 
-CheckForJumping:
-  lda JumpspringAnimCtrl    ;if jumpspring animating, 
-  bne NoJump                ;skip ahead to something else
-    lda A_B_Buttons           ;check for A button press
-    and #A_Button
-    beq NoJump                ;if not, branch to something else
-      and PreviousA_B_Buttons   ;if button not pressed in previous frame, branch
-      beq ProcJumping
-NoJump:
-    jmp X_Physics             ;otherwise, jump to something else
+.proc CheckForSlingShot
+  ; If we are holding a slingshot, check to see if we are still holding it
+  lda HoldingSlingshot
+  bne SlingHold
 
-ProcJumping:
+  lda JumpspringAnimCtrl    ;if jumpspring animating, 
+  bne NoSling          ;skip ahead to something else
+    ; now check to see if we are starting a slingshot
+    lda A_B_Buttons           ;check for A button press
+    beq NoSling                ;if not, branch to something else
+      and PreviousA_B_Buttons   ;if button not pressed in previous frame, branch
+      beq StartSling
+NoSling:
+  jmp X_Physics             ;otherwise, jump to something else
+.endproc
+
+.proc StartSling
   lda Player_State           ;check player state
-  beq InitJS                 ;if on the ground, branch
+  beq InitSling                 ;if on the ground, branch
     lda SwimmingFlag           ;if swimming flag not set, jump to do something else
-    beq NoJump                 ;to prevent midair jumping, otherwise continue
+    beq InitSling                 ;to prevent midair jumping, otherwise continue
       lda JumpSwimTimer          ;if jump/swim timer nonzero, branch
-      bne InitJS
+      bne InitSling
         lda Player_Y_Speed         ;check player's vertical speed
-        bpl InitJS                 ;if player's vertical speed motionless or down, branch
+        bpl InitSling                 ;if player's vertical speed motionless or down, branch
           jmp X_Physics              ;if timer at zero and player still rising, do not swim
-InitJS:
-  lda #$20                   ;set jump/swim timer
-  sta JumpSwimTimer
-  ldy #$00                   ;initialize vertical force and dummy variable
-  sty Player_YMoveForceFractional
-  sty Player_Y_MoveForce
-  lda Player_Y_HighPos       ;get vertical high and low bytes of jump origin
-  sta JumpOrigin_Y_HighPos   ;and store them next to each other here
-  lda Player_Y_Position
-  sta JumpOrigin_Y_Position
-  lda #$01                   ;set player state to jumping/swimming
-  sta Player_State
-  lda Player_XSpeedAbsolute  ;check value related to walking/running speed
-  cmp #$09
-  bcc ChkWtr                 ;branch if below certain values, increment Y
-    iny                        ;for each amount equal or exceeded
-    cmp #$10
-    bcc ChkWtr
-      iny
-      cmp #$19
-      bcc ChkWtr
-        iny
-        cmp #$1c
-        bcc ChkWtr                 ;note that for jumping, range is 0-4 for Y
-          iny
-ChkWtr:
-  lda #$01                   ;set value here (apparently always set to 1)
-  sta DiffToHaltJump
-  lda SwimmingFlag           ;if swimming flag disabled, branch
-  beq GetYPhy
-    ldy #$05                   ;otherwise set Y to 5, range is 5-6
-    lda Whirlpool_Flag         ;if whirlpool flag not set, branch
-    beq GetYPhy
-      iny                        ;otherwise increment to 6
-GetYPhy:
-  lda JumpMForceData,y       ;store appropriate jump/swim
-  sta VerticalForce          ;data here
-  lda FallMForceData,y
-  sta VerticalForceDown
-  lda InitMForceData,y
-  sta Player_Y_MoveForce
-  lda PlayerYSpdData,y
-  sta Player_Y_Speed
-  lda SwimmingFlag           ;if swimming flag disabled, branch
-  beq PJumpSnd
-    lda #Sfx_EnemyStomp        ;load swim/goomba stomp sound into
-    sta Square1SoundQueue      ;square 1's sfx queue
-    lda Player_Y_Position
-    cmp #$14                   ;check vertical low byte of player position
-    bcs X_Physics              ;if below a certain point, branch
-      lda #$00                   ;otherwise reset player's vertical speed
-      sta Player_Y_Speed         ;and jump to something else to keep player
-      jmp X_Physics              ;from swimming above water level
-PJumpSnd:
-  lda #Sfx_BigJump           ;load big mario's jump sound by default
-  ldy PlayerSize             ;is mario big?
-  beq SJumpSnd
-  lda #Sfx_SmallJump         ;if not, load small mario's jump sound
-SJumpSnd:
-  sta Square1SoundQueue      ;store appropriate jump sound in square 1 sfx queue
-X_Physics:
-  ldy #$00
-  sty R0                    ;init value here
-  lda Player_State           ;if mario is on the ground, branch
-  beq ProcPRun
-    lda Player_XSpeedAbsolute  ;check something that seems to be related
-    cmp #$19                   ;to mario's speed
-    bcs GetXPhy                ;if =>$19 branch here
-    bcc ChkRFast               ;if not branch elsewhere
-ProcPRun:
-  iny                        ;if mario on the ground, increment Y
-  lda AreaType               ;check area type
-  beq ChkRFast               ;if water type, branch
-    dey                        ;decrement Y by default for non-water type area
-    lda Left_Right_Buttons     ;get left/right controller bits
-    cmp Player_MovingDir       ;check against moving direction
-    bne ChkRFast               ;if controller bits <> moving direction, skip this part
-      lda A_B_Buttons            ;check for b button pressed
-      and #B_Button
-      bne SetRTmr                ;if pressed, skip ahead to set timer
-        lda RunningTimer           ;check for running timer set
-        bne GetXPhy                ;if set, branch
-ChkRFast:
-  iny                        ;if running timer not set or level type is water, 
-  inc R0                    ;increment Y again and temp variable in memory
-  lda RunningSpeed
-  bne FastXSp                ;if running speed set here, branch
-    lda Player_XSpeedAbsolute
-    cmp #$21                   ;otherwise check player's walking/running speed
-    bcc GetXPhy                ;if less than a certain amount, branch ahead
-FastXSp:
-      inc R0                    ;if running speed set or speed => $21 increment $00
-      jmp GetXPhy                ;and jump ahead
-SetRTmr:
-  lda #$0a                   ;if b button pressed, set running timer
-  sta RunningTimer
-GetXPhy:
-  lda MaxLeftXSpdData,y      ;get maximum speed to the left
-  sta MaximumLeftSpeed
-  lda GameEngineSubroutine   ;check for specific routine running
-  cmp #$07                   ;(player entrance)
-  bne GetXPhy2               ;if not running, skip and use old value of Y
-    ldy #$03                   ;otherwise set Y to 3
-GetXPhy2:
-  lda MaxRightXSpdData,y     ;get maximum speed to the right
-  sta MaximumRightSpeed
-  ldy R0                    ;get other value in memory
-  lda FrictionData,y         ;get value using value in memory as offset
-  sta FrictionAdderLow
-  lda #$00
-  sta FrictionAdderHigh      ;init something here
-  lda PlayerFacingDir
-  cmp Player_MovingDir       ;check facing direction against moving direction
-  beq ExitPhy                ;if the same, branch to leave
-    asl FrictionAdderLow       ;otherwise multiply friction by 2
-    rol FrictionAdderHigh      ;then leave
-ExitPhy:
+    jmp X_Physics
+InitSling:
+  ; copy over the current player position
+  lda Player_Rel_XPos
+  sta SlingPull_Rel_XPos
+  lda Player_Rel_YPos
+  sta SlingPull_Rel_YPos
+
+  ; and set the player to slingshot state
+  lda A_B_Buttons
+  sta HoldingSlingshot
   rts
+.endproc
+
+.proc SlingHold
+  ;; Check to see if we let go of the a or b button
+  lda A_B_Buttons
+  and HoldingSlingshot
+  bne StillHolding
+    ;; TODO apply force and cancel out of slingshot mode.
+
+    sta HoldingSlingshot
+    sta Player_State
+    rts
+StillHolding:
+  ; Move the slingshot position
+  lda Left_Right_Buttons
+  and #Left_Dir
+  bne NotLeft
+    inc SlingPull_Rel_XPos
+NotLeft:
+  lda Left_Right_Buttons
+  and #Right_Dir
+  bne NotRight
+    dec SlingPull_Rel_XPos
+NotRight:
+  lda Up_Down_Buttons
+  and #Up_Dir
+  bne NotUp
+    inc SlingPull_Rel_YPos
+NotUp:
+  lda Up_Down_Buttons
+  and #Down_Dir
+  bne NotDown
+    dec SlingPull_Rel_YPos
+NotDown:
+  lda #PlayerState::Slingshot
+  sta Player_State
+  ; Now clamp the x/y of the sling pull to a certain magnitude
+  ; by calculating the mag = sqrt((x2-x1)^2 + (y2-y1)^2)
+
+x2 = Player_Rel_XPos
+y2 = Player_Rel_YPos
+x1 = SlingPull_Rel_XPos
+y1 = SlingPull_Rel_YPos
+
+  ; (x2 - x1) ^2
+  abssub x1, x2
+  sta X_Magnitude
+  tay
+  lda SquareTableLo,y
+  sta R6
+  lda SquareTableHi,y
+  sta R7
+  abssub y1, y2
+  tay
+  lda SquareTableLo,y
+  clc
+  adc R6
+  pha ; store the (xmag + ymag)^2 lobyte for later
+    lda SquareTableHi,y
+    adc R7
+    tax
+  pla
+  ; sqrt( (xmag + ymag)^2 )
+  jsr FastSqrt
+
+  ; Now clamp the magnitude to max
+  sty R1 ; unclamped magnitude
+  cpy #SLINGSHOT_MAGNITUDE_MAX
+  bcc SkipLessThan
+    ldy #SLINGSHOT_MAGNITUDE_MAX
+SkipLessThan:
+  sty R0 ; Hold the magnitude here for later use (should this be a var?)
+  ; y is the total magnitude, now clamp the xmag and ymag as follows
+  ; xmag * min(SLINGSHOT_MAGNITUDE_MAX, mag) / mag 
+  ; min(SLINGSHOT_MAGNITUDE_MAXmag, mag)
+  tya
+MagMin:
+  ldx X_Magnitude
+  jsr FastMult8x8 ; R3 is result_low which is the same used for longdivide
+  ; a is hibyte
+  sta R4
+  ; R1 is already the unclamped magnitude
+  lda #0
+  sta R2
+  jsr LongDivide
+  ; now write the clamped magnitude back to X_Mag
+  lda R3
+  sta X_Magnitude
+  clc
+  adc Player_Rel_XPos
+  sta SlingPull_Rel_XPos
+  ;; and then do the divide again for ymag
+  ; reload the clamped magnitude
+  lda R0
+  ldx Y_Magnitude
+  jsr FastMult8x8 ; writes the low byte to R3
+  sta R4
+  ; R1 is already the unclamped magnitude
+  ; R2 is already #0
+  jsr LongDivide
+  lda R3
+  sta Y_Magnitude
+  clc
+  adc Player_Rel_YPos
+  sta SlingPull_Rel_YPos
+
+  rts
+;   lda #$20                   ;set jump/swim timer
+;   sta JumpSwimTimer
+;   ldy #$00                   ;initialize vertical force and dummy variable
+;   sty Player_YMoveForceFractional
+;   sty Player_Y_MoveForce
+;   lda Player_Y_HighPos       ;get vertical high and low bytes of jump origin
+;   sta JumpOrigin_Y_HighPos   ;and store them next to each other here
+;   lda Player_Y_Position
+;   sta JumpOrigin_Y_Position
+  ; lda #$04                   ;set player state to jumping/swimming
+  ; lda #PlayerState::Slingshot
+  ; sta Player_State
+;   lda Player_XSpeedAbsolute  ;check value related to walking/running speed
+;   cmp #$09
+;   bcc ChkWtr                 ;branch if below certain values, increment Y
+;     iny                        ;for each amount equal or exceeded
+;     cmp #$10
+;     bcc ChkWtr
+;       iny
+;       cmp #$19
+;       bcc ChkWtr
+;         iny
+;         cmp #$1c
+;         bcc ChkWtr                 ;note that for jumping, range is 0-4 for Y
+;           iny
+; ChkWtr:
+;   lda #$01                   ;set value here (apparently always set to 1)
+;   sta DiffToHaltJump
+;   lda SwimmingFlag           ;if swimming flag disabled, branch
+;   beq GetYPhy
+;     ldy #$05                   ;otherwise set Y to 5, range is 5-6
+;     lda Whirlpool_Flag         ;if whirlpool flag not set, branch
+;     beq GetYPhy
+;       iny                        ;otherwise increment to 6
+; GetYPhy:
+;   lda JumpMForceData,y       ;store appropriate jump/swim
+;   sta VerticalForce          ;data here
+;   lda FallMForceData,y
+;   sta VerticalForceDown
+;   lda InitMForceData,y
+;   sta Player_Y_MoveForce
+;   lda PlayerYSpdData,y
+;   sta Player_Y_Speed
+;   lda SwimmingFlag           ;if swimming flag disabled, branch
+;   beq PJumpSnd
+;     lda #Sfx_EnemyStomp        ;load swim/goomba stomp sound into
+;     sta Square1SoundQueue      ;square 1's sfx queue
+;     lda Player_Y_Position
+;     cmp #$14                   ;check vertical low byte of player position
+;     bcs X_Physics              ;if below a certain point, branch
+;       lda #$00                   ;otherwise reset player's vertical speed
+;       sta Player_Y_Speed         ;and jump to something else to keep player
+;       jmp X_Physics              ;from swimming above water level
+; PJumpSnd:
+; ;   lda #Sfx_BigJump           ;load big mario's jump sound by default
+; ;   ldy PlayerSize             ;is mario big?
+; ;   beq SJumpSnd
+; ;   lda #Sfx_SmallJump         ;if not, load small mario's jump sound
+; ; SJumpSnd:
+; ;   sta Square1SoundQueue      ;store appropriate jump sound in square 1 sfx queue
+.endproc
+
+.proc X_Physics
+  rts
+.endproc
+; X_Physics:
+;   ldy #$00
+;   sty R0                    ;init value here
+;   lda Player_State           ;if mario is on the ground, branch
+;   beq ProcPRun
+;     lda Player_XSpeedAbsolute  ;check something that seems to be related
+;     cmp #$19                   ;to mario's speed
+;     bcs GetXPhy                ;if =>$19 branch here
+;     bcc ChkRFast               ;if not branch elsewhere
+; ProcPRun:
+;   iny                        ;if mario on the ground, increment Y
+;   lda AreaType               ;check area type
+;   beq ChkRFast               ;if water type, branch
+;     dey                        ;decrement Y by default for non-water type area
+;     lda Left_Right_Buttons     ;get left/right controller bits
+;     cmp Player_MovingDir       ;check against moving direction
+;     bne ChkRFast               ;if controller bits <> moving direction, skip this part
+;       lda A_B_Buttons            ;check for b button pressed
+;       and #B_Button
+;       bne SetRTmr                ;if pressed, skip ahead to set timer
+;         lda RunningTimer           ;check for running timer set
+;         bne GetXPhy                ;if set, branch
+; ChkRFast:
+;   iny                        ;if running timer not set or level type is water, 
+;   inc R0                    ;increment Y again and temp variable in memory
+;   lda RunningSpeed
+;   bne FastXSp                ;if running speed set here, branch
+;     lda Player_XSpeedAbsolute
+;     cmp #$21                   ;otherwise check player's walking/running speed
+;     bcc GetXPhy                ;if less than a certain amount, branch ahead
+; FastXSp:
+;       inc R0                    ;if running speed set or speed => $21 increment $00
+;       jmp GetXPhy                ;and jump ahead
+; SetRTmr:
+;   lda #$0a                   ;if b button pressed, set running timer
+;   sta RunningTimer
+; GetXPhy:
+;   lda MaxLeftXSpdData,y      ;get maximum speed to the left
+;   sta MaximumLeftSpeed
+;   lda GameEngineSubroutine   ;check for specific routine running
+;   cmp #$07                   ;(player entrance)
+;   bne GetXPhy2               ;if not running, skip and use old value of Y
+;     ldy #$03                   ;otherwise set Y to 3
+; GetXPhy2:
+;   lda MaxRightXSpdData,y     ;get maximum speed to the right
+;   sta MaximumRightSpeed
+;   ldy R0                    ;get other value in memory
+;   lda FrictionData,y         ;get value using value in memory as offset
+;   sta FrictionAdderLow
+;   lda #$00
+;   sta FrictionAdderHigh      ;init something here
+;   lda PlayerFacingDir
+;   cmp Player_MovingDir       ;check facing direction against moving direction
+;   beq ExitPhy                ;if the same, branch to leave
+;     asl FrictionAdderLow       ;otherwise multiply friction by 2
+;     rol FrictionAdderHigh      ;then leave
+; ExitPhy:
+;   rts
 
 ;-------------------------------------------------------------------------------------
 
-PlayerAnimTmrData:
-      .byte $02, $04, $07
+; PlayerAnimTmrData:
+;       .byte $02, $04, $07
 
-GetPlayerAnimSpeed:
-            ldy #$00                   ;initialize offset in Y
-            lda Player_XSpeedAbsolute  ;check player's walking/running speed
-            cmp #$1c                   ;against preset amount
-            bcs SetRunSpd              ;if greater than a certain amount, branch ahead
-            iny                        ;otherwise increment Y
-            cmp #$0e                   ;compare against lower amount
-            bcs ChkSkid                ;if greater than this but not greater than first, skip increment
-            iny                        ;otherwise increment Y again
-ChkSkid:    lda SavedJoypadBits        ;get controller bits
-            and #%01111111             ;mask out A button
-            beq SetAnimSpd             ;if no other buttons pressed, branch ahead of all this
-            and #$03                   ;mask out all others except left and right
-            cmp Player_MovingDir       ;check against moving direction
-            bne ProcSkid               ;if left/right controller bits <> moving direction, branch
-            lda #$00                   ;otherwise set zero value here
-SetRunSpd:  sta RunningSpeed           ;store zero or running speed here
-            jmp SetAnimSpd
-ProcSkid:   lda Player_XSpeedAbsolute  ;check player's walking/running speed
-            cmp #$0b                   ;against one last amount
-            bcs SetAnimSpd             ;if greater than this amount, branch
-            lda PlayerFacingDir
-            sta Player_MovingDir       ;otherwise use facing direction to set moving direction
-            lda #$00
-            sta Player_X_Speed         ;nullify player's horizontal speed
-            sta Player_X_MoveForce     ;and dummy variable for player
-SetAnimSpd: lda PlayerAnimTmrData,y    ;get animation timer setting using Y as offset
-            sta PlayerAnimTimerSet
-            rts
+; GetPlayerAnimSpeed:
+;   ldy #$00                   ;initialize offset in Y
+;   lda Player_XSpeedAbsolute  ;check player's walking/running speed
+;   cmp #$1c                   ;against preset amount
+;   bcs SetRunSpd              ;if greater than a certain amount, branch ahead
+;   iny                        ;otherwise increment Y
+;   cmp #$0e                   ;compare against lower amount
+;   bcs ChkSkid                ;if greater than this but not greater than first, skip increment
+;   iny                        ;otherwise increment Y again
+; ChkSkid:
+;   lda SavedJoypadBits        ;get controller bits
+;   and #%01111111             ;mask out A button
+;   beq SetAnimSpd             ;if no other buttons pressed, branch ahead of all this
+;     and #$03                   ;mask out all others except left and right
+;     cmp Player_MovingDir       ;check against moving direction
+;     bne ProcSkid               ;if left/right controller bits <> moving direction, branch
+;       lda #$00                   ;otherwise set zero value here
+; SetRunSpd:
+;   sta RunningSpeed           ;store zero or running speed here
+;   jmp SetAnimSpd
+; ProcSkid:
+;   lda Player_XSpeedAbsolute  ;check player's walking/running speed
+;   cmp #$0b                   ;against one last amount
+;   bcs SetAnimSpd             ;if greater than this amount, branch
+;     lda PlayerFacingDir
+;     sta Player_MovingDir       ;otherwise use facing direction to set moving direction
+;     lda #$00
+;     sta Player_X_Speed         ;nullify player's horizontal speed
+;     sta Player_X_MoveForce     ;and dummy variable for player
+; SetAnimSpd:
+;   lda PlayerAnimTmrData,y    ;get animation timer setting using Y as offset
+;   sta PlayerAnimTimerSet
+;   rts
 
 ;-------------------------------------------------------------------------------------
 
 ImposeFriction:
-           and Player_CollisionBits  ;perform AND between left/right controller bits and collision flag
-           cmp #$00                  ;then compare to zero (this instruction is redundant)
-           bne JoypFrict             ;if any bits set, branch to next part
-           lda Player_X_Speed
-           beq SetAbsSpd             ;if player has no horizontal speed, branch ahead to last part
-           bpl RghtFrict             ;if player moving to the right, branch to slow
-           bmi LeftFrict             ;otherwise logic dictates player moving left, branch to slow
-JoypFrict: lsr                       ;put right controller bit into carry
-           bcc RghtFrict             ;if left button pressed, carry = 0, thus branch
-LeftFrict: lda Player_X_MoveForce    ;load value set here
-           clc
-           adc FrictionAdderLow      ;add to it another value set here
-           sta Player_X_MoveForce    ;store here
-           lda Player_X_Speed
-           adc FrictionAdderHigh     ;add value plus carry to horizontal speed
-           sta Player_X_Speed        ;set as new horizontal speed
-           cmp MaximumRightSpeed     ;compare against maximum value for right movement
-           bmi XSpdSign              ;if horizontal speed greater negatively, branch
-           lda MaximumRightSpeed     ;otherwise set preset value as horizontal speed
-           sta Player_X_Speed        ;thus slowing the player's left movement down
-           jmp SetAbsSpd             ;skip to the end
-RghtFrict: lda Player_X_MoveForce    ;load value set here
-           sec
-           sbc FrictionAdderLow      ;subtract from it another value set here
-           sta Player_X_MoveForce    ;store here
-           lda Player_X_Speed
-           sbc FrictionAdderHigh     ;subtract value plus borrow from horizontal speed
-           sta Player_X_Speed        ;set as new horizontal speed
-           cmp MaximumLeftSpeed      ;compare against maximum value for left movement
-           bpl XSpdSign              ;if horizontal speed greater positively, branch
-           lda MaximumLeftSpeed      ;otherwise set preset value as horizontal speed
-           sta Player_X_Speed        ;thus slowing the player's right movement down
-XSpdSign:  cmp #$00                  ;if player not moving or moving to the right,
-           bpl SetAbsSpd             ;branch and leave horizontal speed value unmodified
-           eor #$ff
-           clc                       ;otherwise get two's compliment to get absolute
-           adc #$01                  ;unsigned walking/running speed
-SetAbsSpd: sta Player_XSpeedAbsolute ;store walking/running speed here and leave
-           rts
+  and Player_CollisionBits  ;perform AND between left/right controller bits and collision flag
+  ; cmp #$00                  ;then compare to zero (this instruction is redundant)
+  bne JoypFrict             ;if any bits set, branch to next part
+    lda Player_X_Speed
+    beq SetAbsSpd             ;if player has no horizontal speed, branch ahead to last part
+    bpl RghtFrict             ;if player moving to the right, branch to slow
+    bmi LeftFrict             ;otherwise logic dictates player moving left, branch to slow
+JoypFrict:
+  lsr                       ;put right controller bit into carry
+  bcc RghtFrict             ;if left button pressed, carry = 0, thus branch
+LeftFrict:
+    lda Player_X_MoveForce    ;load value set here
+    clc
+    adc FrictionAdderLow      ;add to it another value set here
+    sta Player_X_MoveForce    ;store here
+    lda Player_X_Speed
+    adc FrictionAdderHigh     ;add value plus carry to horizontal speed
+    sta Player_X_Speed        ;set as new horizontal speed
+    cmp MaximumRightSpeed     ;compare against maximum value for right movement
+    bmi XSpdSign              ;if horizontal speed greater negatively, branch
+      lda MaximumRightSpeed     ;otherwise set preset value as horizontal speed
+      sta Player_X_Speed        ;thus slowing the player's left movement down
+      jmp SetAbsSpd             ;skip to the end
+RghtFrict:
+    lda Player_X_MoveForce    ;load value set here
+    sec
+    sbc FrictionAdderLow      ;subtract from it another value set here
+    sta Player_X_MoveForce    ;store here
+    lda Player_X_Speed
+    sbc FrictionAdderHigh     ;subtract value plus borrow from horizontal speed
+    sta Player_X_Speed        ;set as new horizontal speed
+    cmp MaximumLeftSpeed      ;compare against maximum value for left movement
+    bpl XSpdSign              ;if horizontal speed greater positively, branch
+      lda MaximumLeftSpeed      ;otherwise set preset value as horizontal speed
+      sta Player_X_Speed        ;thus slowing the player's right movement down
+XSpdSign:
+  cmp #$00                  ;if player not moving or moving to the right,
+  bpl SetAbsSpd             ;branch and leave horizontal speed value unmodified
+    eor #$ff
+    clc                       ;otherwise get two's compliment to get absolute
+    adc #$01                  ;unsigned walking/running speed
+SetAbsSpd:
+  sta Player_XSpeedAbsolute ;store walking/running speed here and leave
+  rts
 
 
 .proc RelativeBubblePosition
@@ -1671,9 +1826,139 @@ OffscrJoypadBitsData:
 
 ; ------------------------------------------------------------
 ProcessPlayerAngle:
-  ; TODO update the player chr bank based on current angle
-
+  jsr FastAtan2
+  lsr
+  lsr
+  clc
+  adc #8
+  tay
+  BankCHR10 y
   rts
+
+;; Calculate the angle, in a 256-degree circle, between two points.
+;; The trick is to use logarithmic division to get the y/x ratio and
+;; integrate the power function into the atan table. Some branching is
+;; avoided by using a table to adjust for the octants.
+;; In otherwords nothing new or particularily clever but nevertheless
+;; quite useful.
+;;
+;; by Johan Forslöf (doynax)
+.proc FastAtan2
+octant = R3        ;; temporary zeropage variable
+x2 = Player_Rel_XPos
+y2 = Player_Rel_YPos
+x1 = SlingPull_Rel_XPos
+y1 = SlingPull_Rel_YPos
+; x1 = Player_Rel_XPos
+; y1 = Player_Rel_YPos
+; x2 = SlingPull_Rel_XPos
+; y2 = SlingPull_Rel_YPos
+  abssub x1, x2
+  tax
+  rol octant
+
+  abssub y1, y2
+  tay
+  rol octant
+
+  lda log2_tab,x
+  sec
+  sbc log2_tab,y
+  bcc skipflip3
+    eor #$ff
+    clc
+    adc #1
+skipflip3:
+  tax
+  lda octant
+  rol
+  and #%111
+  tay
+
+  lda atan_tab,x
+  eor octant_adjust,y
+  rts
+
+octant_adjust:
+  .byte %00111111		;; x+,y+,|x|>|y|
+  .byte %00000000		;; x+,y+,|x|<|y|
+  .byte %11000000		;; x+,y-,|x|>|y|
+  .byte %11111111		;; x+,y-,|x|<|y|
+  .byte %01000000		;; x-,y+,|x|>|y|
+  .byte %01111111		;; x-,y+,|x|<|y|
+  .byte %10111111		;; x-,y-,|x|>|y|
+  .byte %10000000		;; x-,y-,|x|<|y|
+
+;;;;;;;; atan(2^(x/32))*128/pi ;;;;;;;;
+atan_tab:
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$02,$02,$02
+  .byte $02,$02,$02,$02,$02,$02,$02,$02
+  .byte $02,$02,$02,$02,$02,$02,$02,$02
+  .byte $03,$03,$03,$03,$03,$03,$03,$03
+  .byte $03,$03,$03,$03,$03,$04,$04,$04
+  .byte $04,$04,$04,$04,$04,$04,$04,$04
+  .byte $05,$05,$05,$05,$05,$05,$05,$05
+  .byte $06,$06,$06,$06,$06,$06,$06,$06
+  .byte $07,$07,$07,$07,$07,$07,$08,$08
+  .byte $08,$08,$08,$08,$09,$09,$09,$09
+  .byte $09,$0a,$0a,$0a,$0a,$0b,$0b,$0b
+  .byte $0b,$0c,$0c,$0c,$0c,$0d,$0d,$0d
+  .byte $0d,$0e,$0e,$0e,$0e,$0f,$0f,$0f
+  .byte $10,$10,$10,$11,$11,$11,$12,$12
+  .byte $12,$13,$13,$13,$14,$14,$15,$15
+  .byte $15,$16,$16,$17,$17,$17,$18,$18
+  .byte $19,$19,$19,$1a,$1a,$1b,$1b,$1c
+  .byte $1c,$1c,$1d,$1d,$1e,$1e,$1f,$1f
+
+;;;;;;;; log2(x)*32 ;;;;;;;;
+log2_tab:
+  .byte $00,$00,$20,$32,$40,$4a,$52,$59
+  .byte $60,$65,$6a,$6e,$72,$76,$79,$7d
+  .byte $80,$82,$85,$87,$8a,$8c,$8e,$90
+  .byte $92,$94,$96,$98,$99,$9b,$9d,$9e
+  .byte $a0,$a1,$a2,$a4,$a5,$a6,$a7,$a9
+  .byte $aa,$ab,$ac,$ad,$ae,$af,$b0,$b1
+  .byte $b2,$b3,$b4,$b5,$b6,$b7,$b8,$b9
+  .byte $b9,$ba,$bb,$bc,$bd,$bd,$be,$bf
+  .byte $c0,$c0,$c1,$c2,$c2,$c3,$c4,$c4
+  .byte $c5,$c6,$c6,$c7,$c7,$c8,$c9,$c9
+  .byte $ca,$ca,$cb,$cc,$cc,$cd,$cd,$ce
+  .byte $ce,$cf,$cf,$d0,$d0,$d1,$d1,$d2
+  .byte $d2,$d3,$d3,$d4,$d4,$d5,$d5,$d5
+  .byte $d6,$d6,$d7,$d7,$d8,$d8,$d9,$d9
+  .byte $d9,$da,$da,$db,$db,$db,$dc,$dc
+  .byte $dd,$dd,$dd,$de,$de,$de,$df,$df
+  .byte $df,$e0,$e0,$e1,$e1,$e1,$e2,$e2
+  .byte $e2,$e3,$e3,$e3,$e4,$e4,$e4,$e5
+  .byte $e5,$e5,$e6,$e6,$e6,$e7,$e7,$e7
+  .byte $e7,$e8,$e8,$e8,$e9,$e9,$e9,$ea
+  .byte $ea,$ea,$ea,$eb,$eb,$eb,$ec,$ec
+  .byte $ec,$ec,$ed,$ed,$ed,$ed,$ee,$ee
+  .byte $ee,$ee,$ef,$ef,$ef,$ef,$f0,$f0
+  .byte $f0,$f1,$f1,$f1,$f1,$f1,$f2,$f2
+  .byte $f2,$f2,$f3,$f3,$f3,$f3,$f4,$f4
+  .byte $f4,$f4,$f5,$f5,$f5,$f5,$f5,$f6
+  .byte $f6,$f6,$f6,$f7,$f7,$f7,$f7,$f7
+  .byte $f8,$f8,$f8,$f8,$f9,$f9,$f9,$f9
+  .byte $f9,$fa,$fa,$fa,$fa,$fa,$fb,$fb
+  .byte $fb,$fb,$fb,$fc,$fc,$fc,$fc,$fc
+  .byte $fd,$fd,$fd,$fd,$fd,$fd,$fe,$fe
+  .byte $fe,$fe,$fe,$ff,$ff,$ff,$ff,$ff
+.endproc
 
 ; ProcessPlayerAction:
 ;   lda Player_State      ;get player's state
@@ -1831,3 +2116,277 @@ NoJSChk:
   sta R0
   lda #$04                ;set maximum vertical speed here
   jmp ImposeGravitySprObj ;then jump to move player vertically
+
+; https://github.com/TobyLobster/sqrt_test/blob/main/sqrt/sqrt9.a
+; ***************************************************************************************
+;
+; sqrt
+;
+; Heavily based on http://www.txbobsc.com/aal/1986/aal8611.html#a1
+; but reformatted and tweaked to improve performance by TobyLobster
+; Average runtime is 39.84 cycles, worst case 129 cycles.
+;
+; On Entry:
+;   X is high byte of number to SQRT (aka 'arghi')
+;   A is low byte of number to SQRT  (aka 'arglo')
+;
+; On Exit:
+;   Y is result
+;
+; ***************************************************************************************
+.proc FastSqrt
+
+argsav     =  R2                 ; 2 bytes
+arglo      =  R4                 ; 1 byte
+
+    cpx #$2c                        ; value already 'normalised' (i.e. large enough)?
+    bcs atleast11264                ; ...yes
+
+    ; $0000 to $2bff (11264 cases)
+under11264:
+    stx argsav+1                    ; save arghi
+    cpx #0                          ; is arghi zero?
+    beq under256                    ; ...yes
+
+    ; $01ff to $2bff (10752 cases)
+    ; we want to bring the input value into the range of our root table ($2c00-$ffff).
+    ;
+    ; each time around the next loop we multiply the input by 4 (double shift), which
+    ; doubles the result. So we keep track of the number of times we shift twice in Y
+    ; (aka shift_count) so we can scale down the result later.
+    ;
+    ; The loop has been unrolled for speed.
+    sta argsav                      ; save arglo for shifting
+    sta arglo                       ; save arglo for later compare
+    txa                             ; arghi to a
+    ldy #1                          ; Y = shift_count = 1
+
+    asl arglo                       ; }
+    rol                             ; }
+    asl arglo                       ; } shift arglo until >=$2c
+    rol                             ; }
+    cmp #$2c                        ; }
+    bcs normalised                  ; }
+
+    asl arglo                       ; }
+    rol                             ; }
+    asl arglo                       ; } shift arglo until >=$2c
+    rol                             ; }
+    iny                             ; } Y = shift_count = 2
+    cmp #$2c                        ; }
+    bcs normalised                  ; }
+
+    asl arglo                       ; }
+    rol                             ; }
+    asl arglo                       ; } shift arglo until >=$2c
+    rol                             ; }
+    iny                             ; } Y = shift_count = 3
+
+    ; a=normalised arg, y=shift_count
+normalised:
+    tax                             ; use norm-arg for index
+    lda root,x                      ; get root from table
+back:
+    lsr                             ; halve the root shift_count times
+    dey                             ;
+    bne back                           ;
+
+    ; check our result against actual square from square_low/high as it could be one out
+    tay                             ; use shifted root for index now
+    lda argsav                      ; get arglo
+    cmp SquareTableLo,y                ;
+    bcc forward                          ; ...speeds up average by 0.7 cycle
+    lda argsav+1                    ;
+    sbc SquareTableHi,y               ;
+    bcc forward                           ;
+    iny                             ;
+forward:
+    rts                             ;
+
+atleast11264:
+    ; $2c00 to $ffff (54272 cases)
+    cpx #$ff                        ; check for arghi = $ff
+    beq over65280                   ; ...yes, special case
+
+    ; if the number is big enough, then we can look up the root in a table indexed by the
+    ; high byte (with the proviso that it may be out by one). We then check against the
+    ; actual squares tables and adjust up by one as needed.
+    ldy root,x                      ; get root, use as index
+    cmp SquareTableLo,y                ;
+    bcc return1                     ; ...speeds up average by 0.8 cycle
+    txa                             ; arghi
+    sbc SquareTableHi,y               ;
+    bcc return1                     ;
+    iny                             ; adjust result by one
+return1:
+    rts                             ;
+
+    ; $0000 to $00ff (256 cases)
+under256:
+    tay                             ; is arglo also zero?
+    beq return1                     ; ...yes, sqrt=0
+
+    ; $0001 to $00ff (255 cases)
+    ; As above, we want to bring the input value into the range of our root table ($2c00-$ffff).
+    ;
+    ; each time around the next loop we multiply the input by 4 (double shifted), which
+    ; doubles the result. So we keep track of the number of times we double shifted in Y
+    ; (aka shift_count) so we can scale down the result later.
+    ;
+    ; The loop has been unrolled for speed.
+    ;
+    ; By using arglo (the low byte) as the high byte we have double shifted four
+    ; times already. Hence shift_count starts at four.
+    ;
+    sta argsav                      ; save arglo for later compare
+    ldy #4                          ; start shift_count = 4
+    cmp #$2c                        ; normalised yet?
+    bcs normalised                  ; ...yes, get root now
+    asl                             ;
+    asl                             ;
+    iny                             ; count the shift
+    cmp #$2c                        ; normalised yet?
+    bcs normalised                  ; ...yes, get root now
+    asl                             ;
+    asl                             ;
+    iny                             ; count the shift
+    cmp #$2c                        ; normalised yet?
+    bcs normalised                  ; ...yes, get root now
+    asl                             ;
+    asl                             ;
+    iny                             ; count the shift
+    bne normalised                  ; ALWAYS branch
+
+    ; $ff00 to $ffff (256 cases)
+over65280:
+    ldy #$ff                        ;
+    rts                             ;
+
+; align tables to $2c offset from a page, so no page crossings occur
+; !align $ff, $2c
+
+; --------------------------------
+; square root of n, for n=11264 to 65280 step 256
+root_table:
+  .byte                     $6a, $6b, $6c, $6d
+  .byte $6e, $70, $71, $72, $73, $74, $75, $76
+  .byte $77, $78, $79, $7a, $7b, $7c, $7d, $7e
+  .byte $80, $80, $81, $82, $83, $84, $85, $86
+  .byte $87, $88, $89, $8a, $8b, $8c, $8d, $8e
+  .byte $8f, $90, $90, $91, $92, $93, $94, $95
+  .byte $96, $96, $97, $98, $99, $9a, $9b, $9b
+  .byte $9c, $9d, $9e, $9f, $a0, $a0, $a1, $a2
+  .byte $a3, $a3, $a4, $a5, $a6, $a7, $a7, $a8
+  .byte $a9, $aa, $aa, $ab, $ac, $ad, $ad, $ae
+  .byte $af, $b0, $b0, $b1, $b2, $b2, $b3, $b4
+  .byte $b5, $b5, $b6, $b7, $b7, $b8, $b9, $b9
+  .byte $ba, $bb, $bb, $bc, $bd, $bd, $be, $bf
+  .byte $c0, $c0, $c1, $c1, $c2, $c3, $c3, $c4
+  .byte $c5, $c5, $c6, $c7, $c7, $c8, $c9, $c9
+  .byte $ca, $cb, $cb, $cc, $cc, $cd, $ce, $ce
+  .byte $cf, $d0, $d0, $d1, $d1, $d2, $d3, $d3
+  .byte $d4, $d4, $d5, $d6, $d6, $d7, $d7, $d8
+  .byte $d9, $d9, $da, $da, $db, $db, $dc, $dd
+  .byte $dd, $de, $de, $df, $e0, $e0, $e1, $e1
+  .byte $e2, $e2, $e3, $e3, $e4, $e5, $e5, $e6
+  .byte $e6, $e7, $e7, $e8, $e8, $e9, $ea, $ea
+  .byte $eb, $eb, $ec, $ec, $ed, $ed, $ee, $ee
+  .byte $ef, $f0, $f0, $f1, $f1, $f2, $f2, $f3
+  .byte $f3, $f4, $f4, $f5, $f5, $f6, $f6, $f7
+  .byte $f7, $f8, $f8, $f9, $f9, $fa, $fa, $fb
+  .byte $fb, $fc, $fc, $fd, $fd, $fe, $fe, $ff
+
+root = root_table-$2c    ; set up so $6a is first square root
+.endproc
+
+SquareTableLo:
+.repeat 256,I
+  .lobytes I * I
+.endrepeat
+
+SquareTableHi:
+.repeat 256,I
+  .hibytes I * I
+.endrepeat
+
+; mult22.a
+; from Niels Möller: https://www.lysator.liu.se/~nisse/misc/6502-mul.html
+; slightly tweaked for speed
+;
+; 8 bit x 8 bit unsigned multiply, 16 bit result
+; Average cycles: 76.48
+; 563 bytes
+
+; In: Factors in A and X
+; Out: High byte in A, low byte in result_low
+.proc FastMult8x8
+
+min         = R2
+result_low  = R3
+temp3       = R4
+    sta min
+    cpx min
+    bcc swap
+    txa
+continue:
+    sbc min
+    tay
+    ; at this point:
+    ;   Y = max(inputs) - min(inputs);
+    ;   X = max(inputs);
+    lda SquareTableLo,x
+    sbc SquareTableLo,y
+    sta result_low
+    lda SquareTableHi,x
+    sbc SquareTableHi,y
+    sta temp3
+    clc
+    ldx min
+    lda result_low
+    adc SquareTableLo,x
+    sta result_low
+    lda temp3
+    adc SquareTableHi,x
+    ror
+    ror result_low
+    rts
+
+swap:
+    stx min
+    tax
+    sec
+    bcs continue            ; ALWAYS branch
+.endproc
+
+.proc LongDivide
+divisor = R1      ;R2 used for hi-byte
+dividend = R3	    ;R4 used for hi-byte
+remainder = R5	  ;R6 used for hi-byte
+result = dividend ;save memory by reusing divident to store the result
+
+  lda #0	        ;preset remainder to 0
+  sta remainder
+  sta remainder+1
+  ldx #16	        ;repeat for each bit: ...
+
+divloop:
+  asl dividend	;dividend lb & hb*2, msb -> Carry
+  rol dividend+1	
+  rol remainder	;remainder lb & hb * 2 + msb from carry
+  rol remainder+1
+  lda remainder
+  sec
+  sbc divisor	;substract divisor to see if it fits in
+  tay	        ;lb result -> Y, for we may need it later
+  lda remainder+1
+  sbc divisor+1
+  bcc skip	;if carry=0 then divisor didn't fit in yet
+
+  sta remainder+1	;else save substraction result as new remainder,
+  sty remainder	
+  inc result	;and INCrement result cause divisor fit in 1 times
+skip:
+  dex
+  bne divloop	
+  rts
+.endproc

@@ -36,4 +36,17 @@ __COMMON_INC = 1
   tay
 .endmacro
 
+.macro abssub x1, x2
+.scope
+  lda x1
+  sec
+  sbc x2
+  bcs skipflip
+    eor #$ff
+    clc
+    adc #1
+skipflip:
+.endscope
+.endmacro
+
 .endif ;__COMMON_INC
