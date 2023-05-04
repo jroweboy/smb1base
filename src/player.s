@@ -1390,23 +1390,23 @@ StillHolding:
   ; Move the slingshot position
   lda Left_Right_Buttons
   and #Left_Dir
-  bne NotLeft
-    inc SlingPull_Rel_XPos
+  beq NotLeft
+    dec SlingPull_Rel_XPos
 NotLeft:
   lda Left_Right_Buttons
   and #Right_Dir
-  bne NotRight
-    dec SlingPull_Rel_XPos
+  beq NotRight
+    inc SlingPull_Rel_XPos
 NotRight:
   lda Up_Down_Buttons
   and #Up_Dir
-  bne NotUp
-    inc SlingPull_Rel_YPos
+  beq NotUp
+    dec SlingPull_Rel_YPos
 NotUp:
   lda Up_Down_Buttons
   and #Down_Dir
-  bne NotDown
-    dec SlingPull_Rel_YPos
+  beq NotDown
+    inc SlingPull_Rel_YPos
 NotDown:
   lda #PlayerState::Slingshot
   sta Player_State
@@ -1418,15 +1418,33 @@ y2 = Player_Rel_YPos
 x1 = SlingPull_Rel_XPos
 y1 = SlingPull_Rel_YPos
 
-  ; (x2 - x1) ^2
-  abssub x1, x2
+  ; xmag = x1 - x2
+  lda x1
+  sec
+  sbc x2
   sta X_Magnitude
+  bcs skipflipx
+    eor #$ff
+    clc
+    adc #1
+skipflipx:
   tay
+  ; xmag ^ 2
   lda SquareTableLo,y
   sta R6
   lda SquareTableHi,y
   sta R7
-  abssub y1, y2
+  ; ymag = y1 - y2
+  lda y1
+  sec
+  sbc y2
+  sta Y_Magnitude
+  ; ymag ^ 2
+  bcs skipflip
+    eor #$ff
+    clc
+    adc #1
+skipflip:
   tay
   lda SquareTableLo,y
   clc
@@ -1440,47 +1458,70 @@ y1 = SlingPull_Rel_YPos
   jsr FastSqrt
 
   ; Now clamp the magnitude to max
-  sty R1 ; unclamped magnitude
-  cpy #SLINGSHOT_MAGNITUDE_MAX
-  bcc SkipLessThan
-    ldy #SLINGSHOT_MAGNITUDE_MAX
-SkipLessThan:
-  sty R0 ; Hold the magnitude here for later use (should this be a var?)
-  ; y is the total magnitude, now clamp the xmag and ymag as follows
-  ; xmag * min(SLINGSHOT_MAGNITUDE_MAX, mag) / mag 
-  ; min(SLINGSHOT_MAGNITUDE_MAXmag, mag)
   tya
-MagMin:
-  ldx X_Magnitude
-  jsr FastMult8x8 ; R3 is result_low which is the same used for longdivide
-  ; a is hibyte
-  sta R4
-  ; R1 is already the unclamped magnitude
-  lda #0
-  sta R2
-  jsr LongDivide
-  ; now write the clamped magnitude back to X_Mag
-  lda R3
-  sta X_Magnitude
+  cmp #SLINGSHOT_MAGNITUDE_MAX
+  bcc SkipLessThan
+    lda #SLINGSHOT_MAGNITUDE_MAX
+SkipLessThan:
+  sta R0
+  ; find the current angle with arctan
+  jsr FastAtan2
+  lsr
+  lsr
+  tay
+
+  ; lda #.lobyte(.bank(SlingHold))
+  ; sta R2
+  lda R0
+  ; now find the x and y magnitude of the vector by using sin and cos
+  jsr FastSinCos
+  stx X_Magnitude
+  sty Y_Magnitude
+  txa
   clc
   adc Player_Rel_XPos
   sta SlingPull_Rel_XPos
-  ;; and then do the divide again for ymag
-  ; reload the clamped magnitude
-  lda R0
-  ldx Y_Magnitude
-  jsr FastMult8x8 ; writes the low byte to R3
-  sta R4
-  ; R1 is already the unclamped magnitude
-  ; R2 is already #0
-  jsr LongDivide
-  lda R3
-  sta Y_Magnitude
+  tya
   clc
   adc Player_Rel_YPos
   sta SlingPull_Rel_YPos
-
   rts
+
+
+  ; y is the total magnitude, now clamp the xmag and ymag as follows
+  ; xmag * min(SLINGSHOT_MAGNITUDE_MAX, mag) / mag 
+  ; min(SLINGSHOT_MAGNITUDE_MAXmag, mag)
+; MagMin:
+;   ldx X_Magnitude
+;   jsr FastMult8x8 ; R3 is result_low which is the same used for longdivide
+;   ; a is hibyte
+;   sta R4
+;   ; R1 is already the unclamped magnitude
+;   lda #0
+;   sta R2
+;   jsr LongDivide
+;   ; now write the clamped magnitude back to X_Mag
+;   lda R3
+;   sta X_Magnitude
+;   clc
+;   adc Player_Rel_XPos
+;   sta SlingPull_Rel_XPos
+;   ;; and then do the divide again for ymag
+;   ; reload the clamped magnitude
+;   lda R0
+;   ldx Y_Magnitude
+;   jsr FastMult8x8 ; writes the low byte to R3
+;   sta R4
+;   ; R1 is already the unclamped magnitude
+;   ; R2 is already #0
+;   jsr LongDivide
+;   lda R3
+;   sta Y_Magnitude
+;   clc
+;   adc Player_Rel_YPos
+;   sta SlingPull_Rel_YPos
+
+;   rts
 ;   lda #$20                   ;set jump/swim timer
 ;   sta JumpSwimTimer
 ;   ldy #$00                   ;initialize vertical force and dummy variable
@@ -1835,131 +1876,6 @@ ProcessPlayerAngle:
   BankCHR10 y
   rts
 
-;; Calculate the angle, in a 256-degree circle, between two points.
-;; The trick is to use logarithmic division to get the y/x ratio and
-;; integrate the power function into the atan table. Some branching is
-;; avoided by using a table to adjust for the octants.
-;; In otherwords nothing new or particularily clever but nevertheless
-;; quite useful.
-;;
-;; by Johan Forslöf (doynax)
-.proc FastAtan2
-octant = R3        ;; temporary zeropage variable
-x2 = Player_Rel_XPos
-y2 = Player_Rel_YPos
-x1 = SlingPull_Rel_XPos
-y1 = SlingPull_Rel_YPos
-; x1 = Player_Rel_XPos
-; y1 = Player_Rel_YPos
-; x2 = SlingPull_Rel_XPos
-; y2 = SlingPull_Rel_YPos
-  abssub x1, x2
-  tax
-  rol octant
-
-  abssub y1, y2
-  tay
-  rol octant
-
-  lda log2_tab,x
-  sec
-  sbc log2_tab,y
-  bcc skipflip3
-    eor #$ff
-    clc
-    adc #1
-skipflip3:
-  tax
-  lda octant
-  rol
-  and #%111
-  tay
-
-  lda atan_tab,x
-  eor octant_adjust,y
-  rts
-
-octant_adjust:
-  .byte %00111111		;; x+,y+,|x|>|y|
-  .byte %00000000		;; x+,y+,|x|<|y|
-  .byte %11000000		;; x+,y-,|x|>|y|
-  .byte %11111111		;; x+,y-,|x|<|y|
-  .byte %01000000		;; x-,y+,|x|>|y|
-  .byte %01111111		;; x-,y+,|x|<|y|
-  .byte %10111111		;; x-,y-,|x|>|y|
-  .byte %10000000		;; x-,y-,|x|<|y|
-
-;;;;;;;; atan(2^(x/32))*128/pi ;;;;;;;;
-atan_tab:
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$00,$00,$00
-  .byte $00,$00,$00,$00,$00,$01,$01,$01
-  .byte $01,$01,$01,$01,$01,$01,$01,$01
-  .byte $01,$01,$01,$01,$01,$01,$01,$01
-  .byte $01,$01,$01,$01,$01,$01,$01,$01
-  .byte $01,$01,$01,$01,$01,$02,$02,$02
-  .byte $02,$02,$02,$02,$02,$02,$02,$02
-  .byte $02,$02,$02,$02,$02,$02,$02,$02
-  .byte $03,$03,$03,$03,$03,$03,$03,$03
-  .byte $03,$03,$03,$03,$03,$04,$04,$04
-  .byte $04,$04,$04,$04,$04,$04,$04,$04
-  .byte $05,$05,$05,$05,$05,$05,$05,$05
-  .byte $06,$06,$06,$06,$06,$06,$06,$06
-  .byte $07,$07,$07,$07,$07,$07,$08,$08
-  .byte $08,$08,$08,$08,$09,$09,$09,$09
-  .byte $09,$0a,$0a,$0a,$0a,$0b,$0b,$0b
-  .byte $0b,$0c,$0c,$0c,$0c,$0d,$0d,$0d
-  .byte $0d,$0e,$0e,$0e,$0e,$0f,$0f,$0f
-  .byte $10,$10,$10,$11,$11,$11,$12,$12
-  .byte $12,$13,$13,$13,$14,$14,$15,$15
-  .byte $15,$16,$16,$17,$17,$17,$18,$18
-  .byte $19,$19,$19,$1a,$1a,$1b,$1b,$1c
-  .byte $1c,$1c,$1d,$1d,$1e,$1e,$1f,$1f
-
-;;;;;;;; log2(x)*32 ;;;;;;;;
-log2_tab:
-  .byte $00,$00,$20,$32,$40,$4a,$52,$59
-  .byte $60,$65,$6a,$6e,$72,$76,$79,$7d
-  .byte $80,$82,$85,$87,$8a,$8c,$8e,$90
-  .byte $92,$94,$96,$98,$99,$9b,$9d,$9e
-  .byte $a0,$a1,$a2,$a4,$a5,$a6,$a7,$a9
-  .byte $aa,$ab,$ac,$ad,$ae,$af,$b0,$b1
-  .byte $b2,$b3,$b4,$b5,$b6,$b7,$b8,$b9
-  .byte $b9,$ba,$bb,$bc,$bd,$bd,$be,$bf
-  .byte $c0,$c0,$c1,$c2,$c2,$c3,$c4,$c4
-  .byte $c5,$c6,$c6,$c7,$c7,$c8,$c9,$c9
-  .byte $ca,$ca,$cb,$cc,$cc,$cd,$cd,$ce
-  .byte $ce,$cf,$cf,$d0,$d0,$d1,$d1,$d2
-  .byte $d2,$d3,$d3,$d4,$d4,$d5,$d5,$d5
-  .byte $d6,$d6,$d7,$d7,$d8,$d8,$d9,$d9
-  .byte $d9,$da,$da,$db,$db,$db,$dc,$dc
-  .byte $dd,$dd,$dd,$de,$de,$de,$df,$df
-  .byte $df,$e0,$e0,$e1,$e1,$e1,$e2,$e2
-  .byte $e2,$e3,$e3,$e3,$e4,$e4,$e4,$e5
-  .byte $e5,$e5,$e6,$e6,$e6,$e7,$e7,$e7
-  .byte $e7,$e8,$e8,$e8,$e9,$e9,$e9,$ea
-  .byte $ea,$ea,$ea,$eb,$eb,$eb,$ec,$ec
-  .byte $ec,$ec,$ed,$ed,$ed,$ed,$ee,$ee
-  .byte $ee,$ee,$ef,$ef,$ef,$ef,$f0,$f0
-  .byte $f0,$f1,$f1,$f1,$f1,$f1,$f2,$f2
-  .byte $f2,$f2,$f3,$f3,$f3,$f3,$f4,$f4
-  .byte $f4,$f4,$f5,$f5,$f5,$f5,$f5,$f6
-  .byte $f6,$f6,$f6,$f7,$f7,$f7,$f7,$f7
-  .byte $f8,$f8,$f8,$f8,$f9,$f9,$f9,$f9
-  .byte $f9,$fa,$fa,$fa,$fa,$fa,$fb,$fb
-  .byte $fb,$fb,$fb,$fc,$fc,$fc,$fc,$fc
-  .byte $fd,$fd,$fd,$fd,$fd,$fd,$fe,$fe
-  .byte $fe,$fe,$fe,$ff,$ff,$ff,$ff,$ff
-.endproc
-
 ; ProcessPlayerAction:
 ;   lda Player_State      ;get player's state
 ;   cmp #$03
@@ -2116,6 +2032,134 @@ NoJSChk:
   sta R0
   lda #$04                ;set maximum vertical speed here
   jmp ImposeGravitySprObj ;then jump to move player vertically
+
+
+
+;; Calculate the angle, in a 256-degree circle, between two points.
+;; The trick is to use logarithmic division to get the y/x ratio and
+;; integrate the power function into the atan table. Some branching is
+;; avoided by using a table to adjust for the octants.
+;; In otherwords nothing new or particularily clever but nevertheless
+;; quite useful.
+;;
+;; by Johan Forslöf (doynax)
+.proc FastAtan2
+octant = R3        ;; temporary zeropage variable
+x2 = Player_Rel_XPos
+y2 = Player_Rel_YPos
+x1 = SlingPull_Rel_XPos
+y1 = SlingPull_Rel_YPos
+; x1 = Player_Rel_XPos
+; y1 = Player_Rel_YPos
+; x2 = SlingPull_Rel_XPos
+; y2 = SlingPull_Rel_YPos
+  abssub x1, x2
+  tax
+  rol octant
+
+  abssub y1, y2
+  tay
+  rol octant
+
+  lda log2_tab,x
+  sec
+  sbc log2_tab,y
+  bcc skipflip3
+    eor #$ff
+    clc
+    adc #1
+skipflip3:
+  tax
+  lda octant
+  rol
+  and #%111
+  tay
+
+  lda atan_tab,x
+  eor octant_adjust,y
+  rts
+
+octant_adjust:
+  .byte %00111111		;; x+,y+,|x|>|y|
+  .byte %00000000		;; x+,y+,|x|<|y|
+  .byte %11000000		;; x+,y-,|x|>|y|
+  .byte %11111111		;; x+,y-,|x|<|y|
+  .byte %01000000		;; x-,y+,|x|>|y|
+  .byte %01111111		;; x-,y+,|x|<|y|
+  .byte %10111111		;; x-,y-,|x|>|y|
+  .byte %10000000		;; x-,y-,|x|<|y|
+
+;;;;;;;; atan(2^(x/32))*128/pi ;;;;;;;;
+atan_tab:
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$00,$00,$00
+  .byte $00,$00,$00,$00,$00,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$01,$01,$01
+  .byte $01,$01,$01,$01,$01,$02,$02,$02
+  .byte $02,$02,$02,$02,$02,$02,$02,$02
+  .byte $02,$02,$02,$02,$02,$02,$02,$02
+  .byte $03,$03,$03,$03,$03,$03,$03,$03
+  .byte $03,$03,$03,$03,$03,$04,$04,$04
+  .byte $04,$04,$04,$04,$04,$04,$04,$04
+  .byte $05,$05,$05,$05,$05,$05,$05,$05
+  .byte $06,$06,$06,$06,$06,$06,$06,$06
+  .byte $07,$07,$07,$07,$07,$07,$08,$08
+  .byte $08,$08,$08,$08,$09,$09,$09,$09
+  .byte $09,$0a,$0a,$0a,$0a,$0b,$0b,$0b
+  .byte $0b,$0c,$0c,$0c,$0c,$0d,$0d,$0d
+  .byte $0d,$0e,$0e,$0e,$0e,$0f,$0f,$0f
+  .byte $10,$10,$10,$11,$11,$11,$12,$12
+  .byte $12,$13,$13,$13,$14,$14,$15,$15
+  .byte $15,$16,$16,$17,$17,$17,$18,$18
+  .byte $19,$19,$19,$1a,$1a,$1b,$1b,$1c
+  .byte $1c,$1c,$1d,$1d,$1e,$1e,$1f,$1f
+
+;;;;;;;; log2(x)*32 ;;;;;;;;
+log2_tab:
+  .byte $00,$00,$20,$32,$40,$4a,$52,$59
+  .byte $60,$65,$6a,$6e,$72,$76,$79,$7d
+  .byte $80,$82,$85,$87,$8a,$8c,$8e,$90
+  .byte $92,$94,$96,$98,$99,$9b,$9d,$9e
+  .byte $a0,$a1,$a2,$a4,$a5,$a6,$a7,$a9
+  .byte $aa,$ab,$ac,$ad,$ae,$af,$b0,$b1
+  .byte $b2,$b3,$b4,$b5,$b6,$b7,$b8,$b9
+  .byte $b9,$ba,$bb,$bc,$bd,$bd,$be,$bf
+  .byte $c0,$c0,$c1,$c2,$c2,$c3,$c4,$c4
+  .byte $c5,$c6,$c6,$c7,$c7,$c8,$c9,$c9
+  .byte $ca,$ca,$cb,$cc,$cc,$cd,$cd,$ce
+  .byte $ce,$cf,$cf,$d0,$d0,$d1,$d1,$d2
+  .byte $d2,$d3,$d3,$d4,$d4,$d5,$d5,$d5
+  .byte $d6,$d6,$d7,$d7,$d8,$d8,$d9,$d9
+  .byte $d9,$da,$da,$db,$db,$db,$dc,$dc
+  .byte $dd,$dd,$dd,$de,$de,$de,$df,$df
+  .byte $df,$e0,$e0,$e1,$e1,$e1,$e2,$e2
+  .byte $e2,$e3,$e3,$e3,$e4,$e4,$e4,$e5
+  .byte $e5,$e5,$e6,$e6,$e6,$e7,$e7,$e7
+  .byte $e7,$e8,$e8,$e8,$e9,$e9,$e9,$ea
+  .byte $ea,$ea,$ea,$eb,$eb,$eb,$ec,$ec
+  .byte $ec,$ec,$ed,$ed,$ed,$ed,$ee,$ee
+  .byte $ee,$ee,$ef,$ef,$ef,$ef,$f0,$f0
+  .byte $f0,$f1,$f1,$f1,$f1,$f1,$f2,$f2
+  .byte $f2,$f2,$f3,$f3,$f3,$f3,$f4,$f4
+  .byte $f4,$f4,$f5,$f5,$f5,$f5,$f5,$f6
+  .byte $f6,$f6,$f6,$f7,$f7,$f7,$f7,$f7
+  .byte $f8,$f8,$f8,$f8,$f9,$f9,$f9,$f9
+  .byte $f9,$fa,$fa,$fa,$fa,$fa,$fb,$fb
+  .byte $fb,$fb,$fb,$fc,$fc,$fc,$fc,$fc
+  .byte $fd,$fd,$fd,$fd,$fd,$fd,$fe,$fe
+  .byte $fe,$fe,$fe,$ff,$ff,$ff,$ff,$ff
+.endproc
+
 
 ; https://github.com/TobyLobster/sqrt_test/blob/main/sqrt/sqrt9.a
 ; ***************************************************************************************
@@ -2390,3 +2434,43 @@ skip:
   bne divloop	
   rts
 .endproc
+
+
+.pushseg
+.segment "LOWCODE"
+.proc FastSinCos
+.import SinTable, CosTable
+pointer = R0
+currentbank = R2
+;; in values
+; angle = Y
+; mag = A
+;; out values
+; cos = X
+; sin = Y
+  sta pointer
+  lda #0
+  sta pointer+1
+  ; multiply the address by 64 to get the correct offset in the lookup
+.repeat 5
+  asl pointer
+  rol pointer+1
+.endrepeat
+  BankPRGA #.lobyte(.bank(CosTable))
+  lda #.hibyte(CosTable)
+  clc
+  adc pointer+1
+  sta pointer+1
+  lda (pointer),y 
+  tax
+  lda #.hibyte(SinTable - CosTable)
+  clc
+  adc pointer+1
+  sta pointer+1
+  lda (pointer),y
+  tay
+  ; TODO do we need to call this from anywhere else?
+  BankPRGA #.lobyte(.bank(SlingHold))
+  rts
+.endproc
+.popseg
