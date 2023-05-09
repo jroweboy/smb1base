@@ -546,12 +546,12 @@ __MEMORY_INC = 1
 .global IrqPPUCTRL
 
 .global X_Magnitude
-; X_Magnitude_Lo = X_Magnitude
-; X_Magnitude_Hi = X_Magnitude + 1
 .global Y_Magnitude
-; Y_Magnitude_Lo = Y_Magnitude
-; Y_Magnitude_Hi = Y_Magnitude + 1
+.global Abs_X_Magnitude
+.global Abs_Y_Magnitude
 ; .global IrqPointer
+
+.global PlayerAngle
 
 .global _WarmBootOffset
 

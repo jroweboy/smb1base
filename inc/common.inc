@@ -36,16 +36,21 @@ __COMMON_INC = 1
   tay
 .endmacro
 
-.macro abssub x1, x2
+.macro abssub x1, x2, store, absstore
 .scope
   lda x1
   sec
   sbc x2
+.ifnblank store
+  sta store
+.endif
   bcs skipflip
     eor #$ff
-    clc
     adc #1
 skipflip:
+.ifnblank absstore
+  sta absstore
+.endif
 .endscope
 .endmacro
 

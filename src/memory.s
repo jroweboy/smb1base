@@ -586,10 +586,13 @@ IrqOldScroll:                   .res  1
 IrqPPUCTRL:                     .res  1
 ; IrqPointer:                     .res  2
 X_Magnitude:                    .res  1
+Abs_X_Magnitude:                .res  1
 Y_Magnitude:                    .res  1
+Abs_Y_Magnitude:                .res  1
 ; FILLER:                         .res  2
 CurrentA:                       .res  1
 NextBank:                       .res  1
+PlayerAngle:                    .res  1
 
     _WarmBootOffset:            .res  1   ; Warm boot offset
 

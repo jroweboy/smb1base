@@ -1270,6 +1270,14 @@ InitCSTimer: sta ClimbSideTimer       ;initialize timer here
              rts
 
 .proc InSlingshotSub
+  lda Player_Rel_XPos
+  sta Sprite_X_Position+62*4
+  lda Player_Rel_YPos
+  sta Sprite_Y_Position+62*4
+  lda #$74
+  sta Sprite_Tilenumber+62*4
+  lda #0
+  sta Sprite_Attributes+62*4
   lda SlingPull_Rel_XPos
   sta Sprite_X_Position+63*4
   lda SlingPull_Rel_YPos
@@ -1366,8 +1374,12 @@ NoSling:
 InitSling:
   ; copy over the current player position
   lda Player_Rel_XPos
+  ; clc
+  ; adc #16
   sta SlingPull_Rel_XPos
   lda Player_Rel_YPos
+  ; clc
+  ; adc #16
   sta SlingPull_Rel_YPos
 
   ; and set the player to slingshot state
@@ -1413,67 +1425,47 @@ NotDown:
   ; Now clamp the x/y of the sling pull to a certain magnitude
   ; by calculating the mag = sqrt((x2-x1)^2 + (y2-y1)^2)
 
-x2 = Player_Rel_XPos
-y2 = Player_Rel_YPos
-x1 = SlingPull_Rel_XPos
-y1 = SlingPull_Rel_YPos
+; x2 = Player_Rel_XPos
+; y2 = Player_Rel_YPos
+; x1 = SlingPull_Rel_XPos
+; y1 = SlingPull_Rel_YPos
+  ; find the current angle with arctan
+  jsr FastAtan2
+  sta PlayerAngle
 
-  ; xmag = x1 - x2
-  lda x1
-  sec
-  sbc x2
-  sta X_Magnitude
-  bcs skipflipx
-    eor #$ff
-    clc
-    adc #1
-skipflipx:
-  tay
+  ; ymag = abs(x1 - x2)
+  ldy Abs_X_Magnitude
   ; xmag ^ 2
   lda SquareTableLo,y
   sta R6
   lda SquareTableHi,y
   sta R7
-  ; ymag = y1 - y2
-  lda y1
-  sec
-  sbc y2
-  sta Y_Magnitude
-  ; ymag ^ 2
-  bcs skipflip
-    eor #$ff
-    clc
-    adc #1
-skipflip:
-  tay
+  ; ymag = abs(y1 - y2)
+  ldy Abs_Y_Magnitude
   lda SquareTableLo,y
   clc
   adc R6
-  pha ; store the (xmag + ymag)^2 lobyte for later
+  sta R6 ; store the xmag^2 + ymag^2 lobyte for later
     lda SquareTableHi,y
     adc R7
     tax
-  pla
-  ; sqrt( (xmag + ymag)^2 )
+  lda R6
+  ; sqrt( xmag^2 + ymag^2 )
   jsr FastSqrt
+  ; save the output magnitude for later
+  sty R0
 
   ; Now clamp the magnitude to max
-  tya
-  cmp #SLINGSHOT_MAGNITUDE_MAX
-  bcc SkipLessThan
-    lda #SLINGSHOT_MAGNITUDE_MAX
-SkipLessThan:
-  sta R0
-  ; find the current angle with arctan
-  jsr FastAtan2
-  lsr
-  lsr
-  tay
-
-  ; lda #.lobyte(.bank(SlingHold))
-  ; sta R2
-  lda R0
+  lda #SLINGSHOT_MAGNITUDE_MAX-1
+  cmp R0
+  bcc ClampMagnitude
+    ; Not at max magnitude so no need to clamp
+    rts
+ClampMagnitude:
+  ; if we clamped the magnitude then we need to calculate the new
+  ; x/y magnitudes.
   ; now find the x and y magnitude of the vector by using sin and cos
+  ldy PlayerAngle
   jsr FastSinCos
   stx X_Magnitude
   sty Y_Magnitude
@@ -1867,7 +1859,8 @@ OffscrJoypadBitsData:
 
 ; ------------------------------------------------------------
 ProcessPlayerAngle:
-  jsr FastAtan2
+  ; jsr FastAtan2
+  lda PlayerAngle
   lsr
   lsr
   clc
@@ -2053,22 +2046,22 @@ y1 = SlingPull_Rel_YPos
 ; y1 = Player_Rel_YPos
 ; x2 = SlingPull_Rel_XPos
 ; y2 = SlingPull_Rel_YPos
-  abssub x1, x2
+  abssub x1, x2, X_Magnitude, Abs_X_Magnitude
   tax
   rol octant
 
-  abssub y1, y2
+  abssub y1, y2, Y_Magnitude, Abs_Y_Magnitude
   tay
   rol octant
 
   lda log2_tab,x
-  sec
+  ; sec
   sbc log2_tab,y
-  bcc skipflip3
+  bcc skipflip
     eor #$ff
-    clc
-    adc #1
-skipflip3:
+    ; clc
+    ; adc #1
+skipflip:
   tax
   lda octant
   rol
@@ -2402,38 +2395,38 @@ swap:
     bcs continue            ; ALWAYS branch
 .endproc
 
-.proc LongDivide
-divisor = R1      ;R2 used for hi-byte
-dividend = R3	    ;R4 used for hi-byte
-remainder = R5	  ;R6 used for hi-byte
-result = dividend ;save memory by reusing divident to store the result
+; .proc LongDivide
+; divisor = R1      ;R2 used for hi-byte
+; dividend = R3	    ;R4 used for hi-byte
+; remainder = R5	  ;R6 used for hi-byte
+; result = dividend ;save memory by reusing divident to store the result
 
-  lda #0	        ;preset remainder to 0
-  sta remainder
-  sta remainder+1
-  ldx #16	        ;repeat for each bit: ...
+;   lda #0	        ;preset remainder to 0
+;   sta remainder
+;   sta remainder+1
+;   ldx #16	        ;repeat for each bit: ...
 
-divloop:
-  asl dividend	;dividend lb & hb*2, msb -> Carry
-  rol dividend+1	
-  rol remainder	;remainder lb & hb * 2 + msb from carry
-  rol remainder+1
-  lda remainder
-  sec
-  sbc divisor	;substract divisor to see if it fits in
-  tay	        ;lb result -> Y, for we may need it later
-  lda remainder+1
-  sbc divisor+1
-  bcc skip	;if carry=0 then divisor didn't fit in yet
+; divloop:
+;   asl dividend	;dividend lb & hb*2, msb -> Carry
+;   rol dividend+1	
+;   rol remainder	;remainder lb & hb * 2 + msb from carry
+;   rol remainder+1
+;   lda remainder
+;   sec
+;   sbc divisor	;substract divisor to see if it fits in
+;   tay	        ;lb result -> Y, for we may need it later
+;   lda remainder+1
+;   sbc divisor+1
+;   bcc skip	;if carry=0 then divisor didn't fit in yet
 
-  sta remainder+1	;else save substraction result as new remainder,
-  sty remainder	
-  inc result	;and INCrement result cause divisor fit in 1 times
-skip:
-  dex
-  bne divloop	
-  rts
-.endproc
+;   sta remainder+1	;else save substraction result as new remainder,
+;   sty remainder	
+;   inc result	;and INCrement result cause divisor fit in 1 times
+; skip:
+;   dex
+;   bne divloop	
+;   rts
+; .endproc
 
 
 .pushseg
@@ -2441,21 +2434,22 @@ skip:
 .proc FastSinCos
 .import SinTable, CosTable
 pointer = R0
-currentbank = R2
+; currentbank = R2
 ;; in values
 ; angle = Y
 ; mag = A
 ;; out values
 ; cos = X
 ; sin = Y
-  sta pointer
-  lda #0
+  ; multiply the address by 255 to get the correct offset in the lookup
+  ; aka "just use the magnitude as the lookup high byte"
   sta pointer+1
-  ; multiply the address by 64 to get the correct offset in the lookup
-.repeat 5
-  asl pointer
-  rol pointer+1
-.endrepeat
+  lda #0
+  sta pointer
+; .repeat 5
+;   asl pointer
+;   rol pointer+1
+; .endrepeat
   BankPRGA #.lobyte(.bank(CosTable))
   lda #.hibyte(CosTable)
   clc
@@ -2463,10 +2457,11 @@ currentbank = R2
   sta pointer+1
   lda (pointer),y 
   tax
-  lda #.hibyte(SinTable - CosTable)
-  clc
-  adc pointer+1
-  sta pointer+1
+  BankPRGA #.lobyte(.bank(SinTable))
+  ; lda #.hibyte(SinTable - CosTable)
+  ; clc
+  ; adc pointer+1
+  ; sta pointer+1
   lda (pointer),y
   tay
   ; TODO do we need to call this from anywhere else?
