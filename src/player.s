@@ -33,6 +33,8 @@
 
 .segment "PLAYER"
 
+.import CosTable, SinTable
+
 ;-------------------------------------------------------------------------------------
 
 .proc GameRoutines
@@ -1395,33 +1397,251 @@ InitSling:
   bne StillHolding
     ;; TODO apply force and cancel out of slingshot mode.
 
+    lda #0
     sta HoldingSlingshot
     sta Player_State
+QuickExit:
     rts
 StillHolding:
-  ; Move the slingshot position
-  lda Left_Right_Buttons
-  and #Left_Dir
-  beq NotLeft
-    dec SlingPull_Rel_XPos
-NotLeft:
-  lda Left_Right_Buttons
-  and #Right_Dir
-  beq NotRight
-    inc SlingPull_Rel_XPos
-NotRight:
-  lda Up_Down_Buttons
-  and #Up_Dir
-  beq NotUp
-    dec SlingPull_Rel_YPos
-NotUp:
-  lda Up_Down_Buttons
-  and #Down_Dir
-  beq NotDown
-    inc SlingPull_Rel_YPos
-NotDown:
   lda #PlayerState::Slingshot
   sta Player_State
+  lda SavedJoypadBits
+  and #%00001111
+  beq QuickExit
+  ; Move the slingshot position
+;   lda Left_Right_Buttons
+;   and #Left_Dir
+;   beq NotLeft
+;     dec SlingPull_Rel_XPos
+; NotLeft:
+;   lda Left_Right_Buttons
+;   and #Right_Dir
+;   beq NotRight
+;     inc SlingPull_Rel_XPos
+; NotRight:
+;   lda Up_Down_Buttons
+;   and #Up_Dir
+;   beq NotUp
+;     dec SlingPull_Rel_YPos
+; NotUp:
+;   lda Up_Down_Buttons
+;   and #Down_Dir
+;   beq NotDown
+;     inc SlingPull_Rel_YPos
+; NotDown:
+
+  ; DiagonalMoveAmt = R2
+  ; lda FrameCounter
+  ; and #%00000001
+  ; clc
+  ; adc #1
+  ; sta DiagonalMoveAmt
+.MACPACK generic
+.MACPACK longbranch
+  ; first things first check to see if we are at the maximum length, ie the
+  ; current sling position is exactly the sin/cos value of the current angle
+  ; (the angle before applying movement from input this frame)
+  X_Temp = R2
+  Y_Temp = R3
+  ldy PlayerAngle
+  lda SinTable, y
+  bpl SkipFlipY
+    eor #$ff
+    clc
+    adc #1
+SkipFlipY:
+  cmp Abs_Y_Magnitude
+  ble @Skip
+    jmp RegularControl
+@Skip: 
+  lda CosTable, y
+  bpl SkipFlipX
+    eor #$ff
+    clc
+    adc #1
+SkipFlipX:
+  cmp Abs_X_Magnitude
+  ble @Skip
+    jmp RegularControl
+@Skip:
+  ; The player has reached the circle limit, so first try to use the movement
+  ; around the circle script. In laymans terms, if we are holding left on a left
+  ; quadrant, then attempt to move along the circle edge by just changing the angle
+  ; and using the next position from the sin/cos table
+
+  ; Frame counter is used to alternate speed around the cirlce to
+  ; limit movement to an average of 1.5 speed per frame
+  lda FrameCounter
+  and #1
+  asl
+  asl
+  asl
+  sta R2
+
+  lda PlayerAngle
+  lsr
+  lsr
+  lsr
+  lsr
+  lsr
+  tax
+  ora R2
+  tay
+  lda SavedJoypadBits
+  and QuadrantDisabled, x
+  ; If its not, that means we need to fall back to regular movement,
+  ; since we pushed a direction that falls off the normal movement edge
+  jne RegularControl
+
+  ; Now check to see if we are in the stable angle range, meaning
+  ; the two angles around the edges of the quadrant.
+  ; ie: if holding left, and the angle is near zero, clamp to zero.
+
+  lda PlayerAngle
+  clc
+  adc #2
+  sta R2
+  and #%00011111
+  cmp #5
+  bge NotAtEdge
+    ; We are at an edge, now check to see if we should clamp
+    stx R3
+    ; Load the angle + 2 from earlier so we can check this quadrant instead
+    lda R2
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    tax
+    lda SavedJoypadBits
+    and #%00001111
+    cmp QuadrantStableDirection,x
+    bne NotTheCorrectEdge
+      ; At this point, the person is holding the direction that would cause
+      ; it to clamp, so lets just clamp the angle and call it done.
+      lda R2
+      and #%11100000
+      jmp UpdatePosition
+NotTheCorrectEdge:
+    ; restore the original quadrant and continue processing
+    ldx R3
+NotAtEdge:
+  ; At this point, we are pushing buttons that influences the current quadrant
+  ; so now we need to figure out which buttons pressed to change the angle
+  lda SavedJoypadBits
+  ; and #%00001111
+  and QuadrantPrimaryDirection, x
+  beq OtherDirection
+    lda QuadrantPrimaryDiff, y
+    bne AddAngle ; unconditional
+OtherDirection:
+  lda QuadrantPrimaryDiff, y
+  eor #$ff
+  clc
+  adc #1
+AddAngle:
+  clc
+  adc PlayerAngle
+UpdatePosition:
+  sta PlayerAngle
+  tay
+  lda CosTable, y
+  clc
+  adc Player_Rel_XPos
+  sta SlingPull_Rel_XPos
+  lda SinTable, y
+  clc
+  adc Player_Rel_YPos
+  sta SlingPull_Rel_YPos
+Done:
+  rts
+
+; If the current input masked with this is not zero, then we fallback
+; to the regular controller input scheme
+QuadrantDisabled:
+  .byte Down_Dir | Right_Dir
+  .byte Down_Dir | Right_Dir
+  .byte Down_Dir | Left_Dir
+  .byte Down_Dir | Left_Dir
+  .byte Up_Dir | Left_Dir
+  .byte Up_Dir | Left_Dir
+  .byte Up_Dir | Right_Dir
+  .byte Up_Dir | Right_Dir
+
+; When deciding to increment or decrement the player angle using the control
+; scheme there always 3 different input combinations that the player can use
+; to move it, two of them go in one direction, and the other goes in the opposite
+; This is a table that determines the "two" direction input
+QuadrantPrimaryDirection:
+  .byte Up_Dir
+  .byte Left_Dir
+  .byte Right_Dir
+  .byte Up_Dir
+  .byte Down_Dir
+  .byte Right_Dir
+  .byte Left_Dir
+  .byte Down_Dir
+
+QuadrantPrimaryDiff:
+  ; .byte 1, -1, 1, -1, 1, -1, 1, -1
+  .byte 2, -2, 2, -2, 2, -2, 2, -2
+  .byte 2, -2, 2, -2, 2, -2, 2, -2
+
+QuadrantStableDirection:
+  .byte Left_Dir
+  .byte Up_Dir | Left_Dir
+  .byte Up_Dir
+  .byte Up_Dir | Right_Dir
+  .byte Right_Dir
+  .byte Down_Dir | Right_Dir
+  .byte Down_Dir
+  .byte Down_Dir | Left_Dir
+
+.endproc
+;   ; X is now the quadrant number use this to look up the action for the player
+;   ; input. 0 == no action or "regular" movement, otherwise add the value to the angle
+;   txa
+;   asl
+;   asl
+;   asl
+;   asl
+;   adc #.lobyte(QuadrantTable) 
+;   sta R0
+;   lda #.hibyte(QuadrantTable)
+;   adc #0
+;   sta R1
+
+;   lda SavedJoypadBits
+;   and #%00001111
+;   tay
+;   lda (R0), y
+
+  ; Use the regular movement script
+.proc RegularControl
+  lda FrameCounter
+  and #1
+  asl
+  asl
+  asl
+  asl
+  sta R2
+
+  lda SavedJoypadBits
+  and #%00001111
+  ora R2
+  tay
+
+  lda HorizontalMovementTable, y
+  clc
+  adc SlingPull_Rel_XPos
+  sta SlingPull_Rel_XPos
+
+  lda VerticalMovementTable, y
+  clc
+  adc SlingPull_Rel_YPos
+  sta SlingPull_Rel_YPos
+
   ; Now clamp the x/y of the sling pull to a certain magnitude
   ; by calculating the mag = sqrt((x2-x1)^2 + (y2-y1)^2)
 
@@ -1432,53 +1652,141 @@ NotDown:
   ; find the current angle with arctan
   jsr FastAtan2
   sta PlayerAngle
+  tay
+  lda SinTable, y
+  bpl SkipFlipY
+    eor #$ff
+    clc
+    adc #1
+SkipFlipY:
+  cmp Abs_Y_Magnitude
+  bcs SkipClampY
+    lda SinTable, y
+    clc
+    adc Player_Rel_YPos
+    sta SlingPull_Rel_YPos
+SkipClampY:
+  lda CosTable, y
+  bpl SkipFlipX
+    eor #$ff
+    clc
+    adc #1
+SkipFlipX:
+  cmp Abs_X_Magnitude
+  bcs SkipClampX
+    lda CosTable, y
+    clc
+    adc Player_Rel_XPos
+    sta SlingPull_Rel_XPos
+SkipClampX:
+  rts
 
   ; ymag = abs(x1 - x2)
-  ldy Abs_X_Magnitude
-  ; xmag ^ 2
-  lda SquareTableLo,y
-  sta R6
-  lda SquareTableHi,y
-  sta R7
-  ; ymag = abs(y1 - y2)
-  ldy Abs_Y_Magnitude
-  lda SquareTableLo,y
-  clc
-  adc R6
-  sta R6 ; store the xmag^2 + ymag^2 lobyte for later
-    lda SquareTableHi,y
-    adc R7
-    tax
-  lda R6
-  ; sqrt( xmag^2 + ymag^2 )
-  jsr FastSqrt
-  ; save the output magnitude for later
-  sty R0
+  ; ldy Abs_X_Magnitude
+  ; ; xmag ^ 2
+  ; lda SquareTableLo,y
+  ; sta R6
+  ; lda SquareTableHi,y
+  ; sta R7
+  ; ; ymag = abs(y1 - y2)
+  ; ldy Abs_Y_Magnitude
+  ; lda SquareTableLo,y
+  ; clc
+  ; adc R6
+  ; sta R6 ; store the xmag^2 + ymag^2 lobyte for later
+  ;   lda SquareTableHi,y
+  ;   adc R7
+  ;   tax
+  ; lda R6
+  ; ; sqrt( xmag^2 + ymag^2 )
+  ; jsr FastSqrt
+  ; ; save the output magnitude for later
+  ; sty R0
 
   ; Now clamp the magnitude to max
-  lda #SLINGSHOT_MAGNITUDE_MAX-1
-  cmp R0
-  bcc ClampMagnitude
-    ; Not at max magnitude so no need to clamp
-    rts
-ClampMagnitude:
+;   lda #SLINGSHOT_MAGNITUDE_MAX-1
+;   cmp R0
+;   bcc ClampMagnitude
+;     ; Not at max magnitude so no need to clamp
+;     rts
+; ClampMagnitude:
   ; if we clamped the magnitude then we need to calculate the new
   ; x/y magnitudes.
   ; now find the x and y magnitude of the vector by using sin and cos
-  ldy PlayerAngle
-  jsr FastSinCos
-  stx X_Magnitude
-  sty Y_Magnitude
-  txa
-  clc
-  adc Player_Rel_XPos
-  sta SlingPull_Rel_XPos
-  tya
-  clc
-  adc Player_Rel_YPos
-  sta SlingPull_Rel_YPos
-  rts
+;   ldy PlayerAngle
+;   ; lsr
+;   ; tay
+; .import CosTable, SinTable
+;   lda CosTable, y
+;   sta X_Magnitude
+;   clc
+;   adc Player_Rel_XPos
+;   sta SlingPull_Rel_XPos
+;   lda SinTable, y
+;   sta Y_Magnitude
+;   clc
+;   adc Player_Rel_YPos
+;   sta SlingPull_Rel_YPos
+  ; jsr FastSinCos
+  ; stx X_Magnitude
+  ; sty Y_Magnitude
+  ; txa
+  ; clc
+  ; adc Player_Rel_XPos
+  ; sta SlingPull_Rel_XPos
+  ; tya
+  ; clc
+  ; adc Player_Rel_YPos
+  ; sta SlingPull_Rel_YPos
 
+  ; rts
+
+QuadrantTable:
+  ;     0    R     L    R/L
+  .byte $00, $01, -$01, $00
+  ;     D    D/R   D/L  D/R/L
+  .byte $00, $01, $00, $00
+  ;     U    U/R   U/L  U/R/L
+  .byte -$01, $01, -$01, $00
+  ;     U/D  U/D/R U/D/L U/D/R/L
+  .byte $00, $01, -$01, $00
+
+HorizontalMovementTable:
+  ;     0    R     L    R/L
+  .byte $00, $02, -$02, $00
+  ;     D    D/R   D/L  D/R/L
+  .byte $00, $01, -$01, $00
+  ;     U    U/R   U/L  U/R/L
+  .byte $00, $01, -$01, $00
+  ;     U/D  U/D/R U/D/L U/D/R/L
+  .byte $00, $01, -$01, $00
+HorizontalMovementTableAlt:
+  ;     0    R     L    R/L
+  .byte $00, $02, -$02, $00
+  ;     D    D/R   D/L  D/R/L
+  .byte $00, $02, -$02, $00
+  ;     U    U/R   U/L  U/R/L
+  .byte $00, $02, -$02, $00
+  ;     U/D  U/D/R U/D/L U/D/R/L
+  .byte $00, $02, -$02, $00
+VerticalMovementTable:
+  ;     0    R     L    R/L
+  .byte $00, $00, $00, $00
+  ;     D    D/R   D/L  D/R/L
+  .byte $02, $01, $01, $02
+  ;     U    U/R   U/L  U/R/L
+  .byte -$02, -$01, -$01, -$02
+  ;     U/D  U/D/R U/D/L U/D/R/L
+  .byte $00, $00, $00, $00
+VerticalMovementTableAlt:
+  ;     0    R     L    R/L
+  .byte $00, $00, $00, $00
+  ;     D    D/R   D/L  D/R/L
+  .byte $02, $02, $02, $02
+  ;     U    U/R   U/L  U/R/L
+  .byte -$02, -$02, -$02, -$02
+  ;     U/D  U/D/R U/D/L U/D/R/L
+  .byte $00, $00, $00, $00
 
   ; y is the total magnitude, now clamp the xmag and ymag as follows
   ; xmag * min(SLINGSHOT_MAGNITUDE_MAX, mag) / mag 
@@ -2046,11 +2354,11 @@ y1 = SlingPull_Rel_YPos
 ; y1 = Player_Rel_YPos
 ; x2 = SlingPull_Rel_XPos
 ; y2 = SlingPull_Rel_YPos
-  abssub x1, x2, X_Magnitude, Abs_X_Magnitude
+  abssub x1, x2, X_Magnitude , Abs_X_Magnitude
   tax
   rol octant
 
-  abssub y1, y2, Y_Magnitude, Abs_Y_Magnitude
+  abssub y1, y2, Y_Magnitude , Abs_Y_Magnitude
   tay
   rol octant
 
@@ -2171,180 +2479,180 @@ log2_tab:
 ;   Y is result
 ;
 ; ***************************************************************************************
-.proc FastSqrt
+; .proc FastSqrt
 
-argsav     =  R2                 ; 2 bytes
-arglo      =  R4                 ; 1 byte
+; argsav     =  R2                 ; 2 bytes
+; arglo      =  R4                 ; 1 byte
 
-    cpx #$2c                        ; value already 'normalised' (i.e. large enough)?
-    bcs atleast11264                ; ...yes
+;     cpx #$2c                        ; value already 'normalised' (i.e. large enough)?
+;     bcs atleast11264                ; ...yes
 
-    ; $0000 to $2bff (11264 cases)
-under11264:
-    stx argsav+1                    ; save arghi
-    cpx #0                          ; is arghi zero?
-    beq under256                    ; ...yes
+;     ; $0000 to $2bff (11264 cases)
+; under11264:
+;     stx argsav+1                    ; save arghi
+;     cpx #0                          ; is arghi zero?
+;     beq under256                    ; ...yes
 
-    ; $01ff to $2bff (10752 cases)
-    ; we want to bring the input value into the range of our root table ($2c00-$ffff).
-    ;
-    ; each time around the next loop we multiply the input by 4 (double shift), which
-    ; doubles the result. So we keep track of the number of times we shift twice in Y
-    ; (aka shift_count) so we can scale down the result later.
-    ;
-    ; The loop has been unrolled for speed.
-    sta argsav                      ; save arglo for shifting
-    sta arglo                       ; save arglo for later compare
-    txa                             ; arghi to a
-    ldy #1                          ; Y = shift_count = 1
+;     ; $01ff to $2bff (10752 cases)
+;     ; we want to bring the input value into the range of our root table ($2c00-$ffff).
+;     ;
+;     ; each time around the next loop we multiply the input by 4 (double shift), which
+;     ; doubles the result. So we keep track of the number of times we shift twice in Y
+;     ; (aka shift_count) so we can scale down the result later.
+;     ;
+;     ; The loop has been unrolled for speed.
+;     sta argsav                      ; save arglo for shifting
+;     sta arglo                       ; save arglo for later compare
+;     txa                             ; arghi to a
+;     ldy #1                          ; Y = shift_count = 1
 
-    asl arglo                       ; }
-    rol                             ; }
-    asl arglo                       ; } shift arglo until >=$2c
-    rol                             ; }
-    cmp #$2c                        ; }
-    bcs normalised                  ; }
+;     asl arglo                       ; }
+;     rol                             ; }
+;     asl arglo                       ; } shift arglo until >=$2c
+;     rol                             ; }
+;     cmp #$2c                        ; }
+;     bcs normalised                  ; }
 
-    asl arglo                       ; }
-    rol                             ; }
-    asl arglo                       ; } shift arglo until >=$2c
-    rol                             ; }
-    iny                             ; } Y = shift_count = 2
-    cmp #$2c                        ; }
-    bcs normalised                  ; }
+;     asl arglo                       ; }
+;     rol                             ; }
+;     asl arglo                       ; } shift arglo until >=$2c
+;     rol                             ; }
+;     iny                             ; } Y = shift_count = 2
+;     cmp #$2c                        ; }
+;     bcs normalised                  ; }
 
-    asl arglo                       ; }
-    rol                             ; }
-    asl arglo                       ; } shift arglo until >=$2c
-    rol                             ; }
-    iny                             ; } Y = shift_count = 3
+;     asl arglo                       ; }
+;     rol                             ; }
+;     asl arglo                       ; } shift arglo until >=$2c
+;     rol                             ; }
+;     iny                             ; } Y = shift_count = 3
 
-    ; a=normalised arg, y=shift_count
-normalised:
-    tax                             ; use norm-arg for index
-    lda root,x                      ; get root from table
-back:
-    lsr                             ; halve the root shift_count times
-    dey                             ;
-    bne back                           ;
+;     ; a=normalised arg, y=shift_count
+; normalised:
+;     tax                             ; use norm-arg for index
+;     lda root,x                      ; get root from table
+; back:
+;     lsr                             ; halve the root shift_count times
+;     dey                             ;
+;     bne back                           ;
 
-    ; check our result against actual square from square_low/high as it could be one out
-    tay                             ; use shifted root for index now
-    lda argsav                      ; get arglo
-    cmp SquareTableLo,y                ;
-    bcc forward                          ; ...speeds up average by 0.7 cycle
-    lda argsav+1                    ;
-    sbc SquareTableHi,y               ;
-    bcc forward                           ;
-    iny                             ;
-forward:
-    rts                             ;
+;     ; check our result against actual square from square_low/high as it could be one out
+;     tay                             ; use shifted root for index now
+;     lda argsav                      ; get arglo
+;     cmp SquareTableLo,y                ;
+;     bcc forward                          ; ...speeds up average by 0.7 cycle
+;     lda argsav+1                    ;
+;     sbc SquareTableHi,y               ;
+;     bcc forward                           ;
+;     iny                             ;
+; forward:
+;     rts                             ;
 
-atleast11264:
-    ; $2c00 to $ffff (54272 cases)
-    cpx #$ff                        ; check for arghi = $ff
-    beq over65280                   ; ...yes, special case
+; atleast11264:
+;     ; $2c00 to $ffff (54272 cases)
+;     cpx #$ff                        ; check for arghi = $ff
+;     beq over65280                   ; ...yes, special case
 
-    ; if the number is big enough, then we can look up the root in a table indexed by the
-    ; high byte (with the proviso that it may be out by one). We then check against the
-    ; actual squares tables and adjust up by one as needed.
-    ldy root,x                      ; get root, use as index
-    cmp SquareTableLo,y                ;
-    bcc return1                     ; ...speeds up average by 0.8 cycle
-    txa                             ; arghi
-    sbc SquareTableHi,y               ;
-    bcc return1                     ;
-    iny                             ; adjust result by one
-return1:
-    rts                             ;
+;     ; if the number is big enough, then we can look up the root in a table indexed by the
+;     ; high byte (with the proviso that it may be out by one). We then check against the
+;     ; actual squares tables and adjust up by one as needed.
+;     ldy root,x                      ; get root, use as index
+;     cmp SquareTableLo,y                ;
+;     bcc return1                     ; ...speeds up average by 0.8 cycle
+;     txa                             ; arghi
+;     sbc SquareTableHi,y               ;
+;     bcc return1                     ;
+;     iny                             ; adjust result by one
+; return1:
+;     rts                             ;
 
-    ; $0000 to $00ff (256 cases)
-under256:
-    tay                             ; is arglo also zero?
-    beq return1                     ; ...yes, sqrt=0
+;     ; $0000 to $00ff (256 cases)
+; under256:
+;     tay                             ; is arglo also zero?
+;     beq return1                     ; ...yes, sqrt=0
 
-    ; $0001 to $00ff (255 cases)
-    ; As above, we want to bring the input value into the range of our root table ($2c00-$ffff).
-    ;
-    ; each time around the next loop we multiply the input by 4 (double shifted), which
-    ; doubles the result. So we keep track of the number of times we double shifted in Y
-    ; (aka shift_count) so we can scale down the result later.
-    ;
-    ; The loop has been unrolled for speed.
-    ;
-    ; By using arglo (the low byte) as the high byte we have double shifted four
-    ; times already. Hence shift_count starts at four.
-    ;
-    sta argsav                      ; save arglo for later compare
-    ldy #4                          ; start shift_count = 4
-    cmp #$2c                        ; normalised yet?
-    bcs normalised                  ; ...yes, get root now
-    asl                             ;
-    asl                             ;
-    iny                             ; count the shift
-    cmp #$2c                        ; normalised yet?
-    bcs normalised                  ; ...yes, get root now
-    asl                             ;
-    asl                             ;
-    iny                             ; count the shift
-    cmp #$2c                        ; normalised yet?
-    bcs normalised                  ; ...yes, get root now
-    asl                             ;
-    asl                             ;
-    iny                             ; count the shift
-    bne normalised                  ; ALWAYS branch
+;     ; $0001 to $00ff (255 cases)
+;     ; As above, we want to bring the input value into the range of our root table ($2c00-$ffff).
+;     ;
+;     ; each time around the next loop we multiply the input by 4 (double shifted), which
+;     ; doubles the result. So we keep track of the number of times we double shifted in Y
+;     ; (aka shift_count) so we can scale down the result later.
+;     ;
+;     ; The loop has been unrolled for speed.
+;     ;
+;     ; By using arglo (the low byte) as the high byte we have double shifted four
+;     ; times already. Hence shift_count starts at four.
+;     ;
+;     sta argsav                      ; save arglo for later compare
+;     ldy #4                          ; start shift_count = 4
+;     cmp #$2c                        ; normalised yet?
+;     bcs normalised                  ; ...yes, get root now
+;     asl                             ;
+;     asl                             ;
+;     iny                             ; count the shift
+;     cmp #$2c                        ; normalised yet?
+;     bcs normalised                  ; ...yes, get root now
+;     asl                             ;
+;     asl                             ;
+;     iny                             ; count the shift
+;     cmp #$2c                        ; normalised yet?
+;     bcs normalised                  ; ...yes, get root now
+;     asl                             ;
+;     asl                             ;
+;     iny                             ; count the shift
+;     bne normalised                  ; ALWAYS branch
 
-    ; $ff00 to $ffff (256 cases)
-over65280:
-    ldy #$ff                        ;
-    rts                             ;
+;     ; $ff00 to $ffff (256 cases)
+; over65280:
+;     ldy #$ff                        ;
+;     rts                             ;
 
-; align tables to $2c offset from a page, so no page crossings occur
-; !align $ff, $2c
+; ; align tables to $2c offset from a page, so no page crossings occur
+; ; !align $ff, $2c
 
-; --------------------------------
-; square root of n, for n=11264 to 65280 step 256
-root_table:
-  .byte                     $6a, $6b, $6c, $6d
-  .byte $6e, $70, $71, $72, $73, $74, $75, $76
-  .byte $77, $78, $79, $7a, $7b, $7c, $7d, $7e
-  .byte $80, $80, $81, $82, $83, $84, $85, $86
-  .byte $87, $88, $89, $8a, $8b, $8c, $8d, $8e
-  .byte $8f, $90, $90, $91, $92, $93, $94, $95
-  .byte $96, $96, $97, $98, $99, $9a, $9b, $9b
-  .byte $9c, $9d, $9e, $9f, $a0, $a0, $a1, $a2
-  .byte $a3, $a3, $a4, $a5, $a6, $a7, $a7, $a8
-  .byte $a9, $aa, $aa, $ab, $ac, $ad, $ad, $ae
-  .byte $af, $b0, $b0, $b1, $b2, $b2, $b3, $b4
-  .byte $b5, $b5, $b6, $b7, $b7, $b8, $b9, $b9
-  .byte $ba, $bb, $bb, $bc, $bd, $bd, $be, $bf
-  .byte $c0, $c0, $c1, $c1, $c2, $c3, $c3, $c4
-  .byte $c5, $c5, $c6, $c7, $c7, $c8, $c9, $c9
-  .byte $ca, $cb, $cb, $cc, $cc, $cd, $ce, $ce
-  .byte $cf, $d0, $d0, $d1, $d1, $d2, $d3, $d3
-  .byte $d4, $d4, $d5, $d6, $d6, $d7, $d7, $d8
-  .byte $d9, $d9, $da, $da, $db, $db, $dc, $dd
-  .byte $dd, $de, $de, $df, $e0, $e0, $e1, $e1
-  .byte $e2, $e2, $e3, $e3, $e4, $e5, $e5, $e6
-  .byte $e6, $e7, $e7, $e8, $e8, $e9, $ea, $ea
-  .byte $eb, $eb, $ec, $ec, $ed, $ed, $ee, $ee
-  .byte $ef, $f0, $f0, $f1, $f1, $f2, $f2, $f3
-  .byte $f3, $f4, $f4, $f5, $f5, $f6, $f6, $f7
-  .byte $f7, $f8, $f8, $f9, $f9, $fa, $fa, $fb
-  .byte $fb, $fc, $fc, $fd, $fd, $fe, $fe, $ff
+; ; --------------------------------
+; ; square root of n, for n=11264 to 65280 step 256
+; root_table:
+;   .byte                     $6a, $6b, $6c, $6d
+;   .byte $6e, $70, $71, $72, $73, $74, $75, $76
+;   .byte $77, $78, $79, $7a, $7b, $7c, $7d, $7e
+;   .byte $80, $80, $81, $82, $83, $84, $85, $86
+;   .byte $87, $88, $89, $8a, $8b, $8c, $8d, $8e
+;   .byte $8f, $90, $90, $91, $92, $93, $94, $95
+;   .byte $96, $96, $97, $98, $99, $9a, $9b, $9b
+;   .byte $9c, $9d, $9e, $9f, $a0, $a0, $a1, $a2
+;   .byte $a3, $a3, $a4, $a5, $a6, $a7, $a7, $a8
+;   .byte $a9, $aa, $aa, $ab, $ac, $ad, $ad, $ae
+;   .byte $af, $b0, $b0, $b1, $b2, $b2, $b3, $b4
+;   .byte $b5, $b5, $b6, $b7, $b7, $b8, $b9, $b9
+;   .byte $ba, $bb, $bb, $bc, $bd, $bd, $be, $bf
+;   .byte $c0, $c0, $c1, $c1, $c2, $c3, $c3, $c4
+;   .byte $c5, $c5, $c6, $c7, $c7, $c8, $c9, $c9
+;   .byte $ca, $cb, $cb, $cc, $cc, $cd, $ce, $ce
+;   .byte $cf, $d0, $d0, $d1, $d1, $d2, $d3, $d3
+;   .byte $d4, $d4, $d5, $d6, $d6, $d7, $d7, $d8
+;   .byte $d9, $d9, $da, $da, $db, $db, $dc, $dd
+;   .byte $dd, $de, $de, $df, $e0, $e0, $e1, $e1
+;   .byte $e2, $e2, $e3, $e3, $e4, $e5, $e5, $e6
+;   .byte $e6, $e7, $e7, $e8, $e8, $e9, $ea, $ea
+;   .byte $eb, $eb, $ec, $ec, $ed, $ed, $ee, $ee
+;   .byte $ef, $f0, $f0, $f1, $f1, $f2, $f2, $f3
+;   .byte $f3, $f4, $f4, $f5, $f5, $f6, $f6, $f7
+;   .byte $f7, $f8, $f8, $f9, $f9, $fa, $fa, $fb
+;   .byte $fb, $fc, $fc, $fd, $fd, $fe, $fe, $ff
 
-root = root_table-$2c    ; set up so $6a is first square root
-.endproc
+; root = root_table-$2c    ; set up so $6a is first square root
+; .endproc
 
-SquareTableLo:
-.repeat 256,I
-  .lobytes I * I
-.endrepeat
+; SquareTableLo:
+; .repeat 256,I
+;   .lobytes I * I
+; .endrepeat
 
-SquareTableHi:
-.repeat 256,I
-  .hibytes I * I
-.endrepeat
+; SquareTableHi:
+; .repeat 256,I
+;   .hibytes I * I
+; .endrepeat
 
 ; mult22.a
 ; from Niels Möller: https://www.lysator.liu.se/~nisse/misc/6502-mul.html
@@ -2356,44 +2664,44 @@ SquareTableHi:
 
 ; In: Factors in A and X
 ; Out: High byte in A, low byte in result_low
-.proc FastMult8x8
+; .proc FastMult8x8
 
-min         = R2
-result_low  = R3
-temp3       = R4
-    sta min
-    cpx min
-    bcc swap
-    txa
-continue:
-    sbc min
-    tay
-    ; at this point:
-    ;   Y = max(inputs) - min(inputs);
-    ;   X = max(inputs);
-    lda SquareTableLo,x
-    sbc SquareTableLo,y
-    sta result_low
-    lda SquareTableHi,x
-    sbc SquareTableHi,y
-    sta temp3
-    clc
-    ldx min
-    lda result_low
-    adc SquareTableLo,x
-    sta result_low
-    lda temp3
-    adc SquareTableHi,x
-    ror
-    ror result_low
-    rts
+; min         = R2
+; result_low  = R3
+; temp3       = R4
+;     sta min
+;     cpx min
+;     bcc swap
+;     txa
+; continue:
+;     sbc min
+;     tay
+;     ; at this point:
+;     ;   Y = max(inputs) - min(inputs);
+;     ;   X = max(inputs);
+;     lda SquareTableLo,x
+;     sbc SquareTableLo,y
+;     sta result_low
+;     lda SquareTableHi,x
+;     sbc SquareTableHi,y
+;     sta temp3
+;     clc
+;     ldx min
+;     lda result_low
+;     adc SquareTableLo,x
+;     sta result_low
+;     lda temp3
+;     adc SquareTableHi,x
+;     ror
+;     ror result_low
+;     rts
 
-swap:
-    stx min
-    tax
-    sec
-    bcs continue            ; ALWAYS branch
-.endproc
+; swap:
+;     stx min
+;     tax
+;     sec
+;     bcs continue            ; ALWAYS branch
+; .endproc
 
 ; .proc LongDivide
 ; divisor = R1      ;R2 used for hi-byte
@@ -2428,44 +2736,51 @@ swap:
 ;   rts
 ; .endproc
 
+; .proc FastSinCos
+; .import CosTable, SinTable
+;   ldx CosTable, y
+;   lda SinTable, y
+;   tay
+;   rts
+; .endproc
 
-.pushseg
-.segment "LOWCODE"
-.proc FastSinCos
-.import SinTable, CosTable
-pointer = R0
-; currentbank = R2
-;; in values
-; angle = Y
-; mag = A
-;; out values
-; cos = X
-; sin = Y
-  ; multiply the address by 255 to get the correct offset in the lookup
-  ; aka "just use the magnitude as the lookup high byte"
-  sta pointer+1
-  lda #0
-  sta pointer
-; .repeat 5
-;   asl pointer
-;   rol pointer+1
-; .endrepeat
-  BankPRGA #.lobyte(.bank(CosTable))
-  lda #.hibyte(CosTable)
-  clc
-  adc pointer+1
-  sta pointer+1
-  lda (pointer),y 
-  tax
-  BankPRGA #.lobyte(.bank(SinTable))
-  ; lda #.hibyte(SinTable - CosTable)
-  ; clc
-  ; adc pointer+1
-  ; sta pointer+1
-  lda (pointer),y
-  tay
-  ; TODO do we need to call this from anywhere else?
-  BankPRGA #.lobyte(.bank(SlingHold))
-  rts
-.endproc
-.popseg
+; .pushseg
+; .segment "LOWCODE"
+; .proc FastSinCos
+; .import SinTable, CosTable
+; pointer = R0
+; ; currentbank = R2
+; ;; in values
+; ; angle = Y
+; ; mag = A
+; ;; out values
+; ; cos = X
+; ; sin = Y
+;   ; multiply the address by 255 to get the correct offset in the lookup
+;   ; aka "just use the magnitude as the lookup high byte"
+;   sta pointer+1
+;   lda #0
+;   sta pointer
+; ; .repeat 5
+; ;   asl pointer
+; ;   rol pointer+1
+; ; .endrepeat
+;   BankPRGA #.lobyte(.bank(CosTable))
+;   lda #.hibyte(CosTable)
+;   clc
+;   adc pointer+1
+;   sta pointer+1
+;   lda (pointer),y 
+;   tax
+;   BankPRGA #.lobyte(.bank(SinTable))
+;   ; lda #.hibyte(SinTable - CosTable)
+;   ; clc
+;   ; adc pointer+1
+;   ; sta pointer+1
+;   lda (pointer),y
+;   tay
+;   ; TODO do we need to call this from anywhere else?
+;   BankPRGA #.lobyte(.bank(SlingHold))
+;   rts
+; .endproc
+; .popseg

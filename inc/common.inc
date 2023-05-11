@@ -5,6 +5,7 @@
 __COMMON_INC = 1
 
 .linecont on
+.feature force_range
 
 .include "charmap.inc"
 .include "memory.inc"
