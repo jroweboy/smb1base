@@ -573,8 +573,8 @@ AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (origi
 
 HoldingSlingshot:                   .res  1
 
-SlingPull_Rel_XPos:             .res  1
-SlingPull_Rel_YPos:             .res  1
+SlingPull_Rel_XPos:             .res  2
+SlingPull_Rel_YPos:             .res  2
 
 StatTimer:                      .res  3
 StatTimerLo                   = StatTimer

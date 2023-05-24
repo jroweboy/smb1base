@@ -1374,14 +1374,10 @@ NoSling:
           jmp X_Physics              ;if timer at zero and player still rising, do not swim
     jmp X_Physics
 InitSling:
-  ; copy over the current player position
-  lda Player_Rel_XPos
-  ; clc
-  ; adc #16
+  ; Initialize the draw string to a fixed position in the center of the screen
+  ; this is only used for calculating angle and velocity, not used for drawing
+  lda SLING_INIT_POS
   sta SlingPull_Rel_XPos
-  lda Player_Rel_YPos
-  ; clc
-  ; adc #16
   sta SlingPull_Rel_YPos
 
   ; and set the player to slingshot state
@@ -1395,10 +1391,33 @@ InitSling:
   lda A_B_Buttons
   and HoldingSlingshot
   bne StillHolding
-    ;; TODO apply force and cancel out of slingshot mode.
-
+    ; apply force and cancel out of slingshot mode.
+    lda X_Magnitude
+    eor #$ff
+    adc #1
+    sta Player_X_Speed
+    lda Y_Magnitude
+    eor #$ff
+    clc
+    adc #1
+    bpl :+     ;if positive number then skip
+      eor #$ff
+      clc
+      adc #1
+      lsr
+      eor #$ff
+      clc
+      adc #1
+      jmp :++
+    :
+    lsr
+    :
+    sta Player_Y_Speed
+    lda #$20
+    sta Player_Y_MoveForce
     lda #0
     sta HoldingSlingshot
+    lda #1
     sta Player_State
 QuickExit:
     rts
@@ -1408,41 +1427,12 @@ StillHolding:
   lda SavedJoypadBits
   and #%00001111
   beq QuickExit
-  ; Move the slingshot position
-;   lda Left_Right_Buttons
-;   and #Left_Dir
-;   beq NotLeft
-;     dec SlingPull_Rel_XPos
-; NotLeft:
-;   lda Left_Right_Buttons
-;   and #Right_Dir
-;   beq NotRight
-;     inc SlingPull_Rel_XPos
-; NotRight:
-;   lda Up_Down_Buttons
-;   and #Up_Dir
-;   beq NotUp
-;     dec SlingPull_Rel_YPos
-; NotUp:
-;   lda Up_Down_Buttons
-;   and #Down_Dir
-;   beq NotDown
-;     inc SlingPull_Rel_YPos
-; NotDown:
 
-  ; DiagonalMoveAmt = R2
-  ; lda FrameCounter
-  ; and #%00000001
-  ; clc
-  ; adc #1
-  ; sta DiagonalMoveAmt
 .MACPACK generic
 .MACPACK longbranch
   ; first things first check to see if we are at the maximum length, ie the
   ; current sling position is exactly the sin/cos value of the current angle
   ; (the angle before applying movement from input this frame)
-  X_Temp = R2
-  Y_Temp = R3
   ldy PlayerAngle
   lda SinTable, y
   bpl SkipFlipY
@@ -1548,11 +1538,11 @@ UpdatePosition:
   tay
   lda CosTable, y
   clc
-  adc Player_Rel_XPos
+  adc #SLING_INIT_POS
   sta SlingPull_Rel_XPos
   lda SinTable, y
   clc
-  adc Player_Rel_YPos
+  adc #SLING_INIT_POS
   sta SlingPull_Rel_YPos
 Done:
   rts
@@ -1586,7 +1576,8 @@ QuadrantPrimaryDirection:
 QuadrantPrimaryDiff:
   ; .byte 1, -1, 1, -1, 1, -1, 1, -1
   .byte 2, -2, 2, -2, 2, -2, 2, -2
-  .byte 2, -2, 2, -2, 2, -2, 2, -2
+  .byte 3, -3, 3, -3, 3, -3, 3, -3
+  ; .byte 2, -2, 2, -2, 2, -2, 2, -2
 
 QuadrantStableDirection:
   .byte Left_Dir
@@ -1597,28 +1588,12 @@ QuadrantStableDirection:
   .byte Down_Dir | Right_Dir
   .byte Down_Dir
   .byte Down_Dir | Left_Dir
-
 .endproc
-;   ; X is now the quadrant number use this to look up the action for the player
-;   ; input. 0 == no action or "regular" movement, otherwise add the value to the angle
-;   txa
-;   asl
-;   asl
-;   asl
-;   asl
-;   adc #.lobyte(QuadrantTable) 
-;   sta R0
-;   lda #.hibyte(QuadrantTable)
-;   adc #0
-;   sta R1
 
-;   lda SavedJoypadBits
-;   and #%00001111
-;   tay
-;   lda (R0), y
-
-  ; Use the regular movement script
+; Regular movement script modifies the x/y coordinates of the sling directly
+; instead of editing the angle
 .proc RegularControl
+  ; FrameCounter is used to make diagonal movement use 1.5px/frame instead of 2
   lda FrameCounter
   and #1
   asl
@@ -1642,13 +1617,6 @@ QuadrantStableDirection:
   adc SlingPull_Rel_YPos
   sta SlingPull_Rel_YPos
 
-  ; Now clamp the x/y of the sling pull to a certain magnitude
-  ; by calculating the mag = sqrt((x2-x1)^2 + (y2-y1)^2)
-
-; x2 = Player_Rel_XPos
-; y2 = Player_Rel_YPos
-; x1 = SlingPull_Rel_XPos
-; y1 = SlingPull_Rel_YPos
   ; find the current angle with arctan
   jsr FastAtan2
   sta PlayerAngle
@@ -1663,7 +1631,7 @@ SkipFlipY:
   bcs SkipClampY
     lda SinTable, y
     clc
-    adc Player_Rel_YPos
+    adc #SLING_INIT_POS
     sta SlingPull_Rel_YPos
 SkipClampY:
   lda CosTable, y
@@ -1676,70 +1644,10 @@ SkipFlipX:
   bcs SkipClampX
     lda CosTable, y
     clc
-    adc Player_Rel_XPos
+    adc #SLING_INIT_POS
     sta SlingPull_Rel_XPos
 SkipClampX:
   rts
-
-  ; ymag = abs(x1 - x2)
-  ; ldy Abs_X_Magnitude
-  ; ; xmag ^ 2
-  ; lda SquareTableLo,y
-  ; sta R6
-  ; lda SquareTableHi,y
-  ; sta R7
-  ; ; ymag = abs(y1 - y2)
-  ; ldy Abs_Y_Magnitude
-  ; lda SquareTableLo,y
-  ; clc
-  ; adc R6
-  ; sta R6 ; store the xmag^2 + ymag^2 lobyte for later
-  ;   lda SquareTableHi,y
-  ;   adc R7
-  ;   tax
-  ; lda R6
-  ; ; sqrt( xmag^2 + ymag^2 )
-  ; jsr FastSqrt
-  ; ; save the output magnitude for later
-  ; sty R0
-
-  ; Now clamp the magnitude to max
-;   lda #SLINGSHOT_MAGNITUDE_MAX-1
-;   cmp R0
-;   bcc ClampMagnitude
-;     ; Not at max magnitude so no need to clamp
-;     rts
-; ClampMagnitude:
-  ; if we clamped the magnitude then we need to calculate the new
-  ; x/y magnitudes.
-  ; now find the x and y magnitude of the vector by using sin and cos
-;   ldy PlayerAngle
-;   ; lsr
-;   ; tay
-; .import CosTable, SinTable
-;   lda CosTable, y
-;   sta X_Magnitude
-;   clc
-;   adc Player_Rel_XPos
-;   sta SlingPull_Rel_XPos
-;   lda SinTable, y
-;   sta Y_Magnitude
-;   clc
-;   adc Player_Rel_YPos
-;   sta SlingPull_Rel_YPos
-  ; jsr FastSinCos
-  ; stx X_Magnitude
-  ; sty Y_Magnitude
-  ; txa
-  ; clc
-  ; adc Player_Rel_XPos
-  ; sta SlingPull_Rel_XPos
-  ; tya
-  ; clc
-  ; adc Player_Rel_YPos
-  ; sta SlingPull_Rel_YPos
-
-  ; rts
 
 QuadrantTable:
   ;     0    R     L    R/L
@@ -1788,40 +1696,6 @@ VerticalMovementTableAlt:
   ;     U/D  U/D/R U/D/L U/D/R/L
   .byte $00, $00, $00, $00
 
-  ; y is the total magnitude, now clamp the xmag and ymag as follows
-  ; xmag * min(SLINGSHOT_MAGNITUDE_MAX, mag) / mag 
-  ; min(SLINGSHOT_MAGNITUDE_MAXmag, mag)
-; MagMin:
-;   ldx X_Magnitude
-;   jsr FastMult8x8 ; R3 is result_low which is the same used for longdivide
-;   ; a is hibyte
-;   sta R4
-;   ; R1 is already the unclamped magnitude
-;   lda #0
-;   sta R2
-;   jsr LongDivide
-;   ; now write the clamped magnitude back to X_Mag
-;   lda R3
-;   sta X_Magnitude
-;   clc
-;   adc Player_Rel_XPos
-;   sta SlingPull_Rel_XPos
-;   ;; and then do the divide again for ymag
-;   ; reload the clamped magnitude
-;   lda R0
-;   ldx Y_Magnitude
-;   jsr FastMult8x8 ; writes the low byte to R3
-;   sta R4
-;   ; R1 is already the unclamped magnitude
-;   ; R2 is already #0
-;   jsr LongDivide
-;   lda R3
-;   sta Y_Magnitude
-;   clc
-;   adc Player_Rel_YPos
-;   sta SlingPull_Rel_YPos
-
-;   rts
 ;   lda #$20                   ;set jump/swim timer
 ;   sta JumpSwimTimer
 ;   ldy #$00                   ;initialize vertical force and dummy variable
@@ -1885,105 +1759,103 @@ VerticalMovementTableAlt:
 .endproc
 
 .proc X_Physics
+  ldy #$00
+  sty R0                    ;init value here
+  lda Player_State           ;if mario is on the ground, branch
+  beq ProcPRun
+    lda Player_XSpeedAbsolute  ;check something that seems to be related
+    cmp #$19                   ;to mario's speed
+    bcs GetXPhy                ;if =>$19 branch here
+    bcc ChkRFast               ;if not branch elsewhere
+ProcPRun:
+  iny                        ;if mario on the ground, increment Y
+  lda AreaType               ;check area type
+  beq ChkRFast               ;if water type, branch
+    dey                        ;decrement Y by default for non-water type area
+    lda Left_Right_Buttons     ;get left/right controller bits
+    cmp Player_MovingDir       ;check against moving direction
+    bne ChkRFast               ;if controller bits <> moving direction, skip this part
+      lda A_B_Buttons            ;check for b button pressed
+      and #B_Button
+      bne SetRTmr                ;if pressed, skip ahead to set timer
+        lda RunningTimer           ;check for running timer set
+        bne GetXPhy                ;if set, branch
+ChkRFast:
+  iny                        ;if running timer not set or level type is water, 
+  inc R0                    ;increment Y again and temp variable in memory
+  lda RunningSpeed
+  bne FastXSp                ;if running speed set here, branch
+    lda Player_XSpeedAbsolute
+    cmp #$21                   ;otherwise check player's walking/running speed
+    bcc GetXPhy                ;if less than a certain amount, branch ahead
+FastXSp:
+      inc R0                    ;if running speed set or speed => $21 increment $00
+      jmp GetXPhy                ;and jump ahead
+SetRTmr:
+  lda #$0a                   ;if b button pressed, set running timer
+  sta RunningTimer
+GetXPhy:
+  lda MaxLeftXSpdData,y      ;get maximum speed to the left
+  sta MaximumLeftSpeed
+  lda GameEngineSubroutine   ;check for specific routine running
+  cmp #$07                   ;(player entrance)
+  bne GetXPhy2               ;if not running, skip and use old value of Y
+    ldy #$03                   ;otherwise set Y to 3
+GetXPhy2:
+  lda MaxRightXSpdData,y     ;get maximum speed to the right
+  sta MaximumRightSpeed
+  ldy R0                    ;get other value in memory
+  lda FrictionData,y         ;get value using value in memory as offset
+  sta FrictionAdderLow
+  lda #$00
+  sta FrictionAdderHigh      ;init something here
+  lda PlayerFacingDir
+  cmp Player_MovingDir       ;check facing direction against moving direction
+  beq ExitPhy                ;if the same, branch to leave
+    asl FrictionAdderLow       ;otherwise multiply friction by 2
+    rol FrictionAdderHigh      ;then leave
+ExitPhy:
+  rts
+
+; -------------------------------------------------------------------------------------
+
+PlayerAnimTmrData:
+      .byte $02, $04, $07
+
+GetPlayerAnimSpeed:
+  ldy #$00                   ;initialize offset in Y
+  lda Player_XSpeedAbsolute  ;check player's walking/running speed
+  cmp #$1c                   ;against preset amount
+  bcs SetRunSpd              ;if greater than a certain amount, branch ahead
+  iny                        ;otherwise increment Y
+  cmp #$0e                   ;compare against lower amount
+  bcs ChkSkid                ;if greater than this but not greater than first, skip increment
+  iny                        ;otherwise increment Y again
+ChkSkid:
+  lda SavedJoypadBits        ;get controller bits
+  and #%01111111             ;mask out A button
+  beq SetAnimSpd             ;if no other buttons pressed, branch ahead of all this
+    and #$03                   ;mask out all others except left and right
+    cmp Player_MovingDir       ;check against moving direction
+    bne ProcSkid               ;if left/right controller bits <> moving direction, branch
+      lda #$00                   ;otherwise set zero value here
+SetRunSpd:
+  sta RunningSpeed           ;store zero or running speed here
+  jmp SetAnimSpd
+ProcSkid:
+  lda Player_XSpeedAbsolute  ;check player's walking/running speed
+  cmp #$0b                   ;against one last amount
+  bcs SetAnimSpd             ;if greater than this amount, branch
+    lda PlayerFacingDir
+    sta Player_MovingDir       ;otherwise use facing direction to set moving direction
+    lda #$00
+    sta Player_X_Speed         ;nullify player's horizontal speed
+    sta Player_X_MoveForce     ;and dummy variable for player
+SetAnimSpd:
+  lda PlayerAnimTmrData,y    ;get animation timer setting using Y as offset
+  sta PlayerAnimTimerSet
   rts
 .endproc
-; X_Physics:
-;   ldy #$00
-;   sty R0                    ;init value here
-;   lda Player_State           ;if mario is on the ground, branch
-;   beq ProcPRun
-;     lda Player_XSpeedAbsolute  ;check something that seems to be related
-;     cmp #$19                   ;to mario's speed
-;     bcs GetXPhy                ;if =>$19 branch here
-;     bcc ChkRFast               ;if not branch elsewhere
-; ProcPRun:
-;   iny                        ;if mario on the ground, increment Y
-;   lda AreaType               ;check area type
-;   beq ChkRFast               ;if water type, branch
-;     dey                        ;decrement Y by default for non-water type area
-;     lda Left_Right_Buttons     ;get left/right controller bits
-;     cmp Player_MovingDir       ;check against moving direction
-;     bne ChkRFast               ;if controller bits <> moving direction, skip this part
-;       lda A_B_Buttons            ;check for b button pressed
-;       and #B_Button
-;       bne SetRTmr                ;if pressed, skip ahead to set timer
-;         lda RunningTimer           ;check for running timer set
-;         bne GetXPhy                ;if set, branch
-; ChkRFast:
-;   iny                        ;if running timer not set or level type is water, 
-;   inc R0                    ;increment Y again and temp variable in memory
-;   lda RunningSpeed
-;   bne FastXSp                ;if running speed set here, branch
-;     lda Player_XSpeedAbsolute
-;     cmp #$21                   ;otherwise check player's walking/running speed
-;     bcc GetXPhy                ;if less than a certain amount, branch ahead
-; FastXSp:
-;       inc R0                    ;if running speed set or speed => $21 increment $00
-;       jmp GetXPhy                ;and jump ahead
-; SetRTmr:
-;   lda #$0a                   ;if b button pressed, set running timer
-;   sta RunningTimer
-; GetXPhy:
-;   lda MaxLeftXSpdData,y      ;get maximum speed to the left
-;   sta MaximumLeftSpeed
-;   lda GameEngineSubroutine   ;check for specific routine running
-;   cmp #$07                   ;(player entrance)
-;   bne GetXPhy2               ;if not running, skip and use old value of Y
-;     ldy #$03                   ;otherwise set Y to 3
-; GetXPhy2:
-;   lda MaxRightXSpdData,y     ;get maximum speed to the right
-;   sta MaximumRightSpeed
-;   ldy R0                    ;get other value in memory
-;   lda FrictionData,y         ;get value using value in memory as offset
-;   sta FrictionAdderLow
-;   lda #$00
-;   sta FrictionAdderHigh      ;init something here
-;   lda PlayerFacingDir
-;   cmp Player_MovingDir       ;check facing direction against moving direction
-;   beq ExitPhy                ;if the same, branch to leave
-;     asl FrictionAdderLow       ;otherwise multiply friction by 2
-;     rol FrictionAdderHigh      ;then leave
-; ExitPhy:
-;   rts
-
-;-------------------------------------------------------------------------------------
-
-; PlayerAnimTmrData:
-;       .byte $02, $04, $07
-
-; GetPlayerAnimSpeed:
-;   ldy #$00                   ;initialize offset in Y
-;   lda Player_XSpeedAbsolute  ;check player's walking/running speed
-;   cmp #$1c                   ;against preset amount
-;   bcs SetRunSpd              ;if greater than a certain amount, branch ahead
-;   iny                        ;otherwise increment Y
-;   cmp #$0e                   ;compare against lower amount
-;   bcs ChkSkid                ;if greater than this but not greater than first, skip increment
-;   iny                        ;otherwise increment Y again
-; ChkSkid:
-;   lda SavedJoypadBits        ;get controller bits
-;   and #%01111111             ;mask out A button
-;   beq SetAnimSpd             ;if no other buttons pressed, branch ahead of all this
-;     and #$03                   ;mask out all others except left and right
-;     cmp Player_MovingDir       ;check against moving direction
-;     bne ProcSkid               ;if left/right controller bits <> moving direction, branch
-;       lda #$00                   ;otherwise set zero value here
-; SetRunSpd:
-;   sta RunningSpeed           ;store zero or running speed here
-;   jmp SetAnimSpd
-; ProcSkid:
-;   lda Player_XSpeedAbsolute  ;check player's walking/running speed
-;   cmp #$0b                   ;against one last amount
-;   bcs SetAnimSpd             ;if greater than this amount, branch
-;     lda PlayerFacingDir
-;     sta Player_MovingDir       ;otherwise use facing direction to set moving direction
-;     lda #$00
-;     sta Player_X_Speed         ;nullify player's horizontal speed
-;     sta Player_X_MoveForce     ;and dummy variable for player
-; SetAnimSpd:
-;   lda PlayerAnimTmrData,y    ;get animation timer setting using Y as offset
-;   sta PlayerAnimTimerSet
-;   rts
 
 ;-------------------------------------------------------------------------------------
 
@@ -2350,15 +2222,29 @@ x2 = Player_Rel_XPos
 y2 = Player_Rel_YPos
 x1 = SlingPull_Rel_XPos
 y1 = SlingPull_Rel_YPos
-; x1 = Player_Rel_XPos
-; y1 = Player_Rel_YPos
-; x2 = SlingPull_Rel_XPos
-; y2 = SlingPull_Rel_YPos
-  abssub x1, x2, X_Magnitude , Abs_X_Magnitude
+  ; abssub x1, x2, X_Magnitude, Abs_X_Magnitude
+  lda SlingPull_Rel_XPos
+  sec
+  sbc #SLING_INIT_POS
+  sta X_Magnitude
+  bcs @X
+    eor #$ff
+    adc #1
+@X:
+  sta Abs_X_Magnitude
   tax
   rol octant
 
-  abssub y1, y2, Y_Magnitude , Abs_Y_Magnitude
+  ; abssub y1, y2, Y_Magnitude, Abs_Y_Magnitude
+  lda SlingPull_Rel_YPos
+  sec
+  sbc #SLING_INIT_POS
+  sta Y_Magnitude
+  bcs @Y
+    eor #$ff
+    adc #1
+@Y:
+  sta Abs_Y_Magnitude
   tay
   rol octant
 

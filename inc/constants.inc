@@ -152,6 +152,7 @@ Right_Dir             = %00000001
 
 MARIO_ROTATION_ANGLE_MAX = 64
 SLINGSHOT_MAGNITUDE_MAX = 48
+SLING_INIT_POS = 100
 
 .enum PlayerState
 Normal = 0
