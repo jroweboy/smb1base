@@ -887,10 +887,10 @@ PlayerGfxProcessing:
   ; lda PlayerGfxTblOffsets,y     ;get offset to graphics table
   ; sta PlayerGfxOffset           ;store it for use later
   ; ldy #$04                      ;set to update four sprite rows by default
-  lda Player_X_Speed
-  ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
-  beq SUpdR                     ;if no speed or button press, branch using set value in Y
-    dey                         ;otherwise set to update only three sprite rows
+  ; lda Player_X_Speed
+  ; ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
+  ; beq SUpdR                     ;if no speed or button press, branch using set value in Y
+  ;   dey                         ;otherwise set to update only three sprite rows
 SUpdR:
   tya                           ;save in A for use
   jsr RenderPlayerSub           ;in sub, draw player object again
@@ -1158,10 +1158,11 @@ NoMoveSub: rts
 
 OnGroundStateSub:
   ; jsr GetPlayerAnimSpeed     ;do a sub to set animation frame timing
-  lda Left_Right_Buttons
-  beq GndMove                ;if left/right controller bits not set, skip instruction
-    sta PlayerFacingDir        ;otherwise set new facing direction
-GndMove:
+  ; lda Left_Right_Buttons
+  ; beq GndMove                ;if left/right controller bits not set, skip instruction
+    ; sta PlayerFacingDir        ;otherwise set new facing direction
+; GndMove:
+  lda #0
   jsr ImposeFriction         ;do a sub to impose friction on player's walk/run
   jsr MovePlayerHorizontally ;do another sub to move player horizontally
   sta Player_X_Scroll        ;set returned value as player's movement speed for scroll
@@ -1172,7 +1173,8 @@ GndMove:
 FallingSub:
   lda VerticalForceDown
   sta VerticalForce      ;dump vertical movement force for falling into main one
-  jmp LRAir              ;movement force, then skip ahead to process left/right movement
+  jmp JSMove
+  ; jmp LRAir              ;movement force, then skip ahead to process left/right movement
 
 ;--------------------------------
 
@@ -1192,22 +1194,22 @@ DumpFall:
   lda VerticalForceDown      ;otherwise dump falling into main fractional
   sta VerticalForce
 ProcSwim:
-  lda SwimmingFlag           ;if swimming flag not set,
-  beq LRAir                  ;branch ahead to last part
+  ; lda SwimmingFlag           ;if swimming flag not set,
+  ; beq LRAir                  ;branch ahead to last part
   ; jsr GetPlayerAnimSpeed     ;do a sub to get animation frame timing
-  lda Player_Y_Position
-  cmp #$14                   ;check vertical position against preset value
-  bcs LRWater                ;if not yet reached a certain position, branch ahead
+  ; lda Player_Y_Position
+  ; cmp #$14                   ;check vertical position against preset value
+  ; bcs LRWater                ;if not yet reached a certain position, branch ahead
   lda #$18
   sta VerticalForce          ;otherwise set fractional
-LRWater:
-  lda Left_Right_Buttons     ;check left/right controller bits (check for swimming)
-  beq LRAir                  ;if not pressing any, skip
-    sta PlayerFacingDir        ;otherwise set facing direction accordingly
-LRAir:
-  lda Left_Right_Buttons     ;check left/right controller bits (check for jumping/falling)
-  beq JSMove                 ;if not pressing any, skip
-    jsr ImposeFriction         ;otherwise process horizontal movement
+; LRWater:
+;   lda Left_Right_Buttons     ;check left/right controller bits (check for swimming)
+;   beq LRAir                  ;if not pressing any, skip
+;     sta PlayerFacingDir        ;otherwise set facing direction accordingly
+; LRAir:
+;   lda Left_Right_Buttons     ;check left/right controller bits (check for jumping/falling)
+;   beq JSMove                 ;if not pressing any, skip
+;     jsr ImposeFriction         ;otherwise process horizontal movement
 JSMove:
   jsr MovePlayerHorizontally ;do a sub to move player horizontally
   sta Player_X_Scroll        ;set player's speed here, to be used for scroll later
@@ -1397,27 +1399,14 @@ InitSling:
     adc #1
     sta Player_X_Speed
     lda Y_Magnitude
-    eor #$ff
-    clc
-    adc #1
-    bpl :+     ;if positive number then skip
-      eor #$ff
-      clc
-      adc #1
-      lsr
-      eor #$ff
-      clc
-      adc #1
-      jmp :++
-    :
-    lsr
-    :
+    tax
+    lda Y_Sling_Speed, x
     sta Player_Y_Speed
-    lda #$20
+    lda Y_Sling_Speed_Fractional, x
     sta Player_Y_MoveForce
     lda #0
     sta HoldingSlingshot
-    lda #1
+    lda #PlayerState::Jumping
     sta Player_State
 QuickExit:
     rts
@@ -1588,6 +1577,11 @@ QuadrantStableDirection:
   .byte Down_Dir | Right_Dir
   .byte Down_Dir
   .byte Down_Dir | Left_Dir
+
+Y_Sling_Speed:
+  .incbin "slingcurve.bin"
+Y_Sling_Speed_Fractional:
+  .incbin "slingfractional.bin"
 .endproc
 
 ; Regular movement script modifies the x/y coordinates of the sling directly
@@ -1761,39 +1755,40 @@ VerticalMovementTableAlt:
 .proc X_Physics
   ldy #$00
   sty R0                    ;init value here
-  lda Player_State           ;if mario is on the ground, branch
-  beq ProcPRun
-    lda Player_XSpeedAbsolute  ;check something that seems to be related
-    cmp #$19                   ;to mario's speed
-    bcs GetXPhy                ;if =>$19 branch here
-    bcc ChkRFast               ;if not branch elsewhere
-ProcPRun:
-  iny                        ;if mario on the ground, increment Y
-  lda AreaType               ;check area type
-  beq ChkRFast               ;if water type, branch
-    dey                        ;decrement Y by default for non-water type area
-    lda Left_Right_Buttons     ;get left/right controller bits
-    cmp Player_MovingDir       ;check against moving direction
-    bne ChkRFast               ;if controller bits <> moving direction, skip this part
-      lda A_B_Buttons            ;check for b button pressed
-      and #B_Button
-      bne SetRTmr                ;if pressed, skip ahead to set timer
-        lda RunningTimer           ;check for running timer set
-        bne GetXPhy                ;if set, branch
-ChkRFast:
-  iny                        ;if running timer not set or level type is water, 
-  inc R0                    ;increment Y again and temp variable in memory
-  lda RunningSpeed
-  bne FastXSp                ;if running speed set here, branch
-    lda Player_XSpeedAbsolute
-    cmp #$21                   ;otherwise check player's walking/running speed
-    bcc GetXPhy                ;if less than a certain amount, branch ahead
-FastXSp:
-      inc R0                    ;if running speed set or speed => $21 increment $00
-      jmp GetXPhy                ;and jump ahead
-SetRTmr:
-  lda #$0a                   ;if b button pressed, set running timer
-  sta RunningTimer
+  ; lda Player_State           ;if mario is on the ground, branch
+;   beq ProcPRun
+;     lda Player_XSpeedAbsolute  ;check something that seems to be related
+;     cmp #$19                   ;to mario's speed
+;     bcs GetXPhy                ;if =>$19 branch here
+;     bcc ChkRFast               ;if not branch elsewhere
+; ProcPRun:
+;   iny                        ;if mario on the ground, increment Y
+;   lda AreaType               ;check area type
+;   beq GetXPhy
+;   ; beq ChkRFast               ;if water type, branch
+;     dey                        ;decrement Y by default for non-water type area
+;     lda Left_Right_Buttons     ;get left/right controller bits
+;     cmp Player_MovingDir       ;check against moving direction
+;     bne ChkRFast               ;if controller bits <> moving direction, skip this part
+;       lda A_B_Buttons            ;check for b button pressed
+;       and #B_Button
+;       bne SetRTmr                ;if pressed, skip ahead to set timer
+;         lda RunningTimer           ;check for running timer set
+;         bne GetXPhy                ;if set, branch
+; ChkRFast:
+;   iny                        ;if running timer not set or level type is water, 
+;   inc R0                    ;increment Y again and temp variable in memory
+;   lda RunningSpeed
+;   bne FastXSp                ;if running speed set here, branch
+;     lda Player_XSpeedAbsolute
+;     cmp #$21                   ;otherwise check player's walking/running speed
+;     bcc GetXPhy                ;if less than a certain amount, branch ahead
+; FastXSp:
+;       inc R0                    ;if running speed set or speed => $21 increment $00
+;       jmp GetXPhy                ;and jump ahead
+; SetRTmr:
+;   lda #$0a                   ;if b button pressed, set running timer
+;   sta RunningTimer
 GetXPhy:
   lda MaxLeftXSpdData,y      ;get maximum speed to the left
   sta MaximumLeftSpeed
