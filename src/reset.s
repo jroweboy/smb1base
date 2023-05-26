@@ -201,12 +201,12 @@ InitBuffer:
       dec TimerControl
     bne NoDecTimers
     DecTimers:
-      ldx #$14                  ;load end offset for end of frame timers
+      ldx #FRAME_TIMER_COUNT    ;load end offset for end of frame timers
       dec IntervalTimerControl  ;decrement interval timer control,
       bpl DecTimersLoop         ;if not expired, only frame timers will decrement
       lda #$14
       sta IntervalTimerControl  ;if control for interval timers expired,
-      ldx #$23                  ;interval timers will decrement along with frame timers
+      ldx #ALL_TIMER_COUNT      ;interval timers will decrement along with frame timers
     DecTimersLoop:
         lda Timers,x              ;check current timer
         beq SkipExpTimer          ;if current timer expired, branch to skip,
@@ -214,6 +214,19 @@ InitBuffer:
       SkipExpTimer:
         dex                       ;move onto next timer
         bpl DecTimersLoop         ;do this until all timers are dealt with
+    AngularMomentumHandler:
+      lda AngularMomentum
+      beq NoDecTimers
+        ; dec AngularMomentumTimer
+        ; bpl NoDecTimers
+          ; cmp #0
+        lda PlayerAngle
+        clc
+        adc AngularMomentum
+        sta PlayerAngle
+        ; lda #2
+        ; sta AngularMomentumTimer
+        ; sta AngularMomentum
   NoDecTimers:
     inc FrameCounter          ;increment frame counter
 PauseSkip:

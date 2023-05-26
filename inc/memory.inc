@@ -497,6 +497,8 @@ __MEMORY_INC = 1
 .global BowserFireBreathTimer
 .global StompTimer
 .global AirBubbleTimer
+.global AirTimeTimer
+FRAME_TIMER_COUNT = AirTimeTimer - Timers
 
 .global ScrollIntervalTimer
 .global EnemyIntervalTimer
@@ -506,6 +508,7 @@ __MEMORY_INC = 1
 .global ScreenTimer
 .global WorldEndTimer
 .global DemoTimer
+ALL_TIMER_COUNT = DemoTimer - Timers
 .global PseudoRandomBitReg
 
 .global SoundMemory
@@ -552,6 +555,10 @@ __MEMORY_INC = 1
 ; .global IrqPointer
 
 .global PlayerAngle
+.global GroundBounceChain
+.global BounceForce
+.global AngularMomentum
+.global AngularMomentumTimer
 
 .global _WarmBootOffset
 

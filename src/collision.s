@@ -448,20 +448,23 @@ EnemyStomped:
       bne ChkForDemoteKoopa
 
 EnemyStompedPts:
-      lda StompedEnemyPtsData,y  ;load points data using offset in Y
-      jsr SetupFloateyNumber     ;run sub to set floatey number controls
-      lda Enemy_MovingDir,x
-      pha                        ;save enemy movement direction to stack
-      jsr SetStun                ;run sub to kill enemy
-      pla
-      sta Enemy_MovingDir,x      ;return enemy movement direction from stack
-      lda #%00100000
-      sta Enemy_State,x          ;set d5 in enemy state
-      jsr InitVStf               ;nullify vertical speed, physics-related thing,
-      sta Enemy_X_Speed,x        ;and horizontal speed
-      lda #$fd                   ;set player's vertical speed, to give bounce
-      sta Player_Y_Speed
-      rts
+  lda StompedEnemyPtsData,y  ;load points data using offset in Y
+  jsr SetupFloateyNumber     ;run sub to set floatey number controls
+  lda Enemy_MovingDir,x
+  pha                        ;save enemy movement direction to stack
+    jsr SetStun                ;run sub to kill enemy
+  pla
+  sta Enemy_MovingDir,x      ;return enemy movement direction from stack
+  lda #%00100000
+  sta Enemy_State,x          ;set d5 in enemy state
+  jsr InitVStf               ;nullify vertical speed, physics-related thing,
+  sta Enemy_X_Speed,x        ;and horizontal speed
+  lda #$fd                   ;set player's vertical speed, to give bounce
+  sta Player_Y_Speed
+  ; reset the air timer so we don't bounce too high when hitting the ground
+  ; after bouncing on an enemy.
+  sta AirTimeTimer
+  rts
 
 ChkForDemoteKoopa:
       cmp #$09                   ;branch elsewhere if enemy object < $09
@@ -1096,7 +1099,9 @@ DoFootCheck:
   ldy Local_eb                    ;get block buffer adder offset
   lda Player_Y_Position
   cmp #$cf                   ;check to see how low player is
-  bcs DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
+  bcc :+
+    jmp DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
+:
     jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
     jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
     bcs AwardTouchedCoin       ;if so, branch to some other part of code
@@ -1107,7 +1112,9 @@ DoFootCheck:
       sta R1                    ;pull bottom left metatile and save here
       bne ChkFootMTile           ;if anything here, skip this part
         lda R0                    ;otherwise check for anything in bottom right metatile
-        beq DoPlayerSideCheck      ;and skip ahead if not
+        bne :+
+          jmp DoPlayerSideCheck      ;and skip ahead if not
+        :
           jsr CheckForCoinMTiles     ;check to see if player touched coin with their right foot
           bcc ChkFootMTile           ;if not, skip unconditional jump and continue code
 AwardTouchedCoin:
@@ -1139,20 +1146,50 @@ LandPlyr:
   and Player_Y_Position      ;mask out lower nybble of player's vertical position
   sta Player_Y_Position      ;and store as new vertical position to land player properly
   jsr HandlePipeEntry        ;do sub to process potential pipe entry
+
+  ; Set the angular momentum for landing on the ground if we aren't already
+  ; spinning in a direction
+  ldx Player_X_Speed
+  lda ScaledRotationSpeed,x
+  sta AngularMomentum
   ; jroweboy - bounce the player after they land on the ground
-  lda Player_Y_Speed
-  lsr
-  eor #$ff
-  adc #1
-  sta Player_Y_Speed         ;initialize vertical speed and fractional
-  
-  ; jroweboy if theres some bounce left, then don't clear out move force or stomp chain
-  bne InitSteP
+  lda GroundBounceChain
+  bne ContinueBounceChain
+    ; first bounce, found how much bounce force to apply
+    lda AirTimeTimer
+    lsr
+    lsr
+    lsr
+    lsr
+    beq SkipForce
+    tax
+    lda BounceForceData,x
+    eor #$ff
+    clc
+    adc #1
+    sta BounceForce
+    sta Player_Y_Speed         ;initialize vertical speed and fractional
+    inc GroundBounceChain
+    jmp DoPlayerSideCheck
+ContinueBounceChain:
+    ; bounce chain, continue bouncing until we come to rest.
+    lda BounceForce
+    clc
+    adc #2
+    bpl SkipForce
+      sta BounceForce
+      sta Player_Y_Speed
+      jmp DoPlayerSideCheck
+SkipForce:
+    lda #0
+    ; sta GroundBounceChain
+    sta AirTimeTimer
     sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
     sta StompChainCounter      ;initialize enemy stomp counter
 InitSteP:
   lda #$00
   sta Player_State           ;set player's state to normal
+  
   ; fallthrough
 
 DoPlayerSideCheck:
@@ -1246,6 +1283,12 @@ ChkGERtn:
 ExCSM:
   rts                        ;and leave
 
+BounceForceData:
+  .byte $06, $06, $05, $05
+  .byte $05, $05, $04, $04
+  .byte $04, $03, $03, $03
+  .byte $02, $02, $01, $00
+
 ;--------------------------------
 ;$02 - high nybble of vertical coordinate from block buffer
 ;$04 - low nybble of horizontal coordinate from block buffer
@@ -1275,6 +1318,9 @@ ErACM:
   sta ($06),y         ;store to remove old contents from block buffer
   jmp RemoveCoin_Axe  ;update the screen accordingly
 
+
+ScaledRotationSpeed:
+  .incbin "rotation_speed.bin"
 
 ;--------------------------------
 

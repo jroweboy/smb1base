@@ -1406,8 +1406,21 @@ InitSling:
     sta Player_Y_MoveForce
     lda #0
     sta HoldingSlingshot
+    ; Initialize the ground bounce chain to zero to signal that this is the first
+    sta GroundBounceChain
     lda #PlayerState::Jumping
     sta Player_State
+    ; Start the airtime counter to track how long mario was in the air
+    ; before bouncing.
+    lda #$ff
+    sta AirTimeTimer
+    ; set the initial angular momentum based on the facing direction
+    ldy #1
+    lda X_Magnitude
+    bmi :+ 
+      ldy #-1
+    :
+    sty AngularMomentum
 QuickExit:
     rts
 StillHolding:
@@ -1814,42 +1827,42 @@ ExitPhy:
 
 ; -------------------------------------------------------------------------------------
 
-PlayerAnimTmrData:
-      .byte $02, $04, $07
+; PlayerAnimTmrData:
+;       .byte $02, $04, $07
 
-GetPlayerAnimSpeed:
-  ldy #$00                   ;initialize offset in Y
-  lda Player_XSpeedAbsolute  ;check player's walking/running speed
-  cmp #$1c                   ;against preset amount
-  bcs SetRunSpd              ;if greater than a certain amount, branch ahead
-  iny                        ;otherwise increment Y
-  cmp #$0e                   ;compare against lower amount
-  bcs ChkSkid                ;if greater than this but not greater than first, skip increment
-  iny                        ;otherwise increment Y again
-ChkSkid:
-  lda SavedJoypadBits        ;get controller bits
-  and #%01111111             ;mask out A button
-  beq SetAnimSpd             ;if no other buttons pressed, branch ahead of all this
-    and #$03                   ;mask out all others except left and right
-    cmp Player_MovingDir       ;check against moving direction
-    bne ProcSkid               ;if left/right controller bits <> moving direction, branch
-      lda #$00                   ;otherwise set zero value here
-SetRunSpd:
-  sta RunningSpeed           ;store zero or running speed here
-  jmp SetAnimSpd
-ProcSkid:
-  lda Player_XSpeedAbsolute  ;check player's walking/running speed
-  cmp #$0b                   ;against one last amount
-  bcs SetAnimSpd             ;if greater than this amount, branch
-    lda PlayerFacingDir
-    sta Player_MovingDir       ;otherwise use facing direction to set moving direction
-    lda #$00
-    sta Player_X_Speed         ;nullify player's horizontal speed
-    sta Player_X_MoveForce     ;and dummy variable for player
-SetAnimSpd:
-  lda PlayerAnimTmrData,y    ;get animation timer setting using Y as offset
-  sta PlayerAnimTimerSet
-  rts
+; GetPlayerAnimSpeed:
+;   ldy #$00                   ;initialize offset in Y
+;   lda Player_XSpeedAbsolute  ;check player's walking/running speed
+;   cmp #$1c                   ;against preset amount
+;   bcs SetRunSpd              ;if greater than a certain amount, branch ahead
+;   iny                        ;otherwise increment Y
+;   cmp #$0e                   ;compare against lower amount
+;   bcs ChkSkid                ;if greater than this but not greater than first, skip increment
+;   iny                        ;otherwise increment Y again
+; ChkSkid:
+;   lda SavedJoypadBits        ;get controller bits
+;   and #%01111111             ;mask out A button
+;   beq SetAnimSpd             ;if no other buttons pressed, branch ahead of all this
+;     and #$03                   ;mask out all others except left and right
+;     cmp Player_MovingDir       ;check against moving direction
+;     bne ProcSkid               ;if left/right controller bits <> moving direction, branch
+;       lda #$00                   ;otherwise set zero value here
+; SetRunSpd:
+;   sta RunningSpeed           ;store zero or running speed here
+;   jmp SetAnimSpd
+; ProcSkid:
+;   lda Player_XSpeedAbsolute  ;check player's walking/running speed
+;   cmp #$0b                   ;against one last amount
+;   bcs SetAnimSpd             ;if greater than this amount, branch
+;     lda PlayerFacingDir
+;     sta Player_MovingDir       ;otherwise use facing direction to set moving direction
+;     lda #$00
+;     sta Player_X_Speed         ;nullify player's horizontal speed
+;     sta Player_X_MoveForce     ;and dummy variable for player
+; SetAnimSpd:
+;   lda PlayerAnimTmrData,y    ;get animation timer setting using Y as offset
+;   sta PlayerAnimTimerSet
+;   rts
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -2019,8 +2032,14 @@ KeepOnscr:
     lda Left_Right_Buttons      ;check saved controller bits
     cmp OffscrJoypadBitsData,y  ;against bits based on offset
     beq InitPlatScrl            ;if not equal, branch
-      lda #$00
-      sta Player_X_Speed          ;otherwise nullify horizontal speed of player
+      ; invert player speed here instead
+      lda Player_X_Speed
+      eor #$ff
+      clc
+      adc #1
+      sta Player_X_Speed
+      ; lda #$00
+      ; sta Player_X_Speed          ;otherwise nullify horizontal speed of player
 InitPlatScrl:
   lda #$00                    ;nullify platform force imposed on scroll
   sta Platform_X_Scroll

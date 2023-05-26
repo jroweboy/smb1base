@@ -151,7 +151,7 @@ ExitPause:     rts
 
 InitializeGame:
 .import InitializeMemory, LoadAreaPointer
-  ldy #$6f              ;clear all memory as in initialization procedure,
+  ldy #>WorldSelectNumber  ;clear all memory as in initialization procedure,
   jsr InitializeMemory  ;but this time, clear only as far as $076f
   ldy #$1f
 ClrSndLoop:
@@ -161,22 +161,21 @@ ClrSndLoop:
   lda #$18              ;set demo timer
   sta DemoTimer
   jsr LoadAreaPointer
-
+  ; fallthrough
 InitializeArea:
-
   ldy #$4b                 ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
-  ldx #$21
+  ldx #FRAME_TIMER_COUNT
   lda #$00
-ClrTimersLoop:
-  sta Timers,x             ;clear out memory between
-  dex                      ;$0780 and $07a1
-  bpl ClrTimersLoop
+:
+    sta Timers,x             ;clear out memory between
+    dex                      ;$0780 and $07a1
+    bpl :-
   lda HalfwayPage
   ldy AltEntranceControl   ;if AltEntranceControl not set, use halfway page, if any found
-  beq StartPage
-  lda EntrancePage         ;otherwise use saved entry page number here
-StartPage:
+  beq :+
+    lda EntrancePage         ;otherwise use saved entry page number here
+:
   sta ScreenLeft_PageLoc   ;set as value here
   sta CurrentPageLoc       ;also set as current page
   sta BackloadingFlag      ;set flag here if halfway page or saved entry page number found

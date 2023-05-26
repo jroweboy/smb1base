@@ -295,8 +295,8 @@ PiranhaPlantDownYPos          = Enemy_Y_MoveForce
 Enemy_Y_MoveForce:              .res  8
 
 Block_Y_MoveForce:              .res  20
-MaximumLeftSpeed:               .res  6
-MaximumRightSpeed:              .res  20
+MaximumLeftSpeed:               .res  6 ; was 6 - can be 1
+MaximumRightSpeed:              .res  20 ; was 20 - can be 1
 
 Whirlpool_Offset              = Cannon_Offset
 Cannon_Offset:                  .res  1
@@ -454,7 +454,7 @@ StarFlagTaskControl:            .res  1
 TimerControl:                   .res  1 ; 0747
 CoinTallyFor1Ups:               .res  1
 SecondaryMsgCounter:            .res  1
-JoypadBitMask:                  .res  4 ; .proc InitializeArea clears the 1st two bytes here and leaves below here alone
+; JoypadBitMask:                  .res  4 ; .proc InitializeArea clears the 1st two bytes here and leaves below here alone
 
 AreaType:                       .res  1 ; 074e
 
@@ -503,7 +503,7 @@ WorldSelectNumber:              .res  1 ; original (5)
 
 ; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
 
-OperMode:                       .res  2
+OperMode:                       .res  1
 OperMode_Task:                  .res  1
 VRAM_Buffer_AddrCtrl:           .res  1
 DisableScreenFlag:              .res  1
@@ -535,6 +535,7 @@ FrenzyEnemyTimer:               .res  1
 BowserFireBreathTimer:          .res  1
 StompTimer:                     .res  1
 AirBubbleTimer:                 .res  3 ; 20 bytes away from Timer
+AirTimeTimer:                   .res  1
 
 ScrollIntervalTimer:            .res  1
 EnemyIntervalTimer:             .res  7
@@ -584,17 +585,19 @@ StatTimerHi                   = StatTimer + 2
 IrqNewScroll:                   .res  1
 IrqOldScroll:                   .res  1
 IrqPPUCTRL:                     .res  1
-; IrqPointer:                     .res  2
 X_Magnitude:                    .res  1
 Abs_X_Magnitude:                .res  1
 Y_Magnitude:                    .res  1
 Abs_Y_Magnitude:                .res  1
-; FILLER:                         .res  2
 CurrentA:                       .res  1
 NextBank:                       .res  1
 PlayerAngle:                    .res  1
+GroundBounceChain:              .res  1
+BounceForce:                    .res  1
+AngularMomentum:                .res  1
+AngularMomentumTimer:           .res  1
 
-    _WarmBootOffset:            .res  1   ; Warm boot offset
+    ; _WarmBootOffset:            .res  1   ; Warm boot offset
 
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits
@@ -607,6 +610,6 @@ WorldSelectEnableFlag:          .res  1
 
 ContinueWorld:                  .res  1
 
-    _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
+    ; _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
     
 WarmBootValidation:             .res  1

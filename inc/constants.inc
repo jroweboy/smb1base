@@ -134,8 +134,8 @@ TallEnemy             = $09
 .endenum
 
 
-WarmBootOffset        = <_WarmBootOffset
-ColdBootOffset        = <_ColdBootOffset
+WarmBootOffset        = <DisplayDigits
+ColdBootOffset        = <WarmBootValidation
 
 TitleScreenDataOffset = $0ec0                     ; swapped sprites and bg
 ; TitleScreenDataOffset = $1ec0                     ; address in CHR ROM for titlescreen nametable layout
