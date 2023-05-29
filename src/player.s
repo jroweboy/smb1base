@@ -2038,6 +2038,11 @@ KeepOnscr:
       clc
       adc #1
       sta Player_X_Speed
+      lda AngularMomentum
+      eor #$ff
+      clc
+      adc #1
+      sta AngularMomentum
       ; lda #$00
       ; sta Player_X_Speed          ;otherwise nullify horizontal speed of player
 InitPlatScrl:

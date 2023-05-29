@@ -1633,6 +1633,11 @@ NXSpd:
       clc
       adc #1
       sta Player_X_Speed
+      lda AngularMomentum
+      eor #$ff
+      clc
+      adc #1
+      sta AngularMomentum
     pla
     ldy #$10
     sty SideCollisionTimer    ;set timer of some sort

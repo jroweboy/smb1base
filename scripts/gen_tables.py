@@ -19,13 +19,13 @@ def sling_curve():
         fract.write(struct.pack("=B", fractional))
 
 
-maxangle = 16
+maxanglespeed = 32
 
 def angular_momentum():
   with open("/Users/jroweboy/dev/smb1base/src/rotation_speed.bin", "wb") as speed:
     for i in range(0,256):
       as_signed = -1 * (256 - i) if i > 128 else i
-      val = as_signed * maxangle / 128.0
+      val = as_signed * maxanglespeed / 128.0
       speed.write(struct.pack("=b",rounding_mode(val)))
 
 
