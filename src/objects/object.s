@@ -659,18 +659,18 @@ SetBBox2:  sta Enemy_BoundBoxCtrl,x  ;set bounding box control then leave
 ;this data added to relative coordinates of sprite objects
 ;stored in order: left edge, top edge, right edge, bottom edge
 BoundBoxCtrlData:
-      .byte $02, $08, $0e, $20 
-      .byte $03, $14, $0d, $20
-      .byte $02, $14, $0e, $20
-      .byte $02, $09, $0e, $15
-      .byte $00, $00, $18, $06
-      .byte $00, $00, $20, $0d
-      .byte $00, $00, $30, $0d
-      .byte $00, $00, $08, $08
-      .byte $06, $04, $0a, $08
-      .byte $03, $0e, $0d, $14
-      .byte $00, $02, $10, $15
-      .byte $04, $04, $0c, $1c
+  .byte $02, $08, $0e, $20 
+  .byte $03, $14, $0d, $20
+  .byte $02, $14, $0e, $20
+  .byte $02, $09, $0e, $15
+  .byte $00, $00, $18, $06
+  .byte $00, $00, $20, $0d
+  .byte $00, $00, $30, $0d
+  .byte $00, $00, $08, $08
+  .byte $06, $04, $0a, $08
+  .byte $03, $0e, $0d, $14
+  .byte $00, $02, $10, $15
+  .byte $04, $04, $0c, $1c
 
 GetFireballBoundBox:
       txa         ;add seven bytes to offset

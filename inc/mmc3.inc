@@ -1,6 +1,6 @@
 
 
-.global CurrentBank, NextBank
+.global CurrentBank, NextBank, BankShadow
 .global TargetAddrJmp, TargetAddress
 .global FarCallCommon, FarCallInit
 
@@ -70,6 +70,9 @@ IRQENABLE   = $e001
 .macro farcall loc, usejmp
 .scope
 .import loc
+.assert .bank(loc) <> .bank(*), error, "Attempting to farcall to the same bank!"
+.assert .bank(loc) <> .bank(CODE), error, "Attempting to farcall to the low bank!"
+.assert .bank(loc) <> .bank(FIXED), error, "Attempting to farcall to the fixed bank!"
   lda #<loc
   sta TargetAddress
   lda #>loc
@@ -81,5 +84,26 @@ IRQENABLE   = $e001
 .else
   jmp FarCallCommon
 .endif
+.endscope
+.endmacro
+
+.macro far function
+.scope
+.ident(.concat("farblock_", .string(function))):
+  lda CurrentBank
+  pha
+    lda #7 | PRG_FIXED_8
+    sta BankShadow
+    sta BANK_SELECT
+    lda #.bank(function)
+    sta BANK_DATA
+.endmacro
+
+.macro endfar
+    lda #7 | PRG_FIXED_8
+    sta BankShadow
+    sta BANK_SELECT
+  pla
+  sta BANK_DATA
 .endscope
 .endmacro

@@ -515,6 +515,7 @@ Mirror_PPUMASK:                 .res  1
 NumberOfPlayers:                .res  1 ; jroweboy( this is only 1 byte, was 5)
 
 CurrentBank:                    .res  1
+BankShadow:                     .res  1
 TargetAddrJmp:                  .res  1
 TargetAddress:                  .res  2
 

@@ -14,7 +14,7 @@
 .import BlockBumpedChk, InitBlock_XY_Pos, BrickShatter, BumpBlock
 
 .export PlayerBGCollision, FireballBGCollision, PlayerEnemyCollision
-.export FireballEnemyCollision, EnemyToBGCollisionDet
+.export EnemyToBGCollisionDet, SprObjectCollisionCore, HandleEnemyFBallCol
 .export EnemyJump, SetupFloateyNumber, EnemiesCollision, InjurePlayer
 
 ; platform.s
@@ -786,73 +786,8 @@ SideC:   jsr ImpedePlayerMove       ;deal with horizontal collision
 NoSideC: ldx ObjectOffset           ;return with enemy object buffer offset
          rts
 
-
-;-------------------------------------------------------------------------------------
-;$01 - enemy buffer offset
-
-FireballEnemyCollision:
-      lda Fireball_State,x  ;check to see if fireball state is set at all
-      beq ExitFBallEnemy    ;branch to leave if not
-      asl
-      bcs ExitFBallEnemy    ;branch to leave also if d7 in state is set
-      lda FrameCounter
-      lsr                   ;get LSB of frame counter
-      bcs ExitFBallEnemy    ;branch to leave if set (do routine every other frame)
-      txa
-      asl                   ;multiply fireball offset by four
-      asl
-      clc
-      adc #$1c              ;then add $1c or 28 bytes to it
-      tay                   ;to use fireball's bounding box coordinates 
-      ldx #$04
-
-FireballEnemyCDLoop:
-           stx R1                     ;store enemy object offset here
-           tya
-           pha                         ;push fireball offset to the stack
-           lda Enemy_State,x
-           and #%00100000              ;check to see if d5 is set in enemy state
-           bne NoFToECol               ;if so, skip to next enemy slot
-           lda Enemy_Flag,x            ;check to see if buffer flag is set
-           beq NoFToECol               ;if not, skip to next enemy slot
-           lda Enemy_ID,x              ;check enemy identifier
-           cmp #$24
-           bcc GoombaDie               ;if < $24, branch to check further
-           cmp #$2b
-           bcc NoFToECol               ;if in range $24-$2a, skip to next enemy slot
-GoombaDie: cmp #Goomba                 ;check for goomba identifier
-           bne NotGoomba               ;if not found, continue with code
-           lda Enemy_State,x           ;otherwise check for defeated state
-           cmp #$02                    ;if stomped or otherwise defeated,
-           bcs NoFToECol               ;skip to next enemy slot
-NotGoomba: lda EnemyOffscrBitsMasked,x ;if any masked offscreen bits set,
-           bne NoFToECol               ;skip to next enemy slot
-           txa
-           asl                         ;otherwise multiply enemy offset by four
-           asl
-           clc
-           adc #$04                    ;add 4 bytes to it
-           tax                         ;to use enemy's bounding box coordinates
-           jsr SprObjectCollisionCore  ;do fireball-to-enemy collision detection
-           ldx ObjectOffset            ;return fireball's original offset
-           bcc NoFToECol               ;if carry clear, no collision, thus do next enemy slot
-           lda #%10000000
-           sta Fireball_State,x        ;set d7 in enemy state
-           ldx R1                     ;get enemy offset
-           jsr HandleEnemyFBallCol     ;jump to handle fireball to enemy collision
-NoFToECol: pla                         ;pull fireball offset from stack
-           tay                         ;put it in Y
-           ldx R1                     ;get enemy object offset
-           dex                         ;decrement it
-           bpl FireballEnemyCDLoop     ;loop back until collision detection done on all enemies
-
-ExitFBallEnemy:
-      ldx ObjectOffset                 ;get original fireball offset and leave
-      rts
-
 BowserIdentities:
       .byte Goomba, GreenKoopa, BuzzyBeetle, Spiny, Lakitu, Bloober, HammerBro, Bowser
-
 HandleEnemyFBallCol:
       jsr RelativeEnemyPosition  ;get relative coordinate of enemy
       ldx R1                    ;get current enemy object offset

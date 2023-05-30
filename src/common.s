@@ -1,6 +1,23 @@
 
 .include "common.inc"
 
+
+; Define Global Labels named after the segment that they appear in
+.macro labelled_segment_def s1,s2,s3,s4,s5,s6,s7,s8,s9
+.ifblank s1
+  ; First parameter is empty
+  .exitmacro
+.endif
+.pushseg
+.segment .string(s1)
+.ident(.string(s1)):
+.export .ident(.string(s1))
+.popseg
+labelled_segment_def s2,s3,s4,s5,s6,s7,s8,s9
+.endmacro
+
+labelled_segment_def OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED
+
 .segment "LOWCODE"
 
 ;-------------------------------------------------------------------------------------
@@ -587,3 +604,33 @@ World7Areas: .byte $33, $29, $01, $27, $64
 World8Areas: .byte $30, $32, $21, $65
 
 
+;-------------------------------------------------------------------------------------
+
+MusicSelectData:
+      .byte WaterMusic, GroundMusic, UndergroundMusic, CastleMusic
+      .byte CloudMusic, PipeIntroMusic
+
+.proc GetAreaMusic
+.export GetAreaMusic
+  lda OperMode           ;if in title screen mode, leave
+  beq ExitGetM
+  lda AltEntranceControl ;check for specific alternate mode of entry
+  cmp #$02               ;if found, branch without checking starting position
+  beq ChkAreaType        ;from area object data header
+  ldy #$05               ;select music for pipe intro scene by default
+  lda PlayerEntranceCtrl ;check value from level header for certain values
+  cmp #$06
+  beq StoreMusic         ;load music for pipe intro scene if header
+  cmp #$07               ;start position either value $06 or $07
+  beq StoreMusic
+ChkAreaType:
+  ldy AreaType           ;load area type as offset for music bit
+  lda CloudTypeOverride
+  beq StoreMusic         ;check for cloud type override
+  ldy #$04               ;select music for cloud type level if found
+StoreMusic:
+  lda MusicSelectData,y  ;otherwise select appropriate music for level type
+  sta AreaMusicQueue     ;store in queue and leave
+ExitGetM:
+  rts
+.endproc

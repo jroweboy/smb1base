@@ -3,7 +3,7 @@
 .include "player.inc"
 
 ; objects/object.s
-.import FloateyNumbersRoutine, MiscObjectsCore
+.import FloateyNumbersRoutine, MiscObjectsCore, ProcessAllEnemies
 ; objects/cannon.s
 .import ProcessCannons
 ; music.s
@@ -38,26 +38,26 @@ GameCoreRoutine:
   bcs GameEngine             ;branch to the game engine itself
     rts
 GameEngine:
-  ; TODO consolidate farcalls
-  farcall ProcFireball_Bubble    ;process fireballs and air bubbles
-  farcall ProcessAllEnemies
-  jsr GetPlayerOffscreenBits ;get offscreen bits for player object
-  jsr RelativePlayerPosition ;get relative coordinates for player object
-  farcall PlayerGfxHandler       ;draw the player
-  jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
-  ldx #$01
-  stx ObjectOffset           ;set offset for second
-  jsr BlockObjectsCore       ;process second block object
-  dex
-  stx ObjectOffset           ;set offset for first
-  jsr BlockObjectsCore       ;process first block object
-  ; TODO consolidate these farcalls
-  farcall MiscObjectsCore        ;process misc objects (hammer, jumping coins)
-  farcall ProcessCannons         ;process bullet bill cannons
-  jsr ProcessWhirlpools      ;process whirlpools
-  jsr FlagpoleRoutine        ;process the flagpole
-  jsr RunGameTimer           ;count down the game timer
-  jsr ColorRotation          ;cycle one of the background colors
+  far OBJECT
+    jsr ProcFireball_Bubble    ;process fireballs and air bubbles
+    jsr ProcessAllEnemies
+    jsr GetPlayerOffscreenBits ;get offscreen bits for player object
+    jsr RelativePlayerPosition ;get relative coordinates for player object
+    farcall PlayerGfxHandler       ;draw the player
+    jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
+    ldx #$01
+    stx ObjectOffset           ;set offset for second
+    jsr BlockObjectsCore       ;process second block object
+    dex
+    stx ObjectOffset           ;set offset for first
+    jsr BlockObjectsCore       ;process first block object
+    jsr MiscObjectsCore        ;process misc objects (hammer, jumping coins)
+    jsr ProcessCannons         ;process bullet bill cannons
+    jsr ProcessWhirlpools      ;process whirlpools
+    jsr FlagpoleRoutine        ;process the flagpole
+    jsr RunGameTimer           ;count down the game timer
+    jsr ColorRotation          ;cycle one of the background colors
+  endfar
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music
   bpl NoChgMus
@@ -67,7 +67,7 @@ GameEngine:
   bne NoChgMus               ;if not yet at a certain point, continue
   lda IntervalTimerControl   ;if interval timer not yet expired,
   bne NoChgMus               ;branch ahead, don't bother with the music
-  farcall GetAreaMusic       ;to re-attain appropriate level music
+  jsr GetAreaMusic       ;to re-attain appropriate level music
 NoChgMus:
   ldy StarInvincibleTimer    ;get invincibility timer
   lda FrameCounter           ;get frame counter

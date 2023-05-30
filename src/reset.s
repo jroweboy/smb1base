@@ -258,7 +258,18 @@ SkipSprite0:
   ; this will restore the nmt select in the flags here.
   lda Mirror_PPUCTRL
   sta IrqPPUCTRL
-  farcall SoundEngine           ;play sound
+
+  lda CurrentBank
+  pha
+    BankPRGA #.lobyte(.bank(MUSIC))
+    jsr SoundEngine           ;play sound
+    lda #7 | PRG_FIXED_8
+    sta BANK_SELECT
+  pla
+  sta BANK_DATA
+  lda BankShadow
+  sta BANK_SELECT
+
 SkipMainOper:
   ply
   plx
@@ -459,28 +470,6 @@ SkipByte:
 ;   pla
 ;   sta JoypadBitMask,x    ;save with all bits in another place and leave
 ;   rts
-.proc OAMandReadJoypad
-  lda #OAM
-  sta OAM_DMA          ; ------ OAM DMA ------
-  ldx #1             ; get put          <- strobe code must take an odd number of cycles total
-  stx SavedJoypad1Bits ; get put get
-  stx JOYPAD_PORT1   ; put get put get
-  dex                ; put get
-  stx JOYPAD_PORT1   ; put get put get
-read_loop:
-  lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
-  and #3             ; put get
-  cmp #1             ; put get
-  rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
-  lda JOYPAD_PORT1   ; put get put GET
-  and #3             ; put get
-  cmp #1             ; put get
-  rol SavedJoypad1Bits ; put get put get put
-  bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
-ASSERT_PAGE read_loop
-  rts
-.endproc
-
 ;-------------------------------------------------------------------------------------
 ;$00 - used for preset value
 .proc SpriteShuffler
@@ -525,5 +514,27 @@ SetMiscOffset:
     dex
     dey
     bpl SetMiscOffset           ;do this until all misc spr offsets are loaded
+  rts
+.endproc
+
+.proc OAMandReadJoypad
+  lda #OAM
+  sta OAM_DMA          ; ------ OAM DMA ------
+  ldx #1             ; get put          <- strobe code must take an odd number of cycles total
+  stx SavedJoypad1Bits ; get put get
+  stx JOYPAD_PORT1   ; put get put get
+  dex                ; put get
+  stx JOYPAD_PORT1   ; put get put get
+read_loop:
+  lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
+  lda JOYPAD_PORT1   ; put get put GET
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad1Bits ; put get put get put
+  bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
+ASSERT_PAGE read_loop
   rts
 .endproc

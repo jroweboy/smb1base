@@ -12,7 +12,7 @@
 .import ContinueGame
 
 ; sprite_render.s
-.import DrawFireball, DrawExplosion_Fireball, DumpTwoSpr, DrawOneSpriteRow
+.import DrawExplosion_Fireball, DumpTwoSpr, DrawOneSpriteRow
 
 ; screen_render.s
 .import GetPlayerColors
@@ -22,6 +22,8 @@
 
 ; objects/vine.s
 .import Setup_Vine
+
+.import BubbleCheck
 
 .export DrawPlayer_Intermediate
 
@@ -447,177 +449,10 @@ ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to ski
           farcall Setup_Vine              ;do a sub to grow vine
 ChkSwimE: ldy AreaType                ;if level not water-type,
           bne SetPESub                ;skip this subroutine
-          jsr SetupBubble             ;otherwise, execute sub to set up air bubbles
+          farcall SetupBubble             ;otherwise, execute sub to set up air bubbles
 SetPESub: lda #$07                    ;set to run player entrance subroutine
           sta GameEngineSubroutine    ;on the next frame of game engine
           rts
-
-;-------------------------------------------------------------------------------------
-;$00 - used to store downward movement force in FireballObjCore
-;$02 - used to store maximum vertical speed in FireballObjCore
-;$07 - used to store pseudorandom bit in BubbleCheck
-
-ProcFireball_Bubble:
-  lda PlayerStatus           ;check player's status
-  cmp #$02
-  bcc ProcAirBubbles         ;if not fiery, branch
-  lda A_B_Buttons
-  and #B_Button              ;check for b button pressed
-  beq ProcFireballs          ;branch if not pressed
-  and PreviousA_B_Buttons
-  bne ProcFireballs          ;if button pressed in previous frame, branch
-  lda FireballCounter        ;load fireball counter
-  and #%00000001             ;get LSB and use as offset for buffer
-  tax
-  lda Fireball_State,x       ;load fireball state
-  bne ProcFireballs          ;if not inactive, branch
-  ldy Player_Y_HighPos       ;if player too high or too low, branch
-  dey
-  bne ProcFireballs
-  lda CrouchingFlag          ;if player crouching, branch
-  bne ProcFireballs
-  lda Player_State           ;if player's state = climbing, branch
-  cmp #$03
-  beq ProcFireballs
-  lda #Sfx_Fireball          ;play fireball sound effect
-  sta Square1SoundQueue
-  lda #$02                   ;load state
-  sta Fireball_State,x
-  ldy PlayerAnimTimerSet     ;copy animation frame timer setting
-  sty FireballThrowingTimer  ;into fireball throwing timer
-  dey
-  sty PlayerAnimTimer        ;decrement and store in player's animation timer
-  inc FireballCounter        ;increment fireball counter
-
-ProcFireballs:
-      ldx #$00
-      jsr FireballObjCore  ;process first fireball object
-      ldx #$01
-      jsr FireballObjCore  ;process second fireball object, then do air bubbles
-
-ProcAirBubbles:
-          lda AreaType                ;if not water type level, skip the rest of this
-          bne BublExit
-          ldx #$02                    ;otherwise load counter and use as offset
-BublLoop: stx ObjectOffset            ;store offset
-          jsr BubbleCheck             ;check timers and coordinates, create air bubble
-          jsr RelativeBubblePosition  ;get relative coordinates
-          jsr GetBubbleOffscreenBits  ;get offscreen information
-          jsr DrawBubble              ;draw the air bubble
-          dex
-          bpl BublLoop                ;do this until all three are handled
-BublExit: rts                         ;then leave
-
-FireballXSpdData:
-      .byte $40, $c0
-
-FireballExplosion:
-      jsr RelativeFireballPosition
-      jmp DrawExplosion_Fireball
-
-FireballObjCore:
-         stx ObjectOffset             ;store offset as current object
-         lda Fireball_State,x         ;check for d7 = 1
-         asl
-         bcs FireballExplosion        ;if so, branch to get relative coordinates and draw explosion
-         ldy Fireball_State,x         ;if fireball inactive, branch to leave
-         beq BublExit
-         dey                          ;if fireball state set to 1, skip this part and just run it
-         beq RunFB
-         lda Player_X_Position        ;get player's horizontal position
-         adc #$04                     ;add four pixels and store as fireball's horizontal position
-         sta Fireball_X_Position,x
-         lda Player_PageLoc           ;get player's page location
-         adc #$00                     ;add carry and store as fireball's page location
-         sta Fireball_PageLoc,x
-         lda Player_Y_Position        ;get player's vertical position and store
-         sta Fireball_Y_Position,x
-         lda #$01                     ;set high byte of vertical position
-         sta Fireball_Y_HighPos,x
-         ldy PlayerFacingDir          ;get player's facing direction
-         dey                          ;decrement to use as offset here
-         lda FireballXSpdData,y       ;set horizontal speed of fireball accordingly
-         sta Fireball_X_Speed,x
-         lda #$04                     ;set vertical speed of fireball
-         sta Fireball_Y_Speed,x
-         lda #$07
-         sta Fireball_BoundBoxCtrl,x  ;set bounding box size control for fireball
-         dec Fireball_State,x         ;decrement state to 1 to skip this part from now on
-RunFB:   txa                          ;add 7 to offset to use
-         clc                          ;as fireball offset for next routines
-         adc #$07
-         tax
-         lda #$50                     ;set downward movement force here
-         sta R0
-         lda #$03                     ;set maximum speed here
-         sta R2
-         lda #$00
-         jsr ImposeGravity            ;do sub here to impose gravity on fireball and move vertically
-         jsr MoveObjectHorizontally   ;do another sub to move it horizontally
-         ldx ObjectOffset             ;return fireball offset to X
-         jsr RelativeFireballPosition ;get relative coordinates
-         jsr GetFireballOffscreenBits ;get offscreen information
-         ; TODO merge farcall
-         farcall GetFireballBoundBox      ;get bounding box coordinates
-         farcall FireballBGCollision      ;do fireball to background collision detection
-         lda FBall_OffscreenBits      ;get fireball offscreen bits
-         and #%11001100               ;mask out certain bits
-         bne EraseFB                  ;if any bits still set, branch to kill fireball
-         jsr FireballEnemyCollision   ;do fireball to enemy collision detection and deal with collisions
-         jmp DrawFireball             ;draw fireball appropriately and leave
-EraseFB: lda #$00                     ;erase fireball state
-         sta Fireball_State,x
-NoFBall: rts                          ;leave
-
-BubbleCheck:
-      lda PseudoRandomBitReg+1,x  ;get part of LSFR
-      and #$01
-      sta R7                     ;store pseudorandom bit here
-      lda Bubble_Y_Position,x     ;get vertical coordinate for air bubble
-      cmp #$f8                    ;if offscreen coordinate not set,
-      bne MoveBubl                ;branch to move air bubble
-      lda AirBubbleTimer          ;if air bubble timer not expired,
-      bne ExitBubl                ;branch to leave, otherwise create new air bubble
-
-SetupBubble:
-          ldy #$00                 ;load default value here
-          lda PlayerFacingDir      ;get player's facing direction
-          lsr                      ;move d0 to carry
-          bcc PosBubl              ;branch to use default value if facing left
-          ldy #$08                 ;otherwise load alternate value here
-PosBubl:  tya                      ;use value loaded as adder
-          adc Player_X_Position    ;add to player's horizontal position
-          sta Bubble_X_Position,x  ;save as horizontal position for airbubble
-          lda Player_PageLoc
-          adc #$00                 ;add carry to player's page location
-          sta Bubble_PageLoc,x     ;save as page location for airbubble
-          lda Player_Y_Position
-          clc                      ;add eight pixels to player's vertical position
-          adc #$08
-          sta Bubble_Y_Position,x  ;save as vertical position for air bubble
-          lda #$01
-          sta Bubble_Y_HighPos,x   ;set vertical high byte for air bubble
-          ldy R7                  ;get pseudorandom bit, use as offset
-          lda BubbleTimerData,y    ;get data for air bubble timer
-          sta AirBubbleTimer       ;set air bubble timer
-MoveBubl: ldy R7                  ;get pseudorandom bit again, use as offset
-          lda Bubble_YMoveForceFractional,x
-          sec                      ;subtract pseudorandom amount from dummy variable
-          sbc Bubble_MForceData,y
-          sta Bubble_YMoveForceFractional,x   ;save dummy variable
-          lda Bubble_Y_Position,x
-          sbc #$00                 ;subtract borrow from airbubble's vertical coordinate
-          cmp #$20                 ;if below the status bar,
-          bcs Y_Bubl               ;branch to go ahead and use to move air bubble upwards
-          lda #$f8                 ;otherwise set offscreen coordinate
-Y_Bubl:   sta Bubble_Y_Position,x  ;store as new vertical coordinate for air bubble
-ExitBubl: rts                      ;leave
-
-Bubble_MForceData:
-      .byte $ff, $50
-
-BubbleTimerData:
-      .byte $40, $20
 
 ;-------------------------------------------------------------------------------------
 
@@ -1274,9 +1109,9 @@ InitCSTimer: sta ClimbSideTimer       ;initialize timer here
              rts
 
 .proc InSlingshotSub
-  lda Player_Rel_XPos
+  lda #100
   sta Sprite_X_Position+62*4
-  lda Player_Rel_YPos
+  lda #100
   sta Sprite_Y_Position+62*4
   lda #$74
   sta Sprite_Tilenumber+62*4
@@ -1378,7 +1213,7 @@ NoSling:
 InitSling:
   ; Initialize the draw string to a fixed position in the center of the screen
   ; this is only used for calculating angle and velocity, not used for drawing
-  lda SLING_INIT_POS
+  lda #SLING_INIT_POS
   sta SlingPull_Rel_XPos
   sta SlingPull_Rel_YPos
 
@@ -1912,49 +1747,6 @@ XSpdSign:
 SetAbsSpd:
   sta Player_XSpeedAbsolute ;store walking/running speed here and leave
   rts
-
-
-.proc RelativeBubblePosition
-  ldy #$01                ;set for air bubble offsets
-  jsr GetProperObjOffset  ;modify X to get proper air bubble offset
-  ldy #$03
-  jmp RelWOfs             ;get the coordinates
-.endproc
-
-.proc GetBubbleOffscreenBits
-  ldy #$01                 ;set for air bubble offsets
-  jsr GetProperObjOffset   ;modify X to get proper air bubble offset
-  ldy #$03                 ;set other offset for airbubble's offscreen bits
-  jmp GetOffScreenBitsSet  ;and get offscreen information about air bubble
-.endproc
-
-;-------------------------------------------------------------------------------------
-
-DrawBubble:
-  ldy Player_Y_HighPos        ;if player's vertical high position
-  dey                         ;not within screen, skip all of this
-  bne ExDBub
-  lda Bubble_OffscreenBits    ;check air bubble's offscreen bits
-  and #%00001000
-  bne ExDBub                  ;if bit set, branch to leave
-  ldy Bubble_SprDataOffset,x  ;get air bubble's OAM data offset
-  lda Bubble_Rel_XPos         ;get relative horizontal coordinate
-  sta Sprite_X_Position,y     ;store as X coordinate here
-  lda Bubble_Rel_YPos         ;get relative vertical coordinate
-  sta Sprite_Y_Position,y     ;store as Y coordinate here
-  lda #$74
-  sta Sprite_Tilenumber,y     ;put air bubble tile into OAM data
-  lda #$02
-  sta Sprite_Attributes,y     ;set attribute byte
-ExDBub:
-  rts                         ;leave
-
-.proc GetFireballOffscreenBits
-  ldy #$00                 ;set for fireball offsets
-  jsr GetProperObjOffset   ;modify X to get proper fireball offset
-  ldy #$02                 ;set other offset for fireball's offscreen bits
-  jmp GetOffScreenBitsSet  ;and get offscreen information about fireball
-.endproc
 
 ;-------------------------------------------------------------------------------------
 

@@ -61,7 +61,7 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   and #$01                  ;mask out all but LSB of page location
   ror                       ;rotate LSB of page location into carry then onto mirror
   rol Mirror_PPUCTRL       ;this is to set the proper PPU name table
-  farcall GetAreaMusic          ;load proper music into queue
+  jsr GetAreaMusic          ;load proper music into queue
   lda #$38                  ;load sprite shuffle amounts to be used later
   sta SprShuffleAmt+2
   lda #$48
@@ -451,7 +451,7 @@ DemoTimingData:
   ; TODO Consolidate farcall 
   farcall EnemiesAndLoopsCore     ;and run enemy code
 AutoPlayer:
-  farcall RelativePlayerPosition  ;get player's relative coordinates
+  jsr RelativePlayerPosition  ;get player's relative coordinates
   farcall PlayerGfxHandler, jmp   ;draw the player, then leave
 .endproc
 
@@ -495,9 +495,10 @@ PerformWalk:
   inc VictoryWalkControl  ;otherwise increment value and Y
   iny                     ;note Y will be used to walk the player
 DontWalk:
+  far PLAYER
   tya                     ;put contents of Y in A and
   sta SavedJoypadBits
-  farcall PlayerCtrlRoutine   ;use A to move player to the right or not
+  jsr PlayerCtrlRoutine   ;use A to move player to the right or not
   lda ScreenLeft_PageLoc  ;check page location of left side of screen
   cmp DestinationPageLoc  ;against set value here
   beq ExitVWalk           ;branch if equal to change modes if necessary
@@ -508,17 +509,18 @@ DontWalk:
   lda #$01                ;set 1 pixel per frame
   adc #$00                ;add carry from previous addition
   tay                     ;use as scroll amount
-  farcall ScrollScreen        ;do sub to scroll the screen
+  jsr ScrollScreen        ;do sub to scroll the screen
   jsr UpdScrollVar        ;do another sub to update screen and scroll variables
   inc VictoryWalkControl  ;increment value to stay in this routine
 ExitVWalk:
+  endfar
   lda VictoryWalkControl  ;load value set here
   ; jroweboy: Change from vanilla: just inc and rts here instead
   ; beq IncModeTask_A       ;if zero, branch to change modes
   ; rts                     ;otherwise leave
-  bne DontIncModeTask
+  bne :+
     inc OperMode_Task
-DontIncModeTask:
+:
   rts
 .endproc
 
