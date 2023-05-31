@@ -597,6 +597,7 @@ GroundBounceChain:              .res  1
 BounceForce:                    .res  1
 AngularMomentum:                .res  1
 AngularMomentumTimer:           .res  1
+InitialFireballYSpeed:          .res  2
 
     ; _WarmBootOffset:            .res  1   ; Warm boot offset
 

@@ -14,7 +14,7 @@
 .segment "VECTORS"
   .word (NonMaskableInterrupt)
   .word (Start)
-  .word (IrqStatusBar)  ;unused
+  .word (IrqStatusBar)
 
 .segment "FIXED"
 

@@ -1197,25 +1197,30 @@ SetCAnim:
       beq StartSling
 NoSling:
   jmp X_Physics             ;otherwise, jump to something else
-.endproc
 
-.proc StartSling
+StartSling:
   lda Player_State           ;check player state
   beq InitSling                 ;if on the ground, branch
     lda SwimmingFlag           ;if swimming flag not set, jump to do something else
-    beq InitSling                 ;to prevent midair jumping, otherwise continue
+    beq NoSling                     ;to prevent midair jumping, otherwise continue
       lda JumpSwimTimer          ;if jump/swim timer nonzero, branch
       bne InitSling
         lda Player_Y_Speed         ;check player's vertical speed
-        bpl InitSling                 ;if player's vertical speed motionless or down, branch
-          jmp X_Physics              ;if timer at zero and player still rising, do not swim
-    jmp X_Physics
+        bmi NoSling                 ;if player's vertical speed motionless or down, branch
+  ; jmp X_Physics              ;if timer at zero and player still rising, do not swim
 InitSling:
   ; Initialize the draw string to a fixed position in the center of the screen
   ; this is only used for calculating angle and velocity, not used for drawing
   lda #SLING_INIT_POS
   sta SlingPull_Rel_XPos
   sta SlingPull_Rel_YPos
+
+  lda #0
+  sta AngularMomentum
+  sta Player_X_Speed
+  sta Player_X_MoveForce
+  sta Player_Y_Speed
+  sta Player_Y_MoveForce
 
   ; and set the player to slingshot state
   lda A_B_Buttons
@@ -1229,9 +1234,22 @@ InitSling:
   and HoldingSlingshot
   bne StillHolding
     ; apply force and cancel out of slingshot mode.
+    ; mulitply the magnitude by 1.5 to make it the x speed
     lda X_Magnitude
-    eor #$ff
-    adc #1
+    bpl :+
+      eor #$ff
+      clc
+      adc #1
+      lsr
+      jmp Subtract
+:
+      lsr
+      eor #$ff
+      clc
+      adc #1
+Subtract:
+    sec
+    sbc X_Magnitude
     sta Player_X_Speed
     lda Y_Magnitude
     tax

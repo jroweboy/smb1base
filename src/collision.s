@@ -222,57 +222,68 @@ GetBlockBufferAddr:
 ;-------------------------------------------------------------------------------------
 
 FireballBGCollision:
-      lda Fireball_Y_Position,x   ;check fireball's vertical coordinate
-      cmp #$18
-      bcc ClearBounceFlag         ;if within the status bar area of the screen, branch ahead
-      jsr BlockBufferChk_FBall    ;do fireball to background collision detection on bottom of it
-      beq ClearBounceFlag         ;if nothing underneath fireball, branch
-      jsr ChkForNonSolids         ;check for non-solid metatiles
-      beq ClearBounceFlag         ;branch if any found
-      lda Fireball_Y_Speed,x      ;if fireball's vertical speed set to move upwards,
-      bmi InitFireballExplode     ;branch to set exploding bit in fireball's state
-      lda FireballBouncingFlag,x  ;if bouncing flag already set,
-      bne InitFireballExplode     ;branch to set exploding bit in fireball's state
-      lda #$fd
-      sta Fireball_Y_Speed,x      ;otherwise set vertical speed to move upwards (give it bounce)
-      lda #$01
-      sta FireballBouncingFlag,x  ;set bouncing flag
-      lda Fireball_Y_Position,x
-      and #$f8                    ;modify vertical coordinate to land it properly
-      sta Fireball_Y_Position,x   ;store as new vertical coordinate
-      rts                         ;leave
+  lda Fireball_Y_Position,x   ;check fireball's vertical coordinate
+  cmp #$18
+  bcc ClearBounceFlag         ;if within the status bar area of the screen, branch ahead
+  jsr BlockBufferChk_FBall    ;do fireball to background collision detection on bottom of it
+  beq ClearBounceFlag         ;if nothing underneath fireball, branch
+  jsr ChkForNonSolids         ;check for non-solid metatiles
+  beq ClearBounceFlag         ;branch if any found
+  lda Fireball_Y_Speed,x      ;if fireball's vertical speed set to move upwards,
+  bmi InitFireballExplode     ;branch to set exploding bit in fireball's state
+  lda FireballBouncingFlag,x  ;if bouncing flag already set,
+  bne InitFireballExplode     ;branch to set exploding bit in fireball's state
+  ; attempt to bounce the fireball back to the original height
+  lda InitialFireballYSpeed,x
+  bmi :+
+    eor #$ff
+    clc
+    adc #1
+:
+  cmp #$fd
+  bcc :+
+    lda #$fd
+:
+  sta Fireball_Y_Speed,x      ;otherwise set vertical speed to move upwards (give it bounce)
+  lda #$01
+  sta FireballBouncingFlag,x  ;set bouncing flag
+  lda Fireball_Y_Position,x
+  and #$f8                    ;modify vertical coordinate to land it properly
+  sta Fireball_Y_Position,x   ;store as new vertical coordinate
+  rts                         ;leave
 
 ClearBounceFlag:
-      lda #$00
-      sta FireballBouncingFlag,x  ;clear bouncing flag by default
-      rts                         ;leave
+  lda #$00
+  sta FireballBouncingFlag,x  ;clear bouncing flag by default
+  rts                         ;leave
 
 InitFireballExplode:
-      lda #$80
-      sta Fireball_State,x        ;set exploding flag in fireball's state
-      lda #Sfx_Bump
-      sta Square1SoundQueue       ;load bump sound
-      rts                         ;leave
+  lda #$80
+  sta Fireball_State,x        ;set exploding flag in fireball's state
+  lda #Sfx_Bump
+  sta Square1SoundQueue       ;load bump sound
+  rts                         ;leave
 
 ChkForNonSolids:
-       cmp #$26       ;blank metatile used for vines?
-       beq NSFnd
-       cmp #$c2       ;regular coin?
-       beq NSFnd
-       cmp #$c3       ;underwater coin?
-       beq NSFnd
-       cmp #$5f       ;hidden coin block?
-       beq NSFnd
-       cmp #$60       ;hidden 1-up block?
-NSFnd: rts
+  cmp #$26       ;blank metatile used for vines?
+  beq NSFnd
+  cmp #$c2       ;regular coin?
+  beq NSFnd
+  cmp #$c3       ;underwater coin?
+  beq NSFnd
+  cmp #$5f       ;hidden coin block?
+  beq NSFnd
+  cmp #$60       ;hidden 1-up block?
+NSFnd:
+  rts
 
 ;--------------------------------
 
 KickedShellXSpdData:
-      .byte $30, $d0
+  .byte $30, $d0
 
 DemotedKoopaXSpdData:
-      .byte $08, $f8
+  .byte $08, $f8
 
 PlayerEnemyCollision:
   lda FrameCounter            ;check counter for d0 set

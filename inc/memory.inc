@@ -559,6 +559,7 @@ ALL_TIMER_COUNT = DemoTimer - Timers
 .global BounceForce
 .global AngularMomentum
 .global AngularMomentumTimer
+.global InitialFireballYSpeed
 
 .global _WarmBootOffset
 

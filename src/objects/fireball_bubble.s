@@ -40,10 +40,10 @@
   sta Square1SoundQueue
   lda #$02                   ;load state
   sta Fireball_State,x
-  ldy PlayerAnimTimerSet     ;copy animation frame timer setting
-  sty FireballThrowingTimer  ;into fireball throwing timer
-  dey
-  sty PlayerAnimTimer        ;decrement and store in player's animation timer
+  ; ldy PlayerAnimTimerSet     ;copy animation frame timer setting
+  ; sty FireballThrowingTimer  ;into fireball throwing timer
+  ; dey
+  ; sty PlayerAnimTimer        ;decrement and store in player's animation timer
   inc FireballCounter        ;increment fireball counter
 
 ProcFireballs:
@@ -91,12 +91,21 @@ FireballExplosion:
   sta Fireball_Y_Position,x
   lda #$01                     ;set high byte of vertical position
   sta Fireball_Y_HighPos,x
-  ldy PlayerFacingDir          ;get player's facing direction
-  dey                          ;decrement to use as offset here
-  lda FireballXSpdData,y       ;set horizontal speed of fireball accordingly
+  ; ldy PlayerFacingDir          ;get player's facing direction
+  ; dey                          ;decrement to use as offset here
+  ; lda FireballXSpdData,y       ;set horizontal speed of fireball accordingly
+  ; sta Fireball_X_Speed,x
+  ; lda #$04                     ;set vertical speed of fireball
+  ; sta Fireball_Y_Speed,x
+  lda PlayerAngle
+  lsr
+  lsr
+  tay
+  lda AngleToFireballXSpeed,y
   sta Fireball_X_Speed,x
-  lda #$04                     ;set vertical speed of fireball
+  lda AngleToFireballYSpeed,y
   sta Fireball_Y_Speed,x
+  sta InitialFireballYSpeed,x
   lda #$07
   sta Fireball_BoundBoxCtrl,x  ;set bounding box size control for fireball
   dec Fireball_State,x         ;decrement state to 1 to skip this part from now on
@@ -122,12 +131,16 @@ RunFB:
   bne EraseFB                  ;if any bits still set, branch to kill fireball
   jsr FireballEnemyCollision   ;do fireball to enemy collision detection and deal with collisions
   jmp DrawFireball             ;draw fireball appropriately and leave
-EraseFB: lda #$00                     ;erase fireball state
-         sta Fireball_State,x
-NoFBall: rts                          ;leave
+EraseFB:
+  lda #$00                     ;erase fireball state
+  sta Fireball_State,x
+NoFBall:
+  rts                          ;leave
 
-FireballXSpdData:
-  .byte $40, $c0
+AngleToFireballXSpeed:
+.incbin "../fireball_x_speed.bin"
+AngleToFireballYSpeed:
+.incbin "../fireball_y_speed.bin"
 .endproc
 
 BubbleCheck:
