@@ -481,37 +481,11 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
 .endproc
 
 RenderPlayerSub:
-  ; The player is always in the same position but different rotations
-  ; So we only need to write to sprite memory once
-  ; lda PlayerGfxOffset ; repurposed to be the "new" animation
-  ; ; cmp Player_SprDataOffset ; repurposed to be the "current" animation
-  ; beq 
-  ; if they aren't equal then we need to redraw
-;   lda FrameCounter
-;   and #%00000001
-;   bne @skip
-;     inc $120
-; @skip:
-;   ldy $120
-;   cpy #8
-;   bcc @setupy
-;   cpy #8 + MARIO_ROTATION_ANGLE_MAX
-;   bcc @skipsetup
-; @setupy:
-;     ldy #8
-;     sty $120
-; @skipsetup:
-;   BankCHR10 y
   lda Player_Rel_XPos
   sta Player_Pos_ForScroll     ;store player's relative horizontal position
   lda Player_Rel_YPos
   sta R2
   ldy #0
-  jmp RenderPlayerInternal
-
-  rts
-
-RenderPlayerInternal:
   ldx PlayerGfxOffset
 DrawPlayerLoop:
   lda PlayerGraphicsTable,x
@@ -606,6 +580,22 @@ SmallMarioHolstered:
 .byte $05, $06, $07
 .byte $15, $16, $17
 .byte $25, $26, $27
+
+; Mario is now 32x32
+; hehehehe good luck punk.
+BigMarioGraphics:
+; big mario sideways
+.byte $08, $09, $0a, $0b
+.byte $18, $19, $1a, $1b
+.byte $28, $29, $2a, $2b
+.byte $38, $39, $3a, $3b
+BigMarioHolstered:
+; big mario sideways
+.byte $0c, $0d, $0e, $0f
+.byte $1c, $1d, $1e, $1f
+.byte $2c, $2d, $2e, $2f
+.byte $3c, $3d, $3e, $3f
+
 
 ; TODO small mario death animation rotated too
 
@@ -1192,6 +1182,7 @@ SetCAnim:
   bne NoSling          ;skip ahead to something else
     ; now check to see if we are starting a slingshot
     lda A_B_Buttons           ;check for A button press
+    and #A_Button
     beq NoSling                ;if not, branch to something else
       and PreviousA_B_Buttons   ;if button not pressed in previous frame, branch
       beq StartSling
@@ -1872,8 +1863,6 @@ ProcessPlayerAngle:
   lda PlayerAngle
   lsr
   lsr
-  clc
-  adc #8
   tay
   BankCHR10 y
   rts

@@ -31,16 +31,13 @@ def angular_momentum():
 
 def fireball_speed():
   max_x_speed = 0x40
-  max_y_speed = 0x04
+  max_y_speed = 0x06
   angles = 64
   with open(basepath.joinpath("fireball_x_speed.bin"), "wb") as x:
     with open(basepath.joinpath("fireball_y_speed.bin"), "wb") as y:
       for angle in range(0,angles):
-        # as_signed = -1 * (256 - i) if i > 128 else i
-        # val = as_signed * maxanglespeed / 128.0
         x_speed = max_x_speed * math.cos(math.radians(angle * 360.0 / angles))
         y_speed = max_y_speed * math.sin(math.radians(angle * 360.0 / angles))
-        print(f"{x_speed} {y_speed}")
         x.write(struct.pack("=b",rounding_mode(x_speed)))
         y.write(struct.pack("=b",rounding_mode(y_speed)))
 

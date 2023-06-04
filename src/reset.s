@@ -72,14 +72,14 @@ MMC3Init:
   ; setup the jmp instruction for the FarBank Target
   jsr FarCallInit
   ldx #5
-  CHRBankInitLoop:
+  :
     txa
     ora PRG_FIXED_8
     sta BANK_SELECT
     lda BankInitValues,x
     sta BANK_DATA
     dex
-    bpl CHRBankInitLoop
+    bpl :-
 
   ; Now set the initial A bank
   BankPRGA #0
@@ -119,7 +119,7 @@ GameLoop:
   jmp GameLoop              ;endless loop, need I say more?
 
 BankInitValues:
-  .byte $00, $02, $04, $05, $06, $07
+  .byte $40, $42, $44, $45, $46, $47
 .endproc
 
 .proc NonMaskableInterrupt
@@ -434,43 +434,6 @@ SkipByte:
   rts
 .endproc
 
-;-------------------------------------------------------------------------------------
-;$00 - temp joypad bit
-; ReadJoypads: 
-;   lda #$01               ;reset and clear strobe of joypad ports
-;   sta JOYPAD_PORT
-;   lsr
-;   tax                    ;start with joypad 1's port
-;   sta JOYPAD_PORT
-;   jsr ReadPortBits
-;   inx                    ;increment for joypad 2's port
-; ReadPortBits:
-;   ldy #$08
-; PortLoop:
-;   pha                    ;push previous bit onto stack
-;     lda JOYPAD_PORT,x      ;read current bit on joypad port
-;     sta R0                ;check d1 and d0 of port output
-;     lsr                    ;this is necessary on the old
-;     ora R0                ;famicom systems in japan
-;     lsr
-;     pla                    ;read bits from stack
-;     rol                    ;rotate bit from carry flag
-;     dey
-;     bne PortLoop           ;count down bits left
-;     sta SavedJoypadBits,x  ;save controller status here always
-;     pha
-;       and #%00110000         ;check for select or start
-;       and JoypadBitMask,x    ;if neither saved state nor current state
-;       beq Save8Bits          ;have any of these two set, branch
-;     pla
-;     and #%11001111         ;otherwise store without select
-;     sta SavedJoypadBits,x  ;or start bits and leave
-;     rts
-; Save8Bits:
-;   pla
-;   sta JoypadBitMask,x    ;save with all bits in another place and leave
-;   rts
-;-------------------------------------------------------------------------------------
 ;$00 - used for preset value
 .proc SpriteShuffler
   lda #$28                    ;load preset value which will put it at
@@ -516,6 +479,12 @@ SetMiscOffset:
     bpl SetMiscOffset           ;do this until all misc spr offsets are loaded
   rts
 .endproc
+
+; .proc SpriteShuffler
+
+;   rts
+; .endproc
+
 
 .proc OAMandReadJoypad
   lda #OAM

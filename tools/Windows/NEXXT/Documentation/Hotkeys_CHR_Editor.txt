@@ -1,0 +1,71 @@
+CHR Editor hotkeys 1.00
+===========================================
+
+Mouse combos
+-------------------------------------------
+[l mouse]		- pen (typically), brush, line
+[r mouse]		- eyedropper
+[l mouse + ctrl]	- bucket
+[l mouse + ctrl + alt]	- bucket (noncontiguous)
+[l mouse + shift]	- Use special "increment ink" for pen & bucket
+[l mouse + shift + alt] - Use special "decrement ink" for pen & bucket
+
+-------------------------------------------
+[1-4]		- Pick colour  
+[5-8]		- Protect colour (pixels of protected colours aren't overdrawn).
+[9]		- Pick special "increment ink" (although l mouse + shift tends to be quicker)
+[0]		- Pick special "decrement ink" (although l mouse + shift + alt  tends to be quicker)
+
+[1-4 + shift]	- Pick subpalette
+[5-8 + shift]	- Switch subpalette set A through D
+
+[E]		- Switch between 2x2 and 1x1 tile edit modes.
+
+[U]		- Quantized pen mode
+[M]		- Open Brush Mask Editor
+[G]		- Smudge mode. Uses the first pixel your stroke clicks on instead of the chosen colour. 
+
+[Z]		- Toggle main/spare chosen colour
+[B]		- Brush mode (replaces pen when on. Combinable with Line mode and Smudge mode).
+[N]		- Line Mode (replaces pen when on. Combinable with Brush mode and Smudge mode).
+	
+	SPECIAL: When in line mode, the following hotkeys apply:
+	[K]		Quick multiline mode
+	[T]		Coat mode - smears the line over the canvas, a bit like a paintroller.
+	[V]		Move (only works while plotting line)
+	[C]		Center x0y0 (origin of line).
+	[WASD]		Nudge x0y0 (origin of line).	
+	[scroll]		Change line algorithm (line, curve, knee, joining/right angle)
+	[ctrl+scroll]		Change y position of x0y0
+	[alt+ctrl+scroll]	Change x position of x0y0
+	[alt+scroll]		Change special algorithm property.
+
+
+
+
+
+[PAUSE KEY] 	- Transluscent mode. Useful for comparisons, tracing, and marking instances as inactive. 
+
+[DEL] 			- Delete current tile
+
+[WASD]		 	- Nudge selection
+or arrow keys 		
+
+[H]			- Mirror selection horizontally
+[V] or [T]		- Mirror selection vertically
+[R]			- Rotate selection right
+[L]			- Rotate selection left
+
+[I]			- Hi bitmask on/off
+[O]			- Lo bitmask on/off
+
+[P]			- Wrap/Cap pixel value (when increasing/decreasing)
+[Q]			- Toggle active (main/chr editor)
+[X]  			- Toggle CHR table (a/b)
+
+[Comma]			- Previous metasprite
+[Period]		- Next metasprite
+
+[Num 5]			- close/re-open CHR editor
+[other Nums]		- navigate current tile
+

@@ -1,0 +1,124 @@
+Main Editor hotkeys 1.0
+===========================================
+
+[Shift+D]			-Switch between LAYOUT mode (default) and the new DRAW mode.
+
+[F1]				- Active tab: screen/map editor
+[F2]				- Active tab: metasprite editor
+[F3]				- Active tab: tileset editor
+
+[F4] (or Num5)			- CHR editor
+		
+[F5]				- Metasprite manager
+[F6]				- Map Navigator
+
+[F12]				- Export nametable/map as bmp
+
+[Shift+F4]			- Open Brush Mask Editor	
+[Shift+F5]			- Line toolbox
+[Shift+F7]			- Tile collision properties
+
+[PAUSE KEY]		 	- Lightbox mode. Useful for comparisons, tracing, and marking instances as inactive. 
+[DEL] 				- Delete current selection
+
+ 
+
+Metasprite exclusive hotkeys
+------------------------------------------
+[H]				- Flip metasprite horizontally
+[V]				- Flip metasprite vertically
+
+[arrows]			- Move sprite(s) 1px
+[arrows + shift]		- Move sprite(s) 8px
+[arrows/home/end + ctrl]	- Step selected sprite
+[arrows/home/end + ctrl + shift]- Select multiple sprites
+
+Nametable exclusive hotkeys
+------------------------------------------
+[V+click]		- pasteclick. works on palettes, tileset, nametable
+[C+click]		- copyclick. works on palettes.
+
+[E]				- view grid(s) on/off 
+[H]				- Screen grid set/clear
+[J]				- 1x grid set/clear
+[K]				- 2x grid set/clear
+[L]				- 4x grid set/clear
+
+
+General hotkeys
+------------------------------------------
+[1-4]		- Pick colour  
+[5-8]		- Protect colour (pixels of protected colours aren't overdrawn).
+[9]		- Pick special "increment ink" (although l mouse + shift tends to be quicker)
+[0]		- Pick special "decrement ink" (although l mouse + shift + alt  tends to be quicker)
+
+[1-4 + shift]	- Pick subpalette
+[5-8 + shift]	- Switch subpalette set A through D
+
+[RGBM]		- set/clear red/green/blue emphasis/monochrome mode
+
+[F]		- fills a selected area of the nametable/map with a single selected pattern from the tileset.
+(or alt+backsp)
+
+[S]		- View selected only
+[A]		- Attribute checker
+[D]		- view grid(s) on/off
+
+[W]		- Apply tiles
+[E]		- Apply attributes
+[T]		- Enter/leave Type In Mode. If a select cursor is present while in Type In mode, 
+		  you need to exit with Ctrl+T. Alternately, deselect the type cursor with ctrl+shift+A.
+
+[X]		- Toggle tilesets A/B
+[Z]		- Toggle main/spare chosen colour
+
+[Comma]		- Previous metasprite
+[Period]	- Next metasprite
+
+[Num 5]		- close/re-open CHR editor
+[other Nums]	- navigate current tile
+
+
+[B + Shift]	- Switch between Pen & Brush mode for [l mouse]
+[N + Shift]	- Quantized pen mode
+[F4+ Shift]	- Open Brush Mask Editor
+
+
+Arrow keys:
+-------------------------------------------
+while in type in mode 		- move the type in cursor
+
+while on metasprite tab		- move sprite 1px
+
++shift				- move sprite 8px
+
++ctrl				- select object (sprite) in a metasprite
+
++ctrl+shift			- select several objects (sprites) in a metasprite
+
+while selection on nametable
++alt 				- nudge selection box
+
+Ctrl				- nudge nametable contents finely (without moving attributes)
+
+ctrl + shift			- nudge nametable contents coarsely (with attributes)
+
+else				- pan view (on a map larger than the viewport)
+
+
+
+System palette modifier keys:
+-----------------------------------------
+New, speedy methods for picking subpalette colours have been added:
+	
+	-[Ctrl click] on a system colour to "ripple pick" a subpalette, that is, pick a colour for the currently active subpalette colour and automatically select the next one. 
+	This is useful for picking a trio of colours for a subpalette much quicker. Ripple picking skips the backdrop colour when cycling through the subpalette. 
+	-[Ctrl right-click] will skip a "ripple" without picking.
+	
+	-[Ctrl+Shift click] on a system colour to "ripple pick" up to a whole set of 4 subpalettes. Again, ripple picking skips "backdrop" entries.
+	-[Ctrl+Shift right-click] will skip a "ripple" without picking; spanning all 4 subpalettes.
+
+	-[Shift click] ripple-pick stepping a whole subpalette at a time. Useful for setting new colours in the same "tier", provided you've ordered your subpalette contents in tiers. 
+ 	-[Shift right-click] skip to the same position in the next subpalette.
+
+	-[Alt click] on a system colour to quickly pick it as the backdrop colour (aka "common colour" or "colour 0"). Using this method, you don't need to preselect colour 0. 
