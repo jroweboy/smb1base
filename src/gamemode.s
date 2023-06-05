@@ -308,33 +308,33 @@ StartGame:
 ChkSelect:
   cmp #Select_Button          ;check to see if the select button was pressed
   beq SelectBLogic            ;if so, branch reset demo timer
-  ldx DemoTimer               ;otherwise check demo timer
-  bne ChkWorldSel             ;if demo timer not expired, branch to check world selection
-  sta SelectTimer             ;set controller bits here if running demo
-  jsr DemoEngine              ;run through the demo actions
-  bcs ResetTitle              ;if carry flag set, demo over, thus branch
-  jmp RunDemo                 ;otherwise, run game engine for demo
-ChkWorldSel:
+;   ldx DemoTimer               ;otherwise check demo timer
+;   bne ChkWorldSel             ;if demo timer not expired, branch to check world selection
+;   sta SelectTimer             ;set controller bits here if running demo
+;   jsr DemoEngine              ;run through the demo actions
+;   bcs ResetTitle              ;if carry flag set, demo over, thus branch
+;   jmp RunDemo                 ;otherwise, run game engine for demo
+; ChkWorldSel:
   ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
   beq NullJoypad
   cmp #B_Button               ;if so, check to see if the B button was pressed
   bne NullJoypad
   iny                         ;if so, increment Y and execute same code as select
 SelectBLogic:
-  lda DemoTimer               ;if select or B pressed, check demo timer one last time
-  beq ResetTitle              ;if demo timer expired, branch to reset title screen mode
-  lda #$18                    ;otherwise reset demo timer
-  sta DemoTimer
+  ; lda DemoTimer               ;if select or B pressed, check demo timer one last time
+  ; beq ResetTitle              ;if demo timer expired, branch to reset title screen mode
+  ; lda #$18                    ;otherwise reset demo timer
+  ; sta DemoTimer
   lda SelectTimer             ;check select/B button timer
   bne NullJoypad              ;if not expired, branch
   lda #$10                    ;otherwise reset select button timer
   sta SelectTimer
   cpy #$01                    ;was the B button pressed earlier?  if so, branch
   beq IncWorldSel             ;note this will not be run if world selection is disabled
-  lda NumberOfPlayers         ;if no, must have been the select button, therefore
-  eor #%00000001              ;change number of players and draw icon accordingly
-  sta NumberOfPlayers
-  jsr DrawMushroomIcon
+  ; lda NumberOfPlayers         ;if no, must have been the select button, therefore
+  ; eor #%00000001              ;change number of players and draw icon accordingly
+  ; sta NumberOfPlayers
+  ; jsr DrawMushroomIcon
   jmp NullJoypad
 IncWorldSel:
   ldx WorldSelectNumber       ;increment world select number
@@ -356,20 +356,20 @@ NullJoypad:
   lda #$00                    ;clear joypad bits for player 1
   sta SavedJoypad1Bits
 RunDemo:
-  jsr GameCoreRoutine         ;run game engine
+  ; jsr GameCoreRoutine         ;run game engine
   lda GameEngineSubroutine    ;check to see if we're running lose life routine
   cmp #$06
   bne ExitMenu                ;if not, do not do all the resetting below
-ResetTitle:
-  lda #$00                    ;reset game modes, disable
-  sta OperMode                ;sprite 0 check and disable
-  sta OperMode_Task           ;screen output
-  sta Sprite0HitDetectFlag
-  inc DisableScreenFlag
-  rts
+; ResetTitle:
+;   lda #$00                    ;reset game modes, disable
+;   sta OperMode                ;sprite 0 check and disable
+;   sta OperMode_Task           ;screen output
+;   sta Sprite0HitDetectFlag
+;   inc DisableScreenFlag
+;   rts
 ChkContinue:
-  ldy DemoTimer               ;if timer for demo has expired, reset modes
-  beq ResetTitle
+  ; ldy DemoTimer               ;if timer for demo has expired, reset modes
+  ; beq ResetTitle
   asl                         ;check to see if A button was also pushed
   bcc StartWorld1             ;if not, don't load continue function's world number
   lda ContinueWorld           ;load previously saved world number for secret
@@ -384,7 +384,7 @@ StartWorld1:
   sta PrimaryHardMode         ;hard mode must be on as well
   lda #$00
   sta OperMode_Task           ;set game mode here, and clear demo timer
-  sta DemoTimer
+  ; sta DemoTimer
   ldx #$17
   lda #$00
 InitScores:
@@ -409,34 +409,34 @@ WSelectBufferTemplate:
 
 ;-------------------------------------------------------------------------------------
 
-.proc DemoEngine
-  ldx DemoAction         ;load current demo action
-  lda DemoActionTimer    ;load current action timer
-  bne DoAction           ;if timer still counting down, skip
-  inx
-  inc DemoAction         ;if expired, increment action, X, and
-  sec                    ;set carry by default for demo over
-  lda DemoTimingData-1,x ;get next timer
-  sta DemoActionTimer    ;store as current timer
-  beq DemoOver           ;if timer already at zero, skip
-DoAction:
-  lda DemoActionData-1,x ;get and perform action (current or next)
-  sta SavedJoypad1Bits
-  dec DemoActionTimer    ;decrement action timer
-  clc                    ;clear carry if demo still going
-DemoOver:
-  rts
+; .proc DemoEngine
+;   ldx DemoAction         ;load current demo action
+;   lda DemoActionTimer    ;load current action timer
+;   bne DoAction           ;if timer still counting down, skip
+;   inx
+;   inc DemoAction         ;if expired, increment action, X, and
+;   sec                    ;set carry by default for demo over
+;   lda DemoTimingData-1,x ;get next timer
+;   sta DemoActionTimer    ;store as current timer
+;   beq DemoOver           ;if timer already at zero, skip
+; DoAction:
+;   lda DemoActionData-1,x ;get and perform action (current or next)
+;   sta SavedJoypad1Bits
+;   dec DemoActionTimer    ;decrement action timer
+;   clc                    ;clear carry if demo still going
+; DemoOver:
+;   rts
 
-DemoActionData:
-      .byte $01, $80, $02, $81, $41, $80, $01
-      .byte $42, $c2, $02, $80, $41, $c1, $41, $c1
-      .byte $01, $c1, $01, $02, $80, $00
+; DemoActionData:
+;       .byte $01, $80, $02, $81, $41, $80, $01
+;       .byte $42, $c2, $02, $80, $41, $c1, $41, $c1
+;       .byte $01, $c1, $01, $02, $80, $00
 
-DemoTimingData:
-      .byte $9b, $10, $18, $05, $2c, $20, $24
-      .byte $15, $5a, $10, $20, $28, $30, $20, $10
-      .byte $80, $20, $30, $30, $01, $ff, $00
-.endproc
+; DemoTimingData:
+;       .byte $9b, $10, $18, $05, $2c, $20, $24
+;       .byte $15, $5a, $10, $20, $28, $30, $20, $10
+;       .byte $80, $20, $30, $30, $01, $ff, $00
+; .endproc
 
 
 ;-------------------------------------------------------------------------------------

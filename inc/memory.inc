@@ -552,7 +552,9 @@ ALL_TIMER_COUNT = DemoTimer - Timers
 .global Y_Magnitude
 .global Abs_X_Magnitude
 .global Abs_Y_Magnitude
-; .global IrqPointer
+.global IrqPointerJmp
+.global IrqPointer
+.global IrqNextScanline
 
 .global PlayerAngle
 .global GroundBounceChain

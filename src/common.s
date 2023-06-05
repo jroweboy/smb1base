@@ -16,7 +16,7 @@
 labelled_segment_def s2,s3,s4,s5,s6,s7,s8,s9
 .endmacro
 
-labelled_segment_def OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED
+labelled_segment_def OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE
 
 .segment "LOWCODE"
 

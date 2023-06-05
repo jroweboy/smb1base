@@ -43,7 +43,10 @@ GameEngine:
     jsr ProcessAllEnemies
     jsr GetPlayerOffscreenBits ;get offscreen bits for player object
     jsr RelativePlayerPosition ;get relative coordinates for player object
-    farcall PlayerGfxHandler       ;draw the player
+    ; lda OperMode
+    ; beq :+ ; skip drawing the player if on the title screen
+      farcall PlayerGfxHandler       ;draw the player
+    ; :
     jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
     ldx #$01
     stx ObjectOffset           ;set offset for second
@@ -56,7 +59,10 @@ GameEngine:
     jsr ProcessWhirlpools      ;process whirlpools
     jsr FlagpoleRoutine        ;process the flagpole
     jsr RunGameTimer           ;count down the game timer
-    jsr ColorRotation          ;cycle one of the background colors
+    ; lda OperMode
+    ; beq :+ ; skip drawing the player if on the title screen
+      jsr ColorRotation          ;cycle one of the background colors
+    ; :
   endfar
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music

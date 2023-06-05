@@ -217,7 +217,7 @@ BowserOrigXPos:                 .res  1
 BowserFlameTimerCtrl:           .res  1
 BowserFront_Offset:             .res  1
 BridgeCollapseOffset:           .res  1
-BowserGfxFlag:                  .res  30
+BowserGfxFlag:                  .res  1
 
 FirebarSpinSpeed:               .res  16
 
@@ -586,6 +586,9 @@ StatTimerHi                   = StatTimer + 2
 IrqNewScroll:                   .res  1
 IrqOldScroll:                   .res  1
 IrqPPUCTRL:                     .res  1
+IrqPointerJmp:                  .res  3
+IrqPointer                    = IrqPointerJmp + 1
+IrqNextScanline:                .res  1
 X_Magnitude:                    .res  1
 Abs_X_Magnitude:                .res  1
 Y_Magnitude:                    .res  1

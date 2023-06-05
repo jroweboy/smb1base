@@ -6,7 +6,7 @@
 .import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
 .import OperModeExecutionTree, MoveSpritesOffscreen, UpdateTopScore
 .import InitScroll, UpdateScreen, SoundEngine, PauseRoutine
-.import FarCallInit
+.import FarCallInit, TitleScreenIrq
 
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
@@ -14,7 +14,7 @@
 .segment "VECTORS"
   .word (NonMaskableInterrupt)
   .word (Start)
-  .word (IrqStatusBar)
+  .word (IrqPointerJmp)
 
 .segment "FIXED"
 
@@ -69,8 +69,17 @@ ColdBoot:
   sta SND_DELTA_REG+1          ;reset delta counter load register
   sta OperMode                 ;reset primary mode of operation
 MMC3Init:
+  ; setup jmp instruction for the Titlescreen IRQ
+  lda #$4c
+  sta IrqPointerJmp
+  lda #<TitleScreenIrq
+  sta IrqPointer
+  lda #>TitleScreenIrq
+  sta IrqPointer+1
   ; setup the jmp instruction for the FarBank Target
   jsr FarCallInit
+  ; initialize the CHR banks
+  ; TODO move this to run after the title screen
   ldx #5
   :
     txa
@@ -116,7 +125,7 @@ GameLoop:
 :
   lda #0
   sta NmiDisable
-  jmp GameLoop              ;endless loop, need I say more?
+  jmp GameLoop
 
 BankInitValues:
   .byte $40, $42, $44, $45, $46, $47
@@ -130,7 +139,7 @@ BankInitValues:
       inc StatTimerHi
 @CheckIfNMIEnabled:
   bit NmiDisable
-  beq @ContinueNMI
+  bpl @ContinueNMI
     inc NmiSkipped
     rti
 @ContinueNMI:
@@ -138,7 +147,7 @@ BankInitValues:
   phx
   phy
   ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
-  inc NmiDisable
+  dec NmiDisable
   ; jroweboy switch the nametable back to nmt0 and force NMI to be enabled
   lda Mirror_PPUCTRL
   and #%11111110            ;alter name table address to be $2800
@@ -181,10 +190,28 @@ InitBuffer:
   ; jroweboy - set up Irq scroll split
   lda HorizontalScroll
   sta IrqNewScroll
-  lda #32 - 1 ; do the split 32 scanlines from the top of the screen. -1 to give us time to set the new scroll
-  sta IRQLATCH
-  sta IRQRELOAD
-  sta IRQENABLE
+  
+
+  lda OperMode
+  bne :+
+    ; We are in the title screen, so initialize the IRQ
+    BankCHR0 #$48
+    BankCHR8 #$4a
+    lda #0
+    sta IrqNextScanline
+    ; start the TitleScreenIRQ
+    lda #(15 * 8 + 7)
+    sta IRQLATCH
+    sta IRQRELOAD
+    sta IRQENABLE
+    bne :++ ; unconditional
+  :
+    ; otherwise we want to use the main IRQ
+    lda #32 - 1 ; do the split 32 scanlines from the top of the screen. -1 to give us time to set the new scroll
+    sta IRQLATCH
+    sta IRQRELOAD
+    sta IRQENABLE
+  :
 ; :
   lda #0
   sta OAMADDR               ;reset spr-ram address register
@@ -259,17 +286,31 @@ SkipSprite0:
   lda Mirror_PPUCTRL
   sta IrqPPUCTRL
 
-  lda CurrentBank
-  pha
-    BankPRGA #.lobyte(.bank(MUSIC))
-    jsr SoundEngine           ;play sound
-    lda #7 | PRG_FIXED_8
+  lda OperMode
+  bne :+
+    lda CurrentBank
+    pha
+      BankPRGA #.lobyte(.bank(TITLE))
+      jsr SoundEngine           ;play sound
+      lda #7 | PRG_FIXED_8
+      sta BANK_SELECT
+    pla
+    sta BANK_DATA
+    lda BankShadow
     sta BANK_SELECT
-  pla
-  sta BANK_DATA
-  lda BankShadow
-  sta BANK_SELECT
 
+    ; Regular music engine
+    lda CurrentBank
+    pha
+      BankPRGA #.lobyte(.bank(MUSIC))
+      jsr SoundEngine           ;play sound
+      lda #7 | PRG_FIXED_8
+      sta BANK_SELECT
+    pla
+    sta BANK_DATA
+    lda BankShadow
+    sta BANK_SELECT
+  :
 SkipMainOper:
   ply
   plx
@@ -402,6 +443,8 @@ WorldSelectMessage2:
   .byte $26, $88, $11
   .byte "TO SELECT A WORLD"
   .byte $00
+
+
 
 .endproc
 

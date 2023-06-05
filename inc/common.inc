@@ -18,7 +18,7 @@ __COMMON_INC = 1
 labelled_segment s2,s3,s4,s5,s6,s7,s8,s9
 .endmacro
 
-labelled_segment OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED
+labelled_segment OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE
 
 .include "charmap.inc"
 .include "memory.inc"
