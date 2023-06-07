@@ -15,8 +15,13 @@ __MEMORY_INC = 1
 .globalzp R6
 .globalzp R7
 
+.globalzp IrqTemp
 .globalzp IrqR0
 .globalzp IrqR1
+.globalzp IrqR2
+.globalzp IrqR3
+.globalzp IrqR4
+.globalzp IrqR5
 
 .globalzp ObjectOffset
 .globalzp FrameCounter
@@ -25,8 +30,6 @@ __MEMORY_INC = 1
 .globalzp SavedJoypadBits
 .globalzp SavedJoypad1Bits
 .globalzp SavedJoypad2Bits
-.globalzp NmiDisable
-.globalzp NmiSkipped
 
 ; moved to abs 
 .global A_B_Buttons
@@ -157,6 +160,7 @@ __MEMORY_INC = 1
 .globalzp MusicOffset_Square2
 .globalzp MusicOffset_Square1
 .globalzp MusicOffset_Triangle
+
 .globalzp PauseSoundQueue
 .globalzp AreaMusicQueue
 .globalzp EventMusicQueue
@@ -178,6 +182,45 @@ __MEMORY_INC = 1
 .global ShellChainCounter
 .global FloateyNum_Timer
 .global DigitModifier
+
+.global NmiDisable
+.global NmiSkipped
+.global X_Magnitude
+.global Y_Magnitude
+.global Abs_X_Magnitude
+.global Abs_Y_Magnitude
+
+.global BhopInitalized
+
+.global HoldingSlingshot
+.global SlingPull_Rel_XPos
+.global SlingPull_Rel_YPos
+
+.global StatTimer
+.global StatTimerLo
+.global StatTimerMd
+.global StatTimerHi
+
+.global IrqOldScroll
+.global IrqNewScroll
+.global IrqPPUCTRL
+.global IrqNextScanline
+
+.global PlayerAngle
+.global GroundBounceChain
+.global BounceForce
+.global AngularMomentum
+.global AngularMomentumTimer
+.global InitialFireballYSpeed
+.global SwitchToMainIRQ
+
+StackClear = SwitchToMainIRQ
+
+.global IrqPointerJmp
+.global IrqPointer
+
+
+; segment "BSS"
 
 .global Sprite_Y_Position
 .global Sprite_Data
@@ -536,34 +579,8 @@ ALL_TIMER_COUNT = DemoTimer - Timers
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
 
-.global HoldingSlingshot
-.global SlingPull_Rel_XPos
-.global SlingPull_Rel_YPos
 
-.global StatTimer
-.global StatTimerLo
-.global StatTimerMd
-.global StatTimerHi
-.global IrqOldScroll
-.global IrqNewScroll
-.global IrqPPUCTRL
-
-.global X_Magnitude
-.global Y_Magnitude
-.global Abs_X_Magnitude
-.global Abs_Y_Magnitude
-.global IrqPointerJmp
-.global IrqPointer
-.global IrqNextScanline
-
-.global PlayerAngle
-.global GroundBounceChain
-.global BounceForce
-.global AngularMomentum
-.global AngularMomentumTimer
-.global InitialFireballYSpeed
-
-.global _WarmBootOffset
+_WarmBootOffset = DisplayDigits
 
 .global DisplayDigits
 .global TopScoreDisplay
@@ -576,8 +593,12 @@ ALL_TIMER_COUNT = DemoTimer - Timers
 
 .global ContinueWorld
 
-.global _ColdBootOffset
+_ColdBootOffset = WarmBootValidation
 
 .global WarmBootValidation
+
+; .segment "WRAM"
+
+.global BhopValidation
 
 .endif ; __MEMORY_INC

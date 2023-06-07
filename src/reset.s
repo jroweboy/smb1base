@@ -5,8 +5,8 @@
 
 .import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
 .import OperModeExecutionTree, MoveSpritesOffscreen, UpdateTopScore
-.import InitScroll, UpdateScreen, SoundEngine, PauseRoutine
-.import FarCallInit, TitleScreenIrq
+.import InitScroll, UpdateScreen, SoundEngine
+.import TitleScreenIrq
 
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
@@ -63,13 +63,14 @@ WBootCheck:
   lda WarmBootValidation       ;second checkpoint, check to see if 
   cmp #$a5                     ;another location has a specific value
   bne ColdBoot   
-  ldy #WarmBootOffset          ;if passed both, load warm boot pointer
+  ldy #<WarmBootOffset          ;if passed both, load warm boot pointer
 ColdBoot:
   jsr InitializeMemory         ;clear memory using pointer in Y
   sta SND_DELTA_REG+1          ;reset delta counter load register
   sta OperMode                 ;reset primary mode of operation
 MMC3Init:
   ; setup jmp instruction for the Titlescreen IRQ
+  .import TitleScreenIrq
   lda #$4c
   sta IrqPointerJmp
   lda #<TitleScreenIrq
@@ -77,7 +78,11 @@ MMC3Init:
   lda #>TitleScreenIrq
   sta IrqPointer+1
   ; setup the jmp instruction for the FarBank Target
-  jsr FarCallInit
+  lda #$4c
+  sta TargetAddrJmp
+  lda #7 | PRG_FIXED_8
+  sta BankShadow
+
   ; initialize the CHR banks
   ; TODO move this to run after the title screen
   ldx #5
@@ -85,17 +90,21 @@ MMC3Init:
     txa
     ora PRG_FIXED_8
     sta BANK_SELECT
-    lda BankInitValues,x
+    lda GraphicsBankInitValues,x
     sta BANK_DATA
     dex
     bpl :-
 
   ; Now set the initial A bank
   BankPRGA #0
-  ; disable scanline counter, $6000 ram, and IRQ
+  ; enable PRG RAM without write protection
+  lda #%10000000
+  sta RAM_PROTECT
+  ; disable scanline counter and IRQ
+  lda #1
+  sta SwitchToMainIRQ
   lda #0
   sta NMT_MIRROR
-  sta RAM_PROTECT
   sta IRQENABLE
   lda #$ff
   sta APU_FRAMECOUNTER ; disable frame counter
@@ -127,9 +136,11 @@ GameLoop:
   sta NmiDisable
   jmp GameLoop
 
-BankInitValues:
-  .byte $40, $42, $44, $45, $46, $47
 .endproc
+
+.export GraphicsBankInitValues
+GraphicsBankInitValues:
+  .byte $40, $42, $44, $45, $46, $47
 
 .proc NonMaskableInterrupt
   inc StatTimerLo
@@ -191,7 +202,41 @@ InitBuffer:
   lda HorizontalScroll
   sta IrqNewScroll
   
+  lda SwitchToMainIRQ
+  beq NoChangeToIRQ
+  bmi UseMainIRQ
+    ; Change back to title screen IRQ handler
+    lda #<TitleScreenIrq
+    sta IrqPointer
+    lda #>TitleScreenIrq
+    sta IrqPointer+1
+    lda #0
+    sta SwitchToMainIRQ
+    jmp NoChangeToIRQ
+UseMainIRQ:
+    ; Reload initial graphics and IRQ handler when switching to main gameplay
+    .import TitleScreenIrq
+    lda #<IrqStatusBar
+    sta IrqPointer
+    lda #>IrqStatusBar
+    sta IrqPointer+1
 
+    ldx #5
+    :
+      txa
+      ora PRG_FIXED_8
+      sta BANK_SELECT
+      lda GraphicsBankInitValues,x
+      sta BANK_DATA
+      dex
+      bpl :-
+    ; also switch the first sprite bank to the player sprite
+    BankCHR10 #0
+    lda #0
+    sta SwitchToMainIRQ
+NoChangeToIRQ:
+
+  ; Setup the scanline to launch the IRQ at. This has to happen before the first scanline of the frame.
   lda OperMode
   bne :+
     ; We are in the title screen, so initialize the IRQ
@@ -212,7 +257,8 @@ InitBuffer:
     sta IRQRELOAD
     sta IRQENABLE
   :
-; :
+  
+  
   lda #0
   sta OAMADDR               ;reset spr-ram address register
   jsr OAMandReadJoypad
@@ -288,29 +334,21 @@ SkipSprite0:
 
   lda OperMode
   bne :+
-    lda CurrentBank
-    pha
-      BankPRGA #.lobyte(.bank(TITLE))
-      jsr SoundEngine           ;play sound
-      lda #7 | PRG_FIXED_8
-      sta BANK_SELECT
-    pla
-    sta BANK_DATA
-    lda BankShadow
-    sta BANK_SELECT
-
-    ; Regular music engine
-    lda CurrentBank
-    pha
-      BankPRGA #.lobyte(.bank(MUSIC))
-      jsr SoundEngine           ;play sound
-      lda #7 | PRG_FIXED_8
-      sta BANK_SELECT
-    pla
-    sta BANK_DATA
-    lda BankShadow
-    sta BANK_SELECT
+    lda BhopInitalized
+    beq SkipMainOper
+    BankPRGA #.lobyte(.bank(TITLE_MUSIC))
+    .import bhop_play
+    jsr bhop_play
+    BankPRGA CurrentBank
+    jmp :++
   :
+    ; Original SMB1 music engine
+    BankPRGA #.lobyte(.bank(MUSIC))
+    jsr SoundEngine
+    BankPRGA CurrentBank
+  :
+  lda BankShadow
+  sta BANK_SELECT
 SkipMainOper:
   ply
   plx
@@ -464,7 +502,7 @@ InitPageLoop:
 InitByteLoop:
       cpx #$01          ;check to see if we're on the stack ($0100-$01ff)
       bne InitByte      ;if not, go ahead anyway
-      cpy #$60          ;otherwise, check to see if we're at $0160-$01ff
+      cpy #<StackClear  ;otherwise, check to see if we're at $01?0-$01ff
       bcs SkipByte      ;if so, skip write
 InitByte:
       sta (InitializeMemoryRAMLo),y       ;otherwise, initialize byte with current low byte in Y
@@ -548,5 +586,45 @@ read_loop:
   rol SavedJoypad1Bits ; put get put get put
   bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
 ASSERT_PAGE read_loop
+  rts
+.endproc
+
+;-------------------------------------------------------------------------------------
+.proc PauseRoutine
+  lda OperMode           ;are we in victory mode?
+  cmp #MODE_VICTORY  ;if so, go ahead
+  beq ChkPauseTimer
+  cmp #MODE_GAMEPLAY     ;are we in game mode?
+  bne ExitPause          ;if not, leave
+  lda OperMode_Task      ;if we are in game mode, are we running game engine?
+  cmp #$03
+  bne ExitPause          ;if not, leave
+ChkPauseTimer:
+  lda GamePauseTimer     ;check if pause timer is still counting down
+  beq ChkStart
+    dec GamePauseTimer     ;if so, decrement and leave
+    rts
+ChkStart:
+  lda SavedJoypad1Bits   ;check to see if start is pressed
+  and #Start_Button      ;on controller 1
+  beq ClrPauseTimer
+    lda GamePauseStatus    ;check to see if timer flag is set
+    and #%10000000         ;and if so, do not reset timer
+    bne ExitPause
+      lda #$2b               ;set pause timer
+      sta GamePauseTimer
+      lda GamePauseStatus
+      tay
+      iny                    ;set pause sfx queue for next pause mode
+      sty PauseSoundQueue
+      eor #%00000001         ;invert d0 and set d7
+      ora #%10000000
+      bne SetPause           ;unconditional branch
+ClrPauseTimer:
+  lda GamePauseStatus    ;clear timer flag if timer is at zero and start button
+  and #%01111111         ;is not pressed
+SetPause:
+  sta GamePauseStatus
+ExitPause:
   rts
 .endproc

@@ -2,7 +2,7 @@
 
 .global CurrentBank, NextBank, BankShadow
 .global TargetAddrJmp, TargetAddress
-.global FarCallCommon, FarCallInit
+.global FarCallCommon
 
 ; MMC3 registers / banking
 PRG_FIXED_8 = (1 << 6)

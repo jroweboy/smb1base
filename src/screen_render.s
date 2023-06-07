@@ -203,6 +203,10 @@ DisplayIntermediate:
   beq NoInter                  ;if in title screen mode, skip this
   cmp #MODE_GAMEOVER           ;are we in game over mode?
   beq GameOverInter            ;if so, proceed to display game over screen
+  
+  ; Switch the IRQ mode when we are loading into a level
+  dec SwitchToMainIRQ
+  
   lda AltEntranceControl       ;otherwise check for mode of alternate entry
   bne NoInter                  ;and branch if found
   ldy AreaType                 ;check if we are on castle level
@@ -363,130 +367,6 @@ NoAltPal:
   bne IncModeTask_B            ;if not, exit
     farcall DrawTitleScreenInternal, jmp
 .endproc
-
-.export TitleScreenIrq
-.proc TitleScreenIrq
-  pha
-  phx
-  phy
-    sta IRQDISABLE
-    ldx IrqNextScanline
-    lda #95
-    sta IRQLATCH
-    sta IRQRELOAD
-    sta IRQENABLE
-
-    ldy NextBankValuesHi,x
-    lda NextBankValuesLo,x
-    tax
-    ; delay 32 cycles
-    NOP
-    TYA
-    LDY #5
-    DEY
-    BNE *-1
-    TAY
-    inc IrqNextScanline
-    BankCHR0 x
-    BankCHR8 y
-  ply
-  plx
-  pla
-  rti
-
-NextBankValuesLo:
-  .byte $4c, $50
-NextBankValuesHi:
-  .byte $4e, $50
-; IrqReloadValues:
-;   .byte $40, $ff
-.endproc
-
-.pushseg
-.segment "TITLE"
-.export DrawTitleScreenInternal
-.proc DrawTitleScreenInternal
-  lda #$ff
-  sta NmiDisable
-  ; wait for NMI so we can disable rendering and start writing the data
-  : lda NmiSkipped
-    beq :-
-  ; set nametable to 0 and increment to horizontal
-  lda Mirror_PPUCTRL
-  and #%11111000
-  sta PPUCTRL
-  ; disable rendering sprites and background while we draw everything
-  lda Mirror_PPUMASK
-  and #%11100111
-  sta PPUMASK
-  lda PPUSTATUS
-  
-  ; Load $400 bytes from NametableData into the first nametable (including attributes)
-  lda #$20
-  sta PPUADDR
-  lda #$00
-  sta PPUADDR
-  ldx #0
-.repeat 4, I
-.scope
-  :
-    lda NametableData + (I * $100),x
-    sta PPUDATA
-    inx
-    bne :-
-.endscope
-.endrepeat
-  ; copy $100 bytes into the sprite buffer
-  :
-    lda SpriteData,x
-    sta Sprite_Data,x
-    inx
-    bne :-
-
-  ; lastly copy the palette data
-  lda #$3f
-  sta PPUADDR
-  lda #$00
-  sta PPUADDR
-  :
-    lda PaletteData,x
-    sta PPUDATA
-    inx
-    cpx #$20
-    bne :-
-
-  ; Setup the correct bank
-  BankCHR0 #$48
-  BankCHR8 #$4a
-  ; c/e
-  ; 50/52
-  ; Title screen sprites starts at 54 i think
-  BankCHR10 #$52
-  BankCHR14 #$53
-  BankCHR18 #$54
-  BankCHR1C #$55
-
-  ; this seems to prevent drawing something else?
-  lda #5
-  sta VRAM_Buffer_AddrCtrl
-  ; re-enable NMI and setup the next task
-  lda #0
-  sta NmiDisable
-  inc OperMode_Task
-  
-  rts
-
-NametableData:
-  .incbin "../chr/title/4kb.nam"
-PaletteData:
-  .incbin "../chr/title/4kb_palette.dat"
-SpriteData:
-  .incbin "../chr/title/4kb.oam"
-.endproc
-
-
-
-.popseg
 
 ;-------------------------------------------------------------------------------------
 

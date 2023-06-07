@@ -2,11 +2,13 @@
 
 nes2mapper 4 ; mmc3
 ; nes2mapper 5 ; mmc5
-nes2prg $24000
+nes2prg $28000
+; nes2prg $24000
 ; nes2prg $20000
 nes2chr $16000
 nes2mirror 'V'
 nes2tv 'N'
+nes2bram $2000
 nes2end
 
 ; CreateBanks $8000, $8000, 0

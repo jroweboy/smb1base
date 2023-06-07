@@ -3,13 +3,6 @@
 
 .segment "FIXED"
 
-FarCallInit:
-  lda #$4c
-  sta TargetAddrJmp
-  lda #7 | PRG_FIXED_8
-  sta BankShadow
-  rts
-
 ; x = bank to switch to
 FarCallCommon:
   lda CurrentBank

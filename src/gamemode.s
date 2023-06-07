@@ -80,7 +80,7 @@ ShufAmtLoop:
 ;     sta Sprite_Data,y
 ;     dey
 ;     bpl ISpr0Loop
-  inc Sprite0HitDetectFlag  ;set sprite #0 check flag
+  ; inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
   rts
 
@@ -91,40 +91,6 @@ DefaultSprOffsets:
 ; Sprite0Data:
 ;       .byte $18, $ff, $23, $58
 
-;-------------------------------------------------------------------------------------
-.export PauseRoutine
-PauseRoutine:
-               lda OperMode           ;are we in victory mode?
-               cmp #MODE_VICTORY  ;if so, go ahead
-               beq ChkPauseTimer
-               cmp #MODE_GAMEPLAY     ;are we in game mode?
-               bne ExitPause          ;if not, leave
-               lda OperMode_Task      ;if we are in game mode, are we running game engine?
-               cmp #$03
-               bne ExitPause          ;if not, leave
-ChkPauseTimer: lda GamePauseTimer     ;check if pause timer is still counting down
-               beq ChkStart
-               dec GamePauseTimer     ;if so, decrement and leave
-               rts
-ChkStart:      lda SavedJoypad1Bits   ;check to see if start is pressed
-               and #Start_Button      ;on controller 1
-               beq ClrPauseTimer
-               lda GamePauseStatus    ;check to see if timer flag is set
-               and #%10000000         ;and if so, do not reset timer
-               bne ExitPause
-               lda #$2b               ;set pause timer
-               sta GamePauseTimer
-               lda GamePauseStatus
-               tay
-               iny                    ;set pause sfx queue for next pause mode
-               sty PauseSoundQueue
-               eor #%00000001         ;invert d0 and set d7
-               ora #%10000000
-               bne SetPause           ;unconditional branch
-ClrPauseTimer: lda GamePauseStatus    ;clear timer flag if timer is at zero and start button
-               and #%01111111         ;is not pressed
-SetPause:      sta GamePauseStatus
-ExitPause:     rts
 
 ;-------------------------------------------------------------------------------------
 .proc OperModeExecutionTree
@@ -151,19 +117,20 @@ ExitPause:     rts
 
 InitializeGame:
 .import InitializeMemory, LoadAreaPointer
-  ldy #>WorldSelectNumber  ;clear all memory as in initialization procedure,
+  ldy #<WorldSelectNumber  ;clear all memory as in initialization procedure,
   jsr InitializeMemory  ;but this time, clear only as far as $076f
-  ldy #$1f
+  
+  ldy #AltRegContentFlag - SoundMemory
 ClrSndLoop:
   sta SoundMemory,y     ;clear out memory used
   dey                   ;by the sound engines
   bpl ClrSndLoop
-  lda #$18              ;set demo timer
-  sta DemoTimer
+  ; lda #$18              ;set demo timer
+  ; sta DemoTimer
   jsr LoadAreaPointer
   ; fallthrough
 InitializeArea:
-  ldy #$4b                 ;clear all memory again, only as far as $074b
+  ldy #<SecondaryMsgCounter    ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
   ldx #FRAME_TIMER_COUNT
   lda #$00
@@ -384,7 +351,6 @@ StartWorld1:
   sta PrimaryHardMode         ;hard mode must be on as well
   lda #$00
   sta OperMode_Task           ;set game mode here, and clear demo timer
-  ; sta DemoTimer
   ldx #$17
   lda #$00
 InitScores:
@@ -398,9 +364,9 @@ GoContinue:
   sta OffScr_WorldNumber      ;of the previously saved world number
   ldx #$00                    ;note that on power-up using this function
   stx AreaNumber              ;will make no difference
-  stx OffScr_AreaNumber   
+  stx OffScr_AreaNumber
   rts
-              
+
 WSelectBufferTemplate:
       .byte $04, $20, $73, $01, $00, $00
 

@@ -37,12 +37,12 @@
 ;--------------------------------
 
 RunBowserFlame:
-      jsr ProcBowserFlame
-      jsr GetEnemyOffscreenBits
-      jsr RelativeEnemyPosition
-      jsr GetEnemyBoundBox
-      jsr PlayerEnemyCollision
-      jmp OffscreenBoundsCheck
+  jsr ProcBowserFlame
+  jsr GetEnemyOffscreenBits
+  jsr RelativeEnemyPosition
+  jsr GetEnemyBoundBox
+  jsr PlayerEnemyCollision
+  jmp OffscreenBoundsCheck
 
 ;-------------------------------------------------------------------------------------
 ;$04-$05 - used to store name table address in little endian order

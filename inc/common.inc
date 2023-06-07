@@ -7,18 +7,18 @@ __COMMON_INC = 1
 .linecont on
 .feature force_range
 
-
 ; Global Labels named after the segment that they appear in
-.macro labelled_segment s1,s2,s3,s4,s5,s6,s7,s8,s9
+.macro labelled_segment s1,s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
 .ifblank s1
   ; First parameter is empty
   .exitmacro
 .endif
 .global .ident(.string(s1))
-labelled_segment s2,s3,s4,s5,s6,s7,s8,s9
+labelled_segment s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
 .endmacro
 
-labelled_segment OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE
+labelled_segment OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE, TITLE_MUSIC
+labelled_segment TITLE_DPCM
 
 .include "charmap.inc"
 .include "memory.inc"

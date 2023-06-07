@@ -13,6 +13,14 @@ R5                             = TempReg + 5
 R6                             = TempReg + 6
 R7                             = TempReg + 7
 
+IrqTemp:                        .res 6
+IrqR0 = IrqTemp + 0
+IrqR1 = IrqTemp + 1
+IrqR2 = IrqTemp + 2
+IrqR3 = IrqTemp + 3
+IrqR4 = IrqTemp + 4
+IrqR5 = IrqTemp + 5
+
 ObjectOffset:                   .res  1
 FrameCounter:                   .res  1
 
@@ -21,8 +29,6 @@ FrameCounter:                   .res  1
 SavedJoypadBits:                .res  2
 SavedJoypad1Bits              = SavedJoypadBits
 SavedJoypad2Bits              = SavedJoypadBits + 1
-NmiDisable:                     .res  1
-NmiSkipped:                     .res  1
 
 GameEngineSubroutine:           .res  1
 Enemy_Flag:                     .res  7
@@ -146,11 +152,11 @@ EnemyData                     = EnemyDataLow
 EnemyDataLow:                   .res  1
 EnemyDataHigh:                  .res  1
 
-SpriteLocalTemp:                .res  5
+SpriteLocalTemp:                .res  4
 Local_eb                      = SpriteLocalTemp
 Local_ec                      = SpriteLocalTemp + 1
 Local_ed                      = SpriteLocalTemp + 2
-Local_ee                      = SpriteLocalTemp + 3 ; jroweboy: unused?
+; Local_ee                      = SpriteLocalTemp + 3 ; jroweboy: unused?
 Local_ef                      = SpriteLocalTemp + 4
 
 NoteLenLookupTblOfs:            .res  1
@@ -161,21 +167,18 @@ AreaMusicBuffer:                .res  1
 
 MusicData                     = MusicDataLow
 MusicDataLow:                   .res  1
-
 MusicDataHigh:                  .res  1
+
 MusicOffset_Square2:            .res  1
 MusicOffset_Square1:            .res  1
 MusicOffset_Triangle:           .res  1
+
 PauseSoundQueue:                .res  1
 AreaMusicQueue:                 .res  1
 EventMusicQueue:                .res  1
 NoiseSoundQueue:                .res  1
 Square2SoundQueue:              .res  1
 Square1SoundQueue:              .res  1
-
-IrqTemp:                        .res 2
-IrqR0 = IrqTemp
-IrqR1 = IrqTemp + 1
 
 .segment "STACK"
 ; start $0100
@@ -192,6 +195,43 @@ FloateyNum_Y_Pos:               .res 7
 ShellChainCounter:              .res 7
 FloateyNum_Timer:               .res 8
 DigitModifier:                  .res 6
+
+HoldingSlingshot:                   .res  1
+
+SlingPull_Rel_XPos:             .res  2
+SlingPull_Rel_YPos:             .res  2
+
+StatTimer:                      .res  3
+StatTimerLo                   = StatTimer
+StatTimerMd                   = StatTimer + 1
+StatTimerHi                   = StatTimer + 2
+
+NmiDisable:                     .res  1
+NmiSkipped:                     .res  1
+
+BhopInitalized:                 .res  1
+
+IrqNewScroll:                   .res  1
+IrqOldScroll:                   .res  1
+IrqPPUCTRL:                     .res  1
+IrqNextScanline:                .res  1
+X_Magnitude:                    .res  1
+Abs_X_Magnitude:                .res  1
+Y_Magnitude:                    .res  1
+Abs_Y_Magnitude:                .res  1
+CurrentA:                       .res  1
+NextBank:                       .res  1
+PlayerAngle:                    .res  1
+GroundBounceChain:              .res  1
+BounceForce:                    .res  1
+AngularMomentum:                .res  1
+AngularMomentumTimer:           .res  1
+InitialFireballYSpeed:          .res  2
+SwitchToMainIRQ:                .res  1
+IrqPointerJmp:                  .res  3
+IrqPointer                    = IrqPointerJmp + 1
+
+; .assert(* < $0180)
 
 .segment "OAM"
 ; start $0200
@@ -573,41 +613,13 @@ PauseModeFlag:                  .res  1
 GroundMusicHeaderOfs:           .res  1  ; this is only one byte (original 3)
 AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (original 12)
 
-HoldingSlingshot:                   .res  1
-
-SlingPull_Rel_XPos:             .res  2
-SlingPull_Rel_YPos:             .res  2
-
-StatTimer:                      .res  3
-StatTimerLo                   = StatTimer
-StatTimerMd                   = StatTimer + 1
-StatTimerHi                   = StatTimer + 2
-
-IrqNewScroll:                   .res  1
-IrqOldScroll:                   .res  1
-IrqPPUCTRL:                     .res  1
-IrqPointerJmp:                  .res  3
-IrqPointer                    = IrqPointerJmp + 1
-IrqNextScanline:                .res  1
-X_Magnitude:                    .res  1
-Abs_X_Magnitude:                .res  1
-Y_Magnitude:                    .res  1
-Abs_Y_Magnitude:                .res  1
-CurrentA:                       .res  1
-NextBank:                       .res  1
-PlayerAngle:                    .res  1
-GroundBounceChain:              .res  1
-BounceForce:                    .res  1
-AngularMomentum:                .res  1
-AngularMomentumTimer:           .res  1
-InitialFireballYSpeed:          .res  2
 
     ; _WarmBootOffset:            .res  1   ; Warm boot offset
 
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits
 
-ScoreAndCoinDisplay:            .res  27
+ScoreAndCoinDisplay:            .res  24
 PlayerScoreDisplay            = ScoreAndCoinDisplay
 
 GameTimerDisplay:               .res  4
@@ -618,3 +630,7 @@ ContinueWorld:                  .res  1
     ; _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
     
 WarmBootValidation:             .res  1
+
+.segment "WRAM"
+
+BhopValidation:                 .res  4

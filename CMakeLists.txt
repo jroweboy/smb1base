@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
   inc/nes2header.inc
   inc/object.inc
 
+  src/bhop.s
   src/chr.s
   src/collision.s
   src/common.s
@@ -29,7 +30,20 @@ add_executable(${PROJECT_NAME}
   src/reset.s
   src/screen_render.s
   src/sprite_render.s
+  src/title_screen.s
   src/trigtable.s
+  
+  # src/bhop/bhop_internal.inc
+  # src/bhop/bhop.inc
+  # src/bhop/commands.asm
+  # src/bhop/config.inc
+  # src/bhop/effects.asm
+  # src/bhop/longbranch.inc
+  # src/bhop/midi_lut.inc
+  # src/bhop/vibrato_lut.inc
+  # src/bhop/word_util.inc
+  # src/bhop/zsaw.asm
+  # src/bhop/zsaw.inc
 
   src/objects/blooper.s
   src/objects/bowser.s
