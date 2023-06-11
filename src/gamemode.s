@@ -263,6 +263,9 @@ GameIsOn:
 .proc GameMenuRoutine
 .import LoadAreaPointer, GameCoreRoutine, DrawMushroomIcon
 
+.import MoveClouds
+  farcall MoveClouds
+  
   ldy #$00
   lda SavedJoypad1Bits        ;check to see if either player pressed
   ora SavedJoypad2Bits        ;only the start button (either joypad)

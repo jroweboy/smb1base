@@ -14,11 +14,11 @@
 
 ; include the new title screen graphics
 .segment "CHR_TITLE_BG_0"
-.incbin "../chr/title/4kb_bg_0.chr"
+.incbin "../chr/title/latest_bg_0.chr"
 .segment "CHR_TITLE_BG_1"
-.incbin "../chr/title/4kb_bg_1.chr"
+.incbin "../chr/title/latest_bg_1.chr"
 .segment "CHR_TITLE_BG_2"
-.incbin "../chr/title/4kb_bg_2.chr"
+.incbin "../chr/title/latest_bg_2.chr"
 
 .segment "CHR_TITLE_SPRITE"
-.incbin "../chr/title/4kb_spr.chr"
+.incbin "../chr/title/latest_spr.chr"

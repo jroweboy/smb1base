@@ -62,7 +62,7 @@ WBootCheck:
   bpl WBootCheck
   lda WarmBootValidation       ;second checkpoint, check to see if 
   cmp #$a5                     ;another location has a specific value
-  bne ColdBoot   
+  bne ColdBoot
   ldy #<WarmBootOffset          ;if passed both, load warm boot pointer
 ColdBoot:
   jsr InitializeMemory         ;clear memory using pointer in Y
@@ -245,7 +245,8 @@ NoChangeToIRQ:
     lda #0
     sta IrqNextScanline
     ; start the TitleScreenIRQ
-    lda #(15 * 8 + 7)
+    .import FIRST_SCANLINE_IRQ
+    lda #FIRST_SCANLINE_IRQ
     sta IRQLATCH
     sta IRQRELOAD
     sta IRQENABLE

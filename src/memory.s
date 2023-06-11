@@ -586,7 +586,7 @@ StarInvincibleTimer:            .res  1
 ScreenTimer:                    .res  1
 WorldEndTimer:                  .res  1
 DemoTimer:                      .res  5
-PseudoRandomBitReg:             .res  8 ; probably actually 8 bytes (original 9)
+PseudoRandomBitReg:             .res  9 ; probably actually ~8~ 9 bytes (original 9) not sure...
 
 SoundMemory                   = MusicOffset_Noise
 MusicOffset_Noise:              .res  1
