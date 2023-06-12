@@ -335,8 +335,8 @@ PiranhaPlantDownYPos          = Enemy_Y_MoveForce
 Enemy_Y_MoveForce:              .res  8
 
 Block_Y_MoveForce:              .res  20
-MaximumLeftSpeed:               .res  6 ; was 6 - can be 1
-MaximumRightSpeed:              .res  20 ; was 20 - can be 1
+MaximumLeftSpeed:               .res  1 ; was 6 - can be 1
+MaximumRightSpeed:              .res  1 ; was 20 - can be 1
 
 Whirlpool_Offset              = Cannon_Offset
 Cannon_Offset:                  .res  1
@@ -616,13 +616,13 @@ AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (origi
 
     ; _WarmBootOffset:            .res  1   ; Warm boot offset
 
+; each display has to be 6 ram values because the math routine
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits
-
 ScoreAndCoinDisplay:            .res  24
 PlayerScoreDisplay            = ScoreAndCoinDisplay
+GameTimerDisplay:               .res  6
 
-GameTimerDisplay:               .res  4
 WorldSelectEnableFlag:          .res  1
 
 ContinueWorld:                  .res  1

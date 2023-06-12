@@ -239,7 +239,7 @@ CloudTwo:
     lda PseudoRandomBitReg
     and #%00001111
     clc
-    adc #35
+    adc #55
     sta CloudTimer + 1
     ldx #CLOUD_2_SPRITE + CLOUD_LAST_SPRITE
     jsr MoveCloud
@@ -247,9 +247,9 @@ CloudThree:
   lda CloudTimer+2
   bne Exit
     lda PseudoRandomBitReg+1
-    and #%00000111
+    and #%00001111
     clc
-    adc #25
+    adc #55
     sta CloudTimer + 2
     ldx #CLOUD_1_SPRITE + CLOUD_LAST_SPRITE
     jmp MoveCloud

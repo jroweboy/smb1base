@@ -3,7 +3,7 @@
 .include "level.inc"
 
 .import RenderAttributeTables, RenderAreaGraphics
-.import InitializeMemory,GetScreenPosition
+.import GetScreenPosition
 .import WriteGameText
 
 .export AreaParserTaskHandler, GetAreaDataAddrs, ProcLoopCommand, AreaParserTaskLoop

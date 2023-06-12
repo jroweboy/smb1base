@@ -741,15 +741,15 @@ StatusBarNybbles:
 
 ;status bar name table offset and length data
 StatusBarData:
-      .byte $f0, $06 ; top score display on title screen
-      .byte $62, $06 ; player score
-      .byte $62, $06
-      .byte $6d, $02 ; coin tally
-      .byte $6d, $02
-      .byte $7a, $03 ; game timer
+  .byte $f0, $06 ; top score display on title screen
+  .byte $62, $06 ; player score
+  .byte $62, $06
+  .byte $6d, $02 ; coin tally
+  .byte $6d, $02
+  .byte $7a, $03 ; game timer
 
 StatusBarOffset:
-      .byte $06, $0c, $12, $18, $1e, $24
+  .byte $06, $0c, $12, $18, $1e, $21
 
 .export PrintStatusBarNumbers
 .proc PrintStatusBarNumbers

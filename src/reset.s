@@ -489,12 +489,14 @@ WorldSelectMessage2:
 
 ;-------------------------------------------------------------------------------------
 
+.export InitializeMemory
+; , InitializeMemoryRAMLo, InitializeMemoryRAMHi
+
+.proc InitializeMemory
 ;$06 - RAM address low
 ;$07 - RAM address high
 InitializeMemoryRAMLo = $06
 InitializeMemoryRAMHi = $07
-.export InitializeMemory, InitializeMemoryRAMLo, InitializeMemoryRAMHi
-.proc InitializeMemory
   ldx #$07          ;set initial high byte to $0700-$07ff
   lda #$00          ;set initial low byte to start of page (at $00 of page)
   sta InitializeMemoryRAMLo
