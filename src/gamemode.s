@@ -80,7 +80,7 @@ ShufAmtLoop:
 ;     sta Sprite_Data,y
 ;     dey
 ;     bpl ISpr0Loop
-  ; inc Sprite0HitDetectFlag  ;set sprite #0 check flag
+  inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
   rts
 
@@ -120,7 +120,7 @@ InitializeGame:
   ldy #<WorldSelectNumber  ;clear all memory as in initialization procedure,
   jsr InitializeMemory  ;but this time, clear only as far as $076f
   
-  ldy #AltRegContentFlag - SoundMemory
+  ldy #AreaMusicBuffer_Alt - SoundMemory
 ClrSndLoop:
   sta SoundMemory,y     ;clear out memory used
   dey                   ;by the sound engines
@@ -265,7 +265,7 @@ GameIsOn:
 
 .import MoveClouds
   farcall MoveClouds
-  
+
   ldy #$00
   lda SavedJoypad1Bits        ;check to see if either player pressed
   ora SavedJoypad2Bits        ;only the start button (either joypad)

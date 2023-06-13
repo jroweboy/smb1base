@@ -325,13 +325,18 @@ RotPRandomBit:
     lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
     lsr
     bcs SkipSprite0
-      jsr MoveSpritesOffscreen
-      jsr SpriteShuffler
+      lda OperMode
+      beq SkipSprite0
+        jsr MoveSpritesOffscreen
+        jsr SpriteShuffler
 SkipSprite0:
   ; copy the PPUCTRL flags to the version that we will write in the IRQ.
-  ; this will restore the nmt select in the flags here.
+  ; this will restore the nmt select flags for the main screen in IRQ
   lda Mirror_PPUCTRL
   sta IrqPPUCTRL
+  ; and also reset the flags for the HUD
+  and #%11111100
+  sta PPUCTRL
 
   lda OperMode
   bne :+
