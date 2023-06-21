@@ -157,7 +157,7 @@ Local_eb                      = SpriteLocalTemp
 Local_ec                      = SpriteLocalTemp + 1
 Local_ed                      = SpriteLocalTemp + 2
 ; Local_ee                      = SpriteLocalTemp + 3 ; jroweboy: unused?
-Local_ef                      = SpriteLocalTemp + 4
+Local_ef                      = SpriteLocalTemp + 3
 
 NoteLenLookupTblOfs:            .res  1
 Square1SoundBuffer:             .res  1
@@ -604,7 +604,8 @@ Squ1_SfxLenCounter:             .res  2
 Squ2_SfxLenCounter:             .res  1
 Sfx_SecondaryCounter:           .res  1
 Noise_SfxLenCounter:            .res  1
-DAC_Counter:                    .res  1
+DMCSoundBuffer:                 .res  1
+DpcmSampleQueue:                .res  1
 NoiseDataLoopbackOfs:           .res  1  ; this is only one byte (original 3)
 NoteLengthTblAdder:             .res  1
 AreaMusicBuffer_Alt:            .res  1

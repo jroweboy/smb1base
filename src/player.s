@@ -1250,6 +1250,8 @@ Subtract:
     sta Player_Y_MoveForce
     lda #0
     sta HoldingSlingshot
+    lda #SFX_Jump
+    sta DpcmSampleQueue
     ; Initialize the ground bounce chain to zero to signal that this is the first
     sta GroundBounceChain
     lda #PlayerState::Jumping

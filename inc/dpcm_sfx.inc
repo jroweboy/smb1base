@@ -2,6 +2,23 @@
 .ifndef __DPCM_SFX_INC
 __DPCM_SFX_INC = 1
 
+; SFX_Jump = (1 << 0)
+; SFX_Bump = (1 << 1)
+; SFX_Wait = (1 << 2)
+; SFX_Hurt = (1 << 3)
+; SFX_Secret = (1 << 4)
+; SFX_Start = (1 << 5)
+; SFX_Stomp = (1 << 6)
+; SFX_Death = (1 << 7)
+SFX_Jump  = (1 + 0)
+SFX_Bump  = (1 + 1)
+SFX_Wait  = (1 + 2)
+SFX_Hurt  = (1 + 3)
+SFX_Secret= (1 + 4)
+SFX_Start = (1 + 5)
+SFX_Stomp = (1 + 6)
+SFX_Death = (1 + 7)
+
 SFX_mario_boing = 0
 SFX_mario_doh =   1
 SFX_mario_falli = 2
@@ -19,7 +36,7 @@ SFX_mario_okey =  13
 SFX_mario_oof =   14
 SFX_mario_pulli = 15
 SFX_mario_snore = 16
-SFX_mario_snore = 17
+SFX_mario_snor2 = 17
 SFX_mario_ungh =  18
 SFX_mario_waha =  19
 SFX_mario_weak =  20

@@ -2,6 +2,17 @@
 
 .segment "MUSIC"
 
+.macpack longbranch
+
+CH_SQUARE_1 = (1 << 0)
+CH_SQUARE_2 = (1 << 1)
+CH_TRIANGLE = (1 << 2)
+CH_NOISE = (1 << 3)
+CH_DMC = (1 << 4)
+
+ALL_MUSIC = CH_SQUARE_1 | CH_SQUARE_2 | CH_TRIANGLE | CH_NOISE
+ALL_CHANNELS = CH_SQUARE_1 | CH_SQUARE_2 | CH_TRIANGLE | CH_NOISE | CH_DMC
+
 ;-------------------------------------------------------------------------------------
 .export SoundEngine
 SoundEngine:
@@ -11,7 +22,13 @@ SoundEngine:
          rts
 SndOn:   lda #$ff
          sta JOYPAD_PORT2          ;disable irqs and set frame counter mode???
-         lda #$0f
+         ; check to see if the DMC is playing. if its not, turn off the DMCSoundBuffer
+         ; to keep the track from looping
+         lda SND_MASTERCTRL_REG
+         and #%00010000
+         sta DMCSoundBuffer
+         lda #ALL_MUSIC
+         ora DMCSoundBuffer
          sta SND_MASTERCTRL_REG    ;enable first four channels
          lda PauseModeFlag         ;is sound already in pause mode?
          bne InPause
@@ -29,7 +46,8 @@ InPause: lda PauseSoundBuffer      ;check pause sfx buffer
          sta Square1SoundBuffer
          sta Square2SoundBuffer
          sta NoiseSoundBuffer
-         lda #$0f
+         sta DMCSoundBuffer
+         lda #ALL_MUSIC
          sta SND_MASTERCTRL_REG    ;enable sound again
          lda #$2a                  ;store length of sound in pause counter
          sta Squ1_SfxLenCounter
@@ -64,27 +82,33 @@ RunSoundSubroutines:
          jsr Square2SfxHandler  ; ''  ''  '' square channel 2
          jsr NoiseSfxHandler    ; ''  ''  '' noise channel
          jsr MusicHandler       ;play music on all channels
+         ldx DpcmSampleQueue
+         beq NoDpcmSample
+           .import PlaySFX
+           jsr PlaySFX
+NoDpcmSample:
          lda #$00               ;clear the music queues
          sta AreaMusicQueue
          sta EventMusicQueue
 
 SkipSoundSubroutines:
-          lda #$00               ;clear the sound effects queues
+        ;   lda #$00               ;clear the sound effects queues
           sta Square1SoundQueue
           sta Square2SoundQueue
           sta NoiseSoundQueue
           sta PauseSoundQueue
-          ldy DAC_Counter        ;load some sort of counter 
-          lda AreaMusicBuffer
-          and #%00000011         ;check for specific music
-          beq NoIncDAC
-          inc DAC_Counter        ;increment and check counter
-          cpy #$30
-          bcc StrWave            ;if not there yet, just store it
-NoIncDAC: tya
-          beq StrWave            ;if we are at zero, do not decrement 
-          dec DAC_Counter        ;decrement counter
-StrWave:  sty SND_DELTA_REG+1    ;store into DMC load register (??)
+          sta DpcmSampleQueue
+        ;   ldy DAC_Counter        ;load some sort of counter 
+;           lda AreaMusicBuffer
+;           and #%00000011         ;check for specific music
+;           beq NoIncDAC
+;           inc DAC_Counter        ;increment and check counter
+;           cpy #$30
+;           bcc StrWave            ;if not there yet, just store it
+; NoIncDAC: tya
+;           beq StrWave            ;if we are at zero, do not decrement 
+;           dec DAC_Counter        ;decrement counter
+; StrWave:  sty SND_DELTA_REG+1    ;store into DMC load register (??)
           rts                    ;we are done here
 
 ;--------------------------------
@@ -204,11 +228,11 @@ Square1SfxHandler:
        lsr Square1SoundQueue
        bcs PlaySmackEnemy      ;smack enemy
        lsr Square1SoundQueue
-       bcs PlayPipeDownInj     ;pipedown/injury
+       jcs PlayPipeDownInj     ;pipedown/injury
        lsr Square1SoundQueue
        bcs PlayFireballThrow   ;fireball throw
        lsr Square1SoundQueue
-       bcs PlayFlagpoleSlide   ;slide flagpole
+       jcs PlayFlagpoleSlide   ;slide flagpole
 
 CheckSfx1Buffer:
        lda Square1SoundBuffer   ;check for sfx in buffer 
@@ -275,12 +299,16 @@ DecrementSfx1Length:
       bne ExSfx1
 
 StopSquare1Sfx:
-        ldx #$00                ;if end of sfx reached, clear buffer
-        stx Square1SoundBuffer  ;and stop making the sfx
-        ldx #$0e
-        stx SND_MASTERCTRL_REG
-        ldx #$0f
-        stx SND_MASTERCTRL_REG
+        ; jroweboy use a instead of x so we can ora
+        pha
+          lda #$00                ;if end of sfx reached, clear buffer
+          sta Square1SoundBuffer  ;and stop making the sfx
+          lda #$0e
+          sta SND_MASTERCTRL_REG
+          lda #$0f
+          ora DMCSoundBuffer
+          sta SND_MASTERCTRL_REG
+        pla
 ExSfx1: rts
 
 PlayPipeDownInj:  
@@ -353,7 +381,7 @@ ContinueBlast:
         bne DecrementSfx2Length
         ldy #$93                ;load second part reg contents then
         lda #$18
-SBlasJ: bne BlstSJp             ;unconditional branch to load rest of reg contents
+SBlasJ: jne BlstSJp             ;unconditional branch to load rest of reg contents
 
 PlayPowerUpGrab:
         lda #$36                    ;load length of power-up grab sound
@@ -380,10 +408,13 @@ EmptySfx2Buffer:
         stx Square2SoundBuffer
 
 StopSquare2Sfx:
-        ldx #$0d                ;stop playing the sfx
-        stx SND_MASTERCTRL_REG 
-        ldx #$0f
-        stx SND_MASTERCTRL_REG
+        pha
+          lda #$0d                ;stop playing the sfx
+          sta SND_MASTERCTRL_REG 
+          lda #$0f
+          ora DMCSoundBuffer
+          sta SND_MASTERCTRL_REG
+        pla
 ExSfx2: rts
 
 Square2SfxHandler:
@@ -403,7 +434,7 @@ Square2SfxHandler:
         lsr Square2SoundQueue
         bcs PlayBlast          ;fireworks/gunfire
         lsr Square2SoundQueue
-        bcs PlayTimerTick      ;timer tick
+        jcs PlayTimerTick      ;timer tick
         lsr Square2SoundQueue
         bcs PlayPowerUpGrab    ;power-up grab
         lsr Square2SoundQueue
@@ -449,7 +480,7 @@ ContinueBowserFall:
           ldy #$a4                 ;if so, load the rest of reg contents for bowser defeat sound
           lda #$5a
 PBFRegs:  ldx #$9f                 ;the fireworks/gunfire sound shares part of reg contents here
-EL_LRegs: bne LoadSqu2Regs         ;this is an unconditional branch outta here
+EL_LRegs: jne LoadSqu2Regs         ;this is an unconditional branch outta here
 
 PlayExtraLife:
         lda #$30                  ;load length of 1-up sound
@@ -647,7 +678,8 @@ LoadHeader:
         sta AltRegContentFlag        ;initialize alternate control reg data used by square 1
         lda #$0b                     ;disable triangle channel and reenable it
         sta SND_MASTERCTRL_REG
-        lda #$0f
+        lda #ALL_CHANNELS
+        ora DMCSoundBuffer
         sta SND_MASTERCTRL_REG
 
 HandleSquare2Music:

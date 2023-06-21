@@ -13,6 +13,74 @@ APU_SND_CHN    = $4015
 
 .export PlaySFX
 .proc PlaySFX
+  lda PseudoRandomBitReg
+  cpx #SFX_Jump
+  beq Jump
+  cpx #SFX_Bump
+  beq Bump
+  cpx #SFX_Wait
+  beq Wait
+  cpx #SFX_Hurt
+  beq Hurt
+  cpx #SFX_Secret
+  beq Secret
+  cpx #SFX_Start
+  beq Start
+  cpx #SFX_Stomp
+  beq Stomp
+  cpx #SFX_Death
+  beq Death
+Jump:
+  ; always play 1 of the 8 samples at random when firing from the slingshot
+  and #%00000111
+  tay
+  ldx JumpSfxTable,y
+  jmp Play
+Bump:
+  ; 50 / 50 chance to play on bump
+  and #%00000111
+  cmp #BumpSfxTableLen
+  bcc :+
+    rts
+:
+  tay
+  ldx BumpSfxTable,y
+  jmp Play
+Wait:
+  and #%00000011
+  cmp #WaitSfxTableLen
+  bcc :+
+    rts
+:
+  tay
+  ldx WaitSfxTable,y
+  jmp Play
+Hurt:
+  ; 1 in 4 always play
+  and #%00000011
+  tay
+  ldx WaitSfxTable,y
+  jmp Play
+Secret:
+Start:
+  ; 1 in 4 always play
+  and #%00000011
+  tay
+  ldx StartSfxTable,y
+  jmp Play
+Stomp:
+  ; 1 in 4 always play
+  and #%00000011
+  tay
+  ldx StompSfxTable,y
+  jmp Play
+Death:
+  ; 1 in 2 always play
+  and #%00000001
+  tay
+  ldx DeathSfxTable,y
+  jmp Play
+Play:
   lda #%00001111 ; Stop DPCM
   sta APU_SND_CHN
   lda DPCM_OFFSET_TABLE,x ; Sample offset
@@ -24,14 +92,54 @@ APU_SND_CHN    = $4015
   lda #$40 ; Initial DMC counter - hardcoded to $40 for now
   sta APU_DMC_RAW
   ldy DPCM_BANK_TABLE,x ; Bank number
-  BankPRGC y
+  lda #6 | PRG_FIXED_8
+  sta BankShadow
+  sta BANK_SELECT
+  sty BANK_DATA
   lda #%00011111 ; Start DMC
   sta APU_SND_CHN
+  lda #0
+  sta DpcmSampleQueue
   rts
+
+JumpSfxTable:
+  .byte SFX_mario_boing, SFX_mario_haha, SFX_mario_hoo, SFX_mario_okey, SFX_mario_waha, SFX_mario_whoa, SFX_mario_yahoo, SFX_mario_yippe
+
+BumpSfxTable:
+  .byte SFX_mario_doh, SFX_mario_falli, SFX_mario_oof, SFX_mario_ungh
+
+WaitSfxTable:
+  .byte SFX_mario_snore, SFX_mario_snor2, SFX_mario_yawn
+
+HurtSfxTable:
+  .byte SFX_mario_hooho, SFX_mario_hurt, SFX_mario_lost_, SFX_mario_weak
+
+SecretSfxTable:
+  ; todo
+
+StartSfxTable:
+  .byte SFX_mario_here_, SFX_mario_its_m, SFX_mario_lets_, SFX_mario_lets_
+
+StompSfxTable:
+  .byte SFX_mario_hello, SFX_mario_waha, SFX_mario_yippe, SFX_mario_boing
+
+DeathSfxTable:
+  .byte SFX_mario_mamma, SFX_mario_oof
+SfxEnd = *
+
+JumpSfxTableLen = BumpSfxTable - JumpSfxTable
+BumpSfxTableLen = WaitSfxTable - BumpSfxTable
+WaitSfxTableLen = HurtSfxTable - WaitSfxTable
+HurtSfxTableLen = SecretSfxTable - HurtSfxTable
+SecretSfxTableLen = StartSfxTable - SecretSfxTable
+StartSfxTableLen = StompSfxTable - StartSfxTable
+StompSfxTableLen = DeathSfxTable - StompSfxTable
+DeathSfxTableLen = SfxEnd - DeathSfxTable
+
 .endproc
 
 FAMISTUDIO_DPCM_PTR = $c000
-BANK_NUM_OFFSET = $03
+BANK_NUM_OFFSET = $06
 
 DPCM_OFFSET_TABLE:
 	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR)

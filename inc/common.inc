@@ -25,6 +25,7 @@ labelled_segment TITLE_DPCM
 .include "constants.inc"
 .include "globals.inc"
 .include "mmc3.inc"
+.include "dpcm_sfx.inc"
 
 .macro ASSERT_PAGE label_
 	.assert >(label_) = >*, error, "Page crossing in timing sensitive code detected! If you see this error then you need to rearrange the code so this branch doesn't cross a page"

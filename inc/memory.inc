@@ -144,7 +144,7 @@ __MEMORY_INC = 1
 .globalzp Local_eb
 .globalzp Local_ec
 .globalzp Local_ed
-.globalzp Local_ee ; jroweboy: unused?
+; .globalzp Local_ee ; jroweboy: unused?
 .globalzp Local_ef
 
 .globalzp NoteLenLookupTblOfs
@@ -570,7 +570,8 @@ ALL_TIMER_COUNT = DemoTimer - Timers
 .global Squ2_SfxLenCounter
 .global Sfx_SecondaryCounter
 .global Noise_SfxLenCounter
-.global DAC_Counter
+.global DMCSoundBuffer
+.global DpcmSampleQueue
 .global NoiseDataLoopbackOfs
 .global NoteLengthTblAdder
 .global AreaMusicBuffer_Alt
