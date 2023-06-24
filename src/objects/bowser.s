@@ -361,9 +361,10 @@ SetGfxF: jsr RelativeEnemyPosition   ;get new relative coordinates
          beq FlmeAt                  ;if d1 not set, write default value
          ldy #$82                    ;otherwise write value with vertical flip bit set
 FlmeAt:  sty R1                     ;set bowser's flame sprite attributes here
-         ldy Enemy_SprDataOffset,x   ;get OAM data offset
-         ldx #$00
+        ;  ldy Enemy_SprDataOffset,x   ;get OAM data offset
 
+      ReserveSpr 3
+         ldx #$00
 DrawFlameLoop:
          lda Enemy_Rel_YPos         ;get Y relative coordinate of current enemy object
          sta Sprite_Y_Position,y    ;write into Y coordinate of OAM data
@@ -384,32 +385,33 @@ DrawFlameLoop:
          inx                        ;move onto the next OAM, and branch if three
          cpx #$03                   ;have not yet been done
          bcc DrawFlameLoop
+      UpdateOAMPosition
          ldx ObjectOffset           ;reload original enemy offset
          jsr GetEnemyOffscreenBits  ;get offscreen information
-         ldy Enemy_SprDataOffset,x  ;get OAM data offset
+        ;  ldy Enemy_SprDataOffset,x  ;get OAM data offset
          lda Enemy_OffscreenBits    ;get enemy object offscreen bits
          lsr                        ;move d0 to carry and result to stack
          pha
          bcc M3FOfs                 ;branch if carry not set
-         lda #$f8                   ;otherwise move sprite offscreen, this part likely
-         sta Sprite_Y_Position+12,y ;residual since flame is only made of three sprites
+        ;  lda #$f8                   ;otherwise move sprite offscreen, this part likely
+        ;  sta Sprite_Y_Position+12,y ;residual since flame is only made of three sprites
 M3FOfs:  pla                        ;get bits from stack
          lsr                        ;move d1 to carry and move bits back to stack
          pha
          bcc M2FOfs                 ;branch if carry not set again
          lda #$f8                   ;otherwise move third sprite offscreen
-         sta Sprite_Y_Position+8,y
+         sta Sprite_Y_Position-4,y
 M2FOfs:  pla                        ;get bits from stack again
          lsr                        ;move d2 to carry and move bits back to stack again
          pha
          bcc M1FOfs                 ;branch if carry not set yet again
          lda #$f8                   ;otherwise move second sprite offscreen
-         sta Sprite_Y_Position+4,y
+         sta Sprite_Y_Position-8,y
 M1FOfs:  pla                        ;get bits from stack one last time
          lsr                        ;move d3 to carry
          bcc ExFlmeD                ;branch if carry not set one last time
          lda #$f8
-         sta Sprite_Y_Position,y    ;otherwise move first sprite offscreen
+         sta Sprite_Y_Position-12,y    ;otherwise move first sprite offscreen
 ExFlmeD: rts                        ;leave
 
 ;--------------------------------

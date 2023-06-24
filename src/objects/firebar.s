@@ -7,7 +7,7 @@
 .import InjurePlayer
 
 ; sprite_render.s
-.import DrawFirebar
+.import DrawSingleFireball
 
 .segment "OBJECT"
 
@@ -140,8 +140,9 @@ SkpFSte:  clc
           sta FirebarSpinState_High,x
 SetupGFB: sta Local_ef                     ;save high byte of spinning thing, modified or otherwise
           jsr RelativeEnemyPosition   ;get relative coordinates to screen
-          jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
-          ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ;     jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
+      ;     ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ; sty FirebarTemp
           lda Enemy_Rel_YPos          ;get relative vertical coordinate
           sta Sprite_Y_Position,y     ;store as Y in OAM data
           sta R7                     ;also save here
@@ -157,6 +158,16 @@ SetupGFB: sta Local_ef                     ;save high byte of spinning thing, mo
           bcc SetMFbar                ;no, branch then
           ldy #$0b                    ;otherwise load value for long firebars
 SetMFbar: sty Local_ed                     ;store maximum value for length of firebars
+      ; AllocSpr y
+          tya
+          sec ; intentionally add 1 to the end
+          adc CurrentOAMOffset
+          bcc :+
+            rts
+          :
+          sta CurrentOAMOffset
+          sta OriginalOAMOffset
+
           lda #$00
           sta R0                     ;initialize counter here
 DrawFbar: lda Local_ef                     ;load high byte of spinstate
@@ -165,8 +176,9 @@ DrawFbar: lda Local_ef                     ;load high byte of spinstate
           lda R0                     ;check which firebar part
           cmp #$04
           bne NextFbar
-          ldy DuplicateObj_Offset     ;if we arrive at fifth firebar part,
-          lda Enemy_SprDataOffset,y   ;get offset from long firebar and load OAM data offset
+          lda OriginalOAMOffset
+          ; ldy DuplicateObj_Offset     ;if we arrive at fifth firebar part,
+      ;     lda Enemy_SprDataOffset,y   ;get offset from long firebar and load OAM data offset
           sta R6                     ;using long firebar offset, then store as new one here
 NextFbar: inc R0                     ;move onto the next firebar part
           lda R0
@@ -213,7 +225,7 @@ SetVFbr: sta Sprite_Y_Position,y  ;store as Y coordinate here
          sta R7                  ;also store here for now
 
 FirebarCollision:
-         jsr DrawFirebar          ;run sub here to draw current tile of firebar
+         jsr DrawSingleFireball   ;run sub here to draw current tile of firebar
          tya                      ;return OAM data offset and save
          pha                      ;to the stack for now
          lda StarInvincibleTimer  ;if star mario invincibility timer

@@ -5,7 +5,7 @@
 ; screen_render.s
 .import AddToScore
 
-.export DrawFirebar, DrawSmallPlatform, DrawFireball
+.export DrawSingleFireball, DrawSmallPlatform, DrawFireball
 .export DrawVine, DrawLargePlatform, DrawPowerUp
 .export DrawOneSpriteRow, JCoinGfxHandler, DrawHammer, DrawBrickChunks, DrawBlock
 .export FlagpoleGfxHandler, DumpFourSpr, DumpThreeSpr
@@ -27,7 +27,8 @@ DrawVine:
          clc
          adc VineYPosAdder,y        ;add value using offset in Y to get value
          ldx Vine_ObjOffset,y        ;get offset to vine
-         ldy Enemy_SprDataOffset,x  ;get sprite data offset
+      ;    ldy Enemy_SprDataOffset,x  ;get sprite data offset
+      ReserveSpr 6
          sty R2                    ;store sprite data offset here
          jsr SixSpriteStacker       ;stack six sprites on top of each other vertically
          lda Enemy_Rel_XPos         ;get relative horizontal coordinate
@@ -56,6 +57,7 @@ VineTL:  lda #$e1                   ;set tile number for sprite
          iny
          dex                        ;move onto next sprite
          bpl VineTL                 ;loop until all sprites are done
+      UpdateOAMPosition
          ldy R2                    ;get original offset
          lda R0                    ;get offset to vine adding data
          bne SkpVTop                ;if offset not zero, skip this part
@@ -117,7 +119,9 @@ HammerSprAttrib:
       .byte $03, $03, $c3, $c3
 
 DrawHammer:
-            ldy Misc_SprDataOffset,x    ;get misc object OAM data offset
+            ; ldy Misc_SprDataOffset,x    ;get misc object OAM data offset
+      AllocSpr 2
+
             lda TimerControl
             bne ForceHPose              ;if master timer control set, skip this part
             lda Misc_State,x            ;otherwise get hammer's state
@@ -165,7 +169,8 @@ NoHOffscr:  rts ; TODO check this RTS can be removed                         ;le
 ;-------------------------------------------------------------------------------------
 
 DrawLargePlatform:
-      ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ; ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      AllocSpr 6
       sty R2                     ;store here
       iny                         ;add 3 to it for offset
       iny                         ;to X coordinate
@@ -185,7 +190,8 @@ ShrinkPlatform:
       lda #$f8                    ;load offscreen coordinate if flag set or castle-type level
 
 SetLast2Platform:
-      ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ; ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ldy R2
       sta Sprite_Y_Position+16,y  ;store vertical coordinate or offscreen
       sta Sprite_Y_Position+20,y  ;coordinate into last two sprites as Y coordinate
       lda #$5b                    ;load default tile for platform (girder)
@@ -203,7 +209,8 @@ SetPlatformTilenum:
         inx                         ;increment X for enemy objects
         jsr GetXOffscreenBits       ;get offscreen bits again
         dex
-        ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ;   ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ldy R2
         asl                         ;rotate d7 into carry, save remaining
         pha                         ;bits to the stack
         bcc SChk2
@@ -271,7 +278,8 @@ JumpingCoinTiles:
       .byte $60, $61, $62, $63
 
 JCoinGfxHandler:
-         ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
+      ;    ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
+      AllocSpr 2
          lda Misc_State,x            ;get state of misc object
          cmp #$02                    ;if 2 or greater, 
          bcs DrawFloateyNumber_Coin  ;branch to draw floatey number
@@ -317,7 +325,9 @@ PowerUpAttributes:
       .byte $02, $01, $02, $01
 
 DrawPowerUp:
-      ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
+      ; ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
+    AllocSpr 4
+    sty OriginalOAMOffset
       lda Enemy_Rel_YPos         ;get relative vertical coordinate
       clc
       adc #$08                   ;add eight pixels
@@ -344,7 +354,8 @@ PUpDrawLoop:
         jsr DrawOneSpriteRow       ;branch to draw one row of our power-up object
         dec R7                    ;decrement counter
         bpl PUpDrawLoop            ;branch until two rows are drawn
-        ldy Enemy_SprDataOffset+5  ;get sprite data offset again
+        ; ldy Enemy_SprDataOffset+5  ;get sprite data offset again
+        ldy OriginalOAMOffset
         pla                        ;pull saved power-up type from the stack
         beq PUpOfs                 ;if regular mushroom, branch, do not change colors or flip
         cmp #$03
@@ -452,7 +463,9 @@ EnemyGfxHandler:
       sta R2
       lda Enemy_Rel_XPos          ;get enemy object horizontal position
       sta R5                     ;relative to screen
-      ldy Enemy_SprDataOffset,x
+      ; ldy Enemy_SprDataOffset,x
+    AllocSpr 6
+      sty OriginalOAMOffset
       sty Local_eb                     ;get sprite data offset
       lda #$00
       sta VerticalFlipFlag        ;initialize vertical flip flag by default
@@ -719,7 +732,8 @@ DrawEnemyObject:
   jsr DrawEnemyObjRow        ;into sprite data
   jsr DrawEnemyObjRow
   ldx ObjectOffset           ;get enemy object offset
-  ldy Enemy_SprDataOffset,x  ;get sprite data offset
+  ; ldy Enemy_SprDataOffset,x  ;get sprite data offset
+  ldy Local_eb
   lda Local_ef
   cmp #$08                   ;get saved enemy object and check
   bne CheckForVerticalFlip   ;for bullet bill, branch if not found
@@ -926,14 +940,14 @@ DrawOneSpriteRow:
 
 MoveESprRowOffscreen:
       clc                         ;add A to enemy object OAM data offset
-      adc Enemy_SprDataOffset,x
+      adc OriginalOAMOffset
       tay                         ;use as offset
       lda #$f8
       jmp DumpTwoSpr              ;move first row of sprites offscreen
 
 MoveESprColOffscreen:
       clc                         ;add A to enemy object OAM data offset
-      adc Enemy_SprDataOffset,x
+      adc OriginalOAMOffset
       tay                         ;use as offset
       jsr MoveColOffscreen        ;move first and second row sprites in column offscreen
       sta Sprite_Data+16,y       ;move third row sprite in column offscreen
@@ -958,7 +972,9 @@ DrawBlock:
            sta R4                       ;set attribute byte here
            lsr
            sta R3                       ;set horizontal flip bit here (will not be used)
-           ldy Block_SprDataOffset,x     ;get sprite data offset
+          ;  ldy Block_SprDataOffset,x     ;get sprite data offset
+        AllocSpr 4
+        sty OriginalOAMOffset
            ldx #$00                      ;reset X for use as offset to tile data
 DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
            sta R0                       ;set here
@@ -967,7 +983,8 @@ DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
            cpx #$04                      ;check incremented offset
            bne DBlkLoop                  ;and loop back until all four sprites are done
            ldx ObjectOffset              ;get block object offset
-           ldy Block_SprDataOffset,x     ;get sprite data offset
+          ;  ldy Block_SprDataOffset,x     ;get sprite data offset
+           ldy OriginalOAMOffset
            lda AreaType
            cmp #$01                      ;check for ground level type area
            beq ChkRep                    ;if found, branch to next part
@@ -1024,7 +1041,9 @@ DrawBrickChunks:
          lda #$03                   ;otherwise set different palette bits
          sta R0
          lda #$84                   ;and set tile number for brick chunks
-DChunks: ldy Block_SprDataOffset,x  ;get OAM data offset
+DChunks: 
+      AllocSpr 4
+        ;  ldy Block_SprDataOffset,x  ;get OAM data offset
          iny                        ;increment to start with tile bytes in OAM
          jsr DumpFourSpr            ;do sub to dump tile number into all four sprites
          lda FrameCounter           ;get frame counter
@@ -1082,13 +1101,14 @@ ExBCDr:  rts                        ;leave
 ;-------------------------------------------------------------------------------------
 
 DrawFireball:
-      ldy FBall_SprDataOffset,x  ;get fireball's sprite data offset
+      ; ldy FBall_SprDataOffset,x  ;get fireball's sprite data offset
+    AllocSpr 1
       lda Fireball_Rel_YPos      ;get relative vertical coordinate
       sta Sprite_Y_Position,y    ;store as sprite Y coordinate
       lda Fireball_Rel_XPos      ;get relative horizontal coordinate
       sta Sprite_X_Position,y    ;store as sprite X coordinate, then do shared code
 
-DrawFirebar:
+DrawSingleFireball:
        lda FrameCounter         ;get frame counter
        lsr                      ;divide by four
        lsr
@@ -1108,7 +1128,8 @@ FireA: sta Sprite_Attributes,y  ;store attribute byte and leave
 ;-------------------------------------------------------------------------------------
 
 DrawSmallPlatform:
-       ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ;  ldy Enemy_SprDataOffset,x   ;get OAM data offset
+    AllocSpr 6
        lda #$5b                    ;load tile number for small platforms
        iny                         ;increment offset for tile numbers
        jsr DumpSixSpr              ;dump tile number into all six sprites
@@ -1254,7 +1275,9 @@ LoadNumTiles:
   sta DigitModifier,x          ;store as amount to add to the digit
   jsr AddToScore               ;update the score accordingly
 ChkTallEnemy:
-  ldy Enemy_SprDataOffset,x    ;get OAM data offset for enemy object
+  ; ldy Enemy_SprDataOffset,x    ;get OAM data offset for enemy object
+AllocSpr 2
+  ; ldy OriginalOAMOffset
   lda Enemy_ID,x               ;get enemy object identifier
   cmp #Spiny
   beq FloateyPart              ;branch if spiny
@@ -1272,8 +1295,8 @@ ChkTallEnemy:
   cmp #$02                     ;if enemy state defeated or otherwise
   bcs FloateyPart              ;$02 or greater, branch beyond this part
 GetAltOffset:
-  ldx SprDataOffset_Ctrl       ;load some kind of control bit
-  ldy Alt_SprDataOffset,x      ;get alternate OAM data offset
+  ; ldx SprDataOffset_Ctrl       ;load some kind of control bit
+  ; ldy Alt_SprDataOffset,x      ;get alternate OAM data offset
   ldx ObjectOffset             ;get enemy object offset again
 FloateyPart:
   lda FloateyNum_Y_Pos,x       ;get vertical coordinate for
@@ -1337,7 +1360,9 @@ ScoreUpdateData:
 
 
 FlagpoleGfxHandler:
-      ldy Enemy_SprDataOffset,x      ;get sprite data offset for flagpole flag
+    AllocSpr 3
+    sty OriginalOAMOffset
+      ; ldy Enemy_SprDataOffset,x      ;get sprite data offset for flagpole flag
       lda Enemy_Rel_XPos             ;get relative horizontal coordinate
       sta Sprite_X_Position,y        ;store as X coordinate for first sprite
       clc
@@ -1379,8 +1404,9 @@ FlagpoleGfxHandler:
       jsr DrawOneSpriteRow           ;use it to render floatey number
 
 ChkFlagOffscreen:
-      ldx ObjectOffset               ;get object offset for flag
-      ldy Enemy_SprDataOffset,x      ;get OAM data offset
+      ; ldx ObjectOffset               ;get object offset for flag
+      ; ldy Enemy_SprDataOffset,x      ;get OAM data offset
+    ldy OriginalOAMOffset
       lda Enemy_OffscreenBits        ;get offscreen bits
       and #%00001110                 ;mask out all but d3-d1
       beq ExitDumpSpr                ;if none of these bits set, branch to leave

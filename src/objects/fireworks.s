@@ -23,7 +23,7 @@ SetupExpl: jsr RelativeEnemyPosition   ;get relative coordinates of explosion
            sta Fireball_Rel_YPos       ;from the enemy object to the fireball object
            lda Enemy_Rel_XPos          ;first vertical, then horizontal
            sta Fireball_Rel_XPos
-           ldy Enemy_SprDataOffset,x   ;get OAM data offset
+      ;      ldy Enemy_SprDataOffset,x   ;get OAM data offset
            lda ExplosionGfxCounter,x   ;get explosion graphics counter
            jmp DrawExplosion_Fireworks ;do a sub to draw the explosion then leave
 
@@ -126,7 +126,8 @@ SetoffF: lda FireworksCounter    ;check fireworks counter
 
 DrawStarFlag:
          jsr RelativeEnemyPosition  ;get relative coordinates of star flag
-         ldy Enemy_SprDataOffset,x  ;get OAM data offset
+      ;    ldy Enemy_SprDataOffset,x  ;get OAM data offset
+      ReserveSpr 4
          ldx #$03                   ;do four sprites
 DSFLoop: lda Enemy_Rel_YPos         ;get relative vertical coordinate
          clc
@@ -146,6 +147,7 @@ DSFLoop: lda Enemy_Rel_YPos         ;get relative vertical coordinate
          iny
          dex                        ;move onto next sprite
          bpl DSFLoop                ;do this until all sprites are done
+      UpdateOAMPosition
          ldx ObjectOffset           ;get enemy object offset and leave
          rts
 

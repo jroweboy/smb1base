@@ -382,21 +382,24 @@ StackClear = SwitchToMainIRQ
 .global MaxRangeFromOrigin
 .global BitMFilter
 .global ChangeAreaTimer
-.global SprShuffleAmtOffset
-.global SprShuffleAmt
 
-.global SprDataOffset
-.global Player_SprDataOffset
+.global CurrentOAMOffset
+.global OriginalOAMOffset
+; .global SprShuffleAmtOffset
+; .global SprShuffleAmt
 
-.global Enemy_SprDataOffset
+; .global SprDataOffset
+; .global Player_SprDataOffset
 
-.global Alt_SprDataOffset
-.global Block_SprDataOffset
+; .global Enemy_SprDataOffset
 
-.global Bubble_SprDataOffset
-.global FBall_SprDataOffset
+; .global Alt_SprDataOffset
+; .global Block_SprDataOffset
 
-.global Misc_SprDataOffset
+; .global Bubble_SprDataOffset
+; .global FBall_SprDataOffset
+
+; .global Misc_SprDataOffset
 
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute

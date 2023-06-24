@@ -74,6 +74,7 @@ MoveSpriteOffscreenUnrolledWrites:
 .endrepeat
   ; original game uses y for looping, so keep it zero to be paranoid
   ldy #0
+  sty CurrentOAMOffset
   rts
 
 ;-------------------------------------------------------------------------------------

@@ -218,7 +218,8 @@ BubbleTimerData:
   lda Bubble_OffscreenBits    ;check air bubble's offscreen bits
   and #%00001000
   bne ExDBub                  ;if bit set, branch to leave
-  ldy Bubble_SprDataOffset,x  ;get air bubble's OAM data offset
+  ; ldy Bubble_SprDataOffset,x  ;get air bubble's OAM data offset
+
   lda Bubble_Rel_XPos         ;get relative horizontal coordinate
   sta Sprite_X_Position,y     ;store as X coordinate here
   lda Bubble_Rel_YPos         ;get relative vertical coordinate
@@ -245,7 +246,7 @@ ExplosionTiles:
   .byte $68, $67, $66
 
 DrawExplosion_Fireball:
-  ldy Alt_SprDataOffset,x  ;get OAM data offset of alternate sort for fireball's explosion
+  ; ldy Alt_SprDataOffset,x  ;get OAM data offset of alternate sort for fireball's explosion
   lda Fireball_State,x     ;load fireball state
   inc Fireball_State,x     ;increment state for next frame
   lsr                      ;divide by 2
@@ -255,6 +256,8 @@ DrawExplosion_Fireball:
   ;fallthrough
 DrawExplosion_Fireworks:
 .export DrawExplosion_Fireworks
+
+  ReserveSpr 4
       tax                         ;use whatever's in A for offset
       lda ExplosionTiles,x        ;get tile number using offset
       iny                         ;increment Y (contains sprite data offset)
@@ -287,6 +290,7 @@ DrawExplosion_Fireworks:
       sta Sprite_Attributes+8,y   ;set horizontal flip for third sprite
       lda #$c2
       sta Sprite_Attributes+12,y  ;set both flips for fourth sprite
+  UpdateOAMPosition
       rts                         ;we are done
 
 KillFireBall:

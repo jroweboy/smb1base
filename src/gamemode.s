@@ -62,18 +62,18 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   ror                       ;rotate LSB of page location into carry then onto mirror
   rol Mirror_PPUCTRL       ;this is to set the proper PPU name table
   jsr GetAreaMusic          ;load proper music into queue
-  lda #$38                  ;load sprite shuffle amounts to be used later
-  sta SprShuffleAmt+2
-  lda #$48
-  sta SprShuffleAmt+1
-  lda #$58
-  sta SprShuffleAmt
-  ldx #$0e                  ;load default OAM offsets into $06e4-$06f2
-ShufAmtLoop:
-    lda DefaultSprOffsets,x
-    sta SprDataOffset,x
-    dex                       ;do this until they're all set
-    bpl ShufAmtLoop
+  ; lda #$38                  ;load sprite shuffle amounts to be used later
+  ; sta SprShuffleAmt+2
+  ; lda #$48
+  ; sta SprShuffleAmt+1
+  ; lda #$58
+  ; sta SprShuffleAmt
+;   ldx #$0e                  ;load default OAM offsets into $06e4-$06f2
+; ShufAmtLoop:
+;     lda DefaultSprOffsets,x
+;     sta SprDataOffset,x
+;     dex                       ;do this until they're all set
+;     bpl ShufAmtLoop
 ;   ldy #$03                  ;set up sprite #0
 ; ISpr0Loop:
 ;     lda Sprite0Data,y

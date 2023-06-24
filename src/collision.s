@@ -1635,6 +1635,10 @@ ExIPM:
 ;$04 - low nybble of horizontal coordinate from block buffer
 ;$06-$07 - block buffer address
 
+SnapFlagPole:
+  ; Step 1: Replace flagpole with sprites
+  
+
 ClimbXPosAdder:
       .byte $f9, $07
 

@@ -39,14 +39,23 @@ GameCoreRoutine:
     rts
 GameEngine:
   far OBJECT
+    ; reserve OAM slots for the player and slingshot
+    lda #9 * 4
+    ldy PlayerSize
+    bne :+
+      lda #16 * 4
+    :
+    ldy HoldingSlingshot
+    beq :+
+      clc
+      adc #12 * 4
+    :
+    sta CurrentOAMOffset
     jsr ProcFireball_Bubble    ;process fireballs and air bubbles
     jsr ProcessAllEnemies
     jsr GetPlayerOffscreenBits ;get offscreen bits for player object
     jsr RelativePlayerPosition ;get relative coordinates for player object
-    ; lda OperMode
-    ; beq :+ ; skip drawing the player if on the title screen
-      farcall PlayerGfxHandler       ;draw the player
-    ; :
+    farcall PlayerGfxHandler       ;draw the player
     jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
     ldx #$01
     stx ObjectOffset           ;set offset for second
@@ -59,10 +68,7 @@ GameEngine:
     jsr ProcessWhirlpools      ;process whirlpools
     jsr FlagpoleRoutine        ;process the flagpole
     jsr RunGameTimer           ;count down the game timer
-    ; lda OperMode
-    ; beq :+ ; skip drawing the player if on the title screen
-      jsr ColorRotation          ;cycle one of the background colors
-    ; :
+    jsr ColorRotation          ;cycle one of the background colors
   endfar
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music

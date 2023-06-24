@@ -404,21 +404,24 @@ JumpspringForce:                .res  1
 MaxRangeFromOrigin:             .res  1
 BitMFilter:                     .res  1
 ChangeAreaTimer:                .res  2
-SprShuffleAmtOffset:            .res  1
-SprShuffleAmt:                  .res  3
 
-SprDataOffset:                  .res  1
-Player_SprDataOffset          = SprDataOffset
+CurrentOAMOffset:               .res  1
+OriginalOAMOffset:              .res  1
+; SprShuffleAmtOffset:            .res  1
+; SprShuffleAmt:                  .res  3
 
-Enemy_SprDataOffset:            .res  7
+; SprDataOffset:                  .res  1
+; Player_SprDataOffset          = SprDataOffset
 
-Block_SprDataOffset:            .res  2
-Alt_SprDataOffset             = Block_SprDataOffset
+; Enemy_SprDataOffset:            .res  7
 
-Bubble_SprDataOffset:           .res  3
-FBall_SprDataOffset:            .res  2
+; Block_SprDataOffset:            .res  2
+; Alt_SprDataOffset             = Block_SprDataOffset
 
-Misc_SprDataOffset:             .res  9
+; Bubble_SprDataOffset:           .res  3
+; FBall_SprDataOffset:            .res  2
+
+; Misc_SprDataOffset:             .res  9
 
 A_B_Buttons:                    .res  1
 Up_Down_Buttons:                .res  1
