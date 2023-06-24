@@ -10,7 +10,7 @@
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, UpdateTopScore, RenderAttributeTables
 .export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
-.export RemBridge, GiveOneCoin, ReplaceBlockMetatile, DrawMushroomIcon
+.export RemBridge, GiveOneCoin, WriteBlockMetatile, DrawMushroomIcon
 
 .segment "RENDER"
 
@@ -898,7 +898,7 @@ WriteBlankMT:
   ; inc Block_ResidualCounter ;increment unused counter (residual code)
   ; dec Block_RepFlag,x       ;decrement flag (residual code)
   ; rts
-  jmp WriteBlockMetatile    ;write metatile to vram buffer to replace block object
+  ; jmp WriteBlockMetatile    ;write metatile to vram buffer to replace block object
   ; rts                       ;leave
 .endproc
 

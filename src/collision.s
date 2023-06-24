@@ -793,7 +793,8 @@ PlatformSideCollisions:
          sbc BoundingBox_UL_XPos
          cmp #$09                   ;if difference not close enough, skip subroutine
          bcs NoSideC                ;and instead branch to leave (no collision)
-SideC:   jsr ImpedePlayerMove       ;deal with horizontal collision
+         ; keep the carry clear so StopPlayerMove goes straight to ImpedeMove
+SideC:   jsr StopPlayerMove       ;deal with horizontal collision
 NoSideC: ldx ObjectOffset           ;return with enemy object buffer offset
          rts
 
@@ -1027,8 +1028,9 @@ HeadChk:
           bcs SolidOrClimb            ;if player collided with solid metatile, branch
           ldy AreaType                ;otherwise check area type
           beq NYSpd                   ;if water level, branch ahead
-          ldy BlockBounceTimer        ;if block bounce timer not expired,
-          bne NYSpd                   ;branch ahead, do not process collision
+          ; don't bother with block bounce timer
+          ; ldy BlockBounceTimer        ;if block bounce timer not expired,
+          ; bne NYSpd                   ;branch ahead, do not process collision
           jsr PlayerHeadCollision     ;otherwise do a sub to process collision
           jmp DoFootCheck             ;jump ahead to skip these other parts
 
@@ -1049,10 +1051,12 @@ DoFootCheck:
     jmp DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
 :
     jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
+    jsr QuickBrickShatterWhenBig
     jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
     bcs AwardTouchedCoin       ;if so, branch to some other part of code
       pha                        ;save bottom left metatile to stack
         jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom right of player
+        jsr QuickBrickShatterWhenBig
         sta R0                    ;save bottom right metatile here
       pla
       sta R1                    ;pull bottom left metatile and save here
@@ -1083,9 +1087,12 @@ ContChk:
       ldy R4                    ;check lower nybble of vertical coordinate returned
       cpy #$05                   ;from collision detection routine
       bcc LandPlyr               ;if lower nybble < 5, branch
-        lda Player_MovingDir
-        sta R0                    ;use player's moving direction as temp variable
-        jmp ImpedePlayerMove       ;jump to impede player's movement in that direction
+        pha ; save the current metatile for checking if we are breaking a brick
+          lda Player_MovingDir
+          sta R0                    ;use player's moving direction as temp variable
+        pla
+        ; also keep the carry set to signify that we want to check for bricks
+        jmp StopPlayerMove       ;jump to impede player's movement in that direction
 LandPlyr:
   jsr ChkForLandJumpSpring   ;do sub to check for jumpspring metatiles and deal with it
   lda #$f0
@@ -1176,6 +1183,7 @@ ExSCH:
   rts                       ;leave
 
 CheckSideMTiles:
+  jsr QuickBrickShatterWhenBig
   jsr ChkInvisibleMTiles     ;check for hidden or coin 1-up blocks
   beq ExSCH                  ;branch to leave if either found
     jsr CheckForClimbMTiles    ;check for climbable metatiles
@@ -1241,6 +1249,21 @@ BounceForceData:
 ;$06-$07 - block buffer address
 
 StopPlayerMove:
+; if the carry is set then we know this object isn't a brick
+  bcc @Exit
+; brick metatile is 51 and 52
+; so if we bounce into a brick when we are big then we don't want to
+; impede the player movement
+  ldx PlayerSize
+  bne @Exit
+  cmp #$54 ; check if we are touching the ground
+  beq @Exit
+  cmp #$50 ; this range is the power up and brick range
+  bcc @Exit
+  cmp #$61
+  bcs @Exit
+    rts
+@Exit:
   jmp ImpedePlayerMove      ;stop player's movement
       
 AreaChangeTimerData:
@@ -1818,7 +1841,23 @@ InvOBit:   lda SprDataOffset_Ctrl   ;invert control bit used by block objects
            sta SprDataOffset_Ctrl
            rts                      ;leave!
 
-
+QuickBrickShatterWhenBig:
+  ldx PlayerSize
+  beq @PlayerBig
+@Exit:
+    rts
+@PlayerBig:
+; brick metatile is 51 and 52
+  cmp #$51
+  bcc @Exit
+  cmp #$53 
+  bcs @Exit
+  pha
+    phy
+      jsr PlayerHeadCollision     ;otherwise do a sub to process collision
+    ply
+  pla
+  rts
 
 ;--------------------------------
 

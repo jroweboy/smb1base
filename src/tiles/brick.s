@@ -154,8 +154,8 @@ BrickShatter:
       sta Block_RepFlag,x    ;set flag for block object to immediately replace metatile
       sta NoiseSoundQueue    ;load brick shatter sound
       jsr SpawnBrickChunks   ;create brick chunk objects
-      lda #$fe
-      sta Player_Y_Speed     ;set vertical speed for player
+      ; lda #$fe
+      ; sta Player_Y_Speed     ;set vertical speed for player
       lda #$05
       sta DigitModifier+5    ;set digit modifier to give player 50 points
       jsr AddToScore         ;do sub to update the score

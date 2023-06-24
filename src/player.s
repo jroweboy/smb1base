@@ -486,7 +486,61 @@ RenderPlayerSub:
   lda Player_Rel_YPos
   sta R2
   ldy #0
-  ldx PlayerGfxOffset
+  lda PlayerSize
+  bne DrawSmallPlayer
+    ldx #BigMarioGraphics-SmallMarioGraphics
+    ; Large Player
+DrawLargePlayerLoop:
+    lda PlayerGraphicsTable,x
+    sta Sprite_Tilenumber,y
+    inx
+    lda PlayerGraphicsTable,x
+    sta Sprite_Tilenumber+4,y
+    inx
+    lda PlayerGraphicsTable,x
+    sta Sprite_Tilenumber+8,y
+    inx
+    lda PlayerGraphicsTable,x
+    sta Sprite_Tilenumber+12,y
+    inx
+    lda R2
+    clc
+    adc #4 ; offset by +16 since always small and -4 for the new 24x24 mode
+    sta Sprite_Y_Position,y
+    sta Sprite_Y_Position+4,y
+    sta Sprite_Y_Position+8,y
+    sta Sprite_Y_Position+12,y
+    lda Player_Rel_XPos
+    sec
+    sbc #$04
+    sta Sprite_X_Position,y
+    clc
+    adc #$08
+    sta Sprite_X_Position+4,y
+    clc
+    adc #$08
+    sta Sprite_X_Position+8,y
+    clc
+    adc #$08
+    sta Sprite_X_Position+12,y
+    lda Player_SprAttrib
+    sta Sprite_Attributes,y    ;store sprite attributes
+    sta Sprite_Attributes+4,y
+    sta Sprite_Attributes+8,y
+    sta Sprite_Attributes+12,y
+    lda R2                    ;add eight pixels to the next y
+    clc                        ;coordinate
+    adc #$08
+    sta R2
+    tya                        ;add twelve to the offset in Y to
+    clc                        ;move to the next two sprites
+    adc #16
+    tay
+    cpy #64 ; draw four rows of four sprites
+    bcc DrawLargePlayerLoop
+    rts
+DrawSmallPlayer:
+  ldx #0
 DrawPlayerLoop:
   lda PlayerGraphicsTable,x
   sta Sprite_Tilenumber,y
@@ -692,14 +746,15 @@ DoChangeSize:
   jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
 
 PlayerKilled:
-  ldy PlayerKilledGraphicsOffset ;load offset for player killed
-  lda PlayerGfxTblOffsets,y     ;get offset to graphics table
+  ; ldy #PlayerKilledGraphicsOffset ;load offset for player killed
+  ; lda PlayerGfxTblOffsets,y     ;get offset to graphics table
+  lda #PlayerKilledGraphicsOffset
 
 PlayerGfxProcessing:
   sta PlayerGfxOffset           ;store offset to graphics table here
-  lda #$04
+  ; lda #$04
   jsr RenderPlayerSub           ;draw player based on offset loaded
-  jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
+  ; jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
   lda FireballThrowingTimer
   beq PlayerOffscreenChk        ;if fireball throw timer not set, skip to the end
   ldy #$00                      ;set value to initialize by default
@@ -727,29 +782,48 @@ PlayerOffscreenChk:
   lsr
   sta R0                       ;store here
   ; ldx #$03                      ;check all four rows of player sprites
-  ldx #2
-  lda Player_SprDataOffset      ;get player's sprite data offset
-  clc
+  ldx PlayerSize
+  lda PlayerSizeToOffset,x      ;get player's sprite data offset
+  ; clc
   ; adc #$18                      ;add 24 bytes to start at bottom row
-  adc #16
+  ; adc #16
   tay                           ;set as offset here
+  lda PlayerOffscreenRowLength,x
+  sta R1
+  lda PlayerSpritesPerRow,x
+  tax
 PROfsLoop:
-    lda #$f8                      ;load offscreen Y coordinate just in case
     lsr R0                       ;shift bit into carry
     bcc NPROffscr                 ;if bit not set, skip, do not move sprites
-    jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
+    lda PlayerSize
+    bne DumpOnlyThree
+.import DumpFourSpr, DumpThreeSpr
+      lda #$f8                      ;load offscreen Y coordinate just in case
+      jsr DumpFourSpr                ;otherwise dump offscreen Y coordinate into sprite data
+      bne NPROffscr
+DumpOnlyThree:
+      lda #$f8
+      jsr DumpThreeSpr
 NPROffscr:
     tya
     sec                           ;subtract eight bytes to do
-    sbc #$08                      ;next row up
+    sbc R1                      ;next row up
     tay
     dex                           ;decrement row counter
     bpl PROfsLoop                 ;do this until all sprite rows are checked
   rts                             ;then we are done!
+PlayerSizeToOffset:
+  .byte 4*4*3, 4*3*2
+PlayerOffscreenRowLength:
+  .byte 4*4, 4*3
+PlayerSpritesPerRow:
+  .byte 4, 3
+; PlayerGfxTblOffsets:
+;   .byte $20, $28, $c8, $18, $00, $40, $50, $58
+;   .byte $80, $88, $b8, $78, $60, $a0, $b0, $b8
+SizeGraphicsOffsets:
+  .byte $00, BigMarioGraphics - SmallMarioGraphics, BigMarioGraphics - SmallMarioGraphics
 
-PlayerGfxTblOffsets:
-  .byte $20, $28, $c8, $18, $00, $40, $50, $58
-  .byte $80, $88, $b8, $78, $60, $a0, $b0, $b8
 
 HandleChangeSize:
   ldy PlayerAnimCtrl           ;get animation frame control
@@ -767,18 +841,18 @@ GorSLog:
   lda PlayerSize               ;get player's size
   bne ShrinkPlayer             ;if player small, skip ahead to next part
     lda ChangeSizeOffsetAdder,y  ;get offset adder based on frame control as offset
-    ldy #$0f                     ;load offset for player growing
-
-GetOffsetFromAnimCtrl:
-    asl                        ;multiply animation frame control
-    asl                        ;by eight to get proper amount
-    asl                        ;to add to our offset
-    adc PlayerGfxTblOffsets,y  ;add to offset to graphics table
+    ; ldy #$0f                     ;load offset for player growing
+    tay
+    lda SizeGraphicsOffsets,y
+; GetOffsetFromAnimCtrl:
+;     asl                        ;multiply animation frame control
+;     asl                        ;by eight to get proper amount
+;     asl                        ;to add to our offset
+;     adc PlayerGfxTblOffsets,y  ;add to offset to graphics table
     rts                        ;and return with result in A
 ChangeSizeOffsetAdder:
   .byte $00, $01, $00, $01, $00, $01, $02, $00, $01, $02
   .byte $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
-
 ShrinkPlayer:
   tya                          ;add ten bytes to frame control as offset
   clc
@@ -789,7 +863,7 @@ ShrinkPlayer:
   bne ShrPlF                   ;and branch to use offset if nonzero
     ldy #$01                     ;otherwise load offset for big player swimming
 ShrPlF:
-  lda PlayerGfxTblOffsets,y    ;get offset to graphics table based on offset loaded
+  ; lda PlayerGfxTblOffsets,y    ;get offset to graphics table based on offset loaded
   rts                          ;and leave
 
 
@@ -1250,10 +1324,10 @@ Subtract:
     sta Player_Y_MoveForce
     lda #0
     sta HoldingSlingshot
-    lda #SFX_Jump
-    sta DpcmSampleQueue
     ; Initialize the ground bounce chain to zero to signal that this is the first
     sta GroundBounceChain
+    lda #SFX_Jump
+    sta DpcmSampleQueue
     lda #PlayerState::Jumping
     sta Player_State
     ; Start the airtime counter to track how long mario was in the air
@@ -1859,16 +1933,6 @@ X_SubtracterData:
 OffscrJoypadBitsData:
   .byte $01, $02
 
-; ------------------------------------------------------------
-ProcessPlayerAngle:
-  ; jsr FastAtan2
-  lda PlayerAngle
-  lsr
-  lsr
-  tay
-  BankCHR10 y
-  rts
-
 ; ProcessPlayerAction:
 ;   lda Player_State      ;get player's state
 ;   cmp #$03
@@ -1976,38 +2040,49 @@ ProcessPlayerAngle:
 ; SzOfs:
 ;   rts             ;go back
 
-ChkForPlayerAttrib:
-  ldy Player_SprDataOffset    ;get sprite data offset
-  lda GameEngineSubroutine
-  cmp #$0b                    ;if executing specific game engine routine,
-  beq KilledAtt               ;branch to change third and fourth row OAM attributes
-  lda PlayerGfxOffset         ;get graphics table offset
-  cmp #$50
-  beq C_S_IGAtt               ;if crouch offset, either standing offset,
-  cmp #$b8                    ;or intermediate growing offset,
-  beq C_S_IGAtt               ;go ahead and execute code to change 
-  cmp #$c0                    ;fourth row OAM attributes only
-  beq C_S_IGAtt
-  cmp #$c8
-  bne ExPlyrAt                ;if none of these, branch to leave
-KilledAtt:
-  lda Sprite_Attributes+16,y
-  and #%00111111              ;mask out horizontal and vertical flip bits
-  sta Sprite_Attributes+16,y  ;for third row sprites and save
-  lda Sprite_Attributes+20,y
-  and #%00111111  
-  ora #%01000000              ;set horizontal flip bit for second
-  sta Sprite_Attributes+20,y  ;sprite in the third row
-C_S_IGAtt:
-  lda Sprite_Attributes+24,y
-  and #%00111111              ;mask out horizontal and vertical flip bits
-  sta Sprite_Attributes+24,y  ;for fourth row sprites and save
-  lda Sprite_Attributes+28,y
-  and #%00111111
-  ora #%01000000              ;set horizontal flip bit for second
-  sta Sprite_Attributes+28,y  ;sprite in the fourth row
-ExPlyrAt:
-  rts                         ;leave
+; ChkForPlayerAttrib:
+;   ldy Player_SprDataOffset    ;get sprite data offset
+;   lda GameEngineSubroutine
+;   cmp #$0b                    ;if executing specific game engine routine,
+;   beq KilledAtt               ;branch to change third and fourth row OAM attributes
+;   lda PlayerGfxOffset         ;get graphics table offset
+;   cmp #$50
+;   beq C_S_IGAtt               ;if crouch offset, either standing offset,
+;   cmp #$b8                    ;or intermediate growing offset,
+;   beq C_S_IGAtt               ;go ahead and execute code to change 
+;   cmp #$c0                    ;fourth row OAM attributes only
+;   beq C_S_IGAtt
+;   cmp #$c8
+;   bne ExPlyrAt                ;if none of these, branch to leave
+; KilledAtt:
+;   lda Sprite_Attributes+16,y
+;   and #%00111111              ;mask out horizontal and vertical flip bits
+;   sta Sprite_Attributes+16,y  ;for third row sprites and save
+;   lda Sprite_Attributes+20,y
+;   and #%00111111  
+;   ora #%01000000              ;set horizontal flip bit for second
+;   sta Sprite_Attributes+20,y  ;sprite in the third row
+; C_S_IGAtt:
+;   lda Sprite_Attributes+24,y
+;   and #%00111111              ;mask out horizontal and vertical flip bits
+;   sta Sprite_Attributes+24,y  ;for fourth row sprites and save
+;   lda Sprite_Attributes+28,y
+;   and #%00111111
+;   ora #%01000000              ;set horizontal flip bit for second
+;   sta Sprite_Attributes+28,y  ;sprite in the fourth row
+; ExPlyrAt:
+;   rts                         ;leave
+
+; ------------------------------------------------------------
+ProcessPlayerAngle:
+  ; jsr FastAtan2
+  lda PlayerAngle
+  lsr
+  lsr
+  tay
+  BankCHR10 y
+NearbyRTS:
+  rts
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used for downward force
@@ -2019,7 +2094,7 @@ MovePlayerVertically:
   lda TimerControl
   bne NoJSChk             ;if master timer control set, branch ahead
   lda JumpspringAnimCtrl  ;otherwise check to see if jumpspring is animating
-  bne ExPlyrAt             ;branch to leave if so
+  bne NearbyRTS             ;branch to leave if so
 NoJSChk:
   lda VerticalForce       ;dump vertical force 
   sta R0

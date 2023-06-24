@@ -678,7 +678,7 @@ LoadHeader:
         sta AltRegContentFlag        ;initialize alternate control reg data used by square 1
         lda #$0b                     ;disable triangle channel and reenable it
         sta SND_MASTERCTRL_REG
-        lda #ALL_CHANNELS
+        lda #ALL_MUSIC
         ora DMCSoundBuffer
         sta SND_MASTERCTRL_REG
 

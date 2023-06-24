@@ -50,7 +50,7 @@ IRQENABLE   = $e001
 .macro _BANK_INNER bank, select
 .scope
   ; set fixed $8000 bank bit
-	lda #select | PRG_FIXED_8
+  lda #select | PRG_FIXED_8
   sta BANK_SELECT
   .if .match(bank, x)
     stx BANK_DATA

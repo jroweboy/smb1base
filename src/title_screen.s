@@ -47,6 +47,14 @@ NextBankValuesHi:
 .segment "TITLE"
 .export DrawTitleScreenInternal
 .proc DrawTitleScreenInternal
+
+  ; Clear out the vram buffer contents.
+  lda #0
+  tay
+ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
+  iny
+  bne ClearVRLoop
+
   lda #$ff
   sta NmiDisable
   ; wait for NMI so we can disable rendering and start writing the data
@@ -111,7 +119,7 @@ NextBankValuesHi:
   ; BankCHR1C #$55
   ; specifically bank in the sprite for cloud from the BG
   BankCHR1C #$40
-.define BHOP_MAGIC_STRING "7BHP"
+.define BHOP_MAGIC_STRING "8BHP"
   ; check to see if our sound driver is already in SRAM
   lda BhopValidation
   cmp #.strat(BHOP_MAGIC_STRING,0)

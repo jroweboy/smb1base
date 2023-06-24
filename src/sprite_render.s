@@ -8,7 +8,7 @@
 .export DrawFirebar, DrawSmallPlatform, DrawFireball
 .export DrawVine, DrawLargePlatform, DrawPowerUp
 .export DrawOneSpriteRow, JCoinGfxHandler, DrawHammer, DrawBrickChunks, DrawBlock
-.export FlagpoleGfxHandler, DumpFourSpr
+.export FlagpoleGfxHandler, DumpFourSpr, DumpThreeSpr
 
 .export DumpTwoSpr, FloateyNumbersRoutine
 

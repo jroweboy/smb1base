@@ -659,9 +659,9 @@ SetBBox2:  sta Enemy_BoundBoxCtrl,x  ;set bounding box control then leave
 ;this data added to relative coordinates of sprite objects
 ;stored in order: left edge, top edge, right edge, bottom edge
 BoundBoxCtrlData:
-  .byte $02, $08, $0e, $20 
-  .byte $03, $14, $0d, $20
-  .byte $02, $14, $0e, $20
+  .byte $02, $08 - 8, $0e + 8, $20  ; big mario
+  .byte $03, $14, $0d, $20  ; small mario
+  .byte $02, $14, $0e, $20  ; big mario crouching
   .byte $02, $09, $0e, $15
   .byte $00, $00, $18, $06
   .byte $00, $00, $20, $0d

@@ -259,6 +259,8 @@ BowserFront_Offset:             .res  1
 BridgeCollapseOffset:           .res  1
 BowserGfxFlag:                  .res  1
 
+; _filler:                        .res  29 ; jroweboy the memory here is offset by the VRAM_Buffer code
+
 FirebarSpinSpeed:               .res  16
 
 Vine_FlagOffset:                .res  1
@@ -375,6 +377,8 @@ BoundingBox_DR_XPos           = BoundingBox_LR_Corner
 
 BoundingBox_DR_YPos:            .res  1
 EnemyBoundingBoxCoord:          .res  80
+
+.segment "BSS2"
 Block_Buffer_1:                 .res  208
 Block_Buffer_2:                 .res  208
 BlockBufferColumnPos:           .res  1

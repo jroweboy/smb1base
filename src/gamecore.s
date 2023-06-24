@@ -116,13 +116,22 @@ ExitEng:
 ;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer
 ;$06-$07 - used to store block buffer address
-.import ReplaceBlockMetatile
+.import WriteBlockMetatile
 BlockObjMT_Updater:
   ldx #$01                  ;set offset to start with second block object
 UpdateLoop:
     stx ObjectOffset          ;set offset here
-    lda VRAM_Buffer1          ;if vram buffer already being used here,
-    bne NextBUpd              ;branch to move onto next block object
+    lda VRAM_Buffer1_Offset
+    cmp #50                 ; try not to overflow by waiting a frame if we must
+    bcc @CanDraw
+      lda #0
+      sta NmiDisable
+      :
+        cmp NmiDisable
+        beq :-
+@CanDraw:
+    ; lda VRAM_Buffer1          ;if vram buffer already being used here,
+    ; bne NextBUpd              ;branch to move onto next block object
     lda Block_RepFlag,x       ;if flag for block object already clear,
     beq NextBUpd              ;branch to move onto next block object
       lda Block_BBuf_Low,x      ;get low byte of block buffer
@@ -134,7 +143,7 @@ UpdateLoop:
       tay
       lda Block_Metatile,x      ;get metatile to be written
       sta ($06),y               ;write it to the block buffer
-      jsr ReplaceBlockMetatile  ;do sub to replace metatile where block object is
+      jsr WriteBlockMetatile  ;do sub to replace metatile where block object is
       lda #$00
       sta Block_RepFlag,x       ;clear block object flag
 NextBUpd:

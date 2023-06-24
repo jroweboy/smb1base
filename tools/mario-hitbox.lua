@@ -23,7 +23,7 @@ local hammer_ch= 0x002A;
 local power_ch = 0x0014;
 
 local mario_x  = 0x0086;
-local hscroll  = 0x073f; -- emu.getLabelAddress("HorizontalScroll");
+local hscroll  = emu.getLabelAddress("HorizontalScroll"); -- 0x073f; -- emu.getLabelAddress("HorizontalScroll");
 local mario_y  = 0x00ce;
 
 local colorGreen = 0xAA00FF00;
