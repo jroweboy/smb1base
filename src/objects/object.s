@@ -211,6 +211,10 @@ SetBBox:
   jmp InitVStf ; jroweboy: Added this jmp to common code
 
 ;-------------------------------------------------------------------------------------
+.proc ExplodingFlagPole
+  
+  rts
+.endproc
 
 MiscObjectsCore:
           ldx #$08          ;set at end of misc object buffer
@@ -219,6 +223,8 @@ MiscLoop: stx ObjectOffset  ;store misc object offset here
           beq MiscLoopBack  ;branch to check next slot
           asl               ;otherwise shift d7 into carry
           bcc ProcJumpCoin  ;if d7 not set, jumping coin, thus skip to rest of code here
+          asl
+          bcc ExplodingFlagPole
           jsr ProcHammerObj ;otherwise go to process hammer,
           jmp MiscLoopBack  ;then check next slot
 
@@ -282,7 +288,7 @@ ProcHammerObj:
           lda TimerControl           ;if master timer control set
           bne RunHSubs               ;skip all of this code and go to last subs at the end
           lda Misc_State,x           ;otherwise get hammer's state
-          and #%01111111             ;mask out d7
+          and #%00111111             ;mask out d7
           ldy HammerEnemyOffset,x    ;get enemy object offset that spawned this hammer
           cmp #$02                   ;check hammer's state
           beq SetHSpd                ;if currently at 2, branch
@@ -332,8 +338,6 @@ RunHSubs: jsr GetMiscOffscreenBits   ;get offscreen information
           jsr RelativeMiscPosition   ;get relative coordinates
           jsr GetMiscBoundBox        ;get bounding box coordinates
           jmp DrawHammer             ;draw the hammer
-          rts ; TODO check this RTS can be removed                        ;and we are done here
-
 
 ;-------------------------------------------------------------------------------------
 

@@ -43,7 +43,6 @@ GameCoreSubRoutine:
   .word ProcessCannons
   .word ProcessWhirlpools
   .word FlagpoleRoutine
-  ; .word RunGameTimer
 
 HandlePlayer:
   jsr GetPlayerOffscreenBits ;get offscreen bits for player object

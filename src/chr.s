@@ -7,6 +7,7 @@
 .incbin .sprintf("../chr/rotate/rotate_%d.chr", I)
 .endrepeat
 
+
 .segment "CHR_ORIGINAL"
 ; Switch sprites and bg
 .incbin "../Super Mario Bros. (World).nes", $9010, $1000

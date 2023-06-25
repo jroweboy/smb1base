@@ -41,7 +41,7 @@ def main():
     out.paste(flag3.rotate(angle), FLAG3_BOX)
     out.save(f"/Users/jroweboy/dev/smb1base/build/rotate_{i}.bmp")
     b = pilbmp2chr(out)
-    with open(f"/Users/jroweboy/dev/smb1base/chr/rotate_{i}.chr", 'wb') as f:
+    with open(f"/Users/jroweboy/dev/smb1base/chr/rotate/rotate_{i}.chr", 'wb') as f:
       f.write(b''.join(b))
 
 if __name__ == "__main__":
