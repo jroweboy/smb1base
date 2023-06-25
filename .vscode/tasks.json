@@ -9,7 +9,7 @@
             "args": ["--build", "${config:cmake.buildDirectory}", "--target", "${input:fileAsTarget}^"],
             "presentation": {
                 "echo": true,
-                "reveal": "silent",
+                // "reveal": "silent",
                 "focus": false,
                 "panel": "shared",
                 // "close": true,
@@ -116,6 +116,21 @@
                             "message": 4
                         }
                     ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
+                    "source": "ca65",
+                    "pattern": [
+                        {
+                            "regexp": "^/(.+):([\\d]+): ?(\\w*): ?(.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "severity": 3,
+                            "message": 4
+                        }
+                    ]
                 }
             ],
             "group": {
@@ -203,6 +218,7 @@
                 {
                     "owner": "ca65",
                     "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
                     "source": "ca65",
                     "pattern": [
                         {
@@ -263,7 +279,7 @@
             "command": "extension.commandvariable.transform",
             "args": {
                 "text": "${command:extension.commandvariable.file.filePosix}",
-                "find": "$/c",
+                "find": "^/c",
                 "replace": "C:",
                 "flags": ""
             }

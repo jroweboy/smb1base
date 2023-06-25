@@ -1032,6 +1032,8 @@ ExDBlk: rts
 ;$00 - used to hold palette bits for attribute byte or relative X position
 
 DrawBrickChunks:
+      AllocSpr 4
+      sty OriginalOAMOffset
          lda #$02                   ;set palette bits here
          sta R0
          lda #$75                   ;set tile number for ball (something residual, likely)
@@ -1042,7 +1044,7 @@ DrawBrickChunks:
          sta R0
          lda #$84                   ;and set tile number for brick chunks
 DChunks: 
-      AllocSpr 4
+         ldy OriginalOAMOffset
         ;  ldy Block_SprDataOffset,x  ;get OAM data offset
          iny                        ;increment to start with tile bytes in OAM
          jsr DumpFourSpr            ;do sub to dump tile number into all four sprites
