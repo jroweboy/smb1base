@@ -13,13 +13,15 @@ R5                             = TempReg + 5
 R6                             = TempReg + 6
 R7                             = TempReg + 7
 
-IrqTemp:                        .res 6
+IrqTemp:                        .res 2
 IrqR0 = IrqTemp + 0
 IrqR1 = IrqTemp + 1
-IrqR2 = IrqTemp + 2
-IrqR3 = IrqTemp + 3
-IrqR4 = IrqTemp + 4
-IrqR5 = IrqTemp + 5
+
+MainTemp:                       .res 4
+M0                             = MainTemp + 0
+M1                             = MainTemp + 1
+M2                             = MainTemp + 2
+M3                             = MainTemp + 3
 
 ObjectOffset:                   .res  1
 FrameCounter:                   .res  1

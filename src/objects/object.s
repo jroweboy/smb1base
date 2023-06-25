@@ -105,6 +105,7 @@ JmpEO:
   .word NoRunCode
   .word WarpZoneObject
   .word RunRetainerObj
+  .word RunFlagpoleShard ; $36
 
 CheckpointEnemyID:
   lda Enemy_ID,x
@@ -179,7 +180,7 @@ InitEnemyRoutines:
   .word NoInitCode
   .word NoInitCode
   .word InitRetainerObj
-  .word EndOfEnemyInitCode
+  .word EndOfEnemyInitCode ; flagpole shard
 
 ;--------------------------------
 
@@ -211,22 +212,110 @@ SetBBox:
   jmp InitVStf ; jroweboy: Added this jmp to common code
 
 ;-------------------------------------------------------------------------------------
+
+MiscExplodingFlagPole:
+  ; store the original Misc obj offset
+  ; but load the enemy offset so we can use the same code for both
+  stx R3
+  txa
+  clc
+  adc #Misc_State - Enemy_State
+  tax
+  stx ObjectOffset
+  jsr ExplodingFlagPole
+  jmp MiscLoopBack
+EnemyExplodingFlagPole:
+  stx R3
+.import BBChk_E, CheckForSolidMTiles
 .proc ExplodingFlagPole
+  ; check the interval timer to see if we are disappearing
+  txa
+  and #%00000111
+  tay
+  lda EnemyIntervalTimer,y
+  bne :+ 
+    sta Enemy_State,x
+    jmp Exit
+  :
+  ldy #$1c                  ;set downward movement amount
+  sty R0
+  lda #3                  ;set maximum vertical speed
+  sta R2
+  lda #0                  ;set A to impose gravity on jumping coin
+
+  ; bump x to use the expected enemy offset (and not mario's offset)
+  inx
+  jsr ImposeGravity         ;do sub to move coin vertically and impose gravity on it
+  jsr MoveObjectHorizontally
+
+  ; restore the original offset (probably not needed)
+  ldx ObjectOffset
+  ; Make them bounce around in the jankiest way i can imagine
+  lda Enemy_X_Position, x
+  cmp #16
+  bcs :+
+
+    lda Enemy_X_Speed, x
+    eor #$ff
+    adc #1
+    sta Enemy_X_Speed, x
+  :
+  cmp #240
+  bcc :+
+    lda Enemy_X_Speed, x
+    eor #$ff
+    adc #1
+    sta Enemy_X_Speed, x
+  :
   
+  lda Enemy_Y_Position, x
+  cmp #16
+  bcs :+
+    lda Enemy_Y_Speed, x
+    eor #$ff
+    adc #1
+    sta Enemy_Y_Speed, x
+  :
+  cmp #200
+  bcc :+
+    lda #200
+    sta Enemy_Y_Position, x
+    lda Enemy_Y_Speed, x
+    eor #$ff
+    adc #0
+    sta Enemy_Y_Speed, x
+  :
+
+NothingHit:
+  AllocSpr 1
+  lda Enemy_State,x
+  and #%00111111
+  sta Sprite_Tilenumber, y
+  lda Enemy_Y_Position, x
+  sta Sprite_Y_Position, y
+  lda Enemy_X_Position, x
+  sta Sprite_X_Position, y
+  lda #$01
+  sta Sprite_Attributes, y
+Exit:
+  ldx R3
   rts
 .endproc
 
 MiscObjectsCore:
-          ldx #$08          ;set at end of misc object buffer
-MiscLoop: stx ObjectOffset  ;store misc object offset here
-          lda Misc_State,x  ;check misc object state
-          beq MiscLoopBack  ;branch to check next slot
-          asl               ;otherwise shift d7 into carry
-          bcc ProcJumpCoin  ;if d7 not set, jumping coin, thus skip to rest of code here
-          asl
-          bcc ExplodingFlagPole
-          jsr ProcHammerObj ;otherwise go to process hammer,
-          jmp MiscLoopBack  ;then check next slot
+  ldx #$08          ;set at end of misc object buffer
+MiscLoop:
+    stx ObjectOffset  ;store misc object offset here
+    lda Misc_State,x  ;check misc object state
+    beq MiscLoopBack  ;branch to check next slot
+    asl               ;otherwise shift d7 into carry
+    bcc ProcJumpCoin  ;if d7 not set, jumping coin, thus skip to rest of code here
+    asl
+    bcs :+
+      jmp MiscExplodingFlagPole
+    :
+    jsr ProcHammerObj ;otherwise go to process hammer,
+    jmp MiscLoopBack  ;then check next slot
 
 ;--------------------------------
 ;$00 - used to set downward force
@@ -834,3 +923,8 @@ NoOfs2: ldx ObjectOffset           ;get object offset and leave
 MoveJumpingEnemy:
       jsr MoveJ_EnemyVertically  ;do a sub to impose gravity on green paratroopa
       jmp MoveEnemyHorizontally  ;jump to move enemy horizontally
+
+.proc RunFlagpoleShard
+  ldx ObjectOffset
+  jmp EnemyExplodingFlagPole
+.endproc

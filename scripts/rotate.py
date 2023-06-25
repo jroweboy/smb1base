@@ -25,7 +25,7 @@ def main():
   flag3 = fulldrawing.crop(FLAG3_BOX)
 
   angles = 64
-  direc = 1
+  direc = -1
   for i in range(0,angles):
     angle = direc * i * (360.0 / angles)
     out = Image.new("P", (128, 32))

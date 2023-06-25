@@ -2,6 +2,8 @@
 .ifndef __GLOBALS_INC
 __GLOBALS_INC = 1
 
+FLAGPOLE_ID = $36
+
 ; 
 .global JumpEngine
 
@@ -29,6 +31,7 @@ __GLOBALS_INC = 1
 .global RelativePlayerPosition
 .global RelativeBlockPosition
 .global GetBlockOffscreenBits
+.global GetObjRelativePosition
 .global InitVStf
 .global GetMiscOffscreenBits
 .global KillEnemies

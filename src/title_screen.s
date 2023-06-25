@@ -142,8 +142,8 @@ FailedValidation:
   ; sta RAM_PROTECT
 
 LOAD = IrqR0
-RUN = IrqR2
-SIZE = IrqR4
+RUN = M0
+SIZE = M2
 
   lda #<__MUSIC_DRIVER_LOAD__
   sta LOAD

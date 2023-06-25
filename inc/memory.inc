@@ -6,6 +6,7 @@ __MEMORY_INC = 1
 ; ------------------------------R -------A --------M ----------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------
 
+.globalzp TempReg
 .globalzp R0
 .globalzp R1
 .globalzp R2
@@ -18,10 +19,12 @@ __MEMORY_INC = 1
 .globalzp IrqTemp
 .globalzp IrqR0
 .globalzp IrqR1
-.globalzp IrqR2
-.globalzp IrqR3
-.globalzp IrqR4
-.globalzp IrqR5
+
+.globalzp MainTemp
+.globalzp M0
+.globalzp M1
+.globalzp M2
+.globalzp M3
 
 .globalzp ObjectOffset
 .globalzp FrameCounter

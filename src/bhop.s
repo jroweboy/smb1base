@@ -11,14 +11,14 @@
 .include "bhop/effects.asm"
 
         .segment BHOP_ZP_SEGMENT
-.globalzp IrqTemp
+.globalzp TempReg
 ; scratch ptr, used for all sorts of indirect reads
-bhop_ptr = IrqTemp ;: .word $0000
+bhop_ptr = TempReg ;: .word $0000
 ; pattern pointers, read repeatedly when updating
 ; rows in a loop, we'll want access to these to be quick
-pattern_ptr = IrqTemp + 2 ; : .word $0000
-channel_index = IrqTemp + 4 ; : .byte $00
-scratch_byte = IrqTemp + 5 ; : .byte $00
+pattern_ptr = TempReg + 2 ; : .word $0000
+channel_index = TempReg + 4 ; : .byte $00
+scratch_byte = TempReg + 5 ; : .byte $00
 
         .segment BHOP_RAM_SEGMENT
 tempo_counter: .word $0000

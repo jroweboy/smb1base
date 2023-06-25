@@ -894,14 +894,14 @@ WriteBlankMT:
   rts
 .endproc
 
-.proc ReplaceBlockMetatile
+; .proc ReplaceBlockMetatile
   ; jsr WriteBlockMetatile    ;write metatile to vram buffer to replace block object
   ; inc Block_ResidualCounter ;increment unused counter (residual code)
   ; dec Block_RepFlag,x       ;decrement flag (residual code)
   ; rts
   ; jmp WriteBlockMetatile    ;write metatile to vram buffer to replace block object
   ; rts                       ;leave
-.endproc
+; .endproc
 
 DestroyBlockMetatile:
   lda #$00       ;force blank metatile if branched/jumped to this point
@@ -931,6 +931,7 @@ MoveVOffset:
   clc
   adc #10
   jmp SetVRAMOffset       ;branch to store as new vram buffer offset
+
 PutBlockMetatile:
   stx R0               ;store control bit from SprDataOffset_Ctrl
   sty R1               ;store vram buffer offset for next byte

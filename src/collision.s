@@ -27,6 +27,8 @@
 ; gamecore.s
 .export ForceInjury
 
+.export BBChk_E
+
 .segment "COLLISION"
 
 ;-------------------------------------------------------------------------------------
@@ -1296,6 +1298,7 @@ ScaledRotationSpeed:
 SolidMTileUpperExt:
   .byte $10, $61, $88, $c4
 
+.export CheckForSolidMTiles
 CheckForSolidMTiles:
   jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
   cmp SolidMTileUpperExt,x  ;compare current metatile with solid metatiles
@@ -1635,8 +1638,153 @@ ExIPM:
 ;$04 - low nybble of horizontal coordinate from block buffer
 ;$06-$07 - block buffer address
 
-BreakFlagPole:
+.proc BreakFlagPole
   ; Step 1: Replace flagpole with sprites
+  lda VRAM_Buffer1_Offset
+  beq CanDraw
+    lda #0
+    sta NmiDisable
+    :
+      cmp NmiDisable
+      beq :-
+CanDraw:
+  lda #5 - 1
+  sta M0
+  lda R2
+  and #%00001111
+  sta R2
+  :
+    jsr DestroyBlockMetatile
+    lda R2
+    clc
+    adc #%00010000
+    sta R2
+    dec M0
+    bpl :-
+
+  ; add the palette write as well
+  ldx VRAM_Buffer1_Offset
+  lda #$3f
+  sta VRAM_Buffer1+0,x
+  lda #$16
+  sta VRAM_Buffer1+1,x
+  lda #$01
+  sta VRAM_Buffer1+2,x
+  lda #$29
+  sta VRAM_Buffer1+3,x
+  lda #$00                 ;now the null terminator
+  sta VRAM_Buffer1+4,x
+  txa
+  clc
+  adc #5
+  sta VRAM_Buffer1_Offset
+
+  ; wait for the second NMI since we can't delete fast enough :P
+  ; without doing more coding
+  lda #0
+  sta NmiDisable
+  :
+    cmp NmiDisable
+    beq :-
+
+  lda #5 - 1
+  sta M0
+  :
+    jsr DestroyBlockMetatile
+    lda R2
+    clc
+    adc #%00010000
+    sta R2
+    dec M0
+    bpl :-
+
+  ; add sprite flagpole in the enemy slots
+  ; use offsets 1 - 6 to leave the slot for the flag alone
+  ldx #5 - 1
+  :
+    lda #FLAGPOLE_ID
+    sta Enemy_ID+1, x
+    sta Enemy_Flag+1, x
+
+    lda FlagPoleTile, x
+    sta Enemy_State+1, x
+    ; TODO get the X position for the flagpole
+    lda #120
+    sta Enemy_X_Position+1, x
+    lda FlagPoleYPosTop, x
+    sta Enemy_Y_Position+1, x
+
+    lda PseudoRandomBitReg,x
+    and #%00000111
+    tay
+    adc FlagPoleXSpeed,y
+    sta Enemy_X_Speed+1,x
+
+    lda PseudoRandomBitReg,x
+    and #%00000111
+    tay
+    adc FlagPoleYSpeed,y
+    sta Enemy_Y_Speed+1,x
+
+    dex
+    bpl :-
+
+  ; add the misc flagpole sprites
+  ldx #9 - 1
+  :
+    lda FlagPoleTile, x
+    sta Misc_State, x
+
+    lda #120
+    sta Misc_X_Position, x
+
+    lda FlagPoleYPosBot, x
+    sta Misc_Y_Position, x
+
+    lda PseudoRandomBitReg,x
+    and #%00000111
+    tay
+    adc FlagPoleXSpeed,y
+    sta Misc_X_Speed,x
+    
+    lda PseudoRandomBitReg,x
+    and #%00000111
+    tay
+    adc FlagPoleYSpeed,y
+    sta Misc_Y_Speed,x
+
+    tya
+    and #%00000011
+    clc
+    adc #3
+    sta EnemyIntervalTimer, x
+    dex
+    bpl :-
+
+  ; force the player to rotate to make the chunks rotate too
+  lda #10
+  sta AngularMomentum
+  rts
+
+FlagPoleTile:
+  .byte $80 | $33, $80 | $34, $80 | $35
+  .byte $80 | $33, $80 | $34, $80 | $35
+  .byte $80 | $33, $80 | $34, $80 | $35
+FlagPoleYPosTop:
+.repeat 5, I
+  .byte $30 + (I * 8)
+.endrepeat
+FlagPoleYPosBot:
+.repeat 9, I
+  .byte $30 + (I * 8) + (5 * 8)
+.endrepeat
+X_ADD = $8
+FlagPoleXSpeed:
+  .byte $8 + X_ADD, $14 + X_ADD, $3 - X_ADD, -$12 - X_ADD
+  .byte $0 + X_ADD, -$20 - X_ADD, $20 + X_ADD, -$6 - X_ADD
+FlagPoleYSpeed:
+  .byte $1, $2, $0, $2, $3, $1, $4, $0
+.endproc
 
 ClimbXPosAdder:
       .byte $f9, $07
@@ -1646,6 +1794,12 @@ ClimbPLocAdder:
 
 FlagpoleYPosData:
       .byte $18, $22, $50, $68, $90
+
+.proc FallSlowly
+; todo: make mario fall still
+  jmp ImposeGravity
+  ; rts
+.endproc
 
 HandleClimbing:
       ldy R4            ;check low nybble of horizontal coordinate returned from
@@ -1662,24 +1816,47 @@ ChkForFlagpole:
       bne VineCollision      ;branch to alternate code if flagpole shaft not found
 
 FlagpoleCollision:
-      lda GameEngineSubroutine
-      cmp #$05                  ;check for end-of-level routine running
-      beq PutPlayerOnVine       ;if running, branch to end of climbing code
-      lda #$01
-      sta PlayerFacingDir       ;set player's facing direction to right
-      inc ScrollLock            ;set scroll lock flag
-      lda GameEngineSubroutine
-      cmp #$04                  ;check for flagpole slide routine running
-      beq RunFR                 ;if running, branch to end of flagpole code here
-      lda #BulletBill_CannonVar ;load identifier for bullet bills (cannon variant)
-      jsr KillEnemies           ;get rid of them
-      lda #Silence
-      sta EventMusicQueue       ;silence music
-      lsr
-      sta FlagpoleSoundQueue    ;load flagpole sound into flagpole sound queue
-      ldx #$04                  ;start at end of vertical coordinate data
-      lda Player_Y_Position
-      sta FlagpoleCollisionYPos ;store player's vertical coordinate here to be used later
+      ; lda GameEngineSubroutine
+      ; cmp #$05                  ;check for end-of-level routine running
+      ; beq PutPlayerOnVine       ;if running, branch to end of climbing code
+      ; lda #$01
+      ; sta PlayerFacingDir       ;set player's facing direction to right
+      ; inc ScrollLock            ;set scroll lock flag
+      ; lda GameEngineSubroutine
+      ; cmp #$04                  ;check for flagpole slide routine running
+      ; beq RunFR                 ;if running, branch to end of flagpole code here
+      ; lda #BulletBill_CannonVar ;load identifier for bullet bills (cannon variant)
+      ; jsr KillEnemies           ;get rid of them
+      ; lda #Silence
+      ; sta EventMusicQueue       ;silence music
+      ; lsr
+      ; sta FlagpoleSoundQueue    ;load flagpole sound into flagpole sound queue
+      ; ldx #$04                  ;start at end of vertical coordinate data
+      ; lda Player_Y_Position
+      ; sta FlagpoleCollisionYPos ;store player's vertical coordinate here to be used later
+  lda GameEngineSubroutine
+  cmp #5
+  beq PutPlayerOnVine
+    lda #$01
+    sta PlayerFacingDir       ;set player's facing direction to right
+    inc ScrollLock            ;set scroll lock flag
+    lda GameEngineSubroutine
+    cmp #$04                  ;check for flagpole slide routine running
+    beq RunFR                 ;if running, branch to end of flagpole code here
+
+    ; first time hitting the flagpole
+    ; so lets 
+    jsr BreakFlagPole
+    ; inc ScrollLock
+    ; lda #BulletBill_CannonVar
+    ; jsr KillEnemies
+    lda #Silence
+    sta EventMusicQueue
+    lsr
+    sta FlagpoleSoundQueue
+    ldx #$04                  ;start at end of vertical coordinate data
+    lda Player_Y_Position
+    sta FlagpoleCollisionYPos ;store player's vertical coordinate here to be used later
 
 ChkFlagpoleYPosLoop:
        cmp FlagpoleYPosData,x    ;compare with current vertical coordinate data
@@ -1688,6 +1865,7 @@ ChkFlagpoleYPosLoop:
        bne ChkFlagpoleYPosLoop   ;do this until all data is checked (use last one if all checked)
 MtchF: stx FlagpoleScore         ;store offset here to be used later
 RunFR: lda #$04
+      ;  lda #5
        sta GameEngineSubroutine  ;set value to run flagpole slide routine
        jmp PutPlayerOnVine       ;jump to end of climbing code
 
