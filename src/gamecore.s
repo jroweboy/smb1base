@@ -3,7 +3,7 @@
 .include "player.inc"
 
 ; objects/object.s
-.import FloateyNumbersRoutine, MiscObjectsCore, ProcessAllEnemies
+.import FloateyNumbersRoutine, MiscObjectsCore, ProcessSingleEnemy
 ; objects/cannon.s
 .import ProcessCannons
 ; music.s
@@ -26,6 +26,38 @@
 .export GameCoreRoutine, UpdScrollVar
 
 .segment "CODE"
+
+GameCoreSubRoutine:
+  tax
+  jsr JumpEngine
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcFireball_Bubble
+  .word HandlePlayer
+  .word HandleBlocks
+  .word MiscObjectsCore
+  .word ProcessCannons
+  .word ProcessWhirlpools
+  .word FlagpoleRoutine
+  ; .word RunGameTimer
+
+HandlePlayer:
+  jsr GetPlayerOffscreenBits ;get offscreen bits for player object
+  jsr RelativePlayerPosition ;get relative coordinates for player object
+  farcall PlayerGfxHandler, jmp       ;draw the player
+
+HandleBlocks:
+  jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
+  ldx #$01
+  stx ObjectOffset           ;set offset for second
+  jsr BlockObjectsCore       ;process second block object
+  dex
+  stx ObjectOffset           ;set offset for first
+  jmp BlockObjectsCore       ;process first block object
 
 ;-------------------------------------------------------------------------------------
 GameCoreRoutine:
@@ -51,42 +83,69 @@ GameEngine:
       adc #12 * 4
     :
     sta CurrentOAMOffset
-    jsr ProcFireball_Bubble    ;process fireballs and air bubbles
-    jsr ProcessAllEnemies
-    jsr GetPlayerOffscreenBits ;get offscreen bits for player object
-    jsr RelativePlayerPosition ;get relative coordinates for player object
-    farcall PlayerGfxHandler       ;draw the player
-    jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
-    ldx #$01
-    stx ObjectOffset           ;set offset for second
-    jsr BlockObjectsCore       ;process second block object
-    dex
-    stx ObjectOffset           ;set offset for first
-    jsr BlockObjectsCore       ;process first block object
-    jsr MiscObjectsCore        ;process misc objects (hammer, jumping coins)
-    jsr ProcessCannons         ;process bullet bill cannons
-    jsr ProcessWhirlpools      ;process whirlpools
-    jsr FlagpoleRoutine        ;process the flagpole
+
+    lda #13 - 1 ; size of the different object update list
+    sta SpriteShuffleTemp
+    lda SpriteShuffleOffset
+    clc
+    adc #7
+    cmp #13
+    bcc @SkipSubtract
+      ; implicit carry set
+      sbc #13
+  @SkipSubtract:
+    sta SpriteShuffleOffset
+  @ObjectLoop:
+      lda SpriteShuffleOffset
+      clc
+      adc #9
+      cmp #13
+      bcc @SkipSubtract1
+        ; implicit carry set
+        sbc #13
+    @SkipSubtract1:
+      sta SpriteShuffleOffset
+      jsr GameCoreSubRoutine
+      dec SpriteShuffleTemp
+      bpl @ObjectLoop
+
+    ; jsr ProcFireball_Bubble    ;process fireballs and air bubbles
+    ; jsr ProcessAllEnemies
+    ; jsr GetPlayerOffscreenBits ;get offscreen bits for player object
+    ; jsr RelativePlayerPosition ;get relative coordinates for player object
+    ; farcall PlayerGfxHandler       ;draw the player
+    ; jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
+    ; ldx #$01
+    ; stx ObjectOffset           ;set offset for second
+    ; jsr BlockObjectsCore       ;process second block object
+    ; dex
+    ; stx ObjectOffset           ;set offset for first
+    ; jsr BlockObjectsCore       ;process first block object
+    ; jsr MiscObjectsCore        ;process misc objects (hammer, jumping coins)
+    ; jsr ProcessCannons         ;process bullet bill cannons
+    ; jsr ProcessWhirlpools      ;process whirlpools
+    ; jsr FlagpoleRoutine        ;process the flagpole
+
     jsr RunGameTimer           ;count down the game timer
     jsr ColorRotation          ;cycle one of the background colors
   endfar
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music
   bpl NoChgMus
-  lda StarInvincibleTimer    ;if star mario invincibility timer at zero,
-  beq ClrPlrPal              ;skip this part
-  cmp #$04
-  bne NoChgMus               ;if not yet at a certain point, continue
-  lda IntervalTimerControl   ;if interval timer not yet expired,
-  bne NoChgMus               ;branch ahead, don't bother with the music
-  jsr GetAreaMusic       ;to re-attain appropriate level music
+    lda StarInvincibleTimer    ;if star mario invincibility timer at zero,
+    beq ClrPlrPal              ;skip this part
+      cmp #$04
+      bne NoChgMus               ;if not yet at a certain point, continue
+        lda IntervalTimerControl   ;if interval timer not yet expired,
+        bne NoChgMus               ;branch ahead, don't bother with the music
+          jsr GetAreaMusic       ;to re-attain appropriate level music
 NoChgMus:
   ldy StarInvincibleTimer    ;get invincibility timer
   lda FrameCounter           ;get frame counter
   cpy #$08                   ;if timer still above certain point,
   bcs CycleTwo               ;branch to cycle player's palette quickly
-  lsr                        ;otherwise, divide by 8 to cycle every eighth frame
-  lsr
+    lsr                        ;otherwise, divide by 8 to cycle every eighth frame
+    lsr
 CycleTwo:
   lsr                        ;if branched here, divide by 2 to cycle every other frame
   sta R0
@@ -117,7 +176,6 @@ RunParser:
   farcall AreaParserTaskHandler  ;update the name table with more level graphics
 ExitEng:
   rts                        ;and after all that, we're finally done!
-
 
 ;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer

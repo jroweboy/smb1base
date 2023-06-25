@@ -407,6 +407,9 @@ ChangeAreaTimer:                .res  2
 
 CurrentOAMOffset:               .res  1
 OriginalOAMOffset:              .res  1
+SpriteShuffleOffset:            .res  1
+SpriteShuffleTemp:              .res  1
+
 ; SprShuffleAmtOffset:            .res  1
 ; SprShuffleAmt:                  .res  3
 

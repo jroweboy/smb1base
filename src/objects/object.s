@@ -13,21 +13,27 @@
 .export EnemiesAndLoopsCore
 
 ; gamecore.s
-.export MiscObjectsCore, ProcessAllEnemies
+.export MiscObjectsCore, ProcessSingleEnemy
 
 .segment "OBJECT"
 
 ;-------------------------------------------------------------------------------------
-ProcessAllEnemies:
-  ldx #$00
-ProcELoop:
-    stx ObjectOffset           ;put incremented offset in X as enemy object offset
-    jsr EnemiesAndLoopsCore    ;process enemy objects
-    jsr FloateyNumbersRoutine  ;process floatey numbers
-    inx
-    cpx #$06                   ;do these two subroutines until the whole buffer is done
-    bne ProcELoop
-  rts
+; ProcessAllEnemies:
+;   ldx #$00
+; ProcELoop:
+;     stx ObjectOffset           ;put incremented offset in X as enemy object offset
+;     jsr EnemiesAndLoopsCore    ;process enemy objects
+;     jsr FloateyNumbersRoutine  ;process floatey numbers
+;     inx
+;     cpx #$06                   ;do these two subroutines until the whole buffer is done
+;     bne ProcELoop
+;   rts
+
+.proc ProcessSingleEnemy
+  stx ObjectOffset
+  jsr EnemiesAndLoopsCore
+  jmp FloateyNumbersRoutine
+.endproc
 
 .proc EnemiesAndLoopsCore
   lda Enemy_Flag,x         ;check data here for MSB set
