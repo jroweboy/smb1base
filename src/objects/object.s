@@ -295,7 +295,7 @@ NothingHit:
   sta Sprite_Y_Position, y
   lda Enemy_X_Position, x
   sta Sprite_X_Position, y
-  lda #$01
+  lda #3
   sta Sprite_Attributes, y
 Exit:
   ldx R3

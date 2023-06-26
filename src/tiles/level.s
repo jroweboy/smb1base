@@ -379,6 +379,7 @@ ProcADLoop: stx ObjectOffset
             lda (AreaData),y         ;get first byte of area object
             cmp #$fd                 ;if end-of-area, skip all this crap
             beq RdyDecode
+Continue:
             lda AreaObjectLength,x   ;check area object buffer flag
             bpl RdyDecode            ;if buffer not negative, branch, otherwise
             iny
@@ -437,6 +438,57 @@ IncAreaObjOffset:
       sta AreaObjectPageSel
       rts
 
+LoopAreaData:
+
+  lda FirstTimeAreaReset
+  bne @WaitForSecondPage
+
+  lda BlockBufferColumnPos
+;   cmp #$10s
+  bne @DoneForNow
+    ; we loaded enough empty room to be past the end of the level
+    ; so set the flag to wait for the second page
+    inc FirstTimeAreaReset
+    bne @DoneForNow
+  
+@WaitForSecondPage:
+    ; now wait till we load the second page of data
+    lda BlockBufferColumnPos
+    cmp #$10
+    bne @DoneForNow
+
+      lda CurrentPageLoc        ;send current page back four pages
+      sec
+      sbc Player_PageLoc
+      sta CurrentPageLoc
+
+      lda ScreenRight_PageLoc   ;do the same for the page location
+      sec                       ;of screen's right border
+      sbc Player_PageLoc
+      sta ScreenRight_PageLoc
+
+      lda ScreenLeft_PageLoc     ;subtract four from page control
+      sec                       ;for area objects
+      sbc Player_PageLoc
+      sta ScreenLeft_PageLoc
+
+
+    ldy #0
+    sty Player_PageLoc
+
+    sty AreaObjectPageLoc
+    sty FirstTimeAreaReset
+    sty EnemyObjectPageSel
+    sty AreaObjectPageSel
+    sty EnemyDataOffset
+    sty EnemyObjectPageLoc
+    sty AreaDataOffset
+    lda (AreaData),y
+    jmp GoBackToProcessing
+
+@DoneForNow:
+  rts
+
 DecodeAreaData:
           lda AreaObjectLength,x     ;check current buffer flag
           bmi Chk1stB
@@ -444,7 +496,9 @@ DecodeAreaData:
 Chk1stB:  ldx #$10                   ;load offset of 16 for special row 15
           lda (AreaData),y           ;get first byte of level object again
           cmp #$fd
-          beq EndAParse              ;if end of level, leave this routine
+          ; beq EndAParse              ;if end of level, leave this routine
+          beq LoopAreaData
+GoBackToProcessing:
           and #$0f                   ;otherwise, mask out low nybble
           cmp #$0f                   ;row 15?
           beq ChkRow14               ;if so, keep the offset of 16

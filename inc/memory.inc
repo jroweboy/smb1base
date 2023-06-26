@@ -389,9 +389,11 @@ StackClear = SwitchToMainIRQ
 .global CurrentOAMOffset
 .global OriginalOAMOffset
 
-
 .global SpriteShuffleOffset
 .global SpriteShuffleTemp
+
+.global FirstTimeAreaReset
+.global AreaResetCountdown
 ; .global SprShuffleAmtOffset
 ; .global SprShuffleAmt
 

@@ -412,6 +412,8 @@ OriginalOAMOffset:              .res  1
 SpriteShuffleOffset:            .res  1
 SpriteShuffleTemp:              .res  1
 
+FirstTimeAreaReset:             .res  1
+AreaResetCountdown:             .res  1
 ; SprShuffleAmtOffset:            .res  1
 ; SprShuffleAmt:                  .res  3
 

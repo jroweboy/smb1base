@@ -429,7 +429,7 @@ AutoPlayer:
   jsr JumpEngine
 
   .word BridgeCollapse
-  .word SetupVictoryMode ; 
+  .word SetupVictoryMode
   .word PlayerVictoryWalk
   .word PrintVictoryMessages
   .word PlayerEndWorld

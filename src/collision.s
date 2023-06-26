@@ -1666,7 +1666,7 @@ CanDraw:
   ldx VRAM_Buffer1_Offset
   lda #$3f
   sta VRAM_Buffer1+0,x
-  lda #$16
+  lda #$1e
   sta VRAM_Buffer1+1,x
   lda #$01
   sta VRAM_Buffer1+2,x
@@ -1699,32 +1699,35 @@ CanDraw:
     bpl :-
 
   ; add sprite flagpole in the enemy slots
-  ; use offsets 1 - 6 to leave the slot for the flag alone
+  ; flagpole flag is fixed in slot #5
+  ; use offsets 0 - 4 to leave the slot for the flag alone
   ldx #5 - 1
   :
     lda #FLAGPOLE_ID
-    sta Enemy_ID+1, x
-    sta Enemy_Flag+1, x
+    sta Enemy_ID, x
+    sta Enemy_Flag, x
 
     lda FlagPoleTile, x
-    sta Enemy_State+1, x
-    ; TODO get the X position for the flagpole
-    lda #120
-    sta Enemy_X_Position+1, x
+    sta Enemy_State, x
+
+    lda Player_X_Position
+    clc
+    adc #8
+    sta Enemy_X_Position, x
     lda FlagPoleYPosTop, x
-    sta Enemy_Y_Position+1, x
+    sta Enemy_Y_Position, x
 
     lda PseudoRandomBitReg,x
     and #%00000111
     tay
     adc FlagPoleXSpeed,y
-    sta Enemy_X_Speed+1,x
+    sta Enemy_X_Speed,x
 
     lda PseudoRandomBitReg,x
     and #%00000111
     tay
     adc FlagPoleYSpeed,y
-    sta Enemy_Y_Speed+1,x
+    sta Enemy_Y_Speed,x
 
     dex
     bpl :-
@@ -1735,7 +1738,9 @@ CanDraw:
     lda FlagPoleTile, x
     sta Misc_State, x
 
-    lda #120
+    lda Player_X_Position
+    clc
+    adc #8
     sta Misc_X_Position, x
 
     lda FlagPoleYPosBot, x
@@ -1865,7 +1870,6 @@ ChkFlagpoleYPosLoop:
        bne ChkFlagpoleYPosLoop   ;do this until all data is checked (use last one if all checked)
 MtchF: stx FlagpoleScore         ;store offset here to be used later
 RunFR: lda #$04
-      ;  lda #5
        sta GameEngineSubroutine  ;set value to run flagpole slide routine
        jmp PutPlayerOnVine       ;jump to end of climbing code
 
