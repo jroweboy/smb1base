@@ -129,8 +129,18 @@ ExitEntr:
 ;-------------------------------------------------------------------------------------
 ;$07 - used to hold upper limit of high byte when player falls down hole
 
-AutoControlPlayer:
+.proc AutoControlPlayer
   sta SavedJoypadBits         ;override controller bits with contents of A if executing here
+  cmp #Right_Dir
+  bne :+
+    lda #10
+    sta Player_X_Speed
+    ; brk
+    ; nop
+  :
+  ; rts
+  ;; fallthrough
+.endproc
 
 PlayerCtrlRoutine:
   lda GameEngineSubroutine    ;check task here
@@ -198,13 +208,13 @@ PlayerSubs:
     lda GameEngineSubroutine
     cmp #$05                    ;if running end-of-level routine, branch ahead
     beq PlayerHole
-      cmp #$07                    ;if running player entrance routine, branch ahead
-      beq PlayerHole
-        cmp #$04                    ;if running routines $00-$03, branch ahead
-        bcc PlayerHole
-          lda Player_SprAttrib
-          and #%11011111              ;otherwise nullify player's
-          sta Player_SprAttrib        ;background priority flag
+    cmp #$07                    ;if running player entrance routine, branch ahead
+    beq PlayerHole
+    cmp #$04                    ;if running routines $00-$03, branch ahead
+    bcc PlayerHole
+      lda Player_SprAttrib
+      and #%11011111              ;otherwise nullify player's
+      sta Player_SprAttrib        ;background priority flag
 PlayerHole:
   lda Player_Y_HighPos        ;check player's vertical high byte
   cmp #$02                    ;for below the screen
@@ -316,7 +326,6 @@ EnterSidePipe:
            tay                    ;and nullify controller bit override here
 RightPipe: tya                    ;use contents of Y to
            jmp AutoControlPlayer  ;execute player control routine with ctrl bits nulled
-           rts ; TODO check this RTS can be removed
 
 ;-------------------------------------------------------------------------------------
 
@@ -1231,10 +1240,10 @@ PlayerPhysicsSub:
     lda Up_Down_Buttons       ;get controller bits for up/down
     and Player_CollisionBits  ;check against player's collision detection bits
     beq ProcClimb             ;if not pressing up or down, branch
+    iny
+    and #%00001000            ;check for pressing up
+    bne ProcClimb
       iny
-      and #%00001000            ;check for pressing up
-      bne ProcClimb
-        iny
 ProcClimb:
   ldx Climb_Y_MForceData,y  ;load value here
   stx Player_Y_MoveForce    ;store as vertical movement force
@@ -1246,6 +1255,12 @@ ProcClimb:
 SetCAnim:
   sta PlayerAnimTimerSet    ;store animation timer setting and leave
   rts
+
+.proc CheckForAutoMario
+  cmp #PlayerState::AutoWalk
+  bne CheckForSlingShot
+  rts
+.endproc
 
 .proc CheckForSlingShot
   ; If we are holding a slingshot, check to see if we are still holding it

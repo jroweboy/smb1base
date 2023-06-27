@@ -248,7 +248,7 @@ Sprite_X_Position:              .res 1
 ; start $0300
 
 VRAM_Buffer1_Offset:            .res  1
-VRAM_Buffer1:                   .res  63
+VRAM_Buffer1:                   .res  84 ; was 63 increase this amount since i'm burning it too quick
 VRAM_Buffer2_Offset:            .res  1
 VRAM_Buffer2:                   .res  34 ; 26 for a column, 3 for address and size 
 
@@ -399,7 +399,7 @@ NumberofGroupEnemies:           .res  1 ; only used in one subroutine , HandleGr
 ColorRotateOffset:              .res  1
 PlayerGfxOffset:                .res  1
 WarpZoneControl:                .res  1
-FireworksCounter:               .res  2
+FireworksCounter:               .res  1 ; original 2
 MultiLoopCorrectCntr:           .res  1
 MultiLoopPassCntr:              .res  1
 JumpspringForce:                .res  1

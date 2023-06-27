@@ -130,14 +130,14 @@ GameLoop:
   lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
   lsr
   bcs :+
-    lda Mirror_PPUMASK
-    ora #%00100000
-    sta PPUMASK
+    ; lda Mirror_PPUMASK
+    ; ora #%00100000
+    ; sta PPUMASK
     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
 :
-  lda Mirror_PPUMASK
-  and #%11011111
-  sta PPUMASK
+  ; lda Mirror_PPUMASK
+  ; and #%11011111
+  ; sta PPUMASK
   lda #0
   sta NmiDisable
   jmp GameLoop

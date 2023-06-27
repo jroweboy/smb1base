@@ -34,6 +34,7 @@ function Main()
   --   angle = emu.read(PlayerAngle, emu.memType.nesDebug, false)
   --   emu.write(PlayerAngle, (angle + 1) & 0xff, emu.memType.nesDebug)
   -- end
+    emu.write(PlayerXSpeed, 0, emu.memType.nesDebug)
   if input.select and input.right then
     pos = emu.read(PlayerXPos, emu.memType.nesDebug, false)
     -- emu.write(PlayerXPos, pos + 2, emu.memType.nesDebug)

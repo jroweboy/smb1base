@@ -106,6 +106,7 @@ StarFlagObject        = $31
 JumpspringObject      = $32
 BulletBill_CannonVar  = $33
 RetainerObject        = $35
+FlagpoleShatterObject = $36
 TallEnemy             = $09
 
 .enum
@@ -159,6 +160,7 @@ Normal = 0
 Jumping = 1
 Climbing = 3
 Slingshot = 4
+AutoWalk = 5
 .endenum
 
 .endif ;__CONSTANTS_INC

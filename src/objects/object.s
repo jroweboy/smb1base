@@ -51,7 +51,7 @@ ChkBowserF:
   tay
   lda Enemy_Flag,y         ;use as pointer and load same place with different offset
   bne ExitELCore
-  sta Enemy_Flag,x         ;if second enemy flag not set, also clear first one
+    sta Enemy_Flag,x         ;if second enemy flag not set, also clear first one
 ExitELCore:
   rts
 .endproc
@@ -233,11 +233,16 @@ EnemyExplodingFlagPole:
   and #%00000111
   tay
   lda EnemyIntervalTimer,y
-  bne :+ 
+  bne NotExpired
+    cpx #Misc_State - Enemy_State
+    bcs NoId
+      sta Enemy_ID,x
+      sta Enemy_Flag,x
+NoId:
     sta Enemy_State,x
     jmp Exit
-  :
-  ldy #$1c                  ;set downward movement amount
+NotExpired:
+  ldy #$1c                ;set downward movement amount
   sty R0
   lda #3                  ;set maximum vertical speed
   sta R2
@@ -254,7 +259,6 @@ EnemyExplodingFlagPole:
   lda Enemy_X_Position, x
   cmp #16
   bcs :+
-
     lda Enemy_X_Speed, x
     eor #$ff
     adc #1

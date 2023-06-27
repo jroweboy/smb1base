@@ -1331,25 +1331,25 @@ SetupNumSpr:
 ;data is used as tiles for numbers
 ;that appear when you defeat enemies
 FloateyNumTileData:
-      .byte $ff, $ff ;dummy
-      .byte $f6, $fb ; "100"
-      .byte $f7, $fb ; "200"
-      .byte $f8, $fb ; "400"
-      .byte $f9, $fb ; "500"
-      .byte $fa, $fb ; "800"
-      .byte $f6, $50 ; "1000"
-      .byte $f7, $50 ; "2000"
-      .byte $f8, $50 ; "4000"
-      .byte $f9, $50 ; "5000"
-      .byte $fa, $50 ; "8000"
-      .byte $fd, $fe ; "1-UP"
+  .byte $ff, $ff ;dummy
+  .byte $f6, $fb ; "100"
+  .byte $f7, $fb ; "200"
+  .byte $f8, $fb ; "400"
+  .byte $f9, $fb ; "500"
+  .byte $fa, $fb ; "800"
+  .byte $f6, $50 ; "1000"
+  .byte $f7, $50 ; "2000"
+  .byte $f8, $50 ; "4000"
+  .byte $f9, $50 ; "5000"
+  .byte $fa, $50 ; "8000"
+  .byte $fd, $fe ; "1-UP"
 
 ;high nybble is digit number, low nybble is number to
 ;add to the digit of the player's score
 ScoreUpdateData:
-      .byte $ff ;dummy
-      .byte $41, $42, $44, $45, $48
-      .byte $31, $32, $34, $35, $38, $00
+  .byte $ff ;dummy
+  .byte $41, $42, $44, $45, $48
+  .byte $31, $32, $34, $35, $38, $00
 
 .endproc
 
@@ -1362,7 +1362,7 @@ ScoreUpdateData:
 
 
 FlagpoleGfxHandler:
-    AllocSpr 3
+    AllocSpr 6
     sty OriginalOAMOffset
       ; ldy Enemy_SprDataOffset,x      ;get sprite data offset for flagpole flag
       lda Enemy_Rel_XPos             ;get relative horizontal coordinate

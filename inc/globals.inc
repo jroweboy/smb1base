@@ -2,8 +2,6 @@
 .ifndef __GLOBALS_INC
 __GLOBALS_INC = 1
 
-FLAGPOLE_ID = $36
-
 ; 
 .global JumpEngine
 

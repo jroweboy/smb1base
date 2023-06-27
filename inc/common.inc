@@ -94,7 +94,6 @@ skipflip:
   bcc :+
     rts
   :
-  tay
 .endmacro
 
 .macro UpdateOAMPosition

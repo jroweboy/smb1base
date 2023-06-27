@@ -11,19 +11,19 @@
 ;--------------------------------
 
 InitEnemyFrenzy:
-      lda Enemy_ID,x        ;load enemy identifier
-      sta EnemyFrenzyBuffer ;save in enemy frenzy buffer
-      sec
-      sbc #$12              ;subtract 12 and use as offset for jump engine
-      jsr JumpEngine
+  lda Enemy_ID,x        ;load enemy identifier
+  sta EnemyFrenzyBuffer ;save in enemy frenzy buffer
+  sec
+  sbc #$12              ;subtract 12 and use as offset for jump engine
+  jsr JumpEngine
 
 ;frenzy object jump table
-      .word LakituAndSpinyHandler
-      .word NoFrenzyCode
-      .word InitFlyingCheepCheep
-      .word InitBowserFlame
-      .word InitFireworks
-      .word BulletBillCheepCheep
+  .word LakituAndSpinyHandler
+  .word NoFrenzyCode
+  .word InitFlyingCheepCheep
+  .word InitBowserFlame
+  .word InitFireworks
+  .word BulletBillCheepCheep
 
 ;--------------------------------
 
@@ -323,78 +323,82 @@ FinCCSt: sta Enemy_PageLoc,x        ;save as enemy's page location
 ;--------------------------------
 
 InitCheepCheep:
-      jsr SmallBBox              ;set vertical bounding box, speed, init others
-      lda PseudoRandomBitReg,x   ;check one portion of LSFR
-      and #%00010000             ;get d4 from it
-      sta CheepCheepMoveMFlag,x  ;save as movement flag of some sort
-      lda Enemy_Y_Position,x
-      sta CheepCheepOrigYPos,x   ;save original vertical coordinate here
-      rts
+  jsr SmallBBox              ;set vertical bounding box, speed, init others
+  lda PseudoRandomBitReg,x   ;check one portion of LSFR
+  and #%00010000             ;get d4 from it
+  sta CheepCheepMoveMFlag,x  ;save as movement flag of some sort
+  lda Enemy_Y_Position,x
+  sta CheepCheepOrigYPos,x   ;save original vertical coordinate here
+  rts
 
 ;--------------------------------
 
 FireworksXPosData:
-      .byte $00, $30, $60, $60, $00, $20
+  .byte $00, $30, $60, $60, $00, $20
 
 FireworksYPosData:
-      .byte $60, $40, $70, $40, $60, $30
+  .byte $60, $40, $70, $40, $60, $30
 
 InitFireworks:
-          lda FrenzyEnemyTimer         ;if timer not expired yet, branch to leave
-          bne ExitFWk
-          lda #$20                     ;otherwise reset timer
-          sta FrenzyEnemyTimer
-          dec FireworksCounter         ;decrement for each explosion
-          ldy #$06                     ;start at last slot
-StarFChk: dey
-          lda Enemy_ID,y               ;check for presence of star flag object
-          cmp #StarFlagObject          ;if there isn't a star flag object,
-          bne StarFChk                 ;routine goes into infinite loop = crash
-          lda Enemy_X_Position,y
-          sec                          ;get horizontal coordinate of star flag object, then
-          sbc #$30                     ;subtract 48 pixels from it and save to
-          pha                          ;the stack
-          lda Enemy_PageLoc,y
-          sbc #$00                     ;subtract the carry from the page location
-          sta R0                      ;of the star flag object
-          lda FireworksCounter         ;get fireworks counter
-          clc
-          adc Enemy_State,y            ;add state of star flag object (possibly not necessary)
-          tay                          ;use as offset
-          pla                          ;get saved horizontal coordinate of star flag - 48 pixels
-          clc
-          adc FireworksXPosData,y      ;add number based on offset of fireworks counter
-          sta Enemy_X_Position,x       ;store as the fireworks object horizontal coordinate
-          lda R0
-          adc #$00                     ;add carry and store as page location for
-          sta Enemy_PageLoc,x          ;the fireworks object
-          lda FireworksYPosData,y      ;get vertical position using same offset
-          sta Enemy_Y_Position,x       ;and store as vertical coordinate for fireworks object
-          lda #$01
-          sta Enemy_Y_HighPos,x        ;store in vertical high byte
-          sta Enemy_Flag,x             ;and activate enemy buffer flag
-          lsr
-          sta ExplosionGfxCounter,x    ;initialize explosion counter
-          lda #$08
-          sta ExplosionTimerCounter,x  ;set explosion timing counter
-ExitFWk:  rts
+  lda FrenzyEnemyTimer         ;if timer not expired yet, branch to leave
+  bne ExitFWk
+  lda #$20                     ;otherwise reset timer
+  sta FrenzyEnemyTimer
+  dec FireworksCounter         ;decrement for each explosion
+  ldy #$06                     ;start at last slot
+StarFChk:
+    dey
+    lda Enemy_ID,y               ;check for presence of star flag object
+    cmp #StarFlagObject          ;if there isn't a star flag object,
+    bne StarFChk                 ;routine goes into infinite loop = crash
+  lda Enemy_X_Position,y
+  sec                          ;get horizontal coordinate of star flag object, then
+  sbc #$30                     ;subtract 48 pixels from it and save to
+  pha                          ;the stack
+  lda Enemy_PageLoc,y
+  sbc #$00                     ;subtract the carry from the page location
+  sta R0                      ;of the star flag object
+  lda FireworksCounter         ;get fireworks counter
+  clc
+  adc Enemy_State,y            ;add state of star flag object (possibly not necessary)
+  tay                          ;use as offset
+  pla                          ;get saved horizontal coordinate of star flag - 48 pixels
+  clc
+  adc FireworksXPosData,y      ;add number based on offset of fireworks counter
+  sta Enemy_X_Position,x       ;store as the fireworks object horizontal coordinate
+  lda R0
+  adc #$00                     ;add carry and store as page location for
+  sta Enemy_PageLoc,x          ;the fireworks object
+  lda FireworksYPosData,y      ;get vertical position using same offset
+  sta Enemy_Y_Position,x       ;and store as vertical coordinate for fireworks object
+  lda #$01
+  sta Enemy_Y_HighPos,x        ;store in vertical high byte
+  sta Enemy_Flag,x             ;and activate enemy buffer flag
+  lsr
+  sta ExplosionGfxCounter,x    ;initialize explosion counter
+  lda #$08
+  sta ExplosionTimerCounter,x  ;set explosion timing counter
+ExitFWk:
+  rts
 
 
 ;--------------------------------
 
 EndFrenzy:
-           ldy #$05               ;start at last slot
-LakituChk: lda Enemy_ID,y         ;check enemy identifiers
-           cmp #Lakitu            ;for lakitu
-           bne NextFSlot
-           lda #$01               ;if found, set state
-           sta Enemy_State,y
-NextFSlot: dey                    ;move onto the next slot
-           bpl LakituChk          ;do this until all slots are checked
-           lda #$00
-           sta EnemyFrenzyBuffer  ;empty enemy frenzy buffer
-           sta Enemy_Flag,x       ;disable enemy buffer flag for this object
-           rts
+  ldy #$05               ;start at last slot
+LakituChk:
+    lda Enemy_ID,y         ;check enemy identifiers
+    cmp #Lakitu            ;for lakitu
+    bne NextFSlot
+      lda #$01               ;if found, set state
+      sta Enemy_State,y
+NextFSlot:
+    dey                    ;move onto the next slot
+    bpl LakituChk          ;do this until all slots are checked
+  lda #$00
+  sta EnemyFrenzyBuffer  ;empty enemy frenzy buffer
+  sta Enemy_Flag,x       ;disable enemy buffer flag for this object
+  rts
 
 ;--------------------------------
 ;$00 - used to hold horizontal difference

@@ -408,48 +408,52 @@ FlagpoleScoreDigits:
       .byte $03, $03, $04, $04, $04
 
 FlagpoleRoutine:
-           ldx #$05                  ;set enemy object offset
-           stx ObjectOffset          ;to special use slot
-           lda Enemy_ID,x
-           cmp #FlagpoleFlagObject   ;if flagpole flag not found,
-           bne ExitFlagP             ;branch to leave
-           lda GameEngineSubroutine
-           cmp #$04                  ;if flagpole slide routine not running,
-           bne SkipScore             ;branch to near the end of code
-           lda Player_State
-           cmp #$03                  ;if player state not climbing,
-           bne SkipScore             ;branch to near the end of code
-           lda Enemy_Y_Position,x    ;check flagpole flag's vertical coordinate
-           cmp #$aa                  ;if flagpole flag down to a certain point,
-           bcs GiveFPScr             ;branch to end the level
-           lda Player_Y_Position     ;check player's vertical coordinate
-           cmp #$a2                  ;if player down to a certain point,
-           bcs GiveFPScr             ;branch to end the level
-           lda Enemy_YMoveForceFractional,x
-           adc #$ff                  ;add movement amount to dummy variable
-           sta Enemy_YMoveForceFractional,x     ;save dummy variable
-           lda Enemy_Y_Position,x    ;get flag's vertical coordinate
-           adc #$01                  ;add 1 plus carry to move flag, and
-           sta Enemy_Y_Position,x    ;store vertical coordinate
-           lda FlagpoleFNum_YMFDummy
-           sec                       ;subtract movement amount from dummy variable
-           sbc #$ff
-           sta FlagpoleFNum_YMFDummy ;save dummy variable
-           lda FlagpoleFNum_Y_Pos
-           sbc #$01                  ;subtract one plus borrow to move floatey number,
-           sta FlagpoleFNum_Y_Pos    ;and store vertical coordinate here
-SkipScore: jmp FPGfx                 ;jump to skip ahead and draw flag and floatey number
-GiveFPScr: ldy FlagpoleScore         ;get score offset from earlier (when player touched flagpole)
-           lda FlagpoleScoreMods,y   ;get amount to award player points
-           ldx FlagpoleScoreDigits,y ;get digit with which to award points
-           sta DigitModifier,x       ;store in digit modifier
-           jsr AddToScore            ;do sub to award player points depending on height of collision
-           lda #$05
-           sta GameEngineSubroutine  ;set to run end-of-level subroutine on next frame
-FPGfx:     jsr GetEnemyOffscreenBits ;get offscreen information
-           jsr RelativeEnemyPosition ;get relative coordinates
-           jmp FlagpoleGfxHandler    ;draw flagpole flag and floatey number
-ExitFlagP: rts ; TODO check this RTS can be removed
+  ldx #$05                  ;set enemy object offset
+  stx ObjectOffset          ;to special use slot
+  lda Enemy_ID,x
+  cmp #FlagpoleFlagObject   ;if flagpole flag not found,
+  bne ExitFlagP             ;branch to leave
+    lda GameEngineSubroutine
+    cmp #$04                  ;if flagpole slide routine not running,
+    bne SkipScore             ;branch to near the end of code
+    lda Player_State
+    cmp #$03                  ;if player state not climbing,
+    bne SkipScore             ;branch to near the end of code
+      lda Enemy_Y_Position,x    ;check flagpole flag's vertical coordinate
+      cmp #$aa                  ;if flagpole flag down to a certain point,
+      bcs GiveFPScr             ;branch to end the level
+      lda Player_Y_Position     ;check player's vertical coordinate
+      cmp #$a2                  ;if player down to a certain point,
+      bcs GiveFPScr             ;branch to end the level
+        lda Enemy_YMoveForceFractional,x
+        adc #$ff                  ;add movement amount to dummy variable
+        sta Enemy_YMoveForceFractional,x     ;save dummy variable
+        lda Enemy_Y_Position,x    ;get flag's vertical coordinate
+        adc #$01                  ;add 1 plus carry to move flag, and
+        sta Enemy_Y_Position,x    ;store vertical coordinate
+        lda FlagpoleFNum_YMFDummy
+        sec                       ;subtract movement amount from dummy variable
+        sbc #$ff
+        sta FlagpoleFNum_YMFDummy ;save dummy variable
+        lda FlagpoleFNum_Y_Pos
+        sbc #$01                  ;subtract one plus borrow to move floatey number,
+        sta FlagpoleFNum_Y_Pos    ;and store vertical coordinate here
+SkipScore:
+  jmp FPGfx                 ;jump to skip ahead and draw flag and floatey number
+GiveFPScr:
+  ldy FlagpoleScore         ;get score offset from earlier (when player touched flagpole)
+  lda FlagpoleScoreMods,y   ;get amount to award player points
+  ldx FlagpoleScoreDigits,y ;get digit with which to award points
+  sta DigitModifier,x       ;store in digit modifier
+  jsr AddToScore            ;do sub to award player points depending on height of collision
+  lda #$05
+  sta GameEngineSubroutine  ;set to run end-of-level subroutine on next frame
+FPGfx:
+  jsr GetEnemyOffscreenBits ;get offscreen information
+  jsr RelativeEnemyPosition ;get relative coordinates
+  jmp FlagpoleGfxHandler    ;draw flagpole flag and floatey number
+ExitFlagP:
+  rts ; TODO check this RTS can be removed
 
 ;-------------------------------------------------------------------------------------
 

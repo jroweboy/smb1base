@@ -1703,7 +1703,12 @@ CanDraw:
   ; use offsets 0 - 4 to leave the slot for the flag alone
   ldx #5 - 1
   :
-    lda #FLAGPOLE_ID
+    ; don't over write the starflag object!
+    lda Enemy_ID, x
+    cmp #StarFlagObject
+    beq @Skip
+
+    lda #FlagpoleShatterObject
     sta Enemy_ID, x
     sta Enemy_Flag, x
 
@@ -1728,7 +1733,7 @@ CanDraw:
     tay
     adc FlagPoleYSpeed,y
     sta Enemy_Y_Speed,x
-
+@Skip:
     dex
     bpl :-
 
@@ -1766,6 +1771,10 @@ CanDraw:
     dex
     bpl :-
 
+  ; don't let the code above set the injury timer
+  lda #0
+  sta InjuryTimer
+
   ; force the player to rotate to make the chunks rotate too
   lda #10
   sta AngularMomentum
@@ -1799,12 +1808,6 @@ ClimbPLocAdder:
 
 FlagpoleYPosData:
       .byte $18, $22, $50, $68, $90
-
-.proc FallSlowly
-; todo: make mario fall still
-  jmp ImposeGravity
-  ; rts
-.endproc
 
 HandleClimbing:
       ldy R4            ;check low nybble of horizontal coordinate returned from
@@ -1874,43 +1877,45 @@ RunFR: lda #$04
        jmp PutPlayerOnVine       ;jump to end of climbing code
 
 VineCollision:
-      cmp #$26                  ;check for climbing metatile used on vines
-      bne PutPlayerOnVine
-      lda Player_Y_Position     ;check player's vertical coordinate
-      cmp #$20                  ;for being in status bar area
-      bcs PutPlayerOnVine       ;branch if not that far up
-      lda #$01
-      sta GameEngineSubroutine  ;otherwise set to run autoclimb routine next frame
+  cmp #$26                  ;check for climbing metatile used on vines
+  bne PutPlayerOnVine
+  lda Player_Y_Position     ;check player's vertical coordinate
+  cmp #$20                  ;for being in status bar area
+  bcs PutPlayerOnVine       ;branch if not that far up
+  lda #$01
+  sta GameEngineSubroutine  ;otherwise set to run autoclimb routine next frame
 
 PutPlayerOnVine:
-         lda #$03                ;set player state to climbing
-         sta Player_State
-         lda #$00                ;nullify player's horizontal speed
-         sta Player_X_Speed      ;and fractional horizontal movement force
-         sta Player_X_MoveForce
-         lda Player_X_Position   ;get player's horizontal coordinate
-         sec
-         sbc ScreenLeft_X_Pos    ;subtract from left side horizontal coordinate
-         cmp #$10
-         bcs SetVXPl             ;if 16 or more pixels difference, do not alter facing direction
-         lda #$02
-         sta PlayerFacingDir     ;otherwise force player to face left
-SetVXPl: ldy PlayerFacingDir     ;get current facing direction, use as offset
-         lda R6                 ;get low byte of block buffer address
-         asl
-         asl                     ;move low nybble to high
-         asl
-         asl
-         clc
-         adc ClimbXPosAdder-1,y  ;add pixels depending on facing direction
-         sta Player_X_Position   ;store as player's horizontal coordinate
-         lda R6                 ;get low byte of block buffer address again
-         bne ExPVne              ;if not zero, branch
-         lda ScreenRight_PageLoc ;load page location of right side of screen
-         clc
-         adc ClimbPLocAdder-1,y  ;add depending on facing location
-         sta Player_PageLoc      ;store as player's page location
-ExPVne:  rts                     ;finally, we're done!
+  lda #$03                ;set player state to climbing
+  sta Player_State
+  lda #$00                ;nullify player's horizontal speed
+  sta Player_X_Speed      ;and fractional horizontal movement force
+  sta Player_X_MoveForce
+  lda Player_X_Position   ;get player's horizontal coordinate
+  sec
+  sbc ScreenLeft_X_Pos    ;subtract from left side horizontal coordinate
+  cmp #$10
+  bcs SetVXPl             ;if 16 or more pixels difference, do not alter facing direction
+  lda #$02
+  sta PlayerFacingDir     ;otherwise force player to face left
+SetVXPl:
+  ldy PlayerFacingDir     ;get current facing direction, use as offset
+  lda R6                 ;get low byte of block buffer address
+  asl
+  asl                     ;move low nybble to high
+  asl
+  asl
+  clc
+  adc ClimbXPosAdder-1,y  ;add pixels depending on facing direction
+  sta Player_X_Position   ;store as player's horizontal coordinate
+  lda R6                 ;get low byte of block buffer address again
+  bne ExPVne              ;if not zero, branch
+  lda ScreenRight_PageLoc ;load page location of right side of screen
+  clc
+  adc ClimbPLocAdder-1,y  ;add depending on facing location
+  sta Player_PageLoc      ;store as player's page location
+ExPVne:
+  rts                     ;finally, we're done!
 
 ;--------------------------------
 
