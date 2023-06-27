@@ -82,18 +82,18 @@ NextVSp: iny                        ;move offset to next OAM data
          rts
 
 SixSpriteStacker:
-       ldx #$06           ;do six sprites
+  ldx #$06           ;do six sprites
 StkLp: sta Sprite_Data,y ;store X or Y coordinate into OAM data
-       clc
-       adc #$08           ;add eight pixels
-       iny
-       iny                ;move offset four bytes forward
-       iny
-       iny
-       dex                ;do another sprite
-       bne StkLp          ;do this until all sprites are done
-       ldy R2            ;get saved OAM data offset and leave
-       rts
+    clc
+    adc #$08           ;add eight pixels
+    iny
+    iny                ;move offset four bytes forward
+    iny
+    iny
+    dex                ;do another sprite
+    bne StkLp          ;do this until all sprites are done
+  ldy R2            ;get saved OAM data offset and leave
+  rts
 
 ;-------------------------------------------------------------------------------------
 
@@ -170,21 +170,21 @@ NoHOffscr:  rts ; TODO check this RTS can be removed                         ;le
 
 DrawLargePlatform:
       ; ldy Enemy_SprDataOffset,x   ;get OAM data offset
-      AllocSpr 6
-      sty R2                     ;store here
-      iny                         ;add 3 to it for offset
-      iny                         ;to X coordinate
-      iny
-      lda Enemy_Rel_XPos          ;get horizontal relative coordinate
-      jsr SixSpriteStacker        ;store X coordinates using A as base, stack horizontally
-      ldx ObjectOffset
-      lda Enemy_Y_Position,x      ;get vertical coordinate
-      jsr DumpFourSpr             ;dump into first four sprites as Y coordinate
-      ldy AreaType
-      cpy #$03                    ;check for castle-type level
-      beq ShrinkPlatform
-      ldy SecondaryHardMode       ;check for secondary hard mode flag set
-      beq SetLast2Platform        ;branch if not set elsewhere
+  AllocSpr 6
+  sty R2                     ;store here
+  iny                         ;add 3 to it for offset
+  iny                         ;to X coordinate
+  iny
+  lda Enemy_Rel_XPos          ;get horizontal relative coordinate
+  jsr SixSpriteStacker        ;store X coordinates using A as base, stack horizontally
+  ldx ObjectOffset
+  lda Enemy_Y_Position,x      ;get vertical coordinate
+  jsr DumpFourSpr             ;dump into first four sprites as Y coordinate
+  ldy AreaType
+  cpy #$03                    ;check for castle-type level
+  beq ShrinkPlatform
+  ldy SecondaryHardMode       ;check for secondary hard mode flag set
+  beq SetLast2Platform        ;branch if not set elsewhere
 
 ShrinkPlatform:
       lda #$f8                    ;load offscreen coordinate if flag set or castle-type level
