@@ -9,6 +9,7 @@ __GLOBALS_INC = 1
 .global GetEnemyOffscreenBits
 .global GetScreenPosition
 .global LoadAreaPointer
+.global ReloadAreaPointer
 .global GetAreaType
 .global GetXOffscreenBits
 .global EnemyGfxHandler

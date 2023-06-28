@@ -130,7 +130,7 @@ AreaParserTasks:
 
 ;-------------------------------------------------------------------------------------
 
-IncrementColumnPos:
+.proc IncrementColumnPos
   inc CurrentColumnPos     ;increment column where we're at
   lda CurrentColumnPos
   and #%00001111           ;mask out higher nybble
@@ -142,7 +142,77 @@ NoColWrap:
   lda BlockBufferColumnPos
   and #%00011111           ;mask out all but 5 LSB (0-1f)
   sta BlockBufferColumnPos ;and save
+  ldy FirstTimeAreaReset
+  beq Exit
+    cpy #1
+    bne WaitForLevelClear
+
+    ; we've reached the end of the level data, now we want to wait for
+    ; we when are about to render the start of the area data
+    cmp #$10
+    bne Exit
+      inc FirstTimeAreaReset
+
+
+      lda #1
+      sta AreaObjectPageLoc
+
+      lda #0
+      sta CurrentPageLoc
+      sta AreaDataOffset
+
+      sta BackloadingFlag
+      sta AreaObjectPageSel
+
+      lda #$ff
+      sta AreaObjectLength     ;set area object lengths for all empty
+      sta AreaObjectLength+1
+      sta AreaObjectLength+2
+
+      jsr ReloadAreaPointer
+      
+      jmp GetAreaDataAddrs
+
+      jmp Exit
+
+WaitForLevelClear:
+    ; We've waited for a while, now lets start drawing the new level
+    cmp #$10
+    bne Exit
+
+      lda #0
+      sta Player_PageLoc
+      
+      lda #$ff
+      sta ScreenLeft_PageLoc
+      lda #1
+      sta ScreenRight_PageLoc
+      lda #0
+      ; sta AreaObjectPageLoc
+      sta EnemyObjectPageLoc
+      sta EnemyObjectPageSel
+
+
+
+      lda #0
+      sta EnemyDataOffset
+
+      ; lda #$ff
+      ; sta Enemy_PageLoc + 0
+      ; sta Enemy_PageLoc + 1
+      ; sta Enemy_PageLoc + 2
+      ; sta Enemy_PageLoc + 3
+      ; sta Enemy_PageLoc + 4
+      ; sta Enemy_PageLoc + 5
+      ; sta CurrentPageLoc
+      sta FirstTimeAreaReset
+
+  ; lda #0
+  ; sta FirstTimeAreaReset
+
+Exit:
   rts
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used as counter, store for low nybble for background, ceiling byte for terrain
@@ -365,11 +435,19 @@ StrBlock: ldy R0                    ;get offset for block buffer
 ;numbers lower than these with the same attribute bits
 ;will not be stored in the block buffer
 BlockBuffLowBounds:
-      .byte $10, $51, $88, $c0
+  .byte $10, $51, $88, $c0
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store area object identifier
 ;$07 - used as adder to find proper area object code
+
+.proc AreaDataExpired
+  lda FirstTimeAreaReset
+  bne :+
+    inc FirstTimeAreaReset
+:
+  jmp RdyDecode
+.endproc
 
 ProcessAreaData:
             ldx #$02                 ;start at the end of area object buffer
@@ -379,7 +457,8 @@ ProcADLoop: stx ObjectOffset
             ldy AreaDataOffset       ;get offset of area data pointer
             lda (AreaData),y         ;get first byte of area object
             cmp #$fd                 ;if end-of-area, skip all this crap
-            beq RdyDecode
+            ; beq RdyDecode
+            beq AreaDataExpired
 Continue:
             lda AreaObjectLength,x   ;check area object buffer flag
             bpl RdyDecode            ;if buffer not negative, branch, otherwise
@@ -439,27 +518,26 @@ IncAreaObjOffset:
       sta AreaObjectPageSel
       rts
 
-.proc LoopAreaData2
+; .proc LoopAreaData
 
-  lda FirstTimeAreaReset
-  bne WaitForSecondPage
+;   lda FirstTimeAreaReset
+;   bne @WaitForSecondPage
 
-  lda BlockBufferColumnPos
-  beq :+
-DoneForNow:
-    rts
-  :
-    inc FirstTimeAreaReset
-    jmp DoneForNow
-WaitForSecondPage:
-    ; now wait till we load the second page of data
-    lda BlockBufferColumnPos
+;   lda BlockBufferColumnPos
+; ;   cmp #$10s
+;   bne @DoneForNow
+;     ; we loaded enough empty room to be past the end of the level
+;     ; so set the flag to wait for the second page
+;     inc FirstTimeAreaReset
+;     ; inc BackloadingFlag
+
+;     bne @DoneForNow
+  
+; @WaitForSecondPage:
+;     ; now wait till we load the second page of data
+;     lda BlockBufferColumnPos
 ;     cmp #$10
-    bne DoneForNow
-
-
-    jsr LoadAreaPointer
-
+;     bne @DoneForNow
 
 ;     lda CurrentPageLoc        ;send current page back four pages
 ;     sec
@@ -477,116 +555,34 @@ WaitForSecondPage:
 ;     sta ScreenLeft_PageLoc
 
 
-    ldy #0
-    sty Player_PageLoc
+;     ldy #0
+;     sty Player_PageLoc
 
-    sty AreaObjectPageLoc
-    sty FirstTimeAreaReset
-    sty EnemyObjectPageSel
-    sty AreaObjectPageSel
-    sty EnemyDataOffset
-    sty EnemyObjectPageLoc
-    sty AreaDataOffset
+;     sty AreaObjectPageLoc
+;     sty FirstTimeAreaReset
+;     sty EnemyObjectPageSel
+;     sty AreaObjectPageSel
+;     sty EnemyDataOffset
+;     sty EnemyObjectPageLoc
+;     sty AreaDataOffset
 
-    lda #1
-    sta ScreenLeft_PageLoc   ;set as value here
-    sta CurrentPageLoc       ;also set as current page
-    sta BackloadingFlag      ;set flag here if halfway page or saved entry page number found
+;     ; move the pointer back to the header and reload the header
+;     jsr LoadAreaPointer
+;     jsr GetAreaDataAddrs
+; ;     lda AreaDataLow
+; ;     sec 
+; ;     sbc #$02
+; ;     sta AreaDataLow
+; ;     jsr GetAreaDataAddrs::ReloadHeader
 
-    jsr GetScreenPosition    ;get pixel coordinates for screen borders
-;     ldy #$20                 ;if on odd numbered page, use $2480 as start of rendering
-;     and #%00000001           ;otherwise use $2080, this address used later as name table
-;     beq SetInitNTHigh        ;address for rendering of game area
-;       ; ldy #$24
-; SetInitNTHigh:
-    ; sty CurrentNTAddr_High   ;store name table address
-    ; ldy #$80
-    ; sty CurrentNTAddr_Low
-    ; asl                      ;store LSB of page number in high nybble
-    ; asl                      ;of block buffer column position
-    ; asl
-    ; asl
-    ; sta BlockBufferColumnPos
-    dec AreaObjectLength     ;set area object lengths for all empty
-    dec AreaObjectLength+1
-    dec AreaObjectLength+2
-    lda #$0b                 ;set value for renderer to update 12 column sets
-    sta ColumnSets           ;12 column sets = 24 metatile columns = 1 1/2 screens
-    jsr GetAreaDataAddrs     ;get enemy and level addresses and load header
+;     ; now we are back to the start so load the first byte
+;     ldy #0
+;     lda (AreaData),y
+;     jmp GoBackToProcessing
 
-
-    ldy #0
-    lda (AreaData),y
-    jmp GoBackToProcessing
-
-  ; rts
-.endproc
-
-.proc LoopAreaData
-
-  lda FirstTimeAreaReset
-  bne @WaitForSecondPage
-
-  lda BlockBufferColumnPos
-;   cmp #$10s
-  bne @DoneForNow
-    ; we loaded enough empty room to be past the end of the level
-    ; so set the flag to wait for the second page
-    inc FirstTimeAreaReset
-    ; inc BackloadingFlag
-
-    bne @DoneForNow
-  
-@WaitForSecondPage:
-    ; now wait till we load the second page of data
-    lda BlockBufferColumnPos
-    cmp #$10
-    bne @DoneForNow
-
-    lda CurrentPageLoc        ;send current page back four pages
-    sec
-    sbc Player_PageLoc
-    sta CurrentPageLoc
-
-    lda ScreenRight_PageLoc   ;do the same for the page location
-    sec                       ;of screen's right border
-    sbc Player_PageLoc
-    sta ScreenRight_PageLoc
-
-    lda ScreenLeft_PageLoc     ;subtract four from page control
-    sec                       ;for area objects
-    sbc Player_PageLoc
-    sta ScreenLeft_PageLoc
-
-
-    ldy #0
-    sty Player_PageLoc
-
-    sty AreaObjectPageLoc
-    sty FirstTimeAreaReset
-    sty EnemyObjectPageSel
-    sty AreaObjectPageSel
-    sty EnemyDataOffset
-    sty EnemyObjectPageLoc
-    sty AreaDataOffset
-
-    ; move the pointer back to the header and reload the header
-    jsr LoadAreaPointer
-    jsr GetAreaDataAddrs
-;     lda AreaDataLow
-;     sec 
-;     sbc #$02
-;     sta AreaDataLow
-;     jsr GetAreaDataAddrs::ReloadHeader
-
-    ; now we are back to the start so load the first byte
-    ldy #0
-    lda (AreaData),y
-    jmp GoBackToProcessing
-
-@DoneForNow:
-  rts
-.endproc
+; @DoneForNow:
+;   rts
+; .endproc
 
 DecodeAreaData:
           lda AreaObjectLength,x     ;check current buffer flag
@@ -595,12 +591,12 @@ DecodeAreaData:
 Chk1stB:  ldx #$10                   ;load offset of 16 for special row 15
           lda (AreaData),y           ;get first byte of level object again
           cmp #$fd
-          ; beq EndAParse              ;if end of level, leave this routine
-          beq LoopAreaData
-      ;     bne :+
-            ; jmp LoopAreaData2
-      ;     :
-GoBackToProcessing:
+          beq EndAParse              ;if end of level, leave this routine
+;           beq LoopAreaData
+;       ;     bne :+
+;             ; jmp LoopAreaData2
+;       ;     :
+; GoBackToProcessing:
           and #$0f                   ;otherwise, mask out low nybble
           cmp #$0f                   ;row 15?
           beq ChkRow14               ;if so, keep the offset of 16

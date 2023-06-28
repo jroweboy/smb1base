@@ -57,8 +57,9 @@ function Main()
     emu.write(PlayerYPos, pos + 2, emu.memType.nesDebug)
     emu.write(PlayerYSpeed, 0, emu.memType.nesDebug)
   end
-
-  emu.write(PlayerYSpeed, 0, emu.memType.nesDebug)
+  if input.select then
+    emu.write(PlayerYSpeed, 0, emu.memType.nesDebug)
+  end
 end
 
 emu.addEventCallback(Main, emu.eventType.startFrame)

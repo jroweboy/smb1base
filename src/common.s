@@ -65,6 +65,8 @@ LoadAreaPointer:
   lda #0
   sta FirstTimeAreaReset
   sta AreaResetCountdown
+
+ReloadAreaPointer:
   
   ldy WorldNumber        ;load offset from world variable
   lda WorldAddrOffsets,y
