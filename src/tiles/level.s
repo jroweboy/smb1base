@@ -144,68 +144,86 @@ NoColWrap:
   sta BlockBufferColumnPos ;and save
   ldy FirstTimeAreaReset
   beq Exit
-    cpy #1
-    bne WaitForLevelClear
-
+  cpy #1
+  beq WaitForPage1
+  cpy #2
+  beq LoadIntroData
+  cpy #3
+  beq WaitForPage2
+  cpy #4
+  beq LoadMainData
+WaitForPage1:
+    ; we've reached the end of the level data, now we want to wait for
+    ; we when are about to render the start of the area data
+    cmp #$00
+    bne Exit
+      inc FirstTimeAreaReset
+      rts
+WaitForPage2:
     ; we've reached the end of the level data, now we want to wait for
     ; we when are about to render the start of the area data
     cmp #$10
     bne Exit
       inc FirstTimeAreaReset
+      rts
+LoadIntroData:
+    ; cmp #$00
+    ; bne Exit
+    ;   inc FirstTimeAreaReset
+    ;   jmp Exit
+    inc FirstTimeAreaReset
+    lda #1
+    sta AreaObjectPageLoc
 
+    lda #0
+    sta CurrentPageLoc
+    sta AreaDataOffset
 
-      lda #1
-      sta AreaObjectPageLoc
+    sta BackloadingFlag
+    sta AreaObjectPageSel
 
-      lda #0
-      sta CurrentPageLoc
-      sta AreaDataOffset
+    lda #$ff
+    sta AreaObjectLength     ;set area object lengths for all empty
+    sta AreaObjectLength+1
+    sta AreaObjectLength+2
 
-      sta BackloadingFlag
-      sta AreaObjectPageSel
+    jsr ReloadAreaPointer
+    
+    jmp GetAreaDataAddrs
 
-      lda #$ff
-      sta AreaObjectLength     ;set area object lengths for all empty
-      sta AreaObjectLength+1
-      sta AreaObjectLength+2
+      ; jmp Exit
 
-      jsr ReloadAreaPointer
-      
-      jmp GetAreaDataAddrs
-
-      jmp Exit
-
-WaitForLevelClear:
+LoadMainData:
     ; We've waited for a while, now lets start drawing the new level
-    cmp #$10
-    bne Exit
+    ; cmp #$10
+    ; bne Exit
 
-      lda #0
-      sta Player_PageLoc
-      
-      lda #$ff
-      sta ScreenLeft_PageLoc
-      lda #1
-      sta ScreenRight_PageLoc
-      lda #0
-      ; sta AreaObjectPageLoc
-      sta EnemyObjectPageLoc
-      sta EnemyObjectPageSel
+    lda #0
+    sta Player_PageLoc
+    
+    lda #$ff
+    sta ScreenLeft_PageLoc
+    lda #1
+    sta ScreenRight_PageLoc
+    lda #0
+    ; sta AreaObjectPageLoc
+    sta EnemyObjectPageLoc
+    sta EnemyObjectPageSel
 
 
 
-      lda #0
-      sta EnemyDataOffset
+    lda #0
+    sta EnemyDataOffset
 
-      ; lda #$ff
-      ; sta Enemy_PageLoc + 0
-      ; sta Enemy_PageLoc + 1
-      ; sta Enemy_PageLoc + 2
-      ; sta Enemy_PageLoc + 3
-      ; sta Enemy_PageLoc + 4
-      ; sta Enemy_PageLoc + 5
-      ; sta CurrentPageLoc
-      sta FirstTimeAreaReset
+    ; lda #$ff
+    ; sta Enemy_PageLoc + 0
+    ; sta Enemy_PageLoc + 1
+    ; sta Enemy_PageLoc + 2
+    ; sta Enemy_PageLoc + 3
+    ; sta Enemy_PageLoc + 4
+    ; sta Enemy_PageLoc + 5
+    ; sta CurrentPageLoc
+    sta FirstTimeAreaReset
 
   ; lda #0
   ; sta FirstTimeAreaReset
