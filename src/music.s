@@ -82,11 +82,11 @@ RunSoundSubroutines:
          jsr Square2SfxHandler  ; ''  ''  '' square channel 2
          jsr NoiseSfxHandler    ; ''  ''  '' noise channel
          jsr MusicHandler       ;play music on all channels
-         ldx DpcmSampleQueue
-         beq NoDpcmSample
-           .import PlaySFX
-           jsr PlaySFX
-NoDpcmSample:
+;          ldx DpcmSampleQueue
+;          beq NoDpcmSample
+;            .import PlaySFX
+;            jsr PlaySFX
+; NoDpcmSample:
          lda #$00               ;clear the music queues
          sta AreaMusicQueue
          sta EventMusicQueue
@@ -420,13 +420,13 @@ ExSfx2: rts
 Square2SfxHandler:
         lda Square2SoundBuffer ;special handling for the 1-up sound to keep it
         and #Sfx_ExtraLife     ;from being interrupted by other sounds on square 2
-        bne ContinueExtraLife
+        jne ContinueExtraLife
         ldy Square2SoundQueue  ;check for sfx in queue
         beq CheckSfx2Buffer
         sty Square2SoundBuffer ;if found, put in buffer and check for the following
         bmi PlayBowserFall     ;bowser fall
         lsr Square2SoundQueue
-        bcs PlayCoinGrab       ;coin grab
+        jcs PlayCoinGrab       ;coin grab
         lsr Square2SoundQueue
         bcs PlayGrowPowerUp    ;power-up reveal
         lsr Square2SoundQueue
@@ -451,11 +451,11 @@ CheckSfx2Buffer:
         lsr
         bcs ContinueGrowItems    ;vine grow
         lsr
-        bcs ContinueBlast        ;fireworks/gunfire
+        jcs ContinueBlast        ;fireworks/gunfire
         lsr
         bcs Cont_CGrab_TTick     ;timer tick
         lsr
-        bcs ContinuePowerUpGrab  ;power-up grab
+        jcs ContinuePowerUpGrab  ;power-up grab
         lsr
         bcs ContinueExtraLife    ;1-up
 ExS2H:  rts
@@ -476,7 +476,7 @@ BlstSJp: bne PBFRegs
 ContinueBowserFall:
           lda Squ2_SfxLenCounter   ;check for almost near the end
           cmp #$08
-          bne DecrementSfx2Length
+          jne DecrementSfx2Length
           ldy #$a4                 ;if so, load the rest of reg contents for bowser defeat sound
           lda #$5a
 PBFRegs:  ldx #$9f                 ;the fireworks/gunfire sound shares part of reg contents here

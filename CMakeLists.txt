@@ -11,19 +11,21 @@ add_executable(${PROJECT_NAME}
   inc/globals.inc
   inc/level.inc
   inc/memory.inc
-  inc/mmc3.inc
+  # inc/mmc3.inc
+  inc/vrc7.inc
   inc/nes2header.inc
   inc/object.inc
 
-  src/bhop.s
+  # src/bhop.s
   src/chr.s
   src/collision.s
   src/common.s
-  src/dpcm.s
+  # src/dpcm.s
   src/gamecore.s
   src/gamemode.s
   src/player.s
-  src/mmc3.s
+  # src/mmc3.s
+  src/vrc7.s
   src/memory.s
   src/music.s
   src/nesheader.s
@@ -31,8 +33,17 @@ add_executable(${PROJECT_NAME}
   src/screen_render.s
   src/sprite_render.s
   src/title_screen.s
-  src/trigtable.s
+  # src/trigtable.s
   
+  audio/superblocks_panic.s
+  audio/blocks_panic.inc
+
+  src/ssdpcm/decode_ss2_async_fullunroll.s
+  src/ssdpcm/mapper_funcs.s
+  src/ssdpcm/playback_irq.s
+  src/ssdpcm/superblock_load.s
+  src/ssdpcm/ram_locations_common.s
+
   # src/bhop/bhop_internal.inc
   # src/bhop/bhop.inc
   # src/bhop/commands.asm
@@ -86,7 +97,7 @@ add_executable(${PROJECT_NAME}
   # chr/lanky_mario.chr
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC inc/ gen/)
+target_include_directories(${PROJECT_NAME} PUBLIC audio/ inc/ gen/)
 
 include(GenerateLinkerScript)
 

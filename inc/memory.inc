@@ -150,26 +150,9 @@ __MEMORY_INC = 1
 ; .globalzp Local_ee ; jroweboy: unused?
 .globalzp Local_ef
 
-.globalzp NoteLenLookupTblOfs
-.globalzp Square1SoundBuffer
-.globalzp Square2SoundBuffer
-.globalzp NoiseSoundBuffer
-.globalzp AreaMusicBuffer
-
 .globalzp MusicData
 .globalzp MusicDataLow
-
 .globalzp MusicDataHigh
-.globalzp MusicOffset_Square2
-.globalzp MusicOffset_Square1
-.globalzp MusicOffset_Triangle
-
-.globalzp PauseSoundQueue
-.globalzp AreaMusicQueue
-.globalzp EventMusicQueue
-.globalzp NoiseSoundQueue
-.globalzp Square2SoundQueue
-.globalzp Square1SoundQueue
 
 ; .segment "STACK"
 .global VerticalFlipFlag
@@ -216,6 +199,25 @@ __MEMORY_INC = 1
 .global AngularMomentumTimer
 .global InitialFireballYSpeed
 .global SwitchToMainIRQ
+
+
+.global NoteLenLookupTblOfs
+.global Square1SoundBuffer
+.global Square2SoundBuffer
+.global NoiseSoundBuffer
+.global AreaMusicBuffer
+
+.global MusicOffset_Square2
+.global MusicOffset_Square1
+.global MusicOffset_Triangle
+
+.global PauseSoundQueue
+.global AreaMusicQueue
+.global EventMusicQueue
+.global NoiseSoundQueue
+.global Square2SoundQueue
+.global Square1SoundQueue
+
 
 StackClear = SwitchToMainIRQ
 

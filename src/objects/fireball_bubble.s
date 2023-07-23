@@ -91,20 +91,20 @@ FireballExplosion:
   sta Fireball_Y_Position,x
   lda #$01                     ;set high byte of vertical position
   sta Fireball_Y_HighPos,x
-  ; ldy PlayerFacingDir          ;get player's facing direction
-  ; dey                          ;decrement to use as offset here
-  ; lda FireballXSpdData,y       ;set horizontal speed of fireball accordingly
-  ; sta Fireball_X_Speed,x
-  ; lda #$04                     ;set vertical speed of fireball
-  ; sta Fireball_Y_Speed,x
-  lda PlayerAngle
-  lsr
-  lsr
-  tay
-  lda AngleToFireballXSpeed,y
+  ldy PlayerFacingDir          ;get player's facing direction
+  dey                          ;decrement to use as offset here
+  lda FireballXSpdData,y       ;set horizontal speed of fireball accordingly
   sta Fireball_X_Speed,x
-  lda AngleToFireballYSpeed,y
+  lda #$04                     ;set vertical speed of fireball
   sta Fireball_Y_Speed,x
+  ; lda PlayerAngle
+  ; lsr
+  ; lsr
+  ; tay
+  ; lda AngleToFireballXSpeed,y
+  ; sta Fireball_X_Speed,x
+  ; lda AngleToFireballYSpeed,y
+  ; sta Fireball_Y_Speed,x
   sta InitialFireballYSpeed,x
   lda #$07
   sta Fireball_BoundBoxCtrl,x  ;set bounding box size control for fireball
@@ -137,10 +137,12 @@ EraseFB:
 NoFBall:
   rts                          ;leave
 
-AngleToFireballXSpeed:
-.incbin "../fireball_x_speed.bin"
-AngleToFireballYSpeed:
-.incbin "../fireball_y_speed.bin"
+FireballXSpdData:
+	.byte $40, $c0
+; AngleToFireballXSpeed:
+; .incbin "../fireball_x_speed.bin"
+; AngleToFireballYSpeed:
+; .incbin "../fireball_y_speed.bin"
 .endproc
 
 BubbleCheck:

@@ -1,8 +1,10 @@
 .include "nes2header.inc"
 
-nes2mapper 4 ; mmc3
+; nes2mapper 4 ; mmc3
+nes2mapper 85 ; vrc7
 ; nes2mapper 5 ; mmc5
-nes2prg $40000
+nes2prg $80000
+; nes2prg $40000
 ; nes2prg $2c000
 ; nes2prg $24000
 ; nes2prg $20000

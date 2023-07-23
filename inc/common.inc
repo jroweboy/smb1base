@@ -18,13 +18,14 @@ labelled_segment s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
 .endmacro
 
 labelled_segment OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE, TITLE_MUSIC
-labelled_segment TITLE_DPCM
+labelled_segment TITLE_DPCM, LOWCODE
 
 .include "charmap.inc"
 .include "memory.inc"
 .include "constants.inc"
 .include "globals.inc"
-.include "mmc3.inc"
+; .include "mmc3.inc"
+.include "vrc7.inc"
 .include "dpcm_sfx.inc"
 
 .macro ASSERT_PAGE label_

@@ -14,31 +14,31 @@
 .segment "VECTORS"
   .word (NonMaskableInterrupt)
   .word (Start)
-  .word (IrqPointerJmp)
+  .word ($0000)
 
 .segment "FIXED"
 
 ;-------------------------------------------------------------------------------------
-.proc IrqStatusBar
-  pha
-    sta IRQDISABLE
-    lda IrqNewScroll  ; Combine bits 7-3 of new X with 2-0 of old X
-    eor IrqOldScroll
-    and #%11111000
-    eor IrqOldScroll
-    sta PPUSCROLL  ; Write old fine X and new coarse X
-    bit PPUSTATUS  ; Clear first/second write toggle
-    lda IrqNewScroll
-    sta IrqOldScroll
-    ; stall here if needed. Right now this is on a blank line so its unimportant to deal with.
-    sta PPUSCROLL  ; Write entire new X
-    bit PPUSTATUS  ; Clear first/second write toggle
-    ; Write nametable to PPUCTRL as well
-    lda IrqPPUCTRL
-    sta PPUCTRL
-  pla
-  rti
-.endproc
+; .proc IrqStatusBar
+;   pha
+;     sta IRQDISABLE
+;     lda IrqNewScroll  ; Combine bits 7-3 of new X with 2-0 of old X
+;     eor IrqOldScroll
+;     and #%11111000
+;     eor IrqOldScroll
+;     sta PPUSCROLL  ; Write old fine X and new coarse X
+;     bit PPUSTATUS  ; Clear first/second write toggle
+;     lda IrqNewScroll
+;     sta IrqOldScroll
+;     ; stall here if needed. Right now this is on a blank line so its unimportant to deal with.
+;     sta PPUSCROLL  ; Write entire new X
+;     bit PPUSTATUS  ; Clear first/second write toggle
+;     ; Write nametable to PPUCTRL as well
+;     lda IrqPPUCTRL
+;     sta PPUCTRL
+;   pla
+;   rti
+; .endproc
 
 .proc Start
   sei                          ;pretty standard 6502 type init here
@@ -70,42 +70,67 @@ ColdBoot:
   sta OperMode                 ;reset primary mode of operation
 MMC3Init:
   ; setup jmp instruction for the Titlescreen IRQ
-  .import TitleScreenIrq
-  lda #$4c
-  sta IrqPointerJmp
-  lda #<TitleScreenIrq
-  sta IrqPointer
-  lda #>TitleScreenIrq
-  sta IrqPointer+1
+  ; .import TitleScreenIrq
+  ; lda #$4c
+  ; sta IrqPointerJmp
+  ; lda #<TitleScreenIrq
+  ; sta IrqPointer
+  ; lda #>TitleScreenIrq
+  ; sta IrqPointer+1
+
   ; setup the jmp instruction for the FarBank Target
   lda #$4c
   sta TargetAddrJmp
-  lda #7 | PRG_FIXED_8
-  sta BankShadow
+  ; lda #7 | PRG_FIXED_8
+  ; sta BankShadow
 
   ; initialize the CHR banks
   ; TODO move this to run after the title screen
-  ldx #5
-  :
-    txa
-    ora PRG_FIXED_8
-    sta BANK_SELECT
-    lda GraphicsBankInitValues,x
-    sta BANK_DATA
-    dex
-    bpl :-
+  ; ldx #5
+  ; :
+  ;   txa
+  ;   ora PRG_FIXED_8
+  ;   sta BANK_SELECT
+  ;   lda GraphicsBankInitValues,x
+  ;   sta BANK_DATA
+  ;   dex
+  ;   bpl :-
+  ldx #0
+  BankCHR0 x
+  inx
+  BankCHR4 x
+  inx
+  BankCHR8 x
+  inx
+  BankCHRC x
+  inx
+  BankCHR10 x
+  inx
+  BankCHR14 x
+  inx
+  BankCHR18 x
+  inx
+  BankCHR1C x
 
-  ; Now set the initial A bank
+  ; Now set the initial 8 bank
+  BankPRG8 #.bank(LOWCODE)
+
+  ; Now set the initial 8 bank
   BankPRGA #0
+
+
   ; enable PRG RAM without write protection
-  lda #%10000000
-  sta RAM_PROTECT
+  ; lda #%10000000
+  ; sta RAM_PROTECT
   ; disable scanline counter and IRQ
-  lda #1
-  sta SwitchToMainIRQ
-  lda #0
+  ; lda #1
+  ; sta SwitchToMainIRQ
+HORIZONTAL_MIRRORING = (1 << 0)
+DISABLE_VRC7_CHANNELS = (1 << 6)
+WRAM_ENABLE = (1 << 7)
+  lda #HORIZONTAL_MIRRORING | WRAM_ENABLE
   sta NMT_MIRROR
-  sta IRQENABLE
+  ; sta IRQENABLE
   lda #$ff
   sta APU_FRAMECOUNTER ; disable frame counter
   ; re-enable interrupts so the scanline irq can run
@@ -144,9 +169,10 @@ GameLoop:
 
 .endproc
 
-.export GraphicsBankInitValues
-GraphicsBankInitValues:
-  .byte $40, $42, $44, $45, $46, $47
+; .export GraphicsBankInitValues
+; GraphicsBankInitValues:
+;   .byte $40, $42, $44, $45, $46, $47
+
 
 .proc NonMaskableInterrupt
   inc StatTimerLo
@@ -208,62 +234,62 @@ InitBuffer:
   lda HorizontalScroll
   sta IrqNewScroll
   
-  lda SwitchToMainIRQ
-  beq NoChangeToIRQ
-  bmi UseMainIRQ
-    ; Change back to title screen IRQ handler
-    lda #<TitleScreenIrq
-    sta IrqPointer
-    lda #>TitleScreenIrq
-    sta IrqPointer+1
-    lda #0
-    sta SwitchToMainIRQ
-    jmp NoChangeToIRQ
-UseMainIRQ:
-    ; Reload initial graphics and IRQ handler when switching to main gameplay
-    .import TitleScreenIrq
-    lda #<IrqStatusBar
-    sta IrqPointer
-    lda #>IrqStatusBar
-    sta IrqPointer+1
+;   lda SwitchToMainIRQ
+;   beq NoChangeToIRQ
+;   bmi UseMainIRQ
+;     ; Change back to title screen IRQ handler
+;     lda #<TitleScreenIrq
+;     sta IrqPointer
+;     lda #>TitleScreenIrq
+;     sta IrqPointer+1
+;     lda #0
+;     sta SwitchToMainIRQ
+;     jmp NoChangeToIRQ
+; UseMainIRQ:
+;     ; Reload initial graphics and IRQ handler when switching to main gameplay
+;     .import TitleScreenIrq
+;     lda #<IrqStatusBar
+;     sta IrqPointer
+;     lda #>IrqStatusBar
+;     sta IrqPointer+1
 
-    ldx #5
-    :
-      txa
-      ora PRG_FIXED_8
-      sta BANK_SELECT
-      lda GraphicsBankInitValues,x
-      sta BANK_DATA
-      dex
-      bpl :-
-    ; also switch the first sprite bank to the player sprite
-    BankCHR10 #0
-    lda #0
-    sta SwitchToMainIRQ
-NoChangeToIRQ:
+;     ldx #5
+;     :
+;       txa
+;       ora PRG_FIXED_8
+;       sta BANK_SELECT
+;       lda GraphicsBankInitValues,x
+;       sta BANK_DATA
+;       dex
+;       bpl :-
+;     ; also switch the first sprite bank to the player sprite
+;     BankCHR10 #0
+;     lda #0
+;     sta SwitchToMainIRQ
+; NoChangeToIRQ:
 
   ; Setup the scanline to launch the IRQ at. This has to happen before the first scanline of the frame.
-  lda OperMode
-  bne :+
-    ; We are in the title screen, so initialize the IRQ
-    BankCHR0 #$48
-    BankCHR8 #$4a
-    lda #0
-    sta IrqNextScanline
-    ; start the TitleScreenIRQ
-    .import FIRST_SCANLINE_IRQ
-    lda #FIRST_SCANLINE_IRQ
-    sta IRQLATCH
-    sta IRQRELOAD
-    sta IRQENABLE
-    bne :++ ; unconditional
-  :
-    ; otherwise we want to use the main IRQ
-    lda #32 - 1 ; do the split 32 scanlines from the top of the screen. -1 to give us time to set the new scroll
-    sta IRQLATCH
-    sta IRQRELOAD
-    sta IRQENABLE
-  :
+  ; lda OperMode
+  ; bne :+
+  ;   ; We are in the title screen, so initialize the IRQ
+  ;   BankCHR0 #$48
+  ;   BankCHR8 #$4a
+  ;   lda #0
+  ;   sta IrqNextScanline
+  ;   ; start the TitleScreenIRQ
+  ;   .import FIRST_SCANLINE_IRQ
+  ;   lda #FIRST_SCANLINE_IRQ
+  ;   sta IRQLATCH
+  ;   sta IRQRELOAD
+  ;   sta IRQENABLE
+  ;   bne :++ ; unconditional
+  ; :
+  ;   ; otherwise we want to use the main IRQ
+  ;   lda #32 - 1 ; do the split 32 scanlines from the top of the screen. -1 to give us time to set the new scroll
+  ;   sta IRQLATCH
+  ;   sta IRQRELOAD
+  ;   sta IRQENABLE
+  ; :
   
   
   lda #0
@@ -336,31 +362,37 @@ RotPRandomBit:
         jsr MoveSpritesOffscreen
         ; jsr SpriteShuffler
 SkipSprite0:
+	lda HorizontalScroll	;set scroll registers from variables
+	sta PPUSCROLL
+	lda VerticalScroll
+	sta PPUSCROLL
+
   ; copy the PPUCTRL flags to the version that we will write in the IRQ.
   ; this will restore the nmt select flags for the main screen in IRQ
   lda Mirror_PPUCTRL
-  sta IrqPPUCTRL
+  ; sta IrqPPUCTRL
   ; and also reset the flags for the HUD
   and #%11111100
   sta PPUCTRL
+  
 
-  lda OperMode
-  bne :+
-    lda BhopInitalized
-    beq SkipMainOper
-    BankPRGA #.lobyte(.bank(TITLE_MUSIC))
-    .import bhop_play
-    jsr bhop_play
-    BankPRGA CurrentBank
-    jmp :++
-  :
+  ; lda OperMode
+  ; bne :+
+  ;   lda BhopInitalized
+  ;   beq SkipMainOper
+  ;   BankPRGA #.lobyte(.bank(TITLE_MUSIC))
+  ;   .import bhop_play
+  ;   jsr bhop_play
+  ;   BankPRGA CurrentBank
+  ;   jmp :++
+  ; :
     ; Original SMB1 music engine
     BankPRGA #.lobyte(.bank(MUSIC))
     jsr SoundEngine
     BankPRGA CurrentBank
-  :
-  lda BankShadow
-  sta BANK_SELECT
+  ; :
+  ; lda BankShadow
+  ; sta BANK_SELECT
 SkipMainOper:
   ply
   plx

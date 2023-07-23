@@ -1104,43 +1104,43 @@ LandPlyr:
 
   ; Set the angular momentum for landing on the ground if we aren't already
   ; spinning in a direction
-  ldx Player_X_Speed
-  lda ScaledRotationSpeed,x
-  sta AngularMomentum
-  ; jroweboy - bounce the player after they land on the ground
-  lda GroundBounceChain
-  bne ContinueBounceChain
-    ; first bounce, found how much bounce force to apply
-    lda AirTimeTimer
-    lsr
-    lsr
-    lsr
-    lsr
-    beq SkipForce
-    tax
-    lda BounceForceData,x
-    eor #$ff
-    clc
-    adc #1
-    sta BounceForce
-    sta Player_Y_Speed         ;initialize vertical speed and fractional
-    inc GroundBounceChain
-    jmp DoPlayerSideCheck
-ContinueBounceChain:
-    ; bounce chain, continue bouncing until we come to rest.
-    lda BounceForce
-    clc
-    adc #2
-    bpl SkipForce
-      sta BounceForce
-      sta Player_Y_Speed
-      jmp DoPlayerSideCheck
-SkipForce:
-    lda #0
-    ; sta GroundBounceChain
-    sta AirTimeTimer
-    sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
-    sta StompChainCounter      ;initialize enemy stomp counter
+;   ldx Player_X_Speed
+;   lda ScaledRotationSpeed,x
+;   sta AngularMomentum
+;   ; jroweboy - bounce the player after they land on the ground
+;   lda GroundBounceChain
+;   bne ContinueBounceChain
+;     ; first bounce, found how much bounce force to apply
+;     lda AirTimeTimer
+;     lsr
+;     lsr
+;     lsr
+;     lsr
+;     beq SkipForce
+;     tax
+;     lda BounceForceData,x
+;     eor #$ff
+;     clc
+;     adc #1
+;     sta BounceForce
+;     sta Player_Y_Speed         ;initialize vertical speed and fractional
+;     inc GroundBounceChain
+;     jmp DoPlayerSideCheck
+; ContinueBounceChain:
+;     ; bounce chain, continue bouncing until we come to rest.
+;     lda BounceForce
+;     clc
+;     adc #2
+;     bpl SkipForce
+;       sta BounceForce
+;       sta Player_Y_Speed
+;       jmp DoPlayerSideCheck
+; SkipForce:
+;     lda #0
+;     ; sta GroundBounceChain
+;     sta AirTimeTimer
+;     sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
+;     sta StompChainCounter      ;initialize enemy stomp counter
 InitSteP:
   lda #$00
   sta Player_State           ;set player's state to normal
@@ -1290,8 +1290,8 @@ ErACM:
   jmp RemoveCoin_Axe  ;update the screen accordingly
 
 
-ScaledRotationSpeed:
-  .incbin "rotation_speed.bin"
+; ScaledRotationSpeed:
+;   .incbin "rotation_speed.bin"
 
 ;--------------------------------
 

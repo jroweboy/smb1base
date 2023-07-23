@@ -111,7 +111,7 @@ InitATLoop:
   dey
   bne InitATLoop
   sta HorizontalScroll      ;reset scroll variables
-  ; sta VerticalScroll
+  sta VerticalScroll
   jmp InitScroll            ;initialize scroll registers to zero
 
 ;-------------------------------------------------------------------------------------

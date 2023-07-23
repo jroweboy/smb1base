@@ -161,28 +161,11 @@ Local_ed                      = SpriteLocalTemp + 2
 ; Local_ee                      = SpriteLocalTemp + 3 ; jroweboy: unused?
 Local_ef                      = SpriteLocalTemp + 3
 
-NoteLenLookupTblOfs:            .res  1
-Square1SoundBuffer:             .res  1
-Square2SoundBuffer:             .res  1
-NoiseSoundBuffer:               .res  1
-AreaMusicBuffer:                .res  1
-
 MusicData                     = MusicDataLow
 MusicDataLow:                   .res  1
 MusicDataHigh:                  .res  1
 
-MusicOffset_Square2:            .res  1
-MusicOffset_Square1:            .res  1
-MusicOffset_Triangle:           .res  1
-
-PauseSoundQueue:                .res  1
-AreaMusicQueue:                 .res  1
-EventMusicQueue:                .res  1
-NoiseSoundQueue:                .res  1
-Square2SoundQueue:              .res  1
-Square1SoundQueue:              .res  1
-
-.segment "STACK"
+.segment "SHORTRAM"
 ; start $0100
 ; blank_stack:                    .res  8 ; not used
 VerticalFlipFlag:               .res  1 ; jroweboy: this is acutally only one byte?
@@ -232,6 +215,23 @@ InitialFireballYSpeed:          .res  2
 SwitchToMainIRQ:                .res  1
 IrqPointerJmp:                  .res  3
 IrqPointer                    = IrqPointerJmp + 1
+
+NoteLenLookupTblOfs:            .res  1
+Square1SoundBuffer:             .res  1
+Square2SoundBuffer:             .res  1
+NoiseSoundBuffer:               .res  1
+AreaMusicBuffer:                .res  1
+
+MusicOffset_Square2:            .res  1
+MusicOffset_Square1:            .res  1
+MusicOffset_Triangle:           .res  1
+
+PauseSoundQueue:                .res  1
+AreaMusicQueue:                 .res  1
+EventMusicQueue:                .res  1
+NoiseSoundQueue:                .res  1
+Square2SoundQueue:              .res  1
+Square1SoundQueue:              .res  1
 
 ; .assert(* < $0180)
 

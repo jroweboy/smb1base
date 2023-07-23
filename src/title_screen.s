@@ -6,43 +6,43 @@
 FIRST_SCANLINE_IRQ = (15 * 8 + 7) - 8
 SECOND_SCANLINE_IRQ = 95 - 16 ; subtract 16 to account for the latest
 
-.export TitleScreenIrq
-.proc TitleScreenIrq
-  pha
-  phx
-  phy
-    sta IRQDISABLE
-    ldx IrqNextScanline
-    lda #SECOND_SCANLINE_IRQ
-    sta IRQLATCH
-    sta IRQRELOAD
-    sta IRQENABLE
+; .export TitleScreenIrq
+; .proc TitleScreenIrq
+;   pha
+;   phx
+;   phy
+;     sta IRQDISABLE
+;     ldx IrqNextScanline
+;     lda #SECOND_SCANLINE_IRQ
+;     sta IRQLATCH
+;     sta IRQRELOAD
+;     sta IRQENABLE
 
-    ldy NextBankValuesHi,x
-    lda NextBankValuesLo,x
-    tax
-    ; delay 32 cycles
-    NOP
-    TYA
-    LDY #5
-    DEY
-    BNE *-1
-    TAY
-    inc IrqNextScanline
-    BankCHR0 x
-    BankCHR8 y
-  ply
-  plx
-  pla
-  rti
+;     ldy NextBankValuesHi,x
+;     lda NextBankValuesLo,x
+;     tax
+;     ; delay 32 cycles
+;     NOP
+;     TYA
+;     LDY #5
+;     DEY
+;     BNE *-1
+;     TAY
+;     inc IrqNextScanline
+;     BankCHR0 x
+;     BankCHR8 y
+;   ply
+;   plx
+;   pla
+;   rti
 
-NextBankValuesLo:
-  .byte $4c, $50
-NextBankValuesHi:
-  .byte $4e, $50
-; IrqReloadValues:
-;   .byte $40, $ff
-.endproc
+; NextBankValuesLo:
+;   .byte $4c, $50
+; NextBankValuesHi:
+;   .byte $4e, $50
+; ; IrqReloadValues:
+; ;   .byte $40, $ff
+; .endproc
 
 .segment "TITLE"
 .export DrawTitleScreenInternal
@@ -108,17 +108,18 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   jsr DrawClouds
 
   ; Setup the correct bank for the background
-  BankCHR0 #$48
-  BankCHR8 #$4a
-  ; c/e
-  ; 50/52
-  ; Title screen sprites starts at 52 i think
-  BankCHR10 #$52
-  BankCHR14 #$53
-  BankCHR18 #$54
-  ; BankCHR1C #$55
-  ; specifically bank in the sprite for cloud from the BG
-  BankCHR1C #$40
+  ; BankCHR0 #$48
+  ; BankCHR8 #$4a
+  ; ; c/e
+  ; ; 50/52
+  ; ; Title screen sprites starts at 52 i think
+  ; BankCHR10 #$52
+  ; BankCHR14 #$53
+  ; BankCHR18 #$54
+  ; ; BankCHR1C #$55
+  ; ; specifically bank in the sprite for cloud from the BG
+  ; BankCHR1C #$40
+
 .define BHOP_MAGIC_STRING "8BHP"
   ; check to see if our sound driver is already in SRAM
   lda BhopValidation
@@ -135,57 +136,57 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   bne FailedValidation
     jmp Finish
 
-.import __MUSIC_DRIVER_LOAD__, __MUSIC_DRIVER_RUN__, __MUSIC_DRIVER_SIZE__
+; .import __MUSIC_DRIVER_LOAD__, __MUSIC_DRIVER_RUN__, __MUSIC_DRIVER_SIZE__
 FailedValidation:
   ; enable writing to sram
   ; lda #%10000000
   ; sta RAM_PROTECT
 
-LOAD = IrqR0
-RUN = M0
-SIZE = M2
+; LOAD = IrqR0
+; RUN = M0
+; SIZE = M2
 
-  lda #<__MUSIC_DRIVER_LOAD__
-  sta LOAD
-  lda #>__MUSIC_DRIVER_LOAD__
-  sta LOAD+1
-  lda #<__MUSIC_DRIVER_RUN__
-  sta RUN
-  lda #>__MUSIC_DRIVER_RUN__
-  sta RUN+1
-  lda #<__MUSIC_DRIVER_SIZE__
-  sta SIZE
-  ldx #>__MUSIC_DRIVER_SIZE__
-  beq LessThan256
-  stx SIZE+1
-  ldy #0
-  :
-      lda (LOAD),y
-      sta (RUN),y
-      iny
-      bne :-
-    inc LOAD+1
-    inc RUN+1
-    dex
-    bne :-
-LessThan256:
-  ldx SIZE
-  beq DoneCopying
-  :
-    lda (LOAD),y
-    sta (RUN),y
-    iny
-    dex
-    bne :-
-DoneCopying:
-  lda #.strat(BHOP_MAGIC_STRING,0)
-  sta BhopValidation
-  lda #.strat(BHOP_MAGIC_STRING,1)
-  sta BhopValidation+1
-  lda #.strat(BHOP_MAGIC_STRING,2)
-  sta BhopValidation+2
-  lda #.strat(BHOP_MAGIC_STRING,3)
-  sta BhopValidation+3
+  ; lda #<__MUSIC_DRIVER_LOAD__
+  ; sta LOAD
+  ; lda #>__MUSIC_DRIVER_LOAD__
+  ; sta LOAD+1
+  ; lda #<__MUSIC_DRIVER_RUN__
+  ; sta RUN
+  ; lda #>__MUSIC_DRIVER_RUN__
+  ; sta RUN+1
+  ; lda #<__MUSIC_DRIVER_SIZE__
+  ; sta SIZE
+  ; ldx #>__MUSIC_DRIVER_SIZE__
+;   beq LessThan256
+;   stx SIZE+1
+;   ldy #0
+;   :
+;       lda (LOAD),y
+;       sta (RUN),y
+;       iny
+;       bne :-
+;     inc LOAD+1
+;     inc RUN+1
+;     dex
+;     bne :-
+; LessThan256:
+;   ldx SIZE
+;   beq DoneCopying
+;   :
+;     lda (LOAD),y
+;     sta (RUN),y
+;     iny
+;     dex
+;     bne :-
+; DoneCopying:
+;   lda #.strat(BHOP_MAGIC_STRING,0)
+;   sta BhopValidation
+;   lda #.strat(BHOP_MAGIC_STRING,1)
+;   sta BhopValidation+1
+;   lda #.strat(BHOP_MAGIC_STRING,2)
+;   sta BhopValidation+2
+;   lda #.strat(BHOP_MAGIC_STRING,3)
+;   sta BhopValidation+3
   ; disable writing to sram
   ; lda #%1000000
   ; sta RAM_PROTECT
@@ -346,27 +347,27 @@ CloudSpriteXOrigin:
 .endproc
 
 
-.segment "MUSIC_DRIVER"
-.include "bhop/bhop.inc"
+; .segment "MUSIC_DRIVER"
+; .include "bhop/bhop.inc"
 
 .proc banked_init
-  BankPRGA #.lobyte(.bank(TITLE_MUSIC))
-  BankPRGC #.lobyte(.bank(TITLE_DPCM))
+  ; BankPRGA #.lobyte(.bank(TITLE_MUSIC))
+  ; BankPRGC #.lobyte(.bank(TITLE_DPCM))
 
-  lda #0
-  jsr bhop_init
+;   lda #0
+;   jsr bhop_init
   
-  lda #1
-  sta BhopInitalized
+;   lda #1
+;   sta BhopInitalized
 
-  BankPRGA #.lobyte(.bank(TITLE))
+;   BankPRGA #.lobyte(.bank(TITLE))
 
   rts
 .endproc
 
-.segment "TITLE_MUSIC"
+; .segment "TITLE_MUSIC"
 
-bhop_music_data:
-  .include "../audio/angry_title.asm"
-.export bhop_music_data
+; bhop_music_data:
+;   .include "../audio/angry_title.asm"
+; .export bhop_music_data
 

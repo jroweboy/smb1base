@@ -1,11 +1,11 @@
 .include "common.inc"
 
-.segment "CHR_ROTATE"
+; .segment "CHR_ROTATE"
 
 
-.repeat MARIO_ROTATION_ANGLE_MAX,I
-.incbin .sprintf("../chr/rotate/rotate_%d.chr", I)
-.endrepeat
+; .repeat MARIO_ROTATION_ANGLE_MAX,I
+; .incbin .sprintf("../chr/rotate/rotate_%d.chr", I)
+; .endrepeat
 
 
 .segment "CHR_ORIGINAL"
