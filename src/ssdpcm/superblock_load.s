@@ -1,3 +1,4 @@
+.include "common.inc"
 
 .segment "DECODE"
 
@@ -24,10 +25,10 @@
 	.globalzp ptr_bitstream, ptr_slopes, last_sample, superblock_length
 
 	.import sblk_table, num_sblk_headers
-	.import mapper_set_bank_8000
+	; .import mapper_set_bank_8000
 
-	header_ptr = $0
-	header_offset_hi = $2
+	header_ptr = M0
+	header_offset_hi = M2
 
 
 	ldy #00                          ; set first block in superblock

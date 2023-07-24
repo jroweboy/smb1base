@@ -1,7 +1,6 @@
 
 .include "common.inc"
-
-
+.include "smc.inc"
 
 .import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
 .import OperModeExecutionTree, MoveSpritesOffscreen, UpdateTopScore
@@ -10,11 +9,11 @@
 
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
-
+.import irq_sample_selfmod
 .segment "VECTORS"
   .word (NonMaskableInterrupt)
   .word (Start)
-  .word ($0000)
+  .word (irq_sample_selfmod)
 
 .segment "FIXED"
 
@@ -40,10 +39,27 @@
 ;   rti
 ; .endproc
 
+.proc load_playback_code
+.import __PLAYBACK_CODE_LOAD__, __PLAYBACK_CODE_RUN__, __PLAYBACK_CODE_SIZE__
+	ldx #<__PLAYBACK_CODE_SIZE__
+	@loop:
+		dex
+		lda __PLAYBACK_CODE_LOAD__, x
+		sta __PLAYBACK_CODE_RUN__, x
+		cpx #00
+		bne @loop
+	rts
+
+.assert __PLAYBACK_CODE_SIZE__ <= 256, error, "playback code is bigger than 256 bytes"
+.endproc
+
 .proc Start
   sei                          ;pretty standard 6502 type init here
   cld
   ; lda #%00010000               ;init PPU control register 1 
+  lda #0
+  sta IRQCONTROL
+
   lda #%00001000
   sta PPUCTRL
   ldx #$ff                     ;reset stack pointer
@@ -68,7 +84,26 @@ ColdBoot:
   jsr InitializeMemory         ;clear memory using pointer in Y
   sta SND_DELTA_REG+1          ;reset delta counter load register
   sta OperMode                 ;reset primary mode of operation
-MMC3Init:
+
+  ; Clear the ssdpcm memory only on reset
+  ldx #last_sample - idx_superblock - 1
+  lda #0
+  :
+    sta idx_superblock,x
+    dex
+    bpl :-
+
+.import load_next_superblock, decode_async, sblk_table
+	jsr load_playback_code       ; copy playback code into RAM
+BankPRG8 #.bank(DECODE)
+BankPRGC #.bank(sblk_table)    ; not needed since this is in fixed rom
+	jsr load_next_superblock     ; load first superblock
+	jsr decode_async         ; pre-fill the buffer with some samples
+	jsr decode_async
+	jsr decode_async
+BankPRG8 #.bank(LOWCODE)
+
+; MMC3Init:
   ; setup jmp instruction for the Titlescreen IRQ
   ; .import TitleScreenIrq
   ; lda #$4c
@@ -78,9 +113,6 @@ MMC3Init:
   ; lda #>TitleScreenIrq
   ; sta IrqPointer+1
 
-  ; setup the jmp instruction for the FarBank Target
-  lda #$4c
-  sta TargetAddrJmp
   ; lda #7 | PRG_FIXED_8
   ; sta BankShadow
 
@@ -95,6 +127,18 @@ MMC3Init:
   ;   sta BANK_DATA
   ;   dex
   ;   bpl :-
+
+  ; enable PRG RAM without write protection
+  ; lda #%10000000
+  ; sta RAM_PROTECT
+  ; disable scanline counter and IRQ
+  ; lda #1
+  ; sta SwitchToMainIRQ
+
+VRC7Init:
+  ; setup the jmp instruction for the FarBank Target
+  lda #$4c
+  sta TargetAddrJmp
   ldx #0
   BankCHR0 x
   inx
@@ -116,25 +160,28 @@ MMC3Init:
   BankPRG8 #.bank(LOWCODE)
 
   ; Now set the initial 8 bank
-  BankPRGA #0
+  BankPRGA #.bank(OBJECT)
+  sta CurrentBank
 
-
-  ; enable PRG RAM without write protection
-  ; lda #%10000000
-  ; sta RAM_PROTECT
-  ; disable scanline counter and IRQ
-  ; lda #1
-  ; sta SwitchToMainIRQ
 HORIZONTAL_MIRRORING = (1 << 0)
 DISABLE_VRC7_CHANNELS = (1 << 6)
 WRAM_ENABLE = (1 << 7)
-  lda #HORIZONTAL_MIRRORING | WRAM_ENABLE
+  lda #WRAM_ENABLE
   sta NMT_MIRROR
   ; sta IRQENABLE
   lda #$ff
   sta APU_FRAMECOUNTER ; disable frame counter
   ; re-enable interrupts so the scanline irq can run
   cli
+  lda #%00000111
+	sta IRQCONTROL
+; 127 clock cycles per sample = ~14093 Hz
+; 162 clock cycles = ~ 11025 Hz
+RELOAD_RATE = 162
+	lda #(256 - RELOAD_RATE)
+	sta irq_latch_value
+	sta IRQLATCH
+	sta IRQACK
 FinializeMarioInit:
   lda #$a5                     ;set warm boot flag
   sta WarmBootValidation     
@@ -149,6 +196,7 @@ FinializeMarioInit:
   lda Mirror_PPUCTRL
   ora #%10000000               ;enable NMIs
   jsr WritePPUReg1
+
 GameLoop:
   lda NmiDisable
   beq GameLoop
@@ -175,20 +223,32 @@ GameLoop:
 
 
 .proc NonMaskableInterrupt
-  inc StatTimerLo
-  bne @CheckIfNMIEnabled
-    inc StatTimerMd
-    bne @CheckIfNMIEnabled
-      inc StatTimerHi
+
+  pha
+  lda #0
+  sta OAMADDR               ;reset spr-ram address register
+  lda #OAM
+  sta OAM_DMA          ; ------ OAM DMA ------
+	SMC_LoadLowByte idx_smc_pcm_playback, a
+	clc
+	adc #4 ; oam_dma_sample_skip_cnt    ; skip over lost samples during OAM DMA
+	SMC_StoreLowByte idx_smc_pcm_playback, a
+  ; inc StatTimerLo
+  ; bne @CheckIfNMIEnabled
+  ;   inc StatTimerMd
+  ;   bne @CheckIfNMIEnabled
+  ;     inc StatTimerHi
 @CheckIfNMIEnabled:
   bit NmiDisable
   bpl @ContinueNMI
     inc NmiSkipped
+    pla
     rti
 @ContinueNMI:
-  pha
+  cli
   phx
   phy
+
   ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
   dec NmiDisable
   ; jroweboy switch the nametable back to nmt0 and force NMI to be enabled
@@ -291,10 +351,14 @@ InitBuffer:
   ;   sta IRQENABLE
   ; :
   
-  
+SMC_Import idx_smc_pcm_playback
+
+
   lda #0
   sta OAMADDR               ;reset spr-ram address register
-  jsr OAMandReadJoypad
+  ; jsr OAMandReadJoypad
+  
+
 
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore
@@ -375,6 +439,10 @@ SkipSprite0:
   and #%11111100
   sta PPUCTRL
   
+BankPRG8 #.bank(DECODE)
+.import fill_buffer
+	jsr fill_buffer
+BankPRG8 #.bank(LOWCODE)
 
   ; lda OperMode
   ; bne :+
@@ -393,6 +461,7 @@ SkipSprite0:
   ; :
   ; lda BankShadow
   ; sta BANK_SELECT
+  
 SkipMainOper:
   ply
   plx
@@ -544,10 +613,15 @@ InitializeMemoryRAMHi = $07
 InitPageLoop:
     stx InitializeMemoryRAMHi
 InitByteLoop:
+      cpx #0
+      bne CheckStackPage
+        cpy #<idx_superblock
+        bcs SkipByte
+CheckStackPage:
       cpx #$01          ;check to see if we're on the stack ($0100-$01ff)
       bne InitByte      ;if not, go ahead anyway
-      cpy #<StackClear  ;otherwise, check to see if we're at $01?0-$01ff
-      bcs SkipByte      ;if so, skip write
+        cpy #<StackClear  ;otherwise, check to see if we're at $01?0-$01ff
+        bcs SkipByte      ;if so, skip write
 InitByte:
       sta (InitializeMemoryRAMLo),y       ;otherwise, initialize byte with current low byte in Y
 SkipByte:

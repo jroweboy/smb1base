@@ -1,5 +1,6 @@
 .include "smc.inc"
-.include "nes_mmio.inc"
+; .include "nes_mmio.inc"
+.include "common.inc"
 
 .segment "DECODE"
 
@@ -32,19 +33,24 @@
 	.globalzp superblock_length, last_sample, ptr_bitstream, ptr_slopes
 
 	.import sblk_table, num_sblk_headers
-	.import mapper_set_bank_8000
+	; .import mapper_set_bank_8000
 	.import load_next_superblock
 
 	.global buf_pcm
 
-	z0       = $0
-	slope0   = $2
-	slope1   = $3
+	; z0       = $0
+	; slope0   = $2
+	; slope1   = $3
+	z0  = M0
+	slope0 = M2
+	slope1 = M3
 
 .segment "DECODE"
 
-	lda slopes_bank
-	jsr mapper_set_bank_8000
+	; lda slopes_bank
+	; jsr mapper_set_bank_8000
+	BankPRGC slopes_bank
+
 
 	ldy #$00
 	lda (ptr_slopes), y
@@ -53,21 +59,22 @@
 	lda (ptr_slopes), y
 	sta slope1
 	
-	lda bits_bank
-	jsr mapper_set_bank_8000
+	BankPRGC bits_bank
+	; lda bits_bank
+	; jsr mapper_set_bank_8000
 	
 	ldy #$00
 	decode_byte:
 		lda (ptr_bitstream), y              ; load byte in bitstream
 		tax
 		lda decode_byte_jump_tbl_low, x     ; fetch jump table address to decode this byte
-		sta $0
+		sta z0
 		lda decode_byte_jump_tbl_high, x
-		sta $1
+		sta z0 + 1
 		
 		lda last_sample                     ; load temporary regs
 		ldx idx_pcm_decode
-		jmp ($0000)                         ; jump to fetched address
+		jmp (z0)                         ; jump to fetched address
 	decode_jump_table_return:
 		sta last_sample
 		inx

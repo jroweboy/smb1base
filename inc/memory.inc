@@ -154,11 +154,21 @@ __MEMORY_INC = 1
 .globalzp MusicDataLow
 .globalzp MusicDataHigh
 
+
+; ssdpcm zp vars
+
+.globalzp idx_superblock, idx_block, idx_pcm_decode
+.globalzp bits_bank, slopes_bank
+.globalzp ptr_bitstream, ptr_slopes, superblock_length, last_sample
+.globalzp tmp_irq_a, irq_latch_value
+
 ; .segment "STACK"
 .global VerticalFlipFlag
 .global FlagpoleFNum_Y_Pos
 .global FlagpoleFNum_YMFDummy
 .global FlagpoleScore
+
+.global TempRam
 
 
 .global FloateyNum_Control

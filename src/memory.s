@@ -165,8 +165,51 @@ MusicData                     = MusicDataLow
 MusicDataLow:                   .res  1
 MusicDataHigh:                  .res  1
 
+
+.globalzp idx_superblock, idx_block, idx_pcm_decode
+	idx_superblock:       .res 1  ; index of currently-playing superblock
+	idx_block:            .res 1  ; index of block in superblock
+	idx_pcm_decode:       .res 1  ; index of next sample to be overwritten by the decoder
+
+.globalzp bits_bank, slopes_bank
+.globalzp ptr_bitstream, ptr_slopes, superblock_length, last_sample
+	bits_bank:            .res 1  ; bank containing the current block's bitstream
+	slopes_bank:          .res 1  ; bank containing the current block's slopes
+	ptr_bitstream:        .res 2  ; pointer to position in bitstream
+	ptr_slopes:           .res 2  ; pointer to slope list for this block
+	superblock_length:    .res 1  ; length of current superblock in blocks
+	last_sample:          .res 1  ; value of the last sample, used by the decode routine
+	
+	; ---------------------
+	; Sample playback IRQ
+	; ---------------------
+	
+.globalzp tmp_irq_a, irq_latch_value
+	tmp_irq_a:       .res 1  ; temporary location for IRQ routine to save the "a" register
+	irq_latch_value: .res 1  ; value written to the IRQ latch, determines the sample rate
+	
+
 .segment "SHORTRAM"
 ; start $0100
+
+NoteLenLookupTblOfs:            .res  1
+Square1SoundBuffer:             .res  1
+Square2SoundBuffer:             .res  1
+NoiseSoundBuffer:               .res  1
+AreaMusicBuffer:                .res  1
+
+MusicOffset_Square2:            .res  1
+MusicOffset_Square1:            .res  1
+MusicOffset_Triangle:           .res  1
+
+PauseSoundQueue:                .res  1
+AreaMusicQueue:                 .res  1
+EventMusicQueue:                .res  1
+NoiseSoundQueue:                .res  1
+Square2SoundQueue:              .res  1
+Square1SoundQueue:              .res  1
+
+TempRam:                        .res  3
 ; blank_stack:                    .res  8 ; not used
 VerticalFlipFlag:               .res  1 ; jroweboy: this is acutally only one byte?
 FlagpoleFNum_Y_Pos:             .res  1
@@ -215,23 +258,6 @@ InitialFireballYSpeed:          .res  2
 SwitchToMainIRQ:                .res  1
 IrqPointerJmp:                  .res  3
 IrqPointer                    = IrqPointerJmp + 1
-
-NoteLenLookupTblOfs:            .res  1
-Square1SoundBuffer:             .res  1
-Square2SoundBuffer:             .res  1
-NoiseSoundBuffer:               .res  1
-AreaMusicBuffer:                .res  1
-
-MusicOffset_Square2:            .res  1
-MusicOffset_Square1:            .res  1
-MusicOffset_Triangle:           .res  1
-
-PauseSoundQueue:                .res  1
-AreaMusicQueue:                 .res  1
-EventMusicQueue:                .res  1
-NoiseSoundQueue:                .res  1
-Square2SoundQueue:              .res  1
-Square1SoundQueue:              .res  1
 
 ; .assert(* < $0180)
 
@@ -646,6 +672,6 @@ ContinueWorld:                  .res  1
     
 WarmBootValidation:             .res  1
 
-.segment "WRAM"
+; .segment "WRAM"
 
-BhopValidation:                 .res  4
+; BhopValidation:                 .res  4

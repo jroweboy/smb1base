@@ -38,8 +38,9 @@ add_executable(${PROJECT_NAME}
   audio/superblocks_panic.s
   audio/blocks_panic.inc
 
+  src/ssdpcm/buffer.s
   src/ssdpcm/decode_ss2_async_fullunroll.s
-  src/ssdpcm/mapper_funcs.s
+  # src/ssdpcm/mapper_funcs.s
   src/ssdpcm/playback_irq.s
   src/ssdpcm/superblock_load.s
   src/ssdpcm/ram_locations_common.s

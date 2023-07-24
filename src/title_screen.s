@@ -120,20 +120,20 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   ; ; specifically bank in the sprite for cloud from the BG
   ; BankCHR1C #$40
 
-.define BHOP_MAGIC_STRING "8BHP"
-  ; check to see if our sound driver is already in SRAM
-  lda BhopValidation
-  cmp #.strat(BHOP_MAGIC_STRING,0)
-  bne FailedValidation
-  lda BhopValidation+1
-  cmp #.strat(BHOP_MAGIC_STRING,1)
-  bne FailedValidation
-  lda BhopValidation+2
-  cmp #.strat(BHOP_MAGIC_STRING,2)
-  bne FailedValidation
-  lda BhopValidation+3
-  cmp #.strat(BHOP_MAGIC_STRING,3)
-  bne FailedValidation
+; .define BHOP_MAGIC_STRING "8BHP"
+;   ; check to see if our sound driver is already in SRAM
+;   lda BhopValidation
+;   cmp #.strat(BHOP_MAGIC_STRING,0)
+;   bne FailedValidation
+;   lda BhopValidation+1
+;   cmp #.strat(BHOP_MAGIC_STRING,1)
+;   bne FailedValidation
+;   lda BhopValidation+2
+;   cmp #.strat(BHOP_MAGIC_STRING,2)
+;   bne FailedValidation
+;   lda BhopValidation+3
+;   cmp #.strat(BHOP_MAGIC_STRING,3)
+;   bne FailedValidation
     jmp Finish
 
 ; .import __MUSIC_DRIVER_LOAD__, __MUSIC_DRIVER_RUN__, __MUSIC_DRIVER_SIZE__

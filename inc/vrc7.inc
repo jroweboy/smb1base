@@ -88,7 +88,7 @@ IRQACK      = $f010
 .scope
 .import loc
 .assert .bank(loc) <> .bank(*), error, "Attempting to farcall to the same bank!"
-.assert .bank(loc) <> .bank(CODE), error, "Attempting to farcall to the low bank!"
+.assert .bank(loc) <> .bank(LOWCODE), error, "Attempting to farcall to the low bank!"
 .assert .bank(loc) <> .bank(FIXED), error, "Attempting to farcall to the fixed bank!"
   lda #<loc
   sta TargetAddress
