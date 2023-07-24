@@ -5,6 +5,10 @@ set(PROJECT_NAME smb1base)
 project(${PROJECT_NAME} ASM C)
 
 add_executable(${PROJECT_NAME}
+
+  chr/arranged_bg.chr
+  chr/arranged_sprites.chr
+
   inc/charmap.inc
   inc/common.inc
   inc/constants.inc

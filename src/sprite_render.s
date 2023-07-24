@@ -316,13 +316,17 @@ ExJCGfx: rts                         ;leave
 
 ;tiles arranged in top left, right, bottom left, right order
 PowerUpGfxTable:
-      .byte $76, $77, $78, $79 ;regular mushroom
-      .byte $d6, $d6, $d9, $d9 ;fire flower
-      .byte $8d, $8d, $e4, $e4 ;star
-      .byte $76, $77, $78, $79 ;1-up mushroom
+  ; .byte $76, $77, $78, $79 ;regular mushroom
+  ; .byte $d6, $d6, $d9, $d9 ;fire flower
+  ; .byte $8d, $8d, $e4, $e4 ;star
+  ; .byte $76, $77, $78, $79 ;1-up mushroom
+  .byte $6e, $6f, $7e, $7f ;regular mushroom
+  .byte $6d, $6d, $7d, $7d ;fire flower
+  .byte $6c, $6c, $7c, $7c ;star
+  .byte $6e, $6f, $7e, $7f ;1-up mushroom
 
 PowerUpAttributes:
-      .byte $02, $01, $02, $01
+  .byte $02, $01, $02, $01
 
 DrawPowerUp:
       ; ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
@@ -396,91 +400,135 @@ PUpOfs: jmp SprObjectOffscrChk     ;jump to check to see if power-up is offscree
 
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable:
-      .byte $fc, $fc, $aa, $ab, $ac, $ad  ;buzzy beetle frame 1
-      .byte $fc, $fc, $ae, $af, $b0, $b1  ;             frame 2
-      .byte $fc, $a5, $a6, $a7, $a8, $a9  ;koopa troopa frame 1
-      .byte $fc, $a0, $a1, $a2, $a3, $a4  ;             frame 2
-      .byte $69, $a5, $6a, $a7, $a8, $a9  ;koopa paratroopa frame 1
-      .byte $6b, $a0, $6c, $a2, $a3, $a4  ;                 frame 2
-      .byte $fc, $fc, $96, $97, $98, $99  ;spiny frame 1
-      .byte $fc, $fc, $9a, $9b, $9c, $9d  ;      frame 2
-      .byte $fc, $fc, $8f, $8e, $8e, $8f  ;spiny's egg frame 1
-      .byte $fc, $fc, $95, $94, $94, $95  ;            frame 2
-      .byte $fc, $fc, $dc, $dc, $df, $df  ;bloober frame 1
-      .byte $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
-      .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1
-      .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2
-      .byte $fc, $fc, $70, $71, $72, $73  ;goomba
-      .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down)
-      .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2
-      .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup)
-      .byte $fc, $fc, $6f, $6f, $6d, $6d  ;            frame 2
-      .byte $fc, $fc, $f4, $f4, $f5, $f5  ;buzzy beetle shell frame 1 (rightsideup)
-      .byte $fc, $fc, $f4, $f4, $f5, $f5  ;                   frame 2
-      .byte $fc, $fc, $f5, $f5, $f4, $f4  ;buzzy beetle shell frame 1 (upside-down)
-      .byte $fc, $fc, $f5, $f5, $f4, $f4  ;                   frame 2
-      .byte $fc, $fc, $fc, $fc, $ef, $ef  ;defeated goomba
-      .byte $b9, $b8, $bb, $ba, $bc, $bc  ;lakitu frame 1
-      .byte $fc, $fc, $bd, $bd, $bc, $bc  ;       frame 2
-      .byte $7a, $7b, $da, $db, $d8, $d8  ;princess
-      .byte $cd, $cd, $ce, $ce, $cf, $cf  ;mushroom retainer
-      .byte $7d, $7c, $d1, $8c, $d3, $d2  ;hammer bro frame 1
-      .byte $7d, $7c, $89, $88, $8b, $8a  ;           frame 2
-      .byte $d5, $d4, $e3, $e2, $d3, $d2  ;           frame 3
-      .byte $d5, $d4, $e3, $e2, $8b, $8a  ;           frame 4
-      .byte $e5, $e5, $e6, $e6, $eb, $eb  ;piranha plant frame 1
-      .byte $ec, $ec, $ed, $ed, $ee, $ee  ;              frame 2
-      .byte $fc, $fc, $d0, $d0, $d7, $d7  ;podoboo
-      .byte $bf, $be, $c1, $c0, $c2, $fc  ;bowser front frame 1
-      .byte $c4, $c3, $c6, $c5, $c8, $c7  ;bowser rear frame 1
-      .byte $bf, $be, $ca, $c9, $c2, $fc  ;       front frame 2
-      .byte $c4, $c3, $c6, $c5, $cc, $cb  ;       rear frame 2
-      .byte $fc, $fc, $e8, $e7, $ea, $e9  ;bullet bill
-      .byte $f2, $f2, $f3, $f3, $f2, $f2  ;jumpspring frame 1
-      .byte $f1, $f1, $f1, $f1, $fc, $fc  ;           frame 2
-      .byte $f0, $f0, $fc, $fc, $fc, $fc  ;           frame 3
+  .byte $FF, $FF, $82, $83, $92, $93  ;buzzy beetle frame 1
+  .byte $FF, $FF, $84, $85, $94, $95  ;             frame 2
+  .byte $FF, $8B, $9A, $9B, $AA, $AB  ;koopa troopa frame 1
+  .byte $FF, $8D, $9C, $9D, $AC, $AD  ;             frame 2
+  .byte $8A, $8B, $BA, $9B, $AA, $AB  ;koopa paratroopa frame 
+  .byte $8C, $8D, $BB, $9D, $AC, $AD  ;                 frame 
+  .byte $FF, $FF, $86, $87, $96, $97  ;spiny frame 1
+  .byte $FF, $FF, $88, $89, $98, $99  ;      frame 2
+  .byte $FF, $FF, $B3, $A3, $A3, $B3  ;spiny's egg frame 1
+  .byte $FF, $FF, $B4, $A4, $A4, $B4  ;            frame 2
+  .byte $FF, $FF, $CD, $CD, $FD, $FD  ;bloober frame 1
+  .byte $CD, $CD, $DD, $DD, $ED, $ED  ;        frame 2
+  .byte $FF, $FF, $A6, $A7, $B6, $B7  ;cheep-cheep frame 1
+  .byte $FF, $FF, $A5, $A7, $B5, $B7  ;            frame 2
+  .byte $FF, $FF, $80, $81, $90, $91  ;goomba
+  .byte $FF, $FF, $A1, $A1, $B1, $B1  ;koopa shell frame 1 (up
+  .byte $FF, $FF, $A2, $A2, $B1, $B1  ;            frame 2
+  .byte $FF, $FF, $B1, $B1, $A1, $A1  ;koopa shell frame 1 (ri
+  .byte $FF, $FF, $B1, $B1, $A2, $A2  ;            frame 2
+  .byte $FF, $FF, $B0, $B0, $A0, $A0  ;buzzy beetle shell fram
+  .byte $FF, $FF, $B0, $B0, $A0, $A0  ;                   fram
+  .byte $FF, $FF, $A0, $A0, $B0, $B0  ;buzzy beetle shell fram
+  .byte $FF, $FF, $A0, $A0, $B0, $B0  ;                   fram
+  .byte $FF, $FF, $FF, $FF, $B2, $B2  ;defeated goomba
+  .byte $8E, $8F, $9E, $9F, $AE, $AE  ;lakitu frame 1
+  .byte $FF, $FF, $AF, $AF, $AE, $AE  ;       frame 2
+  .byte $EA, $EB, $FA, $FB, $FC, $FC  ;princess
+  .byte $CC, $CC, $DC, $DC, $EC, $EC  ;mushroom retainer
+  .byte $C4, $C5, $F6, $F7, $E6, $E7  ;hammer bro frame 1
+  .byte $C4, $C5, $D4, $D5, $E4, $E5  ;           frame 2
+  .byte $C6, $C7, $D6, $D7, $E6, $E7  ;           frame 3
+  .byte $C6, $C7, $D6, $D7, $E4, $E5  ;           frame 4
+  .byte $CE, $CE, $DE, $DE, $EE, $EE  ;piranha plant frame 1
+  .byte $CF, $CF, $DF, $DF, $EF, $EF  ;              frame 2
+  .byte $FF, $FF, $DA, $DA, $DB, $DB  ;podoboo
+  .byte $C2, $C3, $D2, $D3, $E2, $FF  ;bowser front frame 1
+  .byte $D0, $D1, $E0, $E1, $F0, $F1  ;bowser rear frame 1
+  .byte $C2, $C3, $F2, $E3, $E2, $FF  ;       front frame 2
+  .byte $D0, $D1, $E0, $E1, $C0, $C1  ;       rear frame 2
+  .byte $FF, $FF, $A8, $A9, $B8, $B9  ;bullet bill
+  .byte $6A, $6A, $6B, $6B, $6A, $6A  ;jumpspring frame 1
+  .byte $69, $69, $69, $69, $FF, $FF  ;           frame 2
+  .byte $68, $68, $FF, $FF, $FF, $FF  ;           frame 3
+
+; .byte $fc, $fc, $aa, $ab, $ac, $ad  ;buzzy beetle frame 1
+; .byte $fc, $fc, $ae, $af, $b0, $b1  ;             frame 2
+; .byte $fc, $a5, $a6, $a7, $a8, $a9  ;koopa troopa frame 1
+; .byte $fc, $a0, $a1, $a2, $a3, $a4  ;             frame 2
+; .byte $69, $a5, $6a, $a7, $a8, $a9  ;koopa paratroopa frame 1
+; .byte $6b, $a0, $6c, $a2, $a3, $a4  ;                 frame 2
+; .byte $fc, $fc, $96, $97, $98, $99  ;spiny frame 1
+; .byte $fc, $fc, $9a, $9b, $9c, $9d  ;      frame 2
+; .byte $fc, $fc, $8f, $8e, $8e, $8f  ;spiny's egg frame 1
+; .byte $fc, $fc, $95, $94, $94, $95  ;            frame 2
+; .byte $fc, $fc, $dc, $dc, $df, $df  ;bloober frame 1
+; .byte $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
+; .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1
+; .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2
+; .byte $fc, $fc, $70, $71, $72, $73  ;goomba
+; .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down)
+; .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2
+; .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup)
+; .byte $fc, $fc, $6f, $6f, $6d, $6d  ;            frame 2
+; .byte $fc, $fc, $f4, $f4, $f5, $f5  ;buzzy beetle shell frame 1 (rightsideup)
+; .byte $fc, $fc, $f4, $f4, $f5, $f5  ;                   frame 2
+; .byte $fc, $fc, $f5, $f5, $f4, $f4  ;buzzy beetle shell frame 1 (upside-down)
+; .byte $fc, $fc, $f5, $f5, $f4, $f4  ;                   frame 2
+; .byte $fc, $fc, $fc, $fc, $ef, $ef  ;defeated goomba
+; .byte $b9, $b8, $bb, $ba, $bc, $bc  ;lakitu frame 1
+; .byte $fc, $fc, $bd, $bd, $bc, $bc  ;       frame 2
+; .byte $7a, $7b, $da, $db, $d8, $d8  ;princess
+; .byte $cd, $cd, $ce, $ce, $cf, $cf  ;mushroom retainer
+; .byte $7d, $7c, $d1, $8c, $d3, $d2  ;hammer bro frame 1
+; .byte $7d, $7c, $89, $88, $8b, $8a  ;           frame 2
+; .byte $d5, $d4, $e3, $e2, $d3, $d2  ;           frame 3
+; .byte $d5, $d4, $e3, $e2, $8b, $8a  ;           frame 4
+; .byte $e5, $e5, $e6, $e6, $eb, $eb  ;piranha plant frame 1
+; .byte $ec, $ec, $ed, $ed, $ee, $ee  ;              frame 2
+; .byte $fc, $fc, $d0, $d0, $d7, $d7  ;podoboo
+; .byte $bf, $be, $c1, $c0, $c2, $fc  ;bowser front frame 1
+; .byte $c4, $c3, $c6, $c5, $c8, $c7  ;bowser rear frame 1
+; .byte $bf, $be, $ca, $c9, $c2, $fc  ;       front frame 2
+; .byte $c4, $c3, $c6, $c5, $cc, $cb  ;       rear frame 2
+; .byte $fc, $fc, $e8, $e7, $ea, $e9  ;bullet bill
+; .byte $f2, $f2, $f3, $f3, $f2, $f2  ;jumpspring frame 1
+; .byte $f1, $f1, $f1, $f1, $fc, $fc  ;           frame 2
+; .byte $f0, $f0, $fc, $fc, $fc, $fc  ;           frame 3
 
 EnemyGfxTableOffsets:
-      .byte $0c, $0c, $00, $0c, $0c, $a8, $54, $3c
-      .byte $ea, $18, $48, $48, $cc, $c0, $18, $18
-      .byte $18, $90, $24, $ff, $48, $9c, $d2, $d8
-      .byte $f0, $f6, $fc
+  .byte $0c, $0c, $00, $0c, $0c, $a8, $54, $3c
+  .byte $ea, $18, $48, $48, $cc, $c0, $18, $18
+  .byte $18, $90, $24, $ff, $48, $9c, $d2, $d8
+  .byte $f0, $f6, $fc
 
-EnemyAttributeData:
-      .byte $01, $02, $03, $02, $01, $01, $03, $03
-      .byte $03, $01, $01, $02, $02, $21, $01, $02
-      .byte $01, $01, $02, $ff, $02, $02, $01, $01
-      .byte $02, $02, $02
+  EnemyAttributeData:
+  .byte $01, $02, $03, $02, $01, $01, $03, $03
+  .byte $03, $01, $01, $02, $02, $21, $01, $02
+  .byte $01, $01, $02, $ff, $02, $02, $01, $01
+  .byte $02, $02, $02
 
 EnemyAnimTimingBMask:
-      .byte $08, $18
+  .byte $08, $18
 
 JumpspringFrameOffsets:
-      .byte $18, $19, $1a, $19, $18
+  .byte $18, $19, $1a, $19, $18
 
 EnemyGfxHandler:
-      lda Enemy_Y_Position,x      ;get enemy object vertical position
-      sta R2
-      lda Enemy_Rel_XPos          ;get enemy object horizontal position
-      sta R5                     ;relative to screen
-      ; ldy Enemy_SprDataOffset,x
-    AllocSpr 6
-      sty OriginalOAMOffset
-      sty Local_eb                     ;get sprite data offset
-      lda #$00
-      sta VerticalFlipFlag        ;initialize vertical flip flag by default
-      lda Enemy_MovingDir,x
-      sta R3                     ;get enemy object moving direction
-      lda Enemy_SprAttrib,x
-      sta R4                     ;get enemy object sprite attributes
-      lda Enemy_ID,x
-      cmp #PiranhaPlant           ;is enemy object piranha plant?
-      bne CheckForRetainerObj     ;if not, branch
-      ldy PiranhaPlant_Y_Speed,x
-      bmi CheckForRetainerObj     ;if piranha plant moving upwards, branch
-      ldy EnemyFrameTimer,x
-      beq CheckForRetainerObj     ;if timer for movement expired, branch
-      rts                         ;if all conditions fail, leave
+  lda Enemy_Y_Position,x      ;get enemy object vertical position
+  sta R2
+  lda Enemy_Rel_XPos          ;get enemy object horizontal position
+  sta R5                     ;relative to screen
+  ; ldy Enemy_SprDataOffset,x
+AllocSpr 6
+  sty OriginalOAMOffset
+  sty Local_eb                     ;get sprite data offset
+  lda #$00
+  sta VerticalFlipFlag        ;initialize vertical flip flag by default
+  lda Enemy_MovingDir,x
+  sta R3                     ;get enemy object moving direction
+  lda Enemy_SprAttrib,x
+  sta R4                     ;get enemy object sprite attributes
+  lda Enemy_ID,x
+  cmp #PiranhaPlant           ;is enemy object piranha plant?
+  bne CheckForRetainerObj     ;if not, branch
+  ldy PiranhaPlant_Y_Speed,x
+  bmi CheckForRetainerObj     ;if piranha plant moving upwards, branch
+  ldy EnemyFrameTimer,x
+  beq CheckForRetainerObj     ;if timer for movement expired, branch
+  rts                         ;if all conditions fail, leave
 
 CheckForRetainerObj:
       lda Enemy_State,x           ;store enemy state
