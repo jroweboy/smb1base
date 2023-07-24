@@ -476,7 +476,7 @@ EnemyStompedPts:
   sta Player_Y_Speed
   ; reset the air timer so we don't bounce too high when hitting the ground
   ; after bouncing on an enemy.
-  sta AirTimeTimer
+  ; sta AirTimeTimer
   rts
 
 ChkForDemoteKoopa:
@@ -1053,12 +1053,12 @@ DoFootCheck:
     jmp DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
 :
     jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
-    jsr QuickBrickShatterWhenBig
+    ; jsr QuickBrickShatterWhenBig
     jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
     bcs AwardTouchedCoin       ;if so, branch to some other part of code
       pha                        ;save bottom left metatile to stack
         jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom right of player
-        jsr QuickBrickShatterWhenBig
+        ; jsr QuickBrickShatterWhenBig
         sta R0                    ;save bottom right metatile here
       pla
       sta R1                    ;pull bottom left metatile and save here
@@ -1089,10 +1089,10 @@ ContChk:
       ldy R4                    ;check lower nybble of vertical coordinate returned
       cpy #$05                   ;from collision detection routine
       bcc LandPlyr               ;if lower nybble < 5, branch
-        pha ; save the current metatile for checking if we are breaking a brick
+        ; pha ; save the current metatile for checking if we are breaking a brick
           lda Player_MovingDir
           sta R0                    ;use player's moving direction as temp variable
-        pla
+        ; pla
         ; also keep the carry set to signify that we want to check for bricks
         jmp StopPlayerMove       ;jump to impede player's movement in that direction
 LandPlyr:
@@ -1141,6 +1141,12 @@ LandPlyr:
 ;     sta AirTimeTimer
 ;     sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
 ;     sta StompChainCounter      ;initialize enemy stomp counter
+
+
+  lda #$00
+  sta Player_Y_Speed         ;initialize vertical speed and fractional
+  sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
+  sta StompChainCounter      ;initialize enemy stomp counter
 InitSteP:
   lda #$00
   sta Player_State           ;set player's state to normal
@@ -1185,7 +1191,7 @@ ExSCH:
   rts                       ;leave
 
 CheckSideMTiles:
-  jsr QuickBrickShatterWhenBig
+  ; jsr QuickBrickShatterWhenBig
   jsr ChkInvisibleMTiles     ;check for hidden or coin 1-up blocks
   beq ExSCH                  ;branch to leave if either found
     jsr CheckForClimbMTiles    ;check for climbable metatiles
@@ -1252,20 +1258,20 @@ BounceForceData:
 
 StopPlayerMove:
 ; if the carry is set then we know this object isn't a brick
-  bcc @Exit
-; brick metatile is 51 and 52
-; so if we bounce into a brick when we are big then we don't want to
-; impede the player movement
-  ldx PlayerSize
-  bne @Exit
-  cmp #$54 ; check if we are touching the ground
-  beq @Exit
-  cmp #$50 ; this range is the power up and brick range
-  bcc @Exit
-  cmp #$61
-  bcs @Exit
-    rts
-@Exit:
+;   bcc @Exit
+; ; brick metatile is 51 and 52
+; ; so if we bounce into a brick when we are big then we don't want to
+; ; impede the player movement
+;   ldx PlayerSize
+;   bne @Exit
+;   cmp #$54 ; check if we are touching the ground
+;   beq @Exit
+;   cmp #$50 ; this range is the power up and brick range
+;   bcc @Exit
+;   cmp #$61
+;   bcs @Exit
+;     rts
+; @Exit:
   jmp ImpedePlayerMove      ;stop player's movement
       
 AreaChangeTimerData:
@@ -1590,7 +1596,7 @@ ImpedePlayerMove:
   cpy #$00                  ;if player moving to the left,
   bmi ExIPM                 ;branch to invert bit and leave
     lda #$ff                  ;otherwise load A with value to be used later
-    jmp NXSpd                 ;and jump to affect movement
+    bne NXSpd                 ;and jump to affect movement
 RImpd:
     ldx #$02                  ;return $02 to X
     cpy #$01                  ;if player moving to the right,
@@ -1599,22 +1605,22 @@ RImpd:
 NXSpd:
     ; y == Player_X_Speed
     ; jroweboy reverse the player direction when running into a wall
-    pha
-      tya
-      eor #$ff
-      clc
-      adc #1
-      sta Player_X_Speed
-      lda AngularMomentum
-      eor #$ff
-      clc
-      adc #1
-      sta AngularMomentum
-    pla
+    ; pha
+    ;   tya
+    ;   eor #$ff
+    ;   clc
+    ;   adc #1
+    ;   sta Player_X_Speed
+    ;   lda AngularMomentum
+    ;   eor #$ff
+    ;   clc
+    ;   adc #1
+    ;   sta AngularMomentum
+    ; pla
     ldy #$10
     sty SideCollisionTimer    ;set timer of some sort
     ldy #$00
-    ; sty Player_X_Speed        ;nullify player's horizontal speed
+    sty Player_X_Speed        ;nullify player's horizontal speed
     cmp #$00                  ;if value set in A not set to $ff,
     bpl PlatF                 ;branch ahead, do not decrement Y
       dey                       ;otherwise decrement Y now
@@ -2031,23 +2037,23 @@ InvOBit:   lda SprDataOffset_Ctrl   ;invert control bit used by block objects
            sta SprDataOffset_Ctrl
            rts                      ;leave!
 
-QuickBrickShatterWhenBig:
-  ldx PlayerSize
-  beq @PlayerBig
-@Exit:
-    rts
-@PlayerBig:
-; brick metatile is 51 and 52
-  cmp #$51
-  bcc @Exit
-  cmp #$53 
-  bcs @Exit
-  pha
-    phy
-      jsr PlayerHeadCollision     ;otherwise do a sub to process collision
-    ply
-  pla
-  rts
+; QuickBrickShatterWhenBig:
+;   ldx PlayerSize
+;   beq @PlayerBig
+; @Exit:
+;     rts
+; @PlayerBig:
+; ; brick metatile is 51 and 52
+;   cmp #$51
+;   bcc @Exit
+;   cmp #$53 
+;   bcs @Exit
+;   pha
+;     phy
+;       jsr PlayerHeadCollision     ;otherwise do a sub to process collision
+;     ply
+;   pla
+;   rts
 
 ;--------------------------------
 

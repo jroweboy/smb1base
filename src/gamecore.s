@@ -71,16 +71,16 @@ GameCoreRoutine:
 GameEngine:
   far OBJECT
     ; reserve OAM slots for the player and slingshot
-    lda #9 * 4
-    ldy PlayerSize
-    bne :+
-      lda #16 * 4
-    :
-    ldy HoldingSlingshot
-    beq :+
-      clc
-      adc #12 * 4
-    :
+    lda #4 * 2 * 4
+    ; ldy PlayerSize
+    ; bne :+
+    ;   lda #16 * 4
+    ; :
+    ; ldy HoldingSlingshot
+    ; beq :+
+    ;   clc
+    ;   adc #12 * 4
+    ; :
     sta CurrentOAMOffset
 
     lda #13 - 1 ; size of the different object update list

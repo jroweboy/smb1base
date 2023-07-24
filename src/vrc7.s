@@ -10,6 +10,7 @@
   pha
     lda NextBank
     BankPRGA a
+    sta CurrentBank
     jsr TargetAddrJmp
   pla
   BankPRGA a

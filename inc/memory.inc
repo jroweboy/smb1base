@@ -564,8 +564,8 @@ StackClear = SwitchToMainIRQ
 .global BowserFireBreathTimer
 .global StompTimer
 .global AirBubbleTimer
-.global AirTimeTimer
-FRAME_TIMER_COUNT = AirTimeTimer - Timers
+; .global AirTimeTimer
+FRAME_TIMER_COUNT = AirBubbleTimer - Timers
 
 .global ScrollIntervalTimer
 .global EnemyIntervalTimer
@@ -576,6 +576,7 @@ FRAME_TIMER_COUNT = AirTimeTimer - Timers
 .global WorldEndTimer
 .global DemoTimer
 ALL_TIMER_COUNT = DemoTimer - Timers
+
 .global PseudoRandomBitReg
 
 .global SoundMemory

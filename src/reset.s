@@ -232,7 +232,7 @@ RELOAD_RATE = 162
   jsr delay_256x_16_clocks
 
   lda tmp_irq_a
-  cmp #$f8
+  cmp #162
   bcs :+
 BAD_EMULATOR:
     jmp BAD_EMULATOR
@@ -282,17 +282,23 @@ GameLoop:
 ;   .byte $40, $42, $44, $45, $46, $47
 
 
+  
+SMC_Import idx_smc_pcm_playback
+.import fill_buffer
 .proc NonMaskableInterrupt
-
   pha
-  lda #0
-  sta OAMADDR               ;reset spr-ram address register
-  lda #OAM
-  sta OAM_DMA          ; ------ OAM DMA ------
-	SMC_LoadLowByte idx_smc_pcm_playback, a
-	clc
-	adc #4 ; oam_dma_sample_skip_cnt    ; skip over lost samples during OAM DMA
-	SMC_StoreLowByte idx_smc_pcm_playback, a
+  phx
+  phy
+    ; always run OAM even on lag frames
+    lda #0
+    sta OAMADDR               ;reset spr-ram address register
+    lda #OAM
+    sta OAM_DMA          ; ------ OAM DMA ------
+    SMC_LoadLowByte idx_smc_pcm_playback, a
+    clc
+    adc #4 ; oam_dma_sample_skip_cnt    ; skip over lost samples during OAM DMA
+    SMC_StoreLowByte idx_smc_pcm_playback, a
+    
   ; inc StatTimerLo
   ; bne @CheckIfNMIEnabled
   ;   inc StatTimerMd
@@ -300,14 +306,18 @@ GameLoop:
   ;     inc StatTimerHi
 @CheckIfNMIEnabled:
   bit NmiDisable
-  bpl @ContinueNMI
+  bpl ContinueNMI
+  
+BankPRG8 #.bank(DECODE)
+	jsr fill_buffer
+BankPRG8 #.bank(LOWCODE)
     inc NmiSkipped
+    ply
+    plx
     pla
     rti
-@ContinueNMI:
+ContinueNMI:
   cli
-  phx
-  phy
 
   ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
   dec NmiDisable
@@ -351,9 +361,16 @@ InitBuffer:
   ; lda Sprite0HitDetectFlag  ;check for flag here
   ; beq :+
   ; jroweboy - set up Irq scroll split
-  lda HorizontalScroll
-  sta IrqNewScroll
+  ; lda HorizontalScroll
+  ; sta IrqNewScroll
   
+	lda HorizontalScroll	;set scroll registers from variables
+	sta PPUSCROLL
+	lda VerticalScroll
+	sta PPUSCROLL
+  lda Mirror_PPUCTRL
+  sta PPUCTRL
+
 ;   lda SwitchToMainIRQ
 ;   beq NoChangeToIRQ
 ;   bmi UseMainIRQ
@@ -410,15 +427,13 @@ InitBuffer:
   ;   sta IRQRELOAD
   ;   sta IRQENABLE
   ; :
-  
-SMC_Import idx_smc_pcm_playback
 
 
-  lda #0
-  sta OAMADDR               ;reset spr-ram address register
+  ; lda #0
+  ; sta OAMADDR               ;reset spr-ram address register
   ; jsr OAMandReadJoypad
   
-
+  jsr readjoy_safe
 
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore
@@ -444,16 +459,16 @@ SMC_Import idx_smc_pcm_playback
       SkipExpTimer:
         dex                       ;move onto next timer
         bpl DecTimersLoop         ;do this until all timers are dealt with
-    AngularMomentumHandler:
-      lda AngularMomentum
-      beq NoDecTimers
-        ; dec AngularMomentumTimer
-        ; bpl NoDecTimers
-          ; cmp #0
-        lda PlayerAngle
-        clc
-        adc AngularMomentum
-        sta PlayerAngle
+    ; AngularMomentumHandler:
+    ;   lda AngularMomentum
+    ;   beq NoDecTimers
+    ;     ; dec AngularMomentumTimer
+    ;     ; bpl NoDecTimers
+    ;       ; cmp #0
+    ;     lda PlayerAngle
+    ;     clc
+    ;     adc AngularMomentum
+    ;     sta PlayerAngle
         ; lda #2
         ; sta AngularMomentumTimer
         ; sta AngularMomentum
@@ -483,26 +498,23 @@ RotPRandomBit:
     bcs SkipSprite0
       lda OperMode
       beq SkipSprite0
-        jsr MoveSpritesOffscreen
+        jsr MoveAllSpritesOffscreen
         ; jsr SpriteShuffler
 SkipSprite0:
-	lda HorizontalScroll	;set scroll registers from variables
-	sta PPUSCROLL
-	lda VerticalScroll
-	sta PPUSCROLL
 
-  ; copy the PPUCTRL flags to the version that we will write in the IRQ.
-  ; this will restore the nmt select flags for the main screen in IRQ
-  lda Mirror_PPUCTRL
-  ; sta IrqPPUCTRL
-  ; and also reset the flags for the HUD
-  and #%11111100
-  sta PPUCTRL
   
 BankPRG8 #.bank(DECODE)
 .import fill_buffer
 	jsr fill_buffer
 BankPRG8 #.bank(LOWCODE)
+
+  ; copy the PPUCTRL flags to the version that we will write in the IRQ.
+  ; this will restore the nmt select flags for the main screen in IRQ
+  ; lda Mirror_PPUCTRL
+  ; ; sta IrqPPUCTRL
+  ; ; and also reset the flags for the HUD
+  ; and #%11111100
+  ; sta PPUCTRL
 
   ; lda OperMode
   ; bne :+
@@ -783,24 +795,56 @@ ExitPause:
   rts
 .endproc
 
-.proc OAMandReadJoypad
-  lda #OAM
-  sta OAM_DMA          ; ------ OAM DMA ------
-  ldx #1             ; get put          <- strobe code must take an odd number of cycles total
-  stx SavedJoypad1Bits ; get put get
-  stx JOYPAD_PORT1   ; put get put get
-  dex                ; put get
-  stx JOYPAD_PORT1   ; put get put get
-read_loop:
-  lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
-  and #3             ; put get
-  cmp #1             ; put get
-  rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
-  lda JOYPAD_PORT1   ; put get put GET
-  and #3             ; put get
-  cmp #1             ; put get
-  rol SavedJoypad1Bits ; put get put get put
-  bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
-ASSERT_PAGE read_loop
+
+.proc readjoy
+    lda #$01
+    ; While the strobe bit is set, buttons will be continuously reloaded.
+    ; This means that reading from JOYPAD1 will only return the state of the
+    ; first button: button A.
+    sta JOYPAD_PORT1
+    sta SavedJoypad1Bits
+    lsr a        ; now A is 0
+    ; By storing 0 into JOYPAD1, the strobe bit is cleared and the reloading stops.
+    ; This allows all 8 buttons (newly reloaded) to be read from JOYPAD1.
+    sta JOYPAD_PORT1
+loop:
+    lda JOYPAD_PORT1
+    lsr a	       ; bit 0 -> Carry
+    rol SavedJoypad1Bits  ; Carry -> bit 0; bit 7 -> Carry
+    bcc loop
+    rts
+.endproc
+
+.proc readjoy_safe
+  jsr readjoy
+reread:
+  lda SavedJoypad1Bits
+  pha
+    jsr readjoy
+  pla
+  cmp SavedJoypad1Bits
+  bne reread
   rts
 .endproc
+
+; .proc OAMandReadJoypad
+;   lda #OAM
+;   sta OAM_DMA          ; ------ OAM DMA ------
+;   ldx #1             ; get put          <- strobe code must take an odd number of cycles total
+;   stx SavedJoypad1Bits ; get put get
+;   stx JOYPAD_PORT1   ; put get put get
+;   dex                ; put get
+;   stx JOYPAD_PORT1   ; put get put get
+; read_loop:
+;   lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
+;   and #3             ; put get
+;   cmp #1             ; put get
+;   rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
+;   lda JOYPAD_PORT1   ; put get put GET
+;   and #3             ; put get
+;   cmp #1             ; put get
+;   rol SavedJoypad1Bits ; put get put get put
+;   bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
+; ASSERT_PAGE read_loop
+;   rts
+; .endproc

@@ -13,16 +13,6 @@ R5                             = TempReg + 5
 R6                             = TempReg + 6
 R7                             = TempReg + 7
 
-IrqTemp:                        .res 2
-IrqR0 = IrqTemp + 0
-IrqR1 = IrqTemp + 1
-
-MainTemp:                       .res 4
-M0                             = MainTemp + 0
-M1                             = MainTemp + 1
-M2                             = MainTemp + 2
-M3                             = MainTemp + 3
-
 ObjectOffset:                   .res  1
 FrameCounter:                   .res  1
 
@@ -165,7 +155,7 @@ MusicData                     = MusicDataLow
 MusicDataLow:                   .res  1
 MusicDataHigh:                  .res  1
 
-
+; Everything after here is NOT cleared on reload.
 .globalzp idx_superblock, idx_block, idx_pcm_decode
 	idx_superblock:       .res 1  ; index of currently-playing superblock
 	idx_block:            .res 1  ; index of block in superblock
@@ -180,6 +170,17 @@ MusicDataHigh:                  .res  1
 	superblock_length:    .res 1  ; length of current superblock in blocks
 	last_sample:          .res 1  ; value of the last sample, used by the decode routine
 	
+
+IrqTemp:                        .res 2
+IrqR0 = IrqTemp + 0
+IrqR1 = IrqTemp + 1
+
+MainTemp:                       .res 4
+M0                             = MainTemp + 0
+M1                             = MainTemp + 1
+M2                             = MainTemp + 2
+M3                             = MainTemp + 3
+
 	; ---------------------
 	; Sample playback IRQ
 	; ---------------------
@@ -243,17 +244,17 @@ IrqNewScroll:                   .res  1
 IrqOldScroll:                   .res  1
 IrqPPUCTRL:                     .res  1
 IrqNextScanline:                .res  1
-X_Magnitude:                    .res  1
-Abs_X_Magnitude:                .res  1
-Y_Magnitude:                    .res  1
-Abs_Y_Magnitude:                .res  1
+; X_Magnitude:                    .res  1
+; Abs_X_Magnitude:                .res  1
+; Y_Magnitude:                    .res  1
+; Abs_Y_Magnitude:                .res  1
 CurrentA:                       .res  1
 NextBank:                       .res  1
 PlayerAngle:                    .res  1
 GroundBounceChain:              .res  1
 BounceForce:                    .res  1
-AngularMomentum:                .res  1
-AngularMomentumTimer:           .res  1
+; AngularMomentum:                .res  1
+; AngularMomentumTimer:           .res  1
 InitialFireballYSpeed:          .res  2
 SwitchToMainIRQ:                .res  1
 IrqPointerJmp:                  .res  3
