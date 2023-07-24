@@ -6,10 +6,10 @@
 .import DrawPlayer_Intermediate
 
 .export ScreenRoutines
-.export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, AddToScore
+.export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
-.export InitializeNameTables, UpdateTopScore, RenderAttributeTables
-.export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
+.export InitializeNameTables, RenderAttributeTables
+.export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset
 .export RemBridge, GiveOneCoin, WriteBlockMetatile, DrawMushroomIcon
 
 .segment "RENDER"
@@ -143,31 +143,30 @@ SetupIntermediate:
 ;-------------------------------------------------------------------------------------
 
 WriteBottomStatusLine:
-
-  jsr GetSBNybbles        ;write player's score and coin tally to screen
-  ldx VRAM_Buffer1_Offset
-  lda #$20                ;write address for world-area number on screen
-  sta VRAM_Buffer1,x
-  lda #$73
-  sta VRAM_Buffer1+1,x
-  lda #$03                ;write length for it
-  sta VRAM_Buffer1+2,x
-  ldy WorldNumber         ;first the world number
-  iny
-  tya
-  sta VRAM_Buffer1+3,x
-  lda #$28                ;next the dash
-  sta VRAM_Buffer1+4,x
-  ldy LevelNumber         ;next the level number
-  iny                     ;increment for proper number display
-  tya
-  sta VRAM_Buffer1+5,x    
-  lda #$00                ;put null terminator on
-  sta VRAM_Buffer1+6,x
-  txa                     ;move the buffer offset up by 6 bytes
-  clc
-  adc #$06
-  sta VRAM_Buffer1_Offset
+;   jsr GetSBNybbles        ;write player's score and coin tally to screen
+;   ldx VRAM_Buffer1_Offset
+;   lda #$20                ;write address for world-area number on screen
+;   sta VRAM_Buffer1,x
+;   lda #$73
+;   sta VRAM_Buffer1+1,x
+;   lda #$03                ;write length for it
+;   sta VRAM_Buffer1+2,x
+;   ldy WorldNumber         ;first the world number
+;   iny
+;   tya
+;   sta VRAM_Buffer1+3,x
+;   lda #$28                ;next the dash
+;   sta VRAM_Buffer1+4,x
+;   ldy LevelNumber         ;next the level number
+;   iny                     ;increment for proper number display
+;   tya
+;   sta VRAM_Buffer1+5,x    
+;   lda #$00                ;put null terminator on
+;   sta VRAM_Buffer1+6,x
+;   txa                     ;move the buffer offset up by 6 bytes
+;   clc
+;   adc #$06
+;   sta VRAM_Buffer1_Offset
   jmp IncSubtask
 
 ;-------------------------------------------------------------------------------------
@@ -372,8 +371,8 @@ NoAltPal:
 ;-------------------------------------------------------------------------------------
 
 WriteTopScore:
-  lda #$fa           ;run display routine to display top score on title
-  jsr UpdateNumber
+  ; lda #$fa           ;run display routine to display top score on title
+  ; jsr UpdateNumber
 IncModeTask_B:
   inc OperMode_Task  ;move onto next mode
   rts
@@ -490,33 +489,33 @@ InitScroll:
 ;-------------------------------------------------------------------------------------
 
 WriteGameText:
-  pha                      ;save text number to stack
-    asl
-    tay                      ;multiply by 2 and use as offset
-    cpy #$04                 ;if set to do top status bar or world/lives display,
-    bcc LdGameText           ;branch to use current offset as-is
-    cpy #$08                 ;if set to do time-up or game over,
-    bcc Chk2Players          ;branch to check players
-    ldy #$08                 ;otherwise warp zone, therefore set offset
-Chk2Players:
-    lda NumberOfPlayers      ;check for number of players
-    bne LdGameText           ;if there are two, use current offset to also print name
-    iny                      ;otherwise increment offset by one to not print name
-LdGameText:
-    ldx GameTextOffsets,y    ;get offset to message we want to print
-    ldy #$00
-GameTextLoop:
-    lda GameText,x           ;load message data
-    cmp #$ff                 ;check for terminator
-    beq EndGameText          ;branch to end text if found
-    sta VRAM_Buffer1,y       ;otherwise write data to buffer
-    inx                      ;and increment increment
-    iny
-    bne GameTextLoop         ;do this for 256 bytes if no terminator found
-EndGameText:
-    lda #$00                 ;put null terminator at end
-    sta VRAM_Buffer1,y
-  pla                      ;pull original text number from stack
+;   pha                      ;save text number to stack
+;     asl
+;     tay                      ;multiply by 2 and use as offset
+;     cpy #$04                 ;if set to do top status bar or world/lives display,
+;     bcc LdGameText           ;branch to use current offset as-is
+;     cpy #$08                 ;if set to do time-up or game over,
+;     bcc Chk2Players          ;branch to check players
+;     ldy #$08                 ;otherwise warp zone, therefore set offset
+; Chk2Players:
+;     lda NumberOfPlayers      ;check for number of players
+;     bne LdGameText           ;if there are two, use current offset to also print name
+;     iny                      ;otherwise increment offset by one to not print name
+; LdGameText:
+;     ldx GameTextOffsets,y    ;get offset to message we want to print
+;     ldy #$00
+; GameTextLoop:
+;     lda GameText,x           ;load message data
+;     cmp #$ff                 ;check for terminator
+;     beq EndGameText          ;branch to end text if found
+;     sta VRAM_Buffer1,y       ;otherwise write data to buffer
+;     inx                      ;and increment increment
+;     iny
+;     bne GameTextLoop         ;do this for 256 bytes if no terminator found
+; EndGameText:
+;     lda #$00                 ;put null terminator at end
+;     sta VRAM_Buffer1,y
+;   pla                      ;pull original text number from stack
   tax
   cmp #$04                 ;are we printing warp zone?
   bcs PrintWarpZoneNumbers
@@ -686,41 +685,42 @@ ExPipeE: rts                       ;leave!!!
 
 ;-------------------------------------------------------------------------------------
 GiveOneCoin:
-  lda #$01               ;set digit modifier to add 1 coin
-  sta DigitModifier+5    ;to the current player's coin tally
-  ldx CurrentPlayer      ;get current player on the screen
-  ldy CoinTallyOffsets,x ;get offset for player's coin tally
-  jsr DigitsMathRoutine  ;update the coin tally
+  ; lda #$01               ;set digit modifier to add 1 coin
+  ; sta DigitModifier+5    ;to the current player's coin tally
+  ; ldx CurrentPlayer      ;get current player on the screen
+  ; ldy CoinTallyOffsets,x ;get offset for player's coin tally
+  ; jsr DigitsMathRoutine  ;update the coin tally
   inc CoinTally          ;increment onscreen player's coin amount
   lda CoinTally
   cmp #100               ;does player have 100 coins yet?
-  bne CoinPoints         ;if not, skip all of this
+  bne NoZSup
+  ; bne CoinPoints         ;if not, skip all of this
   lda #$00
   sta CoinTally          ;otherwise, reinitialize coin amount
   inc NumberofLives      ;give the player an extra life
   lda #Sfx_ExtraLife
   sta Square2SoundQueue  ;play 1-up sound
 
-CoinPoints:
-  lda #$02               ;set digit modifier to award
-  sta DigitModifier+4    ;200 points to the player
+; CoinPoints:
+;   lda #$02               ;set digit modifier to award
+;   sta DigitModifier+4    ;200 points to the player
 
-AddToScore:
-  ldx CurrentPlayer      ;get current player
-  ldy ScoreOffsets,x     ;get offset for player's score
-  jsr DigitsMathRoutine  ;update the score internally with value in digit modifier
+; AddToScore:
+;   ldx CurrentPlayer      ;get current player
+;   ldy ScoreOffsets,x     ;get offset for player's score
+;   jsr DigitsMathRoutine  ;update the score internally with value in digit modifier
 
-GetSBNybbles:
-  ldy CurrentPlayer      ;get current player
-  lda StatusBarNybbles,y ;get nybbles based on player, use to update score and coins
+; GetSBNybbles:
+;   ldy CurrentPlayer      ;get current player
+;   lda StatusBarNybbles,y ;get nybbles based on player, use to update score and coins
 
-UpdateNumber:
-  jsr PrintStatusBarNumbers ;print status bar numbers based on nybbles, whatever they be
-  ldy VRAM_Buffer1_Offset   
-  lda VRAM_Buffer1-6,y      ;check highest digit of score
-  bne NoZSup                ;if zero, overwrite with space tile for zero suppression
-  lda #$24
-  sta VRAM_Buffer1-6,y
+; UpdateNumber:
+;   jsr PrintStatusBarNumbers ;print status bar numbers based on nybbles, whatever they be
+;   ldy VRAM_Buffer1_Offset   
+;   lda VRAM_Buffer1-6,y      ;check highest digit of score
+;   bne NoZSup                ;if zero, overwrite with space tile for zero suppression
+;   lda #$24
+;   sta VRAM_Buffer1-6,y
 NoZSup:
   ldx ObjectOffset          ;get enemy object buffer offset
   rts
@@ -846,32 +846,32 @@ CarryOne:
 .endproc
 
 ;-------------------------------------------------------------------------------------
-.proc UpdateTopScore
-  ldx #$05          ;start with mario's score
-  jsr TopScoreCheck
-  ldx #$0b          ;now do luigi's score
-TopScoreCheck:
-  ldy #$05                 ;start with the lowest digit
-  sec           
-GetScoreDiff:
-  lda PlayerScoreDisplay,x ;subtract each player digit from each high score digit
-  sbc TopScoreDisplay,y    ;from lowest to highest, if any top score digit exceeds
-  dex                      ;any player digit, borrow will be set until a subsequent
-  dey                      ;subtraction clears it (player digit is higher than top)
-  bpl GetScoreDiff      
-  bcc NoTopSc              ;check to see if borrow is still set, if so, no new high score
-  inx                      ;increment X and Y once to the start of the score
-  iny
-CopyScore:
-  lda PlayerScoreDisplay,x ;store player's score digits into high score memory area
-  sta TopScoreDisplay,y
-  inx
-  iny
-  cpy #$06                 ;do this until we have stored them all
-  bcc CopyScore
-NoTopSc:
-  rts
-.endproc
+; .proc UpdateTopScore
+;   ldx #$05          ;start with mario's score
+;   jsr TopScoreCheck
+;   ldx #$0b          ;now do luigi's score
+; TopScoreCheck:
+;   ldy #$05                 ;start with the lowest digit
+;   sec           
+; GetScoreDiff:
+;   lda PlayerScoreDisplay,x ;subtract each player digit from each high score digit
+;   sbc TopScoreDisplay,y    ;from lowest to highest, if any top score digit exceeds
+;   dex                      ;any player digit, borrow will be set until a subsequent
+;   dey                      ;subtraction clears it (player digit is higher than top)
+;   bpl GetScoreDiff      
+;   bcc NoTopSc              ;check to see if borrow is still set, if so, no new high score
+;   inx                      ;increment X and Y once to the start of the score
+;   iny
+; CopyScore:
+;   lda PlayerScoreDisplay,x ;store player's score digits into high score memory area
+;   sta TopScoreDisplay,y
+;   inx
+;   iny
+;   cpy #$06                 ;do this until we have stored them all
+;   bcc CopyScore
+; NoTopSc:
+;   rts
+; .endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - temp store for offset control bit

@@ -107,11 +107,11 @@ delay_256x_11_clocks_:
   ldy #ColdBootOffset          ;load default cold boot pointer
   ldx #$05                     ;this is where we check for a warm boot
 WBootCheck:
-  lda TopScoreDisplay,x        ;check each score digit in the top score
-  cmp #10                      ;to see if we have a valid digit
-  bcs ColdBoot                 ;if not, give up and proceed with cold boot
-  dex                      
-  bpl WBootCheck
+  ; lda TopScoreDisplay,x        ;check each score digit in the top score
+  ; cmp #10                      ;to see if we have a valid digit
+  ; bcs ColdBoot                 ;if not, give up and proceed with cold boot
+  ; dex                      
+  ; bpl WBootCheck
   lda WarmBootValidation       ;second checkpoint, check to see if 
   cmp #$a5                     ;another location has a specific value
   bne ColdBoot
@@ -436,7 +436,7 @@ InitBuffer:
   jsr readjoy_safe
 
   jsr PauseRoutine          ;handle pause
-  jsr UpdateTopScore
+  ; jsr UpdateTopScore
 
   lda GamePauseStatus       ;check for pause status
   lsr

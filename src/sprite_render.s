@@ -1266,16 +1266,16 @@ DecNumTimer:
   lda #Sfx_ExtraLife
   sta Square2SoundQueue        ;and play the 1-up sound
 LoadNumTiles:
-  lda ScoreUpdateData,y        ;load point value here
-  lsr                          ;move high nybble to low
-  lsr
-  lsr
-  lsr
-  tax                          ;use as X offset, essentially the digit
-  lda ScoreUpdateData,y        ;load again and this time
-  and #%00001111               ;mask out the high nybble
-  sta DigitModifier,x          ;store as amount to add to the digit
-  jsr AddToScore               ;update the score accordingly
+;   lda ScoreUpdateData,y        ;load point value here
+;   lsr                          ;move high nybble to low
+;   lsr
+;   lsr
+;   lsr
+;   tax                          ;use as X offset, essentially the digit
+;   lda ScoreUpdateData,y        ;load again and this time
+;   and #%00001111               ;mask out the high nybble
+;   sta DigitModifier,x          ;store as amount to add to the digit
+;   jsr AddToScore               ;update the score accordingly
 ChkTallEnemy:
   ; ldy Enemy_SprDataOffset,x    ;get OAM data offset for enemy object
 AllocSpr 2
