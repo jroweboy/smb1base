@@ -53,6 +53,42 @@
 .assert __PLAYBACK_CODE_SIZE__ <= 256, error, "playback code is bigger than 256 bytes"
 .endproc
 
+.proc load_test_irq_code
+.import __PLAYBACK_CODE_LOAD__, __PLAYBACK_CODE_RUN__, __PLAYBACK_CODE_SIZE__
+	ldx #5
+loop:
+		lda TestIRQ, x
+		sta __PLAYBACK_CODE_RUN__, x
+		dex
+		bpl loop
+	rts
+TestIRQ:
+.byte $8d, $10, $f0, $e6, tmp_irq_a, $40
+.endproc
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+; Delays X*256 clocks + overhead
+; Clobbers X,Y. Preserves A. Relocatable.
+; Time: X*256+16 clocks (including JSR)
+;;;;;;;;;;;;;;;;;;;;;;;;
+delay_256x_16_clocks:
+	cpx #0
+	bne delay_256x_11_clocks_
+	rts
+delay_256x_11_clocks_:
+	;5 cycles done. Must consume 256 cycles; 251 cycles remain.
+        pha                      ;3
+        tya                      ;2
+         ldy #46                 ;2
+@l:      dey                     ;2*46
+         bne @l                  ;3*46
+         nop                     ;2-1
+         nop                     ;2
+        tay                      ;2
+        pla                      ;4
+	dex                      ;2
+	jmp delay_256x_16_clocks ;3
+
 .proc Start
   sei                          ;pretty standard 6502 type init here
   cld
@@ -94,7 +130,6 @@ ColdBoot:
     bpl :-
 
 .import load_next_superblock, decode_async, sblk_table
-	jsr load_playback_code       ; copy playback code into RAM
 BankPRG8 #.bank(DECODE)
 BankPRGC #.bank(sblk_table)    ; not needed since this is in fixed rom
 	jsr load_next_superblock     ; load first superblock
@@ -171,8 +206,8 @@ WRAM_ENABLE = (1 << 7)
   ; sta IRQENABLE
   lda #$ff
   sta APU_FRAMECOUNTER ; disable frame counter
-  ; re-enable interrupts so the scanline irq can run
-  cli
+
+  ; configure VRC7 IRQ
   lda #%00000111
 	sta IRQCONTROL
 ; 127 clock cycles per sample = ~14093 Hz
@@ -182,6 +217,31 @@ RELOAD_RATE = 162
 	sta irq_latch_value
 	sta IRQLATCH
 	sta IRQACK
+
+
+; do a quick check that the IRQ works.
+  lda #0
+  sta tmp_irq_a
+  jsr load_test_irq_code
+
+  ; re-enable interrupts so the scanline irq can run
+  cli
+
+  ; check that it runs at 162 times in a frame
+  ldx #116
+  jsr delay_256x_16_clocks
+
+  lda tmp_irq_a
+  cmp #$f8
+  bcs :+
+BAD_EMULATOR:
+    jmp BAD_EMULATOR
+:
+
+  sei
+	jsr load_playback_code       ; copy playback code into RAM
+  cli
+
 FinializeMarioInit:
   lda #$a5                     ;set warm boot flag
   sta WarmBootValidation     
@@ -683,28 +743,6 @@ SkipByte:
 ;   rts
 ; .endproc
 
-.proc OAMandReadJoypad
-  lda #OAM
-  sta OAM_DMA          ; ------ OAM DMA ------
-  ldx #1             ; get put          <- strobe code must take an odd number of cycles total
-  stx SavedJoypad1Bits ; get put get
-  stx JOYPAD_PORT1   ; put get put get
-  dex                ; put get
-  stx JOYPAD_PORT1   ; put get put get
-read_loop:
-  lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
-  and #3             ; put get
-  cmp #1             ; put get
-  rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
-  lda JOYPAD_PORT1   ; put get put GET
-  and #3             ; put get
-  cmp #1             ; put get
-  rol SavedJoypad1Bits ; put get put get put
-  bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
-ASSERT_PAGE read_loop
-  rts
-.endproc
-
 ;-------------------------------------------------------------------------------------
 .proc PauseRoutine
   lda OperMode           ;are we in victory mode?
@@ -742,5 +780,27 @@ ClrPauseTimer:
 SetPause:
   sta GamePauseStatus
 ExitPause:
+  rts
+.endproc
+
+.proc OAMandReadJoypad
+  lda #OAM
+  sta OAM_DMA          ; ------ OAM DMA ------
+  ldx #1             ; get put          <- strobe code must take an odd number of cycles total
+  stx SavedJoypad1Bits ; get put get
+  stx JOYPAD_PORT1   ; put get put get
+  dex                ; put get
+  stx JOYPAD_PORT1   ; put get put get
+read_loop:
+  lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
+  lda JOYPAD_PORT1   ; put get put GET
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad1Bits ; put get put get put
+  bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
+ASSERT_PAGE read_loop
   rts
 .endproc
