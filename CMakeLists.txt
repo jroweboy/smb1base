@@ -35,8 +35,8 @@ add_executable(${PROJECT_NAME}
   src/title_screen.s
   # src/trigtable.s
   
-  audio/superblocks_panic.s
-  audio/blocks_panic.inc
+  audio/panic/superblocks_panic.s
+  audio/panic/blocks_panic.inc
 
   src/ssdpcm/buffer.s
   src/ssdpcm/decode_ss2_async_fullunroll.s
@@ -98,7 +98,7 @@ add_executable(${PROJECT_NAME}
   # chr/lanky_mario.chr
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC audio/ inc/ gen/)
+target_include_directories(${PROJECT_NAME} PUBLIC inc/ gen/)
 
 include(GenerateLinkerScript)
 
