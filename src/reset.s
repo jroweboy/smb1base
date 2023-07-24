@@ -257,9 +257,16 @@ FinializeMarioInit:
   ora #%10000000               ;enable NMIs
   jsr WritePPUReg1
 
-GameLoop:
+  ; do a jsr to the main loop so we can profile it separately
+  jsr IdleLoop
+.endproc
+.proc IdleLoop
   lda NmiDisable
-  beq GameLoop
+  beq IdleLoop
+  jsr GameLoop
+  jmp IdleLoop
+.endproc
+.proc GameLoop
   lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
   lsr
   bcs :+
@@ -273,8 +280,7 @@ GameLoop:
   ; sta PPUMASK
   lda #0
   sta NmiDisable
-  jmp GameLoop
-
+  rts
 .endproc
 
 ; .export GraphicsBankInitValues
@@ -289,16 +295,6 @@ SMC_Import idx_smc_pcm_playback
   pha
   phx
   phy
-    ; always run OAM even on lag frames
-    lda #0
-    sta OAMADDR               ;reset spr-ram address register
-    lda #OAM
-    sta OAM_DMA          ; ------ OAM DMA ------
-    SMC_LoadLowByte idx_smc_pcm_playback, a
-    clc
-    adc #4 ; oam_dma_sample_skip_cnt    ; skip over lost samples during OAM DMA
-    SMC_StoreLowByte idx_smc_pcm_playback, a
-    
   ; inc StatTimerLo
   ; bne @CheckIfNMIEnabled
   ;   inc StatTimerMd
@@ -433,6 +429,16 @@ InitBuffer:
   ; sta OAMADDR               ;reset spr-ram address register
   ; jsr OAMandReadJoypad
   
+    ; always run OAM even on lag frames
+    lda #0
+    sta OAMADDR               ;reset spr-ram address register
+    lda #OAM
+    sta OAM_DMA          ; ------ OAM DMA ------
+    SMC_LoadLowByte idx_smc_pcm_playback, a
+    clc
+    adc #4 ; oam_dma_sample_skip_cnt    ; skip over lost samples during OAM DMA
+    SMC_StoreLowByte idx_smc_pcm_playback, a
+    
   jsr readjoy_safe
 
   jsr PauseRoutine          ;handle pause

@@ -9,7 +9,7 @@
 .export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, RenderAttributeTables
-.export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset
+.export WritePPUReg1, HandlePipeEntry, MoveVOffset
 .export RemBridge, GiveOneCoin, WriteBlockMetatile, DrawMushroomIcon
 
 .segment "RENDER"
@@ -117,8 +117,8 @@ InitATLoop:
 ;-------------------------------------------------------------------------------------
 
 WriteTopStatusLine:
-  lda #$00          ;select main status bar
-  jsr WriteGameText ;output it
+  ; lda #$00          ;select main status bar
+  ; jsr WriteGameText ;output it
   jmp IncSubtask    ;onto the next task
   ;implicit rts
 
@@ -218,7 +218,7 @@ PlayerInter:
   farcall DrawPlayer_Intermediate  ;put player in appropriate place for
   lda #$01                     ;lives display, then output lives display to buffer
 OutputInter:
-  jsr WriteGameText
+  ; jsr WriteGameText
   jsr ResetScreenTimer
   lda #$00
   sta DisableScreenFlag        ;reenable screen output
@@ -226,8 +226,8 @@ OutputInter:
 GameOverInter:
   lda #$12                     ;set screen timer
   sta ScreenTimer
-  lda #$03                     ;output game over screen to buffer
-  jsr WriteGameText
+  ; lda #$03                     ;output game over screen to buffer
+  ; jsr WriteGameText
   jmp IncModeTask_B
 NoInter:
   lda #$08                     ;set for specific task and leave
@@ -488,7 +488,7 @@ InitScroll:
 
 ;-------------------------------------------------------------------------------------
 
-WriteGameText:
+; WriteGameText:
 ;   pha                      ;save text number to stack
 ;     asl
 ;     tay                      ;multiply by 2 and use as offset
@@ -516,50 +516,50 @@ WriteGameText:
 ;     lda #$00                 ;put null terminator at end
 ;     sta VRAM_Buffer1,y
 ;   pla                      ;pull original text number from stack
-  tax
-  cmp #$04                 ;are we printing warp zone?
-  bcs PrintWarpZoneNumbers
-  dex                      ;are we printing the world/lives display?
-  bne CheckPlayerName      ;if not, branch to check player's name
-  lda NumberofLives        ;otherwise, check number of lives
-  clc                      ;and increment by one for display
-  adc #$01
-  cmp #10                  ;more than 9 lives?
-  bcc PutLives
-  sbc #10                  ;if so, subtract 10 and put a crown tile
-  ldy #$9f                 ;next to the difference...strange things happen if
-  sty VRAM_Buffer1+7       ;the number of lives exceeds 19
-PutLives:
-  sta VRAM_Buffer1+8
-  ldy WorldNumber          ;write world and level numbers (incremented for display)
-  iny                      ;to the buffer in the spaces surrounding the dash
-  sty VRAM_Buffer1+19
-  ldy LevelNumber
-  iny
-  sty VRAM_Buffer1+21      ;we're done here
-  rts
+;   tax
+;   cmp #$04                 ;are we printing warp zone?
+;   bcs PrintWarpZoneNumbers
+;   dex                      ;are we printing the world/lives display?
+;   bne CheckPlayerName      ;if not, branch to check player's name
+;   lda NumberofLives        ;otherwise, check number of lives
+;   clc                      ;and increment by one for display
+;   adc #$01
+;   cmp #10                  ;more than 9 lives?
+;   bcc PutLives
+;   sbc #10                  ;if so, subtract 10 and put a crown tile
+;   ldy #$9f                 ;next to the difference...strange things happen if
+;   sty VRAM_Buffer1+7       ;the number of lives exceeds 19
+; PutLives:
+;   sta VRAM_Buffer1+8
+;   ldy WorldNumber          ;write world and level numbers (incremented for display)
+;   iny                      ;to the buffer in the spaces surrounding the dash
+;   sty VRAM_Buffer1+19
+;   ldy LevelNumber
+;   iny
+;   sty VRAM_Buffer1+21      ;we're done here
+;   rts
 
-CheckPlayerName:
-  lda NumberOfPlayers    ;check number of players
-  beq ExitChkName        ;if only 1 player, leave
-  lda CurrentPlayer      ;load current player
-  dex                    ;check to see if current message number is for time up
-  bne ChkLuigi
-  ldy OperMode           ;check for game over mode
-  cpy #MODE_GAMEOVER
-  beq ChkLuigi
-  eor #%00000001         ;if not, must be time up, invert d0 to do other player
-ChkLuigi:
-  lsr
-  bcc ExitChkName        ;if mario is current player, do not change the name
-    ldy #$04
-NameLoop:
-      lda LuigiName,y        ;otherwise, replace "MARIO" with "LUIGI"
-      sta VRAM_Buffer1+3,y
-      dey
-      bpl NameLoop           ;do this until each letter is replaced
-ExitChkName:
-  rts
+; CheckPlayerName:
+;   lda NumberOfPlayers    ;check number of players
+;   beq ExitChkName        ;if only 1 player, leave
+;   lda CurrentPlayer      ;load current player
+;   dex                    ;check to see if current message number is for time up
+;   bne ChkLuigi
+;   ldy OperMode           ;check for game over mode
+;   cpy #MODE_GAMEOVER
+;   beq ChkLuigi
+;   eor #%00000001         ;if not, must be time up, invert d0 to do other player
+; ChkLuigi:
+;   lsr
+;   bcc ExitChkName        ;if mario is current player, do not change the name
+;     ldy #$04
+; NameLoop:
+;       lda LuigiName,y        ;otherwise, replace "MARIO" with "LUIGI"
+;       sta VRAM_Buffer1+3,y
+;       dey
+;       bpl NameLoop           ;do this until each letter is replaced
+; ExitChkName:
+  ; rts
 
 PrintWarpZoneNumbers:
   sbc #$04               ;subtract 4 and then shift to the left

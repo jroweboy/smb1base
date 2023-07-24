@@ -816,7 +816,7 @@ ScrollLockObject_Warp:
          inx                 ;(8-7-6) and move on
 WarpNum: txa
          sta WarpZoneControl ;store number here to be used by warp zone routine
-         jsr WriteGameText   ;print text and warp zone numbers
+      ;    jsr WriteGameText   ;print text and warp zone numbers
          lda #PiranhaPlant
          jsr KillEnemies     ;load identifier for piranha plants and do sub
 
