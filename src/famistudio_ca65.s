@@ -3352,6 +3352,10 @@ famistudio_update:
 @env_special:
     bne @env_set_repeat  ; Zero is the loop point, non-zero values used for the repeat counter
     iny
+.ifndef CustomMusicLoopCallback
+.import CustomMusicLoopCallback
+.endif
+    jsr CustomMusicLoopCallback
     lda (@env_ptr),y     ; Read loop position
     tay
     jmp @env_read_value
