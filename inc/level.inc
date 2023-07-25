@@ -27,3 +27,5 @@
 ;objects for special row $0d or 13 (d6 set)
 .global IntroPipe, FlagpoleObject, AxeObj, ChainObj, CastleBridgeObj
 .global ScrollLockObject_Warp, ScrollLockObject, ScrollLockObject, AreaFrenzy, LoopCmdE
+
+CRACKED_BRICK_METATILE = $8a

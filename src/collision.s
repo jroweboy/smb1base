@@ -1312,7 +1312,7 @@ CheckForSolidMTiles:
   rts
 
 ClimbMTileUpperExt:
-  .byte $24, $6d, $8a, $c6
+  .byte $24, $6d, $8b, $c6
 
 CheckForClimbMTiles:
   jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB

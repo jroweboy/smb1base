@@ -1261,6 +1261,8 @@ Palette2_MTiles:
   .byte $26, $26, $26, $26 ;water/lava
   .byte $8E, $9E, $8F, $9F ;cloud level terrain
   .byte $39, $49, $39, $49 ;bowser's bridge
+  .byte $82, $92, $83, $93 ;cracked rock terrain
+
 
 Palette3_MTiles:
   .byte $A8, $B8, $A9, $B9 ;question block (coin)

@@ -65,7 +65,7 @@ RenderUnderPart:
              beq DrawThisRow       ;if question block w/ coin, overwrite
              cpy #$c0
              bcs WaitOneRow        ;if any other metatile with palette 3, wait until next row
-             cpy #$54
+             cpy #CRACKED_BRICK_METATILE ; $54
              bne DrawThisRow       ;if cracked rock terrain, overwrite
              cmp #$50
              beq WaitOneRow        ;if stem top of mushroom, wait until next row

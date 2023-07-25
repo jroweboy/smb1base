@@ -291,7 +291,7 @@ ForeSceneryData:
   .byte $00, $00, $00, $00, $86, $87
 
 TerrainMetatiles:
-  .byte $69, $54, $52, $62
+  .byte $69, CRACKED_BRICK_METATILE, $52, $62
 
 TerrainRenderBits:
   .byte %00000000, %00000000 ;no ceiling or floor
@@ -416,7 +416,7 @@ NextTBit: inx                        ;continue until end of buffer
           bne EndUChk                ;if not underground, skip this part
           cpx #$0b
           bne EndUChk                ;if we're at the bottom of the screen, override
-          lda #$54                   ;old terrain type with ground level terrain type
+          lda #CRACKED_BRICK_METATILE ; $54 ;old terrain type with ground level terrain type
           sta R7
 EndUChk:  iny                        ;increment bitmasks offset in Y
           cpy #$08
