@@ -2,6 +2,9 @@
 
 .segment "BSS"
 
+.export PlayPanic
+PlayPanic: .res 1
+
 .segment "MUSIC_ENGINE"
 
 FAMISTUDIO_CFG_EXTERNAL = 1
@@ -31,6 +34,7 @@ CustomSoundInit:
   ldx #<music_data
   ldy #>music_data
   lda #0
+  sta PlayPanic
   jsr famistudio_init
 
   ldx #<sfx_data
@@ -116,6 +120,8 @@ NoiseSfxTable:
 .export CustomSoundEngine
 CustomSoundEngine:
   BankPRGA #.bank(music_data)
+  lda PlayPanic
+  bne PlayPanicMusic
   lda EventMusicQueue
   ora AreaMusicQueue
   beq SkipMusicProcessing
@@ -142,6 +148,9 @@ PlayNewSong:
     jmp SkipMusicProcessing
 StopMusic:
   jsr famistudio_music_stop
+  jmp SkipAreaProcessing
+PlayPanicMusic:
+
 SkipMusicProcessing:
 
   ; Now check for sound effects
@@ -228,5 +237,7 @@ sfx_data:
   .include "disco_mario_sfx.s"
 
 .segment "DPCM_00"
+.export DPCM_DATA
+DPCM_DATA:
   .incbin "../audio/disco_mario.dmc"
 

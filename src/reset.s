@@ -309,8 +309,8 @@ FinializeMarioInit:
 ; GraphicsBankInitValues:
 ;   .byte $40, $42, $44, $45, $46, $47
 
+.import PlayPanic
 
-  
 SMC_Import idx_smc_pcm_playback
 .import fill_buffer
 .proc NonMaskableInterrupt
@@ -325,10 +325,12 @@ SMC_Import idx_smc_pcm_playback
 @CheckIfNMIEnabled:
   bit NmiDisable
   bpl ContinueNMI
-  
-BankPRG8 #.bank(DECODE)
-	jsr fill_buffer
-BankPRG8 #.bank(LOWCODE)
+  lda PlayPanic
+  beq :+
+  BankPRG8 #.bank(DECODE)
+    jsr fill_buffer
+  BankPRG8 #.bank(LOWCODE)
+:
     inc NmiSkipped
     ply
     plx
@@ -531,11 +533,13 @@ RotPRandomBit:
 SkipSprite0:
 
   
-BankPRG8 #.bank(DECODE)
-.import fill_buffer
-	jsr fill_buffer
-BankPRG8 #.bank(LOWCODE)
-
+  lda PlayPanic
+  beq :+
+  BankPRG8 #.bank(DECODE)
+  .import fill_buffer
+    jsr fill_buffer
+  BankPRG8 #.bank(LOWCODE)
+:
   ; copy the PPUCTRL flags to the version that we will write in the IRQ.
   ; this will restore the nmt select flags for the main screen in IRQ
   ; lda Mirror_PPUCTRL
@@ -557,6 +561,8 @@ BankPRG8 #.bank(LOWCODE)
     ; Original SMB1 music engine
     BankPRG8 #.lobyte(.bank(MUSIC_ENGINE))
     BankPRGA #.lobyte(.bank(MUSIC))
+.import DPCM_DATA
+    BankPRGC #.lobyte(.bank(DPCM_DATA))
     ; jsr SoundEngine
     .import CustomSoundEngine
     jsr CustomSoundEngine
