@@ -63,7 +63,6 @@ AreaMusicLUT:
 EventMusicLUT:
   .byte SilenceTrack, HurryUp, Victory, SilenceTrack, InAnotherCastle, SavedPrincess, GameOver, Death
 
-
 OneUp =       0
 BigJump =     1
 Blast =       2
