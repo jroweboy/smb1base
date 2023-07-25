@@ -1165,7 +1165,7 @@ Palette0_MTiles:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
   .byte $24, $24, $24, $30 ;bush left
-  .byte $31, $25, $32, $25 ;bush middle
+  .byte $31, $24, $32, $24 ;bush middle
   .byte $24, $33, $24, $24 ;bush right
   .byte $24, $34, $34, $26 ;mountain left
   .byte $26, $26, $38, $26 ;mountain left bottom/middle center
@@ -1252,7 +1252,7 @@ Palette1_MTiles:
 
 Palette2_MTiles:
   .byte $24, $24, $24, $30 ;cloud left
-  .byte $31, $25, $32, $25 ;cloud middle
+  .byte $31, $24, $32, $24 ;cloud middle
   .byte $24, $33, $24, $24 ;cloud right
   .byte $24, $24, $40, $24 ;cloud bottom left
   .byte $41, $24, $42, $24 ;cloud bottom middle

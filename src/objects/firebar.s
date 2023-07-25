@@ -114,13 +114,14 @@ SpinCounterClockwise:
       sta FirebarSpinState_Low,x
       lda FirebarSpinState_High,x ;add carry to what would normally be the vertical speed
       sbc #$00
+QuickExit:
       rts
 
 ProcFirebar:
           jsr GetEnemyOffscreenBits   ;get offscreen information
           lda Enemy_OffscreenBits     ;check for d3 set
           and #%00001000              ;if so, branch to leave
-          bne SkipFBar
+          bne QuickExit
           lda TimerControl            ;if master timer control set, branch
           bne SusFbar                 ;ahead of this part
           lda FirebarSpinSpeed,x      ;load spinning speed of firebar
@@ -143,6 +144,22 @@ SetupGFB: sta Local_ef                     ;save high byte of spinning thing, mo
       ;     jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
       ;     ldy Enemy_SprDataOffset,x   ;get OAM data offset
       ; sty FirebarTemp
+      
+          AllocSpr 6
+          ; sta OriginalOAMOffset
+          ; sta CurrentOAMOffset
+          ; tay
+          ; lda CurrentOAMOffset
+          ; sta OriginalOAMOffset
+          ; lda Local_ef
+          ; sec ; intentionally add 1 to the end
+          ; adc CurrentOAMOffset
+          ; bcc :+
+          ;   rts
+          ; :
+          ; sta CurrentOAMOffset
+          ; tay
+
           lda Enemy_Rel_YPos          ;get relative vertical coordinate
           sta Sprite_Y_Position,y     ;store as Y in OAM data
           sta R7                     ;also save here
@@ -159,14 +176,14 @@ SetupGFB: sta Local_ef                     ;save high byte of spinning thing, mo
           ldy #$0b                    ;otherwise load value for long firebars
 SetMFbar: sty Local_ed                     ;store maximum value for length of firebars
       ; AllocSpr y
-          tya
-          sec ; intentionally add 1 to the end
-          adc CurrentOAMOffset
-          bcc :+
-            rts
-          :
-          sta CurrentOAMOffset
-          sta OriginalOAMOffset
+      ;     tya
+      ;     sec ; intentionally add 1 to the end
+      ;     adc CurrentOAMOffset
+      ;     bcc :+
+      ;       rts
+      ;     :
+      ;     sta CurrentOAMOffset
+      ;     sta OriginalOAMOffset
 
           lda #$00
           sta R0                     ;initialize counter here
@@ -179,6 +196,8 @@ DrawFbar: lda Local_ef                     ;load high byte of spinstate
           lda OriginalOAMOffset
           ; ldy DuplicateObj_Offset     ;if we arrive at fifth firebar part,
       ;     lda Enemy_SprDataOffset,y   ;get offset from long firebar and load OAM data offset
+      
+          AllocSpr 6
           sta R6                     ;using long firebar offset, then store as new one here
 NextFbar: inc R0                     ;move onto the next firebar part
           lda R0
