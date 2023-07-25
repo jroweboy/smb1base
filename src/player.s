@@ -466,132 +466,27 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
 ;-------------------------------------------------------------------------------------
 
 .proc DrawPlayer_Intermediate
-
-;   ldx #$05                       ;store data into zero page memory
-; PIntLoop:
-;     lda IntermediatePlayerData,x   ;load data to display player as he always
-;     sta R2,x                      ;appears on world/lives display
-;     dex
-;     bpl PIntLoop                   ;do this until all data is loaded
+  ldx #$05                       ;store data into zero page memory
+PIntLoop:
+    lda IntermediatePlayerData,x   ;load data to display player as he always
+    sta R2,x                      ;appears on world/lives display
+    dex
+    bpl PIntLoop                   ;do this until all data is loaded
   lda #$58 ; y coord
   sta R2
   lda #$60
   sta Player_Rel_XPos
-  ldx #0                       ;load offset for small standing
+  ldx #PlayerStandGraphicsOffset
   ldy #0                       ;load sprite data offset
   jsr DrawPlayerLoop             ;draw player accordingly
   ; lda Sprite_Attributes+36       ;get empty sprite attributes
   ; ora #%01000000                 ;set horizontal flip bit for bottom-right sprite
   ; sta Sprite_Attributes+32       ;store and leave
   rts
-; IntermediatePlayerData:
-;   .byte $58, $01, $00, $60, $ff, $04
+IntermediatePlayerData:
+  .byte $58, $01, $00, $60, $ff, $04
 
 .endproc
-
-; RenderPlayerSub:
-;   lda Player_Rel_XPos
-;   sta Player_Pos_ForScroll     ;store player's relative horizontal position
-;   lda Player_Rel_YPos
-;   sta R2
-;   ldy #0
-;   lda PlayerSize
-;   bne DrawSmallPlayer
-;     ldx #BigMarioGraphics-SmallMarioGraphics
-;     ; Large Player
-; DrawLargePlayerLoop:
-;     lda PlayerGraphicsTable,x
-;     sta Sprite_Tilenumber,y
-;     inx
-;     lda PlayerGraphicsTable,x
-;     sta Sprite_Tilenumber+4,y
-;     inx
-;     lda PlayerGraphicsTable,x
-;     sta Sprite_Tilenumber+8,y
-;     inx
-;     lda PlayerGraphicsTable,x
-;     sta Sprite_Tilenumber+12,y
-;     inx
-;     lda R2
-;     clc
-;     adc #4 ; offset by +16 since always small and -4 for the new 24x24 mode
-;     sta Sprite_Y_Position,y
-;     sta Sprite_Y_Position+4,y
-;     sta Sprite_Y_Position+8,y
-;     sta Sprite_Y_Position+12,y
-;     lda Player_Rel_XPos
-;     sec
-;     sbc #$04
-;     sta Sprite_X_Position,y
-;     clc
-;     adc #$08
-;     sta Sprite_X_Position+4,y
-;     clc
-;     adc #$08
-;     sta Sprite_X_Position+8,y
-;     clc
-;     adc #$08
-;     sta Sprite_X_Position+12,y
-;     lda Player_SprAttrib
-;     sta Sprite_Attributes,y    ;store sprite attributes
-;     sta Sprite_Attributes+4,y
-;     sta Sprite_Attributes+8,y
-;     sta Sprite_Attributes+12,y
-;     lda R2                    ;add eight pixels to the next y
-;     clc                        ;coordinate
-;     adc #$08
-;     sta R2
-;     tya                        ;add twelve to the offset in Y to
-;     clc                        ;move to the next two sprites
-;     adc #16
-;     tay
-;     cpy #64 ; draw four rows of four sprites
-;     bcc DrawLargePlayerLoop
-;     rts
-; DrawSmallPlayer:
-;   ldx #0
-; DrawPlayerLoop:
-;   lda PlayerGraphicsTable,x
-;   sta Sprite_Tilenumber,y
-;   inx
-;   lda PlayerGraphicsTable,x
-;   sta Sprite_Tilenumber+4,y
-;   inx
-;   lda PlayerGraphicsTable,x
-;   sta Sprite_Tilenumber+8,y
-;   inx
-;   lda R2
-;   clc
-;   adc #12 ; offset by +16 since always small and -4 for the new 24x24 mode
-;   sta Sprite_Y_Position,y
-;   sta Sprite_Y_Position+4,y
-;   sta Sprite_Y_Position+8,y
-;   lda Player_Rel_XPos
-;   sec
-;   sbc #$04
-;   sta Sprite_X_Position,y
-;   clc
-;   adc #$08
-;   sta Sprite_X_Position+4,y
-;   clc
-;   adc #$08
-;   sta Sprite_X_Position+8,y
-;   lda Player_SprAttrib
-;   sta Sprite_Attributes,y    ;store sprite attributes
-;   sta Sprite_Attributes+4,y
-;   sta Sprite_Attributes+8,y
-;   lda R2                    ;add eight pixels to the next y
-;   clc                        ;coordinate
-;   adc #$08
-;   sta R2
-;   tya                        ;add twelve to the offset in Y to
-;   clc                        ;move to the next two sprites
-;   adc #12
-;   tay
-;   cpy #36 ; draw three rows of sprites
-;   bcc DrawPlayerLoop
-
-;   rts
 
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - used to hold tile numbers, $00 also used to hold upper extent of animation frames
@@ -625,45 +520,9 @@ DrawPlayerLoop:
     bne DrawPlayerLoop           ;do this until all rows are drawn  
   rts
 
-;tiles arranged in order, 2 tiles per row, top to bottom
-; SwimTileRepOffset     = PlayerGraphicsTable + $9e
-; PlayerKilledGraphicsOffset = $00
-
-; PlayerHolsteredOffset = SmallMarioHolstered - PlayerGraphicsTable
-
-; PlayerGraphicsTable:
-; ; Mario is now 24x24
-; ; Good luck everybody.
-; SmallMarioGraphics:
-; ; small mario sideways
-; .byte $02, $03, $04
-; .byte $12, $13, $14
-; .byte $22, $23, $24
-; SmallMarioHolstered:
-; ; small mario holstered
-; .byte $05, $06, $07
-; .byte $15, $16, $17
-; .byte $25, $26, $27
-
-; ; Mario is now 32x32
-; ; hehehehe good luck punk.
-; BigMarioGraphics:
-; ; big mario sideways
-; .byte $08, $09, $0a, $0b
-; .byte $18, $19, $1a, $1b
-; .byte $28, $29, $2a, $2b
-; .byte $38, $39, $3a, $3b
-; BigMarioHolstered:
-; ; big mario sideways
-; .byte $0c, $0d, $0e, $0f
-; .byte $1c, $1d, $1e, $1f
-; .byte $2c, $2d, $2e, $2f
-; .byte $3c, $3d, $3e, $3f
-
-
 SwimTileRepOffset     = PlayerGraphicsTable + $9e
-PlayerKilledGraphicsOffset = $00
-; TODO small mario death animation rotated too
+PlayerKilledGraphicsOffset = $b0
+PlayerStandGraphicsOffset = $c8
 PlayerGraphicsTable:
 
 ;; big player table
