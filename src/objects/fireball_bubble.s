@@ -245,7 +245,7 @@ ExDBub:
 ;-------------------------------------------------------------------------------------
 
 ExplosionTiles:
-  .byte $68, $67, $66
+  .byte $64, $65, $66
 
 DrawExplosion_Fireball:
   ; ldy Alt_SprDataOffset,x  ;get OAM data offset of alternate sort for fireball's explosion
