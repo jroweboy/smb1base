@@ -1313,7 +1313,7 @@ DecNumTimer:
   bne ChkTallEnemy
   cpy #$0b                     ;check offset for $0b
   bne LoadNumTiles             ;branch ahead if not found
-  inc NumberofLives            ;give player one extra life (1-up)
+  ; inc NumberofLives            ;give player one extra life (1-up)
   lda #Sfx_ExtraLife
   sta Square2SoundQueue        ;and play the 1-up sound
 LoadNumTiles:
@@ -1437,10 +1437,10 @@ FlagpoleGfxHandler:
       sta Sprite_Attributes,y        ;set attribute bytes for all three sprites
       sta Sprite_Attributes+4,y
       sta Sprite_Attributes+8,y
-      lda #$7e
+      lda #$d8
       sta Sprite_Tilenumber,y        ;put triangle shaped tile
       sta Sprite_Tilenumber+8,y      ;into first and third sprites
-      lda #$7f
+      lda #$d9
       sta Sprite_Tilenumber+4,y      ;put skull tile into second sprite
       lda FlagpoleCollisionYPos      ;get vertical coordinate at time of collision
       beq ChkFlagOffscreen           ;if zero, branch ahead
@@ -1487,9 +1487,8 @@ ExitDumpSpr:
       rts
 
 FlagpoleScoreNumTiles:
-      .byte $f9, $50
-      .byte $f7, $50
-      .byte $fa, $fb
-      .byte $f8, $fb
-      .byte $f6, $fb
-
+      .byte $74, $70
+      .byte $72, $70
+      .byte $75, $76
+      .byte $73, $76
+      .byte $71, $76

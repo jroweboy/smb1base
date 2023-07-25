@@ -697,7 +697,7 @@ GiveOneCoin:
   ; bne CoinPoints         ;if not, skip all of this
   lda #$00
   sta CoinTally          ;otherwise, reinitialize coin amount
-  inc NumberofLives      ;give the player an extra life
+  ; inc NumberofLives      ;give the player an extra life
   lda #Sfx_ExtraLife
   sta Square2SoundQueue  ;play 1-up sound
 

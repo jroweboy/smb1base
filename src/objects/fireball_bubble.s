@@ -40,10 +40,10 @@
   sta Square1SoundQueue
   lda #$02                   ;load state
   sta Fireball_State,x
-  ; ldy PlayerAnimTimerSet     ;copy animation frame timer setting
-  ; sty FireballThrowingTimer  ;into fireball throwing timer
-  ; dey
-  ; sty PlayerAnimTimer        ;decrement and store in player's animation timer
+  ldy PlayerAnimTimerSet     ;copy animation frame timer setting
+  sty FireballThrowingTimer  ;into fireball throwing timer
+  dey
+  sty PlayerAnimTimer        ;decrement and store in player's animation timer
   inc FireballCounter        ;increment fireball counter
 
 ProcFireballs:

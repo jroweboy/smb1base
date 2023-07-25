@@ -568,15 +568,15 @@ CoinTally:                      .res  1
 WorldNumber:                    .res  1
 AreaNumber:                     .res  1
 
-OffScr_NumberofLives:           .res  1
-OffscreenPlayerInfo           = OffScr_NumberofLives
+; OffScr_NumberofLives:           .res  1
+; OffscreenPlayerInfo           = OffScr_NumberofLives
 
-OffScr_HalfwayPage:             .res  1
-OffScr_LevelNumber:             .res  1
-OffScr_Hidden1UpFlag:           .res  1
-OffScr_CoinTally:               .res  1
-OffScr_WorldNumber:             .res  1
-OffScr_AreaNumber:              .res  1
+; OffScr_HalfwayPage:             .res  1
+; OffScr_LevelNumber:             .res  1
+; OffScr_Hidden1UpFlag:           .res  1
+; OffScr_CoinTally:               .res  1
+; OffScr_WorldNumber:             .res  1
+; OffScr_AreaNumber:              .res  1
 ScrollFractional:               .res  1
 DisableIntermediate:            .res  1
 PrimaryHardMode:                .res  1

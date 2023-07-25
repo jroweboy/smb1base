@@ -79,12 +79,12 @@ SMC_Import idx_smc_pcm_playback
 	rts
 	
 @fill_buffer:
-	; lda ppumask_shadow
+	; lda Mirror_PPUMASK
 	; ora #$81
 	; sta PPUMASK
 	jsr decode_async       ; go decode a block
 	
-	; lda ppumask_shadow
+	; lda Mirror_PPUMASK
 	; ora #$21
 	; sta PPUMASK
 	lda tmp_playback_pos

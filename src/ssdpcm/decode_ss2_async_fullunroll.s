@@ -51,7 +51,6 @@
 	; jsr mapper_set_bank_8000
 	BankPRGC slopes_bank
 
-
 	ldy #$00
 	lda (ptr_slopes), y
 	sta slope0
@@ -60,31 +59,36 @@
 	sta slope1
 	
 	BankPRGC bits_bank
-	; lda bits_bank
-	; jsr mapper_set_bank_8000
+; 	; lda bits_bank
+; 	; jsr mapper_set_bank_8000
 	
-	ldy #$00
-	decode_byte:
-		lda (ptr_bitstream), y              ; load byte in bitstream
-		tax
-		lda decode_byte_jump_tbl_low, x     ; fetch jump table address to decode this byte
-		sta z0
-		lda decode_byte_jump_tbl_high, x
-		sta z0 + 1
+	; ldy #$00
+	; decode_byte:
+	; 	lda (ptr_bitstream), y              ; load byte in bitstream
+	; 	tax
+	; 	lda decode_byte_jump_tbl_low, x     ; fetch jump table address to decode this byte
+	; 	sta z0
+	; 	lda decode_byte_jump_tbl_high, x
+	; 	sta z0 + 1
 		
-		lda last_sample                     ; load temporary regs
-		ldx idx_pcm_decode
-		jmp (z0)                         ; jump to fetched address
-	decode_jump_table_return:
-		sta last_sample
-		inx
-		inx
-		inx
-		inx
-		stx idx_pcm_decode
-		iny
-		cpy #16
-		bne decode_byte
+	; 	lda last_sample                     ; load temporary regs
+	; 	ldx idx_pcm_decode
+	; 	jmp (z0)                         ; jump to fetched address
+	; decode_jump_table_return:
+	; 	sta last_sample
+	; 	inx
+	; 	inx
+	; 	inx
+	; 	inx
+	; 	stx idx_pcm_decode
+	; 	iny
+	; 	cpy #16
+	; 	bne decode_byte
+
+; disgustingly unrolled version of decode byte
+	jsr disgustingly_unrolled
+	sta last_sample
+	stx idx_pcm_decode
 
 @after:
 	; Bitstream pointer update
@@ -120,6 +124,23 @@
 	inc ptr_slopes + 1
 
 @skip:
+	rts
+
+disgustingly_unrolled:
+	ldy #15
+.repeat 16, I
+	lda (ptr_bitstream), y
+	tax
+	lda decode_byte_jump_tbl_high,x
+	pha
+	lda decode_byte_jump_tbl_low,x
+	pha
+.if I <> 15
+	dey
+.endif
+.endrepeat
+	lda last_sample                     ; load temporary regs
+	ldx idx_pcm_decode
 	rts
 
 .segment "DECODE_UNROLL"
@@ -176,13 +197,26 @@
 		sta buf_pcm+3, x
 	.endmacro
 
+	; .macro decode_byte    by
+	; .ident (.sprintf ("decode_byte_%02x", by)):
+	; 	decode_code_offs0 (by >> 6) & $03,
+	; 	decode_code_offs1 (by >> 4) & $03,  (by >> 6) & $03
+	; 	decode_code_offs2 (by >> 2) & $03,  (by >> 4) & $03
+	; 	decode_code_offs3 by & $03,         (by >> 2) & $03
+	; 	jmp decode_jump_table_return
+	; .endmacro
+
 	.macro decode_byte    by
 	.ident (.sprintf ("decode_byte_%02x", by)):
 		decode_code_offs0 (by >> 6) & $03,
 		decode_code_offs1 (by >> 4) & $03,  (by >> 6) & $03
 		decode_code_offs2 (by >> 2) & $03,  (by >> 4) & $03
 		decode_code_offs3 by & $03,         (by >> 2) & $03
-		jmp decode_jump_table_return
+		inx
+		inx
+		inx
+		inx
+		rts
 	.endmacro
 	
 	; This macro generates 256 segments of code to decode each possible byte from the bitstream.
@@ -191,15 +225,26 @@
 	.endrepeat
 
 .segment "DECODE_TABLES"
+	; ; This segment contains stripped jump tables to the 256 different segments of code
+	; decode_byte_jump_tbl_low:
+	; .repeat 256, by
+	; 	.byte (.lobyte (.ident (.sprintf ("decode_byte_%02x", by))))
+	; .endrepeat
+	
+	; decode_byte_jump_tbl_high:
+	; .repeat 256, by
+	; 	.byte (.hibyte (.ident (.sprintf ("decode_byte_%02x", by))))
+	; .endrepeat
+	
 	; This segment contains stripped jump tables to the 256 different segments of code
 	decode_byte_jump_tbl_low:
 	.repeat 256, by
-		.byte (.lobyte (.ident (.sprintf ("decode_byte_%02x", by))))
+		.byte (.lobyte (.ident (.sprintf ("decode_byte_%02x", by)) - 1))
 	.endrepeat
 	
 	decode_byte_jump_tbl_high:
 	.repeat 256, by
-		.byte (.hibyte (.ident (.sprintf ("decode_byte_%02x", by))))
+		.byte (.hibyte (.ident (.sprintf ("decode_byte_%02x", by)) - 1))
 	.endrepeat
-	
+
 .endproc

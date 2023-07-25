@@ -168,15 +168,15 @@ SaveJoyp:
   and #%00001100
   sta Up_Down_Buttons
 
-;   and #%00000100              ;check for pressing down
-;   beq SizeChk                 ;if not, branch
-;     lda Player_State            ;check player's state
-;     bne SizeChk                 ;if not on the ground, branch
-;       ldy Left_Right_Buttons      ;check left and right
-;       beq SizeChk                 ;if neither pressed, branch
-;         lda #$00
-;         sta Left_Right_Buttons      ;if pressing down while on the ground,
-;         sta Up_Down_Buttons         ;nullify directional bits
+  and #%00000100              ;check for pressing down
+  beq SizeChk                 ;if not, branch
+    lda Player_State            ;check player's state
+    bne SizeChk                 ;if not on the ground, branch
+      ldy Left_Right_Buttons      ;check left and right
+      beq SizeChk                 ;if neither pressed, branch
+        lda #$00
+        sta Left_Right_Buttons      ;if pressing down while on the ground,
+        sta Up_Down_Buttons         ;nullify directional bits
 SizeChk:
   jsr PlayerMovementSubs      ;run movement subroutines
   ldy #$01                    ;is player small?
@@ -346,14 +346,14 @@ HalfwayPageNybbles:
   sta Sprite0HitDetectFlag
   lda #Silence             ;silence music
   sta EventMusicQueue
-  dec NumberofLives        ;take one life from player
-  bpl StillInGame          ;if player still has lives, branch
-  lda #$00
-  sta OperMode_Task        ;initialize mode task,
-  lda #MODE_GAMEOVER       ;switch to game over mode
-  sta OperMode             ;and leave
-  rts
-StillInGame:
+  ; dec NumberofLives        ;take one life from player
+  ; bpl StillInGame          ;if player still has lives, branch
+  ; lda #$00
+  ; sta OperMode_Task        ;initialize mode task,
+  ; lda #MODE_GAMEOVER       ;switch to game over mode
+  ; sta OperMode             ;and leave
+  ; rts
+; StillInGame:
   lda WorldNumber          ;multiply world number by 2 and use
   asl                      ;as offset
   tax
@@ -379,7 +379,7 @@ MaskHPNyb:
   lda #$00                 ;beginning of the level
 SetHalfway:
   sta HalfwayPage          ;store as halfway page for player
-  jsr TransposePlayers     ;switch players around if 2-player game
+  ; jsr TransposePlayers     ;switch players around if 2-player game
 
   jmp ContinueGame         ;continue the game
 .endproc
@@ -1070,15 +1070,15 @@ ExitNA:
 ;-------------------------------------------------------------------------------------
 
 PlayerMovementSubs:
-;   lda #$00                  ;set A to init crouch flag by default
-;   ldy PlayerSize            ;is player small?
-;   bne SetCrouch             ;if so, branch
-;   lda Player_State          ;check state of player
-;   bne ProcMove              ;if not on the ground, branch
-;   lda Up_Down_Buttons       ;load controller bits for up and down
-;   and #%00000100            ;single out bit for down button
-; SetCrouch:
-;   sta CrouchingFlag         ;store value in crouch flag
+  lda #$00                  ;set A to init crouch flag by default
+  ldy PlayerSize            ;is player small?
+  bne SetCrouch             ;if so, branch
+  lda Player_State          ;check state of player
+  bne ProcMove              ;if not on the ground, branch
+  lda Up_Down_Buttons       ;load controller bits for up and down
+  and #%00000100            ;single out bit for down button
+SetCrouch:
+  sta CrouchingFlag         ;store value in crouch flag
 ProcMove:
   jsr PlayerPhysicsSub      ;run sub related to jumping and swimming
   lda PlayerChangeSizeFlag  ;if growing/shrinking flag set,

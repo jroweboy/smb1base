@@ -37,13 +37,13 @@
 ;-------------------------------------------------------------------------------------
 PrimaryGameSetup:
 .import GetAreaMusic
-
   lda #$01
   sta FetchNewGameTimerFlag   ;set flag to load game timer from header
-  sta PlayerSize              ;set player's size to small
-  lda #$02
-  sta NumberofLives           ;give each player three lives
-  sta OffScr_NumberofLives
+  lda #$00
+  sta PlayerSize              ;set player's size to LARGE
+  ; lda #$02
+  ; sta NumberofLives           ;give each player three lives
+  ; sta OffScr_NumberofLives
 SecondaryGameSetup:
   lda #$00
   sta DisableScreenFlag     ;enable screen output
@@ -100,7 +100,7 @@ DefaultSprOffsets:
   .word TitleScreenMode
   .word GameMode
   .word VictoryMode
-  .word GameOverMode
+  ; .word GameOverMode
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -192,14 +192,14 @@ DoneInitArea:
 
 
 ;-------------------------------------------------------------------------------------
-.proc GameOverMode
-  lda OperMode_Task
-  jsr JumpEngine
+; .proc GameOverMode
+;   lda OperMode_Task
+;   jsr JumpEngine
   
-  .word SetupGameOver
-  .word ScreenRoutines
-  .word RunGameOver
-.endproc
+;   .word SetupGameOver
+;   .word ScreenRoutines
+;   .word RunGameOver
+; .endproc
 
 ;-------------------------------------------------------------------------------------
 
@@ -217,33 +217,34 @@ DoneInitArea:
 
 ;-------------------------------------------------------------------------------------
 
-.proc RunGameOver
-.import LoadAreaPointer, TransposePlayers
-.export ContinueGame, TerminateGame
+; .proc RunGameOver
+; .import LoadAreaPointer, TransposePlayers
+; .export ContinueGame, TerminateGame
 
-  lda #$00              ;reenable screen
-  sta DisableScreenFlag
-  lda SavedJoypad1Bits  ;check controller for start pressed
-  and #Start_Button
-  bne TerminateGame
-  lda ScreenTimer       ;if not pressed, wait for
-  bne GameIsOn          ;screen timer to expire
-TerminateGame:
-  lda #Silence          ;silence music
-  sta EventMusicQueue
-  jsr TransposePlayers  ;check if other player can keep
-  bcc ContinueGame      ;going, and do so if possible
-  lda WorldNumber       ;otherwise put world number of current
-  sta ContinueWorld     ;player into secret continue function variable
-  lda #$00
-  sta OperMode_Task     ;reset all modes to title screen and
-  sta ScreenTimer       ;leave
-  sta OperMode
-  rts
+;   lda #$00              ;reenable screen
+;   sta DisableScreenFlag
+;   lda SavedJoypad1Bits  ;check controller for start pressed
+;   and #Start_Button
+;   bne TerminateGame
+;   lda ScreenTimer       ;if not pressed, wait for
+;   bne GameIsOn          ;screen timer to expire
+; TerminateGame:
+;   lda #Silence          ;silence music
+;   sta EventMusicQueue
+;   ; jsr TransposePlayers  ;check if other player can keep
+;   bcc ContinueGame      ;going, and do so if possible
+;   lda WorldNumber       ;otherwise put world number of current
+;   sta ContinueWorld     ;player into secret continue function variable
+;   lda #$00
+;   sta OperMode_Task     ;reset all modes to title screen and
+;   sta ScreenTimer       ;leave
+;   sta OperMode
+;   rts
 
-ContinueGame:
+.export ContinueGame
+.proc ContinueGame
   jsr LoadAreaPointer       ;update level pointer with
-  lda #$01                  ;actual world and area numbers, then
+  lda #$00                  ;actual world and area numbers, then
   sta PlayerSize            ;reset player's size, status, and
   inc FetchNewGameTimerFlag ;set game timer flag to reload
   lda #$00                  ;game timer from header
@@ -347,7 +348,7 @@ ChkContinue:
 StartWorld1:
   jsr LoadAreaPointer
   inc Hidden1UpFlag           ;set 1-up box flag for both players
-  inc OffScr_Hidden1UpFlag
+  ; inc OffScr_Hidden1UpFlag
   inc FetchNewGameTimerFlag   ;set fetch new game timer flag
   inc OperMode                ;set next game mode
   lda WorldSelectEnableFlag   ;if world select flag is on, then primary
@@ -364,10 +365,10 @@ ExitMenu:
   rts
 GoContinue:
   sta WorldNumber             ;start both players at the first area
-  sta OffScr_WorldNumber      ;of the previously saved world number
+  ; sta OffScr_WorldNumber      ;of the previously saved world number
   ldx #$00                    ;note that on power-up using this function
   stx AreaNumber              ;will make no difference
-  stx OffScr_AreaNumber
+  ; stx OffScr_AreaNumber
   rts
 
 WSelectBufferTemplate:
@@ -583,9 +584,9 @@ EndChkBButton:
   beq EndExitTwo             ;branch to leave if not
   lda #$01                   ;otherwise set world selection flag
   sta WorldSelectEnableFlag
-  lda #$ff                   ;remove onscreen player's lives
-  sta NumberofLives
-  jsr TerminateGame          ;do sub to continue other player or end game
+  ; lda #$ff                   ;remove onscreen player's lives
+  ; sta NumberofLives
+  ; jsr TerminateGame          ;do sub to continue other player or end game
 EndExitTwo:
   rts                        ;leave
 .endproc

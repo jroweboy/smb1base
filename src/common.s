@@ -319,29 +319,29 @@ ExDivPD:
   rts           ;leave
 .endproc
 
-.proc TransposePlayers
-  sec                       ;set carry flag by default to end game
-  lda NumberOfPlayers       ;if only a 1 player game, leave
-  beq ExTrans
-  lda OffScr_NumberofLives  ;does offscreen player have any lives left?
-  bmi ExTrans               ;branch if not
-  lda CurrentPlayer         ;invert bit to update
-  eor #%00000001            ;which player is on the screen
-  sta CurrentPlayer
-  ldx #$06
-TransLoop:
-  lda OnscreenPlayerInfo,x    ;transpose the information
-  pha                         ;of the onscreen player
-    lda OffscreenPlayerInfo,x   ;with that of the offscreen player
-    sta OnscreenPlayerInfo,x
-  pla
-  sta OffscreenPlayerInfo,x
-  dex
-  bpl TransLoop
-  clc            ;clear carry flag to get game going
-ExTrans:
-  rts
-.endproc
+; .proc TransposePlayers
+;   sec                       ;set carry flag by default to end game
+;   lda NumberOfPlayers       ;if only a 1 player game, leave
+;   beq ExTrans
+;   lda OffScr_NumberofLives  ;does offscreen player have any lives left?
+;   bmi ExTrans               ;branch if not
+;   lda CurrentPlayer         ;invert bit to update
+;   eor #%00000001            ;which player is on the screen
+;   sta CurrentPlayer
+;   ldx #$06
+; TransLoop:
+;   lda OnscreenPlayerInfo,x    ;transpose the information
+;   pha                         ;of the onscreen player
+;     lda OffscreenPlayerInfo,x   ;with that of the offscreen player
+;     sta OnscreenPlayerInfo,x
+;   pla
+;   sta OffscreenPlayerInfo,x
+;   dex
+;   bpl TransLoop
+;   clc            ;clear carry flag to get game going
+; ExTrans:
+;   rts
+; .endproc
 
 ;--------------------------------
 
