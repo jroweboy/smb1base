@@ -52,7 +52,7 @@
   .word PlayerLoseLife
   .word PlayerEntrance
   .word PlayerCtrlRoutine
-  .word PlayerChangeSize
+  .word $0000 ; PlayerChangeSize
   .word PlayerInjuryBlink
   .word PlayerDeath
   .word PlayerFireFlower
@@ -745,8 +745,8 @@ CntPl:
   lda GameEngineSubroutine    ;if executing specific game engine routine,
   cmp #$0b                    ;branch ahead to some other part
   beq PlayerKilled
-  lda PlayerChangeSizeFlag    ;if grow/shrink flag set
-  bne DoChangeSize            ;then branch to some other code
+  ; lda PlayerChangeSizeFlag    ;if grow/shrink flag set
+  ; bne DoChangeSize            ;then branch to some other code
   ldy SwimmingFlag            ;if swimming flag set, branch to
   beq FindPlayerAction        ;different part, do not return
   lda Player_State
@@ -787,9 +787,9 @@ FindPlayerAction:
   ; lda #0
   jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
 
-DoChangeSize:
-  jsr HandleChangeSize          ;find proper offset to graphics table for grow/shrink
-  jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
+; DoChangeSize:
+;   jsr HandleChangeSize          ;find proper offset to graphics table for grow/shrink
+;   jmp PlayerGfxProcessing       ;draw player, then process for fireball throwing
 
 PlayerKilled:
   ldy #PlayerKilledGraphicsOffset ;load offset for player killed
@@ -871,25 +871,25 @@ PlayerGfxTblOffsets:
 ; SizeGraphicsOffsets:
 ;   .byte $00, BigMarioGraphics - SmallMarioGraphics, BigMarioGraphics - SmallMarioGraphics
 
-HandleChangeSize:
-  ldy PlayerAnimCtrl           ;get animation frame control
-  lda FrameCounter
-  and #%00000011               ;get frame counter and execute this code every
-  bne GorSLog                  ;fourth frame, otherwise branch ahead
-    iny                          ;increment frame control
-    cpy #$0a                     ;check for preset upper extent
-    bcc CSzNext                  ;if not there yet, skip ahead to use
-      ldy #$00                     ;otherwise initialize both grow/shrink flag
-      sty PlayerChangeSizeFlag     ;and animation frame control
-CSzNext:
-    sty PlayerAnimCtrl           ;store proper frame control
-GorSLog:
-  lda PlayerSize               ;get player's size
-  bne ShrinkPlayer             ;if player small, skip ahead to next part
-    lda ChangeSizeOffsetAdder,y  ;get offset adder based on frame control as offset
-    ldy #$0f                     ;load offset for player growing
-    ; tay
-    ; lda SizeGraphicsOffsets,y
+; HandleChangeSize:
+;   ldy PlayerAnimCtrl           ;get animation frame control
+;   lda FrameCounter
+;   and #%00000011               ;get frame counter and execute this code every
+;   bne GorSLog                  ;fourth frame, otherwise branch ahead
+;     iny                          ;increment frame control
+;     cpy #$0a                     ;check for preset upper extent
+;     bcc CSzNext                  ;if not there yet, skip ahead to use
+;       ldy #$00                     ;otherwise initialize both grow/shrink flag
+;       sty PlayerChangeSizeFlag     ;and animation frame control
+; CSzNext:
+;     sty PlayerAnimCtrl           ;store proper frame control
+; GorSLog:
+;   lda PlayerSize               ;get player's size
+;   bne ShrinkPlayer             ;if player small, skip ahead to next part
+;     lda ChangeSizeOffsetAdder,y  ;get offset adder based on frame control as offset
+;     ldy #$0f                     ;load offset for player growing
+;     ; tay
+;     ; lda SizeGraphicsOffsets,y
 GetOffsetFromAnimCtrl:
     asl                        ;multiply animation frame control
     asl                        ;by eight to get proper amount
@@ -897,35 +897,35 @@ GetOffsetFromAnimCtrl:
     adc PlayerGfxTblOffsets,y  ;add to offset to graphics table
     rts                        ;and return with result in A
 ChangeSizeOffsetAdder:
-  .byte $00, $01, $00, $01, $00, $01, $02, $00, $01, $02
-  .byte $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
-ShrinkPlayer:
-  tya                          ;add ten bytes to frame control as offset
-  clc
-  adc #$0a                     ;this thing apparently uses two of the swimming frames
-  tax                          ;to draw the player shrinking
-  ldy #$09                     ;load offset for small player swimming
-  lda ChangeSizeOffsetAdder,x  ;get what would normally be offset adder
-  bne ShrPlF                   ;and branch to use offset if nonzero
-    ldy #$01                     ;otherwise load offset for big player swimming
-ShrPlF:
-  ; lda PlayerGfxTblOffsets,y    ;get offset to graphics table based on offset loaded
-  rts                          ;and leave
+;   .byte $00, $01, $00, $01, $00, $01, $02, $00, $01, $02
+;   .byte $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
+; ShrinkPlayer:
+;   tya                          ;add ten bytes to frame control as offset
+;   clc
+;   adc #$0a                     ;this thing apparently uses two of the swimming frames
+;   tax                          ;to draw the player shrinking
+;   ldy #$09                     ;load offset for small player swimming
+;   lda ChangeSizeOffsetAdder,x  ;get what would normally be offset adder
+;   bne ShrPlF                   ;and branch to use offset if nonzero
+;     ldy #$01                     ;otherwise load offset for big player swimming
+; ShrPlF:
+;   ; lda PlayerGfxTblOffsets,y    ;get offset to graphics table based on offset loaded
+;   rts                          ;and leave
 
 
 ;-------------------------------------------------------------------------------------
 
-PlayerChangeSize:
-  lda TimerControl    ;check master timer control
-  cmp #$f8            ;for specific moment in time
-  bne EndChgSize      ;branch if before or after that point
-  jmp InitChangeSize  ;otherwise run code to get growing/shrinking going
-EndChgSize:
-  cmp #$c4            ;check again for another specific moment
-  bne ExitChgSize     ;and branch to leave if before or after that point
-  jmp DonePlayerTask  ;otherwise do sub to init timer control and set routine
-ExitChgSize:
-  rts ; TODO check this RTS can be removed                 ;and then leave
+; PlayerChangeSize:
+;   lda TimerControl    ;check master timer control
+;   cmp #$f8            ;for specific moment in time
+;   bne EndChgSize      ;branch if before or after that point
+;   jmp InitChangeSize  ;otherwise run code to get growing/shrinking going
+; EndChgSize:
+;   cmp #$c4            ;check again for another specific moment
+;   bne ExitChgSize     ;and branch to leave if before or after that point
+;   jmp DonePlayerTask  ;otherwise do sub to init timer control and set routine
+; ExitChgSize:
+;   rts ; TODO check this RTS can be removed                 ;and then leave
 
 ;-------------------------------------------------------------------------------------
 
@@ -937,16 +937,16 @@ PlayerInjuryBlink:
   beq DonePlayerTask     ;branch if at that point, and not before or after
   jmp PlayerCtrlRoutine  ;otherwise run player control routine
 ExitBlink:
-  bne ExitBoth           ;do unconditional branch to leave
+  ; bne ExitBoth           ;do unconditional branch to leave
 
-InitChangeSize:
-  ldy PlayerChangeSizeFlag  ;if growing/shrinking flag already set
-  bne ExitBoth              ;then branch to leave
-  sty PlayerAnimCtrl        ;otherwise initialize player's animation frame control
-  inc PlayerChangeSizeFlag  ;set growing/shrinking flag
-  lda PlayerSize
-  eor #$01                  ;invert player's size
-  sta PlayerSize
+; InitChangeSize:
+;   ldy PlayerChangeSizeFlag  ;if growing/shrinking flag already set
+;   bne ExitBoth              ;then branch to leave
+;   sty PlayerAnimCtrl        ;otherwise initialize player's animation frame control
+;   inc PlayerChangeSizeFlag  ;set growing/shrinking flag
+;   lda PlayerSize
+;   eor #$01                  ;invert player's size
+;   sta PlayerSize
 ExitBoth:
   rts                       ;leave
 

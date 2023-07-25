@@ -921,7 +921,8 @@ SetFor1Up:
 UpToSuper:
        lda #$01         ;set player status to super
        sta PlayerStatus
-       lda #$09         ;set value to be used by subroutine tree (super)
+      ;  lda #$09         ;set value to be used by subroutine tree (super)
+      lda #$0c            ;set value to be used by subroutine tree (fiery)
 
 UpToFiery:
        ldy #$00         ;set value to be used as new player state
