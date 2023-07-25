@@ -66,6 +66,28 @@ TestIRQ:
 .byte $8d, $10, $f0, $e6, tmp_irq_a, $40
 .endproc
 
+.export StartAudioIRQ
+.proc StartAudioIRQ
+  ; configure VRC7 IRQ
+  lda #%00000111
+	sta IRQCONTROL
+; 127 clock cycles per sample = ~14093 Hz
+; 162 clock cycles = ~ 11025 Hz
+RELOAD_RATE = 162
+	lda #(256 - RELOAD_RATE)
+	sta irq_latch_value
+	sta IRQLATCH
+	sta IRQACK
+  rts
+.endproc
+
+.export CancelAudioIRQ
+.proc CancelAudioIRQ
+  lda #0
+  sta IRQCONTROL
+  rts
+.endproc
+
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ; Delays X*256 clocks + overhead
 ; Clobbers X,Y. Preserves A. Relocatable.
@@ -191,12 +213,6 @@ VRC7Init:
   inx
   BankCHR1C x
 
-  ; Now set the initial 8 bank
-  BankPRG8 #.bank(LOWCODE)
-
-  ; Now set the initial 8 bank
-  BankPRGA #.bank(OBJECT)
-  sta CurrentBank
 
 HORIZONTAL_MIRRORING = (1 << 0)
 DISABLE_VRC7_CHANNELS = (1 << 6)
@@ -207,17 +223,7 @@ WRAM_ENABLE = (1 << 7)
   lda #$ff
   sta APU_FRAMECOUNTER ; disable frame counter
 
-  ; configure VRC7 IRQ
-  lda #%00000111
-	sta IRQCONTROL
-; 127 clock cycles per sample = ~14093 Hz
-; 162 clock cycles = ~ 11025 Hz
-RELOAD_RATE = 162
-	lda #(256 - RELOAD_RATE)
-	sta irq_latch_value
-	sta IRQLATCH
-	sta IRQACK
-
+  jsr StartAudioIRQ
 
 ; do a quick check that the IRQ works.
   lda #0
@@ -240,7 +246,23 @@ BAD_EMULATOR:
 
   sei
 	jsr load_playback_code       ; copy playback code into RAM
+  jsr CancelAudioIRQ
   cli
+
+; set up the banks before starting anything else 
+
+  BankPRG8 #.bank(MUSIC_ENGINE)
+  ; initialize famistudio
+.import CustomSoundInit
+  
+  jsr CustomSoundInit
+
+  ; Now set the initial 8 bank
+  BankPRG8 #.bank(LOWCODE)
+
+  ; Now set the initial 8 bank
+  BankPRGA #.bank(OBJECT)
+  sta CurrentBank
 
 FinializeMarioInit:
   lda #$a5                     ;set warm boot flag
@@ -533,9 +555,14 @@ BankPRG8 #.bank(LOWCODE)
   ;   jmp :++
   ; :
     ; Original SMB1 music engine
+    BankPRG8 #.lobyte(.bank(MUSIC_ENGINE))
     BankPRGA #.lobyte(.bank(MUSIC))
-    jsr SoundEngine
+    ; jsr SoundEngine
+    .import CustomSoundEngine
+    jsr CustomSoundEngine
+    BankPRG8 #.lobyte(.bank(LOWCODE))
     BankPRGA CurrentBank
+
   ; :
   ; lda BankShadow
   ; sta BANK_SELECT

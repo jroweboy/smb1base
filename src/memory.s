@@ -175,11 +175,12 @@ IrqTemp:                        .res 2
 IrqR0 = IrqTemp + 0
 IrqR1 = IrqTemp + 1
 
-MainTemp:                       .res 4
+MainTemp:                       .res 5
 M0                             = MainTemp + 0
 M1                             = MainTemp + 1
 M2                             = MainTemp + 2
 M3                             = MainTemp + 3
+M4                             = MainTemp + 4
 
 	; ---------------------
 	; Sample playback IRQ

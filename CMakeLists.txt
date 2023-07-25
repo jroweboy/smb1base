@@ -31,7 +31,8 @@ add_executable(${PROJECT_NAME}
   # src/mmc3.s
   src/vrc7.s
   src/memory.s
-  src/music.s
+  src/custom_music.s
+  # src/music.s
   src/nesheader.s
   src/reset.s
   src/screen_render.s
@@ -102,7 +103,7 @@ add_executable(${PROJECT_NAME}
   # chr/lanky_mario.chr
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC inc/ gen/)
+target_include_directories(${PROJECT_NAME} PUBLIC audio/ inc/ gen/)
 
 include(GenerateLinkerScript)
 
