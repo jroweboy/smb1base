@@ -665,50 +665,19 @@ SwimTileRepOffset     = PlayerGraphicsTable + $9e
 PlayerKilledGraphicsOffset = $00
 ; TODO small mario death animation rotated too
 PlayerGraphicsTable:
-;big player table
-;   .byte $00, $01, $02, $03, $04, $05, $06, $07 ;walking frame 1
-;   .byte $08, $09, $0a, $0b, $0c, $0d, $0e, $0f ;        frame 2
-;   .byte $10, $11, $12, $13, $14, $15, $16, $17 ;        frame 3
-;   .byte $18, $19, $1a, $1b, $1c, $1d, $1e, $1f ;skidding
-;   .byte $20, $21, $22, $23, $24, $25, $26, $27 ;jumping
-;   .byte $08, $09, $28, $29, $2a, $2b, $2c, $2d ;swimming frame 1
-;   .byte $08, $09, $0a, $0b, $0c, $30, $2c, $2d ;         frame 2
-;   .byte $08, $09, $0a, $0b, $2e, $2f, $2c, $2d ;         frame 3
-;   .byte $08, $09, $28, $29, $2a, $2b, $5c, $5d ;climbing frame 1
-;   .byte $08, $09, $0a, $0b, $0c, $0d, $5e, $5f ;         frame 2
-;   .byte $fc, $fc, $08, $09, $58, $59, $5a, $5a ;crouching
-;   .byte $08, $09, $28, $29, $2a, $2b, $0e, $0f ;fireball throwing
-
-; ; ;small player table
-;   .byte $fc, $fc, $fc, $fc, $32, $33, $34, $35 ;walking frame 1
-;   .byte $fc, $fc, $fc, $fc, $36, $37, $38, $39 ;        frame 2
-;   .byte $fc, $fc, $fc, $fc, $3a, $37, $3b, $3c ;        frame 3
-;   .byte $fc, $fc, $fc, $fc, $3d, $3e, $3f, $40 ;skidding
-;   .byte $fc, $fc, $fc, $fc, $32, $41, $42, $43 ;jumping
-;   .byte $fc, $fc, $fc, $fc, $32, $33, $44, $45 ;swimming frame 1
-;   .byte $fc, $fc, $fc, $fc, $32, $33, $44, $47 ;         frame 2
-;   .byte $fc, $fc, $fc, $fc, $32, $33, $48, $49 ;         frame 3
-;   .byte $fc, $fc, $fc, $fc, $32, $33, $90, $91 ;climbing frame 1
-;   .byte $fc, $fc, $fc, $fc, $3a, $37, $92, $93 ;         frame 2
-;   .byte $fc, $fc, $fc, $fc, $9e, $9e, $9f, $9f ;killed
-
-; ; ;used by both player sizes
-;   .byte $fc, $fc, $fc, $fc, $3a, $37, $4f, $4f ;small player standing
-;   .byte $fc, $fc, $00, $01, $4c, $4d, $4e, $4e ;intermediate grow frame
-;   .byte $00, $01, $4c, $4d, $4a, $4a, $4b, $4b ;big player standing
 
 ;; big player table
 .byte $00, $01, $10, $11, $20, $21, $30, $31 ;walking frame 1
 .byte $02, $03, $12, $13, $22, $23, $32, $33 ;        frame 2
 .byte $04, $05, $14, $15, $24, $25, $34, $35 ;        frame 3
-.byte $06, $07, $16, $17, $26, $27, $36, $37 ;skidding
+.byte $08, $09, $18, $19, $28, $29, $38, $39;skidding
 .byte $08, $09, $18, $19, $28, $29, $38, $39 ;jumping
 .byte $02, $03, $0A, $0B, $1A, $1B, $2A, $2B ;swimming frame 1
 .byte $02, $03, $12, $13, $22, $1D, $2A, $2B ;         frame 2
 .byte $02, $03, $12, $13, $0C, $0D, $2A, $2B ;         frame 3
-.byte $02, $03, $0A, $0B, $1A, $1B, $5C, $5D ;climbing frame 1
-.byte $02, $03, $12, $13, $22, $23, $5E, $5F ;         frame 2
-.byte $FF, $FF, $02, $03, $54, $55, $53, $53 ;crouching
+.byte $02, $03, $0A, $0B, $1A, $1B, $2C, $2D ;climbing frame 1
+.byte $02, $03, $12, $13, $22, $23, $3C, $3D ;         frame 2
+.byte $FF, $FF, $02, $03, $3A, $3B, $06, $07 ;crouching
 .byte $02, $03, $0A, $0B, $1A, $1B, $32, $33 ;fireball throwing
 
 ;; small player table
@@ -722,16 +691,15 @@ PlayerGraphicsTable:
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $2C, $2D ;         frame 3
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $58, $59 ;climbing frame 1
 .byte $FF, $FF, $FF, $FF, $41, $2F, $5A, $5B ;         frame 2
-.byte $FF, $FF, $FF, $FF, $4E, $4E, $4F, $4F ;killed
+.byte $0E, $0F, $1E, $1F, $2E, $2F, $3E, $3F ;killed
 
 ;; used by both player sizes
 .byte $FF, $FF, $FF, $FF, $41, $2F, $49, $49 ;small player standing
 .byte $FF, $FF, $00, $01, $46, $47, $48, $48 ;intermediate grow frame
-.byte $00, $01, $46, $47, $56, $56, $57, $57 ;big player standing
+.byte $00, $01, $16, $17, $26, $27, $36, $37 ;big player standing
 
 SwimKickTileNum:
   .byte $1C, $4A
-  ; .byte $31, $46
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store player's vertical offscreen bits
@@ -2266,36 +2234,36 @@ SzOfs:
 
 ChkForPlayerAttrib:
   ; ldy Player_SprDataOffset    ;get sprite data offset
-  ldy #0
-  lda GameEngineSubroutine
-  cmp #$0b                    ;if executing specific game engine routine,
-  beq KilledAtt               ;branch to change third and fourth row OAM attributes
-  lda PlayerGfxOffset         ;get graphics table offset
-  cmp #$50
-  beq C_S_IGAtt               ;if crouch offset, either standing offset,
-  cmp #$b8                    ;or intermediate growing offset,
-  beq C_S_IGAtt               ;go ahead and execute code to change 
-  cmp #$c0                    ;fourth row OAM attributes only
-  beq C_S_IGAtt
-  cmp #$c8
-  bne ExPlyrAt                ;if none of these, branch to leave
-KilledAtt:
-  lda Sprite_Attributes+16,y
-  and #%00111111              ;mask out horizontal and vertical flip bits
-  sta Sprite_Attributes+16,y  ;for third row sprites and save
-  lda Sprite_Attributes+20,y
-  and #%00111111  
-  ora #%01000000              ;set horizontal flip bit for second
-  sta Sprite_Attributes+20,y  ;sprite in the third row
-C_S_IGAtt:
-  lda Sprite_Attributes+24,y
-  and #%00111111              ;mask out horizontal and vertical flip bits
-  sta Sprite_Attributes+24,y  ;for fourth row sprites and save
-  lda Sprite_Attributes+28,y
-  and #%00111111
-  ora #%01000000              ;set horizontal flip bit for second
-  sta Sprite_Attributes+28,y  ;sprite in the fourth row
-ExPlyrAt:
+;   ldy #0
+;   lda GameEngineSubroutine
+;   cmp #$0b                    ;if executing specific game engine routine,
+;   beq NearbyRTS               ;branch to change third and fourth row OAM attributes
+;   lda PlayerGfxOffset         ;get graphics table offset
+;   ; cmp #$50
+;   ; beq C_S_IGAtt               ;if crouch offset, either standing offset,
+;   ; cmp #$b8                    ;or intermediate growing offset,
+;   ; beq C_S_IGAtt               ;go ahead and execute code to change 
+;   ; cmp #$c0                    ;fourth row OAM attributes only
+;   ; beq C_S_IGAtt
+; ;   cmp #$c8
+; ;   bne ExPlyrAt                ;if none of these, branch to leave
+; ; KilledAtt:
+; ;   lda Sprite_Attributes+16,y
+; ;   and #%00111111              ;mask out horizontal and vertical flip bits
+; ;   sta Sprite_Attributes+16,y  ;for third row sprites and save
+; ;   lda Sprite_Attributes+20,y
+; ;   and #%00111111  
+; ;   ora #%01000000              ;set horizontal flip bit for second
+; ;   sta Sprite_Attributes+20,y  ;sprite in the third row
+; ; C_S_IGAtt:
+; ;   lda Sprite_Attributes+24,y
+; ;   and #%00111111              ;mask out horizontal and vertical flip bits
+; ;   sta Sprite_Attributes+24,y  ;for fourth row sprites and save
+; ;   lda Sprite_Attributes+28,y
+; ;   and #%00111111
+; ;   ora #%01000000              ;set horizontal flip bit for second
+; ;   sta Sprite_Attributes+28,y  ;sprite in the fourth row
+; ExPlyrAt:
 NearbyRTS:
   rts                         ;leave
 
