@@ -353,7 +353,7 @@ SFlmX:   sta R0                     ;store value here
 SetGfxF: jsr RelativeEnemyPosition   ;get new relative coordinates
          lda Enemy_State,x           ;if bowser's flame not in normal state,
          bne ExFl                    ;branch to leave
-         lda #$51                    ;otherwise, continue
+         lda #$f3     ; #$51                    ;otherwise, continue
          sta R0                     ;write first tile number
          ldy #$02                    ;load attributes without vertical flip by default
          lda FrameCounter
@@ -361,9 +361,10 @@ SetGfxF: jsr RelativeEnemyPosition   ;get new relative coordinates
          beq FlmeAt                  ;if d1 not set, write default value
          ldy #$82                    ;otherwise write value with vertical flip bit set
 FlmeAt:  sty R1                     ;set bowser's flame sprite attributes here
-        ;  ldy Enemy_SprDataOffset,x   ;get OAM data offset
 
-      ReserveSpr 3
+         AllocSpr 3
+         sty OriginalOAMOffset
+
          ldx #$00
 DrawFlameLoop:
          lda Enemy_Rel_YPos         ;get Y relative coordinate of current enemy object
@@ -385,17 +386,16 @@ DrawFlameLoop:
          inx                        ;move onto the next OAM, and branch if three
          cpx #$03                   ;have not yet been done
          bcc DrawFlameLoop
-      UpdateOAMPosition
          ldx ObjectOffset           ;reload original enemy offset
          jsr GetEnemyOffscreenBits  ;get offscreen information
-        ;  ldy Enemy_SprDataOffset,x  ;get OAM data offset
+         ldy OriginalOAMOffset
          lda Enemy_OffscreenBits    ;get enemy object offscreen bits
          lsr                        ;move d0 to carry and result to stack
-         pha
-         bcc M3FOfs                 ;branch if carry not set
-        ;  lda #$f8                   ;otherwise move sprite offscreen, this part likely
-        ;  sta Sprite_Y_Position+12,y ;residual since flame is only made of three sprites
-M3FOfs:  pla                        ;get bits from stack
+;          pha
+;          bcc M3FOfs                 ;branch if carry not set
+;         ;  lda #$f8                   ;otherwise move sprite offscreen, this part likely
+;         ;  sta Sprite_Y_Position+12,y ;residual since flame is only made of three sprites
+; M3FOfs:  pla                        ;get bits from stack
          lsr                        ;move d1 to carry and move bits back to stack
          pha
          bcc M2FOfs                 ;branch if carry not set again
