@@ -47,7 +47,8 @@ StarFlagXPosAdder:
   .byte $00, $08, $00, $08
 
 StarFlagTileData:
-  .byte $54, $55, $56, $57
+  .byte $e8, $e9, $f8, $f9
+  ; .byte $54, $55, $56, $57
 
 RunStarFlagObj:
   lda #$00                 ;initialize enemy frenzy buffer
