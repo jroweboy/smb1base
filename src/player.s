@@ -466,26 +466,54 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
 ;-------------------------------------------------------------------------------------
 
 .proc DrawPlayer_Intermediate
-  ldx #$05                       ;store data into zero page memory
-PIntLoop:
-    lda IntermediatePlayerData,x   ;load data to display player as he always
-    sta R2,x                      ;appears on world/lives display
-    dex
-    bpl PIntLoop                   ;do this until all data is loaded
-  lda #$58 ; y coord
-  sta R2
-  lda #$60
-  sta Player_Rel_XPos
-  ldx #PlayerStandGraphicsOffset
-  ldy #0                       ;load sprite data offset
-  jsr DrawPlayerLoop             ;draw player accordingly
-  ; lda Sprite_Attributes+36       ;get empty sprite attributes
-  ; ora #%01000000                 ;set horizontal flip bit for bottom-right sprite
-  ; sta Sprite_Attributes+32       ;store and leave
+  lda #0
+  sta Local_eb ; use as a loop counter
+  sta Local_ec
+OuterLoop:
+    lda Local_ec
+    asl
+    asl
+    tay
+    ldx #0
+    PIntLoop:
+        lda IntermediatePlayerData,y   ;load data to display player as he always
+        sta R2,x                      ;appears on world/lives display
+        iny
+        inx
+        cpx #4
+        bne PIntLoop                   ;do this until all data is loaded
+      lda #4
+      sta R7
+      ldy Local_ec
+      ldx PlayerAnimationFrame,y
+      ldy Local_eb                       ;load sprite data offset
+      jsr DrawPlayerLoop             ;draw player accordingly
+    inc Local_ec
+    lda Local_eb
+    clc
+    adc #32
+    sta Local_eb
+    bne OuterLoop
   rts
 IntermediatePlayerData:
-  .byte $58, $01, $00, $60, $ff, $04
+  .byte $58, $01, $00, $60
+  .byte $48, $01, $00, $50
+  .byte $38, $01, $00, $40
+  .byte $28, $01, $00, $30
+  .byte $18, $01, $00, $20
+  .byte $08, $01, $00, $10
+  .byte $68, $01, $00, $70
+  .byte $78, $01, $00, $80
 
+PlayerAnimationFrame:
+  .byte PlayerStandGraphicsOffset
+  .byte PlayerAnimWalking1
+  .byte PlayerAnimSwimming2
+  .byte PlayerAnimFireball
+  .byte PlayerAnimClimbing1
+  .byte PlayerAnimKilled
+  .byte PlayerAnimJumping
+  .byte PlayerAnimCrouching
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -526,17 +554,30 @@ PlayerStandGraphicsOffset = $c8
 PlayerGraphicsTable:
 
 ;; big player table
+BigPlayerTable:
+PlayerAnimWalking1 = * - BigPlayerTable
 .byte $00, $01, $10, $11, $20, $21, $30, $31 ;walking frame 1
+PlayerAnimWalking2 = * - BigPlayerTable
 .byte $02, $03, $12, $13, $22, $23, $32, $33 ;        frame 2
+PlayerAnimWalking3 = * - BigPlayerTable
 .byte $04, $05, $14, $15, $24, $25, $34, $35 ;        frame 3
+PlayerAnimSkidding = * - BigPlayerTable
 .byte $08, $09, $18, $19, $28, $29, $38, $39;skidding
+PlayerAnimJumping = * - BigPlayerTable
 .byte $08, $09, $18, $19, $28, $29, $38, $39 ;jumping
+PlayerAnimSwimming1 = * - BigPlayerTable
 .byte $02, $03, $0A, $0B, $1A, $1B, $2A, $2B ;swimming frame 1
+PlayerAnimSwimming2 = * - BigPlayerTable
 .byte $02, $03, $12, $13, $22, $1D, $2A, $2B ;         frame 2
+PlayerAnimSwimming3 = * - BigPlayerTable
 .byte $02, $03, $12, $13, $0C, $0D, $2A, $2B ;         frame 3
+PlayerAnimClimbing1 = * - BigPlayerTable
 .byte $02, $03, $0A, $0B, $1A, $1B, $2C, $2D ;climbing frame 1
+PlayerAnimClimbing2 = * - BigPlayerTable
 .byte $02, $03, $12, $13, $22, $23, $3C, $3D ;         frame 2
+PlayerAnimCrouching = * - BigPlayerTable
 .byte $FF, $FF, $02, $03, $3A, $3B, $06, $07 ;crouching
+PlayerAnimFireball = * - BigPlayerTable
 .byte $02, $03, $0A, $0B, $1A, $1B, $32, $33 ;fireball throwing
 
 ;; small player table
@@ -550,11 +591,13 @@ PlayerGraphicsTable:
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $2C, $2D ;         frame 3
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $58, $59 ;climbing frame 1
 .byte $FF, $FF, $FF, $FF, $41, $2F, $5A, $5B ;         frame 2
+PlayerAnimKilled = * - BigPlayerTable
 .byte $0E, $0F, $1E, $1F, $2E, $2F, $3E, $3F ;killed
 
 ;; used by both player sizes
 .byte $FF, $FF, $FF, $FF, $41, $2F, $49, $49 ;small player standing
 .byte $FF, $FF, $00, $01, $46, $47, $48, $48 ;intermediate grow frame
+PlayerAnimStanding = * - BigPlayerTable
 .byte $00, $01, $16, $17, $26, $27, $36, $37 ;big player standing
 
 SwimKickTileNum:
