@@ -882,7 +882,7 @@ CarryOne:
 ;$06, $07 - block buffer address low/high
 
 .proc RemoveCoin_Axe
-  ldy #$41                 ;set low byte so offset points to $0341
+  ldy #<VRAM_Buffer2       ;set low byte so offset points to $0341
   lda #$03                 ;load offset for default blank metatile
   ldx AreaType             ;check area type
   bne WriteBlankMT         ;if not water type, use offset
@@ -992,12 +992,16 @@ RemBridge:
   rts                   ;and leave
 
 BlockGfxData:
-  .byte $45, $45, $47, $47
-  .byte $47, $47, $47, $47
-  .byte $57, $58, $59, $5a
+  ; .byte $45, $45, $47, $47
+  ; .byte $47, $47, $47, $47
+  ; .byte $57, $58, $59, $5a
+  ; .byte $24, $24, $24, $24
+  ; .byte $26, $26, $26, $26
+  .byte $47, $47, $48, $48
+  .byte $48, $48, $48, $48
+  .byte $AE, $AF, $BE, $BF
   .byte $24, $24, $24, $24
   .byte $26, $26, $26, $26
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - temp vram buffer offset

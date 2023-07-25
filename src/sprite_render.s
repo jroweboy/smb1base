@@ -49,7 +49,7 @@ DrawVine:
          sta Sprite_Attributes+12,y
          sta Sprite_Attributes+20,y
          ldx #$05                   ;set tiles for six sprites
-VineTL:  lda #$e1                   ;set tile number for sprite
+VineTL:  lda #$7b                   ;set tile number for sprite
          sta Sprite_Tilenumber,y
          iny                        ;move offset to next sprite data
          iny
@@ -61,7 +61,7 @@ VineTL:  lda #$e1                   ;set tile number for sprite
          ldy R2                    ;get original offset
          lda R0                    ;get offset to vine adding data
          bne SkpVTop                ;if offset not zero, skip this part
-         lda #$e0
+         lda #$7a
          sta Sprite_Tilenumber,y    ;set other tile number for top of vine
 SkpVTop: ldx #$00                   ;start with the first sprite again
 ChkFTop: lda Vine_Start_Y_Position   ;get original starting vertical coordinate
@@ -110,10 +110,10 @@ SecondSprYPos:
       .byte $08, $00, $08, $00
 
 FirstSprTilenum:
-      .byte $80, $82, $81, $83
+      .byte $c8, $ca, $c9, $cb
 
 SecondSprTilenum:
-      .byte $81, $83, $80, $82
+      .byte $c9, $cb, $c8, $ca
 
 HammerSprAttrib:
       .byte $03, $03, $c3, $c3
@@ -194,10 +194,10 @@ SetLast2Platform:
       ldy R2
       sta Sprite_Y_Position+16,y  ;store vertical coordinate or offscreen
       sta Sprite_Y_Position+20,y  ;coordinate into last two sprites as Y coordinate
-      lda #$5b                    ;load default tile for platform (girder)
+      lda #$bc                    ;load default tile for platform (girder)
       ldx CloudTypeOverride
       beq SetPlatformTilenum      ;if cloud level override flag not set, use
-      lda #$75                    ;otherwise load other tile for platform (puff)
+      lda #$fe                    ;otherwise load other tile for platform (puff)
 
 SetPlatformTilenum:
         ldx ObjectOffset            ;get enemy object buffer offset
@@ -268,9 +268,9 @@ NotRsNum: lda Misc_Y_Position,x     ;get vertical coordinate
           lda #$02
           sta Sprite_Attributes,y   ;store attribute byte in both sprites
           sta Sprite_Attributes+4,y
-          lda #$f7
+          lda #$72
           sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
-          lda #$fb                  ;that resemble "200"
+          lda #$76                  ;that resemble "200"
           sta Sprite_Tilenumber+4,y
           jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
 
@@ -1009,7 +1009,8 @@ MoveESprColOffscreen:
 ;$05 - relative X position
 
 DefaultBlockObjTiles:
-      .byte $85, $85, $86, $86             ;brick w/ line (these are sprite tiles, not BG!)
+      ; .byte $85, $85, $86, $86             ;brick w/ line (these are sprite tiles, not BG!)
+  .byte $bd, $bd, $be, $be
 
 DrawBlock:
            lda Block_Rel_YPos            ;get relative vertical coordinate of block object
@@ -1036,13 +1037,13 @@ DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
            lda AreaType
            cmp #$01                      ;check for ground level type area
            beq ChkRep                    ;if found, branch to next part
-           lda #$86
+           lda #$be
            sta Sprite_Tilenumber,y       ;otherwise remove brick tiles with lines
            sta Sprite_Tilenumber+4,y     ;and replace then with lineless brick tiles
 ChkRep:    lda Block_Metatile,x          ;check replacement metatile
            cmp #$c4                      ;if not used block metatile, then
            bne BlkOffscr                 ;branch ahead to use current graphics
-           lda #$87                      ;set A for used block tile
+           lda #$bf                      ;set A for used block tile
            iny                           ;increment Y to write to tile bytes
            jsr DumpFourSpr               ;do sub to dump into all four sprites
            dey                           ;return Y to original offset
@@ -1084,13 +1085,14 @@ DrawBrickChunks:
       sty OriginalOAMOffset
          lda #$02                   ;set palette bits here
          sta R0
-         lda #$75                   ;set tile number for ball (something residual, likely)
+        ;  lda #$75                   ;set tile number for ball (something residual, likely)
          ldy GameEngineSubroutine
          cpy #$05                   ;if end-of-level routine running,
          beq DChunks                ;use palette and tile number assigned
          lda #$03                   ;otherwise set different palette bits
          sta R0
-         lda #$84                   ;and set tile number for brick chunks
+         lda #$67                   ;and set tile number for brick chunks
+;          lda #$84                   ;and set tile number for brick chunks
 DChunks: 
          ldy OriginalOAMOffset
         ;  ldy Block_SprDataOffset,x  ;get OAM data offset
@@ -1164,7 +1166,8 @@ DrawSingleFireball:
        lsr
        pha                      ;save result to stack
        and #$01                 ;mask out all but last bit
-       eor #$64                 ;set either tile $64 or $65 as fireball tile
+       eor #$50                 ;set either tile $64 or $65 as fireball tile
+      ;  eor #$64                 ;set either tile $64 or $65 as fireball tile
        sta Sprite_Tilenumber,y  ;thus tile changes every four frames
        pla                      ;get from stack
        lsr                      ;divide by four again
@@ -1380,17 +1383,17 @@ SetupNumSpr:
 ;that appear when you defeat enemies
 FloateyNumTileData:
   .byte $ff, $ff ;dummy
-  .byte $f6, $fb ; "100"
-  .byte $f7, $fb ; "200"
-  .byte $f8, $fb ; "400"
-  .byte $f9, $fb ; "500"
-  .byte $fa, $fb ; "800"
-  .byte $f6, $50 ; "1000"
-  .byte $f7, $50 ; "2000"
-  .byte $f8, $50 ; "4000"
-  .byte $f9, $50 ; "5000"
-  .byte $fa, $50 ; "8000"
-  .byte $fd, $fe ; "1-UP"
+  .byte $71, $76 ; "100"
+  .byte $72, $76 ; "200"
+  .byte $73, $76 ; "400"
+  .byte $74, $76 ; "500"
+  .byte $75, $76 ; "800"
+  .byte $71, $70 ; "1000"
+  .byte $72, $70 ; "2000"
+  .byte $73, $70 ; "4000"
+  .byte $74, $70 ; "5000"
+  .byte $75, $70 ; "8000"
+  .byte $77, $78 ; "1-UP"
 
 ;high nybble is digit number, low nybble is number to
 ;add to the digit of the player's score
