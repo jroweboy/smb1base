@@ -183,17 +183,17 @@ BlockObjMT_Updater:
   ldx #$01                  ;set offset to start with second block object
 UpdateLoop:
     stx ObjectOffset          ;set offset here
-    lda VRAM_Buffer1_Offset
-    cmp #50                 ; try not to overflow by waiting a frame if we must
-    bcc @CanDraw
-      lda #0
-      sta NmiDisable
-      :
-        cmp NmiDisable
-        beq :-
-@CanDraw:
-    ; lda VRAM_Buffer1          ;if vram buffer already being used here,
-    ; bne NextBUpd              ;branch to move onto next block object
+;     lda VRAM_Buffer1_Offset
+;     cmp #50                 ; try not to overflow by waiting a frame if we must
+;     bcc @CanDraw
+;       lda #0
+;       sta NmiDisable
+;       :
+;         cmp NmiDisable
+;         beq :-
+; @CanDraw:
+    lda VRAM_Buffer1          ;if vram buffer already being used here,
+    bne NextBUpd              ;branch to move onto next block object
     lda Block_RepFlag,x       ;if flag for block object already clear,
     beq NextBUpd              ;branch to move onto next block object
       lda Block_BBuf_Low,x      ;get low byte of block buffer

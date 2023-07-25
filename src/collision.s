@@ -1,4 +1,5 @@
 .include "common.inc"
+.macpack longbranch
 
 ; objects/hammer_bros.s
 .import SetHJ
@@ -1031,9 +1032,8 @@ HeadChk:
           bcs SolidOrClimb            ;if player collided with solid metatile, branch
           ldy AreaType                ;otherwise check area type
           beq NYSpd                   ;if water level, branch ahead
-          ; don't bother with block bounce timer
-          ; ldy BlockBounceTimer        ;if block bounce timer not expired,
-          ; bne NYSpd                   ;branch ahead, do not process collision
+          ldy BlockBounceTimer        ;if block bounce timer not expired,
+          bne NYSpd                   ;branch ahead, do not process collision
           jsr PlayerHeadCollision     ;otherwise do a sub to process collision
           jmp DoFootCheck             ;jump ahead to skip these other parts
 
@@ -1050,9 +1050,7 @@ DoFootCheck:
   ldy Local_eb                    ;get block buffer adder offset
   lda Player_Y_Position
   cmp #$cf                   ;check to see how low player is
-  bcc :+
-    jmp DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
-:
+  jcs DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
     jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
     ; jsr QuickBrickShatterWhenBig
     jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
@@ -1065,11 +1063,9 @@ DoFootCheck:
       sta R1                    ;pull bottom left metatile and save here
       bne ChkFootMTile           ;if anything here, skip this part
         lda R0                    ;otherwise check for anything in bottom right metatile
-        bne :+
-          jmp DoPlayerSideCheck      ;and skip ahead if not
-        :
-          jsr CheckForCoinMTiles     ;check to see if player touched coin with their right foot
-          bcc ChkFootMTile           ;if not, skip unconditional jump and continue code
+        jeq DoPlayerSideCheck      ;and skip ahead if not
+        jsr CheckForCoinMTiles     ;check to see if player touched coin with their right foot
+        bcc ChkFootMTile           ;if not, skip unconditional jump and continue code
 AwardTouchedCoin:
   jmp HandleCoinMetatile     ;follow the code to erase coin and award to player 1 coin
   ;implicit rts
@@ -1102,48 +1098,6 @@ LandPlyr:
   and Player_Y_Position      ;mask out lower nybble of player's vertical position
   sta Player_Y_Position      ;and store as new vertical position to land player properly
   jsr HandlePipeEntry        ;do sub to process potential pipe entry
-
-  ; Set the angular momentum for landing on the ground if we aren't already
-  ; spinning in a direction
-;   ldx Player_X_Speed
-;   lda ScaledRotationSpeed,x
-;   sta AngularMomentum
-;   ; jroweboy - bounce the player after they land on the ground
-;   lda GroundBounceChain
-;   bne ContinueBounceChain
-;     ; first bounce, found how much bounce force to apply
-;     lda AirTimeTimer
-;     lsr
-;     lsr
-;     lsr
-;     lsr
-;     beq SkipForce
-;     tax
-;     lda BounceForceData,x
-;     eor #$ff
-;     clc
-;     adc #1
-;     sta BounceForce
-;     sta Player_Y_Speed         ;initialize vertical speed and fractional
-;     inc GroundBounceChain
-;     jmp DoPlayerSideCheck
-; ContinueBounceChain:
-;     ; bounce chain, continue bouncing until we come to rest.
-;     lda BounceForce
-;     clc
-;     adc #2
-;     bpl SkipForce
-;       sta BounceForce
-;       sta Player_Y_Speed
-;       jmp DoPlayerSideCheck
-; SkipForce:
-;     lda #0
-;     ; sta GroundBounceChain
-;     sta AirTimeTimer
-;     sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
-;     sta StompChainCounter      ;initialize enemy stomp counter
-
-
   lda #$00
   sta Player_Y_Speed         ;initialize vertical speed and fractional
   sta Player_Y_MoveForce     ;movement force to stop player's vertical movement
@@ -1246,11 +1200,11 @@ ChkGERtn:
 ExCSM:
   rts                        ;and leave
 
-BounceForceData:
-  .byte $06, $06, $05, $05
-  .byte $05, $05, $04, $04
-  .byte $04, $03, $03, $03
-  .byte $02, $02, $01, $00
+; BounceForceData:
+;   .byte $06, $06, $05, $05
+;   .byte $05, $05, $04, $04
+;   .byte $04, $03, $03, $03
+;   .byte $02, $02, $01, $00
 
 ;--------------------------------
 ;$02 - high nybble of vertical coordinate from block buffer
@@ -1604,20 +1558,6 @@ RImpd:
     bpl ExIPM                 ;branch to invert bit and leave
     lda #$01                  ;otherwise load A with value to be used here
 NXSpd:
-    ; y == Player_X_Speed
-    ; jroweboy reverse the player direction when running into a wall
-    ; pha
-    ;   tya
-    ;   eor #$ff
-    ;   clc
-    ;   adc #1
-    ;   sta Player_X_Speed
-    ;   lda AngularMomentum
-    ;   eor #$ff
-    ;   clc
-    ;   adc #1
-    ;   sta AngularMomentum
-    ; pla
     ldy #$10
     sty SideCollisionTimer    ;set timer of some sort
     ldy #$00
