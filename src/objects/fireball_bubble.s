@@ -97,14 +97,6 @@ FireballExplosion:
   sta Fireball_X_Speed,x
   lda #$04                     ;set vertical speed of fireball
   sta Fireball_Y_Speed,x
-  ; lda PlayerAngle
-  ; lsr
-  ; lsr
-  ; tay
-  ; lda AngleToFireballXSpeed,y
-  ; sta Fireball_X_Speed,x
-  ; lda AngleToFireballYSpeed,y
-  ; sta Fireball_Y_Speed,x
   sta InitialFireballYSpeed,x
   lda #$07
   sta Fireball_BoundBoxCtrl,x  ;set bounding box size control for fireball

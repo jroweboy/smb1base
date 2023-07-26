@@ -105,7 +105,7 @@ JmpEO:
   .word NoRunCode
   .word WarpZoneObject
   .word RunRetainerObj
-  .word RunFlagpoleShard ; $36
+  ; .word RunFlagpoleShard ; $36
 
 CheckpointEnemyID:
   lda Enemy_ID,x
@@ -829,7 +829,3 @@ MoveJumpingEnemy:
       jsr MoveJ_EnemyVertically  ;do a sub to impose gravity on green paratroopa
       jmp MoveEnemyHorizontally  ;jump to move enemy horizontally
 
-.proc RunFlagpoleShard
-  ldx ObjectOffset
-  jmp EnemyExplodingFlagPole
-.endproc
