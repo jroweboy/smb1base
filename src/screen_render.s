@@ -671,8 +671,8 @@ ChangeColorToBackground:
     ldy AreaType
 :
   lda BackgroundColors,y   ;to background color instead
-  jmp SetPaletteColor
-
+  ; jmp SetPaletteColor
+  ; fallthrough
 SetPaletteColor:
   ldx VRAM_Buffer1_Offset
   sta VRAM_Buffer1+3,x
@@ -684,7 +684,10 @@ SetPaletteColor:
   sta VRAM_Buffer1+2,x
   lda #0
   sta VRAM_Buffer1+4,x
-
+  lda VRAM_Buffer1_Offset
+  clc 
+  adc #5
+  sta VRAM_Buffer1_Offset
   rts
 
 .endproc

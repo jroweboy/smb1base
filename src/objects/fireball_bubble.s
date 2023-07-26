@@ -97,7 +97,6 @@ FireballExplosion:
   sta Fireball_X_Speed,x
   lda #$04                     ;set vertical speed of fireball
   sta Fireball_Y_Speed,x
-  ; sta InitialFireballYSpeed,x
   lda #$07
   sta Fireball_BoundBoxCtrl,x  ;set bounding box size control for fireball
   dec Fireball_State,x         ;decrement state to 1 to skip this part from now on
