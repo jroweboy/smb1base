@@ -4,6 +4,7 @@
 
 .export PlayPanic
 PlayPanic: .res 1
+NextSFXChannel: .res 1
 
 .segment "MUSIC_ENGINE"
 
@@ -13,7 +14,7 @@ FAMISTUDIO_USE_VOLUME_TRACK = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
 FAMISTUDIO_CFG_SFX_SUPPORT = 1
-FAMISTUDIO_CFG_SFX_STREAMS = 2
+FAMISTUDIO_CFG_SFX_STREAMS = 4
 FAMISTUDIO_USE_RELEASE_NOTES = 1
 
 FAMISTUDIO_USE_VOLUME_SLIDES = 0
@@ -36,6 +37,7 @@ CustomSoundInit:
   ldy #>music_data
   lda #0
   sta PlayPanic
+  sta NextSFXChannel
   jsr famistudio_init
 
   ldx #<sfx_data
@@ -159,8 +161,9 @@ SkipMusicProcessing:
   beq :+
     ldy CountLeadingZeroLookup,x
     lda Sq2SfxTable,y
-    ldx #FAMISTUDIO_SFX_CH0
+    ldx NextSFXChannel
     jsr famistudio_sfx_play
+    jsr BumpSFXChannel
     lda #0
     sta Square2SoundQueue
   :
@@ -168,8 +171,9 @@ SkipMusicProcessing:
   beq :+
     ldy CountLeadingZeroLookup,x
     lda Sq1SfxTable,y
-    ldx #FAMISTUDIO_SFX_CH1
+    ldx NextSFXChannel
     jsr famistudio_sfx_play
+    jsr BumpSFXChannel
     lda #0
     sta Square1SoundQueue
   :
@@ -177,20 +181,27 @@ SkipMusicProcessing:
   beq :+
     ldy CountLeadingZeroLookup,x
     lda NoiseSfxTable,y
-    ldx #FAMISTUDIO_SFX_CH0
+    ldx NextSFXChannel
     jsr famistudio_sfx_play
+    jsr BumpSFXChannel
     lda #0
     sta NoiseSoundQueue
   :
 
   jsr famistudio_update
   BankPRGA CurrentBank
-  
-  ; lda #$00               ;clear the music queues
-  ; sta AreaMusicQueue
-  ; sta EventMusicQueue
   rts
 
+BumpSFXChannel:
+  lda NextSFXChannel
+  clc
+  adc #FAMISTUDIO_SFX_CH1
+  cmp #FAMISTUDIO_SFX_CH3+1
+  bcc :+
+    lda #0
+  :
+  sta NextSFXChannel
+  rts
 ; When the music driver is completes playback (and before it loops)
 ; we create a custom callback that will run to clear out the queue
 ; and set song playing to 0
