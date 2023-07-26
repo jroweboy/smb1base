@@ -54,9 +54,6 @@ __MEMORY_INC = 1
 
 
 .globalzp PlayerFacingDir
-.globalzp FirebarSpinDirection
-.globalzp DestinationPageLoc
-.globalzp VictoryWalkControl
 .globalzp PowerUpType
 .globalzp FireballBouncingFlag
 .globalzp HammerBroJumpTimer
@@ -497,6 +494,10 @@ StackClear = SwitchToMainIRQ
 .global SecondaryMsgCounter
 .global JoypadBitMask
 
+.global FirebarSpinDirection
+.global DestinationPageLoc
+.global VictoryWalkControl
+
 .global AreaType
 
 .global AreaAddrsLOffset
@@ -536,6 +537,8 @@ StackClear = SwitchToMainIRQ
 .global WorldSelectNumber
 
 .global DiscoCycleIdx
+.global CurrentFloorTileBank
+.global CurrentDiscoColor
 
 ; $.global 0770
 

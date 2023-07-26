@@ -16,13 +16,16 @@
 .incbin "../chr/arranged_bg.chr"
 .incbin "../chr/arranged_sprites.chr"
 
-; include the new title screen graphics
-.segment "CHR_TITLE_BG_0"
-.incbin "../chr/title/latest_bg_0.chr"
-.segment "CHR_TITLE_BG_1"
-.incbin "../chr/title/latest_bg_1.chr"
-.segment "CHR_TITLE_BG_2"
-.incbin "../chr/title/latest_bg_2.chr"
+.incbin "../chr/peach_spritesheet.chr"
+.incbin "../chr/alternate_disco_floor.chr"
 
-.segment "CHR_TITLE_SPRITE"
-.incbin "../chr/title/latest_spr.chr"
+; include the new title screen graphics
+; .segment "CHR_TITLE_BG_0"
+; .incbin "../chr/title/latest_bg_0.chr"
+; .segment "CHR_TITLE_BG_1"
+; .incbin "../chr/title/latest_bg_1.chr"
+; .segment "CHR_TITLE_BG_2"
+; .incbin "../chr/title/latest_bg_2.chr"
+
+; .segment "CHR_TITLE_SPRITE"
+; .incbin "../chr/title/latest_spr.chr"

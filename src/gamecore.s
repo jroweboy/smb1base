@@ -513,17 +513,81 @@ GetAreaPal:   lda Palette3Data,y       ;fetch palette to be written based on are
               lda #$00
               sta ColorRotateOffset    ;otherwise, init to keep it in range
 ExitColorRot:
-  ; lda FrameCounter
-  ; and #%00000111
+  lda FrameCounter
+  and #%00111111
   ; cmp #%00000011
-  ; bne Exit ; Every 8 frames on frame 4 do a disco rotation
-  ;   ldx VRAM_Buffer1_Offset  ;check vram buffer offset
-  ;   cpx #$38
-  ;   bcs Exit
-  ;     lda DiscoCycleIdx
-  ;     and #%00000011
-  ;     clc
-      
+  bne Exit ; Every 32 frames on frame 4 do a disco rotation
+    inc DiscoCycleIdx
+    ldx VRAM_Buffer1_Offset  ;check vram buffer offset
+    cpx #$38
+    bcs Exit
+      lda DiscoCycleIdx
+      and #%00000011
+      beq BankSwitchCHR
+      ; Otherwise change a single color
+      tay
+      dey
+      clc
+      adc #8
+      sta VRAM_Buffer1+1, x
+      lda #$3f
+      sta VRAM_Buffer1, x
+      lda #1
+      sta VRAM_Buffer1+2, x
+      lda #0
+      sta VRAM_Buffer1+4, x
+  
+      ; Now choose a random color
+      lda CurrentDiscoColor,y
+      sta R0
+      sty R2
+      tya
+      asl
+      asl
+      sta R1
+      lda PseudoRandomBitReg
+      and #%00000011
+      clc
+      adc R1
+      tay 
+      lda CycleForPalette1,y
+      cmp R0
+      bne :+
+        iny
+        tya
+        and #%00000011
+        clc
+        adc R1
+        tay
+        lda CycleForPalette1,y
+:
+      sta VRAM_Buffer1+3, x
+      ldy R2
+      sta CurrentDiscoColor,y
+      lda VRAM_Buffer1_Offset
+      clc
+      adc #6
+      sta VRAM_Buffer1_Offset
+      jmp Exit
+
+BankSwitchCHR:
+  lda CurrentFloorTileBank
+  eor #1
+  sta CurrentFloorTileBank
+  tax
+  lda BankNumForFloor, x
+  BankCHR8 a
 Exit:
   rts
+
+BankNumForFloor:
+  .byte $02, $09
+
+CycleForPalette1:
+  .byte $30, $16, $38, $2a
+CycleForPalette2:
+  .byte $21, $14, $27, $24
+; Choose dark colors for the outline
+CycleForPalette3: 
+  .byte $0f, $01, $04, $0a
 .endproc

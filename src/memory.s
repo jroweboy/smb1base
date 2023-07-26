@@ -42,9 +42,6 @@ Misc_State:                     .res  9
 ;--------------------------- 
 
 PlayerFacingDir:                .res  1 ; 1 = right, 2 = left
-DestinationPageLoc:             .res  1
-FirebarSpinDirection          = DestinationPageLoc
-VictoryWalkControl:             .res  4 ; (FirebarSpinDirection shares this)
 PowerUpType:                    .res  1 ; 0 = shroom, 1 = fireflower, 2 = star, 3 = 1up shroom
 FireballBouncingFlag:           .res  2
 HammerBroJumpTimer:             .res  9
@@ -538,6 +535,10 @@ CoinTallyFor1Ups:               .res  1
 SecondaryMsgCounter:            .res  1
 ; JoypadBitMask:                  .res  4 ; .proc InitializeArea clears the 1st two bytes here and leaves below here alone
 
+DestinationPageLoc:             .res  1
+FirebarSpinDirection          = DestinationPageLoc
+VictoryWalkControl:             .res  4 ; (FirebarSpinDirection shares this)
+
 AreaType:                       .res  1 ; 074e
 
 ; notes:
@@ -584,6 +585,8 @@ PrimaryHardMode:                .res  1
 WorldSelectNumber:              .res  1 ; original (5)
 
 DiscoCycleIdx:                  .res  1
+CurrentFloorTileBank:           .res  1
+CurrentDiscoColor:              .res  3
 
 ; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
 
