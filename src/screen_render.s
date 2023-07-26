@@ -634,53 +634,120 @@ GameTextOffsets:
   .byte WarpZoneWelcome-GameText, WarpZoneWelcome-GameText
 
 
+.export SetupPipeTransitionOverlay
+.proc SetupPipeTransitionOverlay
+  sta InPipeTransition
+  beq ClearTransition
+  cmp #1
+  beq IsDownPipe
+  cmp #2
+  beq IsRightPipe
+  ; fallthrough
+RisingEntrance:
+  lda #$90 + 32
+  sta PipeYPosition
+  jmp IsDownPipe
+ClearTransition:
+  ; reset the color for the palette back to the original
+  lda #$1b
+  jmp SetPaletteColor
+  ; rts
+IsRightPipe:
+  lda Player_X_Position   ;get player's horizontal coordinate
+  clc
+  adc #$08 + 16                ;add eight pixels
+  and #$f0                ;mask out low nybble to give 16-pixel correspondence
+  sta PipeXPosition
+  lda Player_Y_Position
+  sta PipeYPosition
+  jmp ChangeColorToBackground
+IsDownPipe:
+  lda RelativePlayerPosition
+  sta PipeXPosition
+  ; fallthrough
+ChangeColorToBackground:
+  ldy BackgroundColorCtrl
+  bne :+
+    ldy AreaType
+:
+  lda BackgroundColors,y   ;to background color instead
+  jmp SetPaletteColor
+
+SetPaletteColor:
+  ldx VRAM_Buffer1_Offset
+  sta VRAM_Buffer1+3,x
+  lda #$3f
+  sta VRAM_Buffer1+0,x
+  lda #$1b
+  sta VRAM_Buffer1+1,x
+  lda #1
+  sta VRAM_Buffer1+2,x
+  lda #0
+  sta VRAM_Buffer1+4,x
+
+  rts
+
+.endproc
+
 HandlePipeEntry:
-         lda Up_Down_Buttons       ;check saved controller bits from earlier
-         and #%00000100            ;for pressing down
-         beq ExPipeE               ;if not pressing down, branch to leave
-         lda R0
-         cmp #$11                  ;check right foot metatile for warp pipe right metatile
-         bne ExPipeE               ;branch to leave if not found
-         lda R1
-         cmp #$10                  ;check left foot metatile for warp pipe left metatile
-         bne ExPipeE               ;branch to leave if not found
-         lda #$30
-         sta ChangeAreaTimer       ;set timer for change of area
-         lda #$03
-         sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
-         lda #Sfx_PipeDown_Injury
-         sta Square1SoundQueue     ;load pipedown/injury sound
-         lda #%00100000
-         sta Player_SprAttrib      ;set background priority bit in player's attributes
-         lda WarpZoneControl       ;check warp zone control
-         beq ExPipeE               ;branch to leave if none found
-         and #%00000011            ;mask out all but 2 LSB
-         asl
-         asl                       ;multiply by four
-         tax                       ;save as offset to warp zone numbers (starts at left pipe)
-         lda Player_X_Position     ;get player's horizontal position
-         cmp #$60      
-         bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
-         inx                       ;otherwise increment for middle pipe
-         cmp #$a0      
-         bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
-         inx                       ;otherwise increment for last pipe
-GetWNum: ldy WarpZoneNumbers,x     ;get warp zone numbers
-         dey                       ;decrement for use as world number
-         sty WorldNumber           ;store as world number and offset
-         ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
-         lda AreaAddrOffsets,x     ;get area offset based on world offset
-         sta AreaPointer           ;store area offset here to be used to change areas
-         lda #Silence
-         sta EventMusicQueue       ;silence music
-         lda #$00
-         sta EntrancePage          ;initialize starting page number
-         sta AreaNumber            ;initialize area number used for area address offset
-         sta LevelNumber           ;initialize level number used for world display
-         sta AltEntranceControl    ;initialize mode of entry
-         inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
-         inc FetchNewGameTimerFlag ;set flag to load new game timer
-ExPipeE: rts                       ;leave!!!
+  lda Up_Down_Buttons       ;check saved controller bits from earlier
+  and #%00000100            ;for pressing down
+  beq ExPipeE               ;if not pressing down, branch to leave
+  lda R0
+  cmp #$11                  ;check right foot metatile for warp pipe right metatile
+  bne ExPipeE               ;branch to leave if not found
+  lda R1
+  cmp #$10                  ;check left foot metatile for warp pipe left metatile
+  bne ExPipeE               ;branch to leave if not found
+  lda #$30
+  sta ChangeAreaTimer       ;set timer for change of area
+  lda #$03
+  sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
+  lda #Sfx_PipeDown_Injury
+  sta Square1SoundQueue     ;load pipedown/injury sound
+  lda #1
+  jsr SetupPipeTransitionOverlay
+  lda Player_X_Position
+  sec
+  sbc ScreenLeft_X_Pos
+  sta PipeXPosition
+  lda Player_Y_Position
+  clc
+  adc #32
+  sta PipeYPosition
+;  lda #%00100000
+;  sta Player_SprAttrib      ;set background priority bit in player's attributes
+  lda WarpZoneControl       ;check warp zone control
+  beq ExPipeE               ;branch to leave if none found
+  and #%00000011            ;mask out all but 2 LSB
+  asl
+  asl                       ;multiply by four
+  tax                       ;save as offset to warp zone numbers (starts at left pipe)
+  lda Player_X_Position     ;get player's horizontal position
+  cmp #$60      
+  bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
+  inx                       ;otherwise increment for middle pipe
+  cmp #$a0      
+  bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
+  inx                       ;otherwise increment for last pipe
+GetWNum:
+  ldy WarpZoneNumbers,x     ;get warp zone numbers
+  dey                       ;decrement for use as world number
+  sty WorldNumber           ;store as world number and offset
+  ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
+  lda AreaAddrOffsets,x     ;get area offset based on world offset
+  sta AreaPointer           ;store area offset here to be used to change areas
+  lda #Silence
+  sta EventMusicQueue       ;silence music
+  lda #$00
+  sta EntrancePage          ;initialize starting page number
+  sta AreaNumber            ;initialize area number used for area address offset
+  sta LevelNumber           ;initialize level number used for world display
+  sta AltEntranceControl    ;initialize mode of entry
+  inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
+  inc FetchNewGameTimerFlag ;set flag to load new game timer
+ExPipeE:
+  rts                       ;leave!!!
 
 
 ;-------------------------------------------------------------------------------------
@@ -1259,9 +1326,9 @@ Palette2_MTiles:
   .byte $43, $24, $24, $24 ;cloud bottom right
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
-  .byte $8E, $9E, $8F, $9F ;cloud level terrain
   .byte $44, $83, $44, $82 ;cracked rock terrain (nonsolid)
   ; Solid Extent
+  .byte $8E, $9E, $8F, $9F ;cloud level terrain
   .byte $82, $92, $83, $93 ;cracked rock terrain top (new)
   .byte $92, $93, $92, $93 ;cracked rock terrain bottom (new)
   .byte $39, $49, $39, $49 ;bowser's bridge

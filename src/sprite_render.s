@@ -194,10 +194,10 @@ SetLast2Platform:
       ldy R2
       sta Sprite_Y_Position+16,y  ;store vertical coordinate or offscreen
       sta Sprite_Y_Position+20,y  ;coordinate into last two sprites as Y coordinate
-      lda #$bc                    ;load default tile for platform (girder)
+      lda #$68 ; $bc                    ;load default tile for platform (girder)
       ldx CloudTypeOverride
       beq SetPlatformTilenum      ;if cloud level override flag not set, use
-      lda #$fe                    ;otherwise load other tile for platform (puff)
+      lda #$79 ; $fe                    ;otherwise load other tile for platform (puff)
 
 SetPlatformTilenum:
         ldx ObjectOffset            ;get enemy object buffer offset
@@ -574,13 +574,14 @@ CheckForPodoboo:
       inc VerticalFlipFlag    ;otherwise, set flag for vertical flip
 
 CheckBowserGfxFlag:
-             lda BowserGfxFlag   ;if not drawing bowser at all, skip to something else
-             beq CheckForGoomba
-             ldy #$16            ;if set to 1, draw bowser's front
-             cmp #$01
-             beq SBwsrGfxOfs
-             iny                 ;otherwise draw bowser's rear
-SBwsrGfxOfs: sty Local_ef
+  lda BowserGfxFlag   ;if not drawing bowser at all, skip to something else
+  beq CheckForGoomba
+  ldy #$16            ;if set to 1, draw bowser's front
+  cmp #$01
+  beq SBwsrGfxOfs
+  iny                 ;otherwise draw bowser's rear
+SBwsrGfxOfs:
+  sty Local_ef
 
 CheckForGoomba:
           ldy Local_ef               ;check value for goomba object
@@ -602,28 +603,29 @@ GmbaAnim: and #%00100000        ;check for d5 set in enemy object state
           sta R3               ;leave alone otherwise
 
 CheckBowserFront:
-             lda EnemyAttributeData,y    ;load sprite attribute using enemy object
-             ora R4                     ;as offset, and add to bits already loaded
-             sta R4
-             lda EnemyGfxTableOffsets,y  ;load value based on enemy object as offset
-             tax                         ;save as X
-             ldy Local_ec                     ;get previously saved value
-             lda BowserGfxFlag
-             beq CheckForSpiny           ;if not drawing bowser object at all, skip all of this
-             cmp #$01
-             bne CheckBowserRear         ;if not drawing front part, branch to draw the rear part
-             lda BowserBodyControls      ;check bowser's body control bits
-             bpl ChkFrontSte             ;branch if d7 not set (control's bowser's mouth)      
-             ldx #$de                    ;otherwise load offset for second frame
-ChkFrontSte: lda Local_ed                     ;check saved enemy state
-             and #%00100000              ;if bowser not defeated, do not set flag
-             beq DrawBowser
+  lda EnemyAttributeData,y    ;load sprite attribute using enemy object
+  ora R4                     ;as offset, and add to bits already loaded
+  sta R4
+  lda EnemyGfxTableOffsets,y  ;load value based on enemy object as offset
+  tax                         ;save as X
+  ldy Local_ec                     ;get previously saved value
+  lda BowserGfxFlag
+  beq CheckForSpiny           ;if not drawing bowser object at all, skip all of this
+  cmp #$01
+  bne CheckBowserRear         ;if not drawing front part, branch to draw the rear part
+  lda BowserBodyControls      ;check bowser's body control bits
+  bpl ChkFrontSte             ;branch if d7 not set (control's bowser's mouth)      
+  ldx #$de                    ;otherwise load offset for second frame
+ChkFrontSte:
+  lda Local_ed                     ;check saved enemy state
+  and #%00100000              ;if bowser not defeated, do not set flag
+  beq DrawBowser
 
 FlipBowserOver:
-      stx VerticalFlipFlag  ;set vertical flip flag to nonzero
+  stx VerticalFlipFlag  ;set vertical flip flag to nonzero
 
 DrawBowser:
-      jmp DrawEnemyObject   ;draw bowser's graphics now
+  jmp DrawEnemyObject   ;draw bowser's graphics now
 
 CheckBowserRear:
             lda BowserBodyControls  ;check bowser's body control bits

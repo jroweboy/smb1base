@@ -97,7 +97,7 @@ FireballExplosion:
   sta Fireball_X_Speed,x
   lda #$04                     ;set vertical speed of fireball
   sta Fireball_Y_Speed,x
-  sta InitialFireballYSpeed,x
+  ; sta InitialFireballYSpeed,x
   lda #$07
   sta Fireball_BoundBoxCtrl,x  ;set bounding box size control for fireball
   dec Fireball_State,x         ;decrement state to 1 to skip this part from now on
@@ -213,12 +213,12 @@ BubbleTimerData:
   and #%00001000
   bne ExDBub                  ;if bit set, branch to leave
   ; ldy Bubble_SprDataOffset,x  ;get air bubble's OAM data offset
-
+  AllocSpr 1
   lda Bubble_Rel_XPos         ;get relative horizontal coordinate
   sta Sprite_X_Position,y     ;store as X coordinate here
   lda Bubble_Rel_YPos         ;get relative vertical coordinate
   sta Sprite_Y_Position,y     ;store as Y coordinate here
-  lda #$74
+  lda #$52
   sta Sprite_Tilenumber,y     ;put air bubble tile into OAM data
   lda #$02
   sta Sprite_Attributes,y     ;set attribute byte

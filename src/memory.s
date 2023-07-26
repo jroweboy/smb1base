@@ -236,7 +236,7 @@ StatTimerHi                   = StatTimer + 2
 NmiDisable:                     .res  1
 NmiSkipped:                     .res  1
 
-BhopInitalized:                 .res  1
+; BhopInitalized:                 .res  1
 
 IrqNewScroll:                   .res  1
 IrqOldScroll:                   .res  1
@@ -248,12 +248,12 @@ IrqNextScanline:                .res  1
 ; Abs_Y_Magnitude:                .res  1
 CurrentA:                       .res  1
 NextBank:                       .res  1
-PlayerAngle:                    .res  1
-GroundBounceChain:              .res  1
-BounceForce:                    .res  1
+; PlayerAngle:                    .res  1
+; GroundBounceChain:              .res  1
+; BounceForce:                    .res  1
 ; AngularMomentum:                .res  1
 ; AngularMomentumTimer:           .res  1
-InitialFireballYSpeed:          .res  2
+; InitialFireballYSpeed:          .res  2
 SwitchToMainIRQ:                .res  1
 IrqPointerJmp:                  .res  3
 IrqPointer                    = IrqPointerJmp + 1
@@ -432,6 +432,7 @@ MaxRangeFromOrigin:             .res  1
 BitMFilter:                     .res  1
 ChangeAreaTimer:                .res  2
 
+PlayerOAMOffset:                .res  1
 CurrentOAMOffset:               .res  1
 OriginalOAMOffset:              .res  1
 SpriteShuffleOffset:            .res  1
@@ -534,6 +535,10 @@ TimerControl:                   .res  1 ; 0747
 CoinTallyFor1Ups:               .res  1
 SecondaryMsgCounter:            .res  1
 ; JoypadBitMask:                  .res  4 ; .proc InitializeArea clears the 1st two bytes here and leaves below here alone
+
+InPipeTransition:               .res  1
+PipeXPosition:                  .res  1
+PipeYPosition:                  .res  1
 
 DestinationPageLoc:             .res  1
 FirebarSpinDirection          = DestinationPageLoc

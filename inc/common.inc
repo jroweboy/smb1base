@@ -4,6 +4,9 @@
 .ifndef __COMMON_INC
 __COMMON_INC = 1
 
+.macpack longbranch
+.macpack generic
+
 .linecont on
 .feature force_range
 

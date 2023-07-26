@@ -1,5 +1,4 @@
 .include "common.inc"
-.macpack longbranch
 
 ; objects/hammer_bros.s
 .import SetHJ
@@ -236,17 +235,7 @@ FireballBGCollision:
   bmi InitFireballExplode     ;branch to set exploding bit in fireball's state
   lda FireballBouncingFlag,x  ;if bouncing flag already set,
   bne InitFireballExplode     ;branch to set exploding bit in fireball's state
-  ; attempt to bounce the fireball back to the original height
-  lda InitialFireballYSpeed,x
-  bmi :+
-    eor #$ff
-    clc
-    adc #1
-:
-  cmp #$fd
-  bcc :+
-    lda #$fd
-:
+  lda #$fd
   sta Fireball_Y_Speed,x      ;otherwise set vertical speed to move upwards (give it bounce)
   lda #$01
   sta FireballBouncingFlag,x  ;set bouncing flag
@@ -1084,11 +1073,8 @@ ContChk:
       ldy R4                    ;check lower nybble of vertical coordinate returned
       cpy #$05                   ;from collision detection routine
       bcc LandPlyr               ;if lower nybble < 5, branch
-        ; pha ; save the current metatile for checking if we are breaking a brick
-          lda Player_MovingDir
-          sta R0                    ;use player's moving direction as temp variable
-        ; pla
-        ; also keep the carry set to signify that we want to check for bricks
+        lda Player_MovingDir
+        sta R0                    ;use player's moving direction as temp variable
         jmp StopPlayerMove       ;jump to impede player's movement in that direction
 LandPlyr:
   jsr ChkForLandJumpSpring   ;do sub to check for jumpspring metatiles and deal with it
@@ -1170,13 +1156,23 @@ ChkPBtm:
     cmp #$1f                   ;if collided with water pipe (bottom), continue
     bne StopPlayerMove         ;otherwise branch to impede player's movement
 PipeDwnS:
-  lda Player_SprAttrib       ;check player's attributes
-  bne PlyrPipe               ;if already set, branch, do not play sound again
+  ; lda Player_SprAttrib       ;check player's attributes
+  ; bne PlyrPipe               ;if already set, branch, do not play sound again
+  lda InPipeTransition
+  bne :+
     ldy #Sfx_PipeDown_Injury
     sty Square1SoundQueue      ;otherwise load pipedown/injury sound
-PlyrPipe:
-  ora #%00100000
-  sta Player_SprAttrib       ;set background priority bit in player attributes
+    lda PlayerEntranceCtrl  ;;; check if we are entering the pipe in auto mode
+    cmp #7
+    bne :+
+      ;; if we are then start a pipe transition
+      .import SetupPipeTransitionOverlay
+      lda #2
+      jsr SetupPipeTransitionOverlay
+  :
+; PlyrPipe:
+  ; ora #%00100000
+  ; sta Player_SprAttrib       ;set background priority bit in player attributes
   lda Player_X_Position
   and #%00001111             ;get lower nybble of player's horizontal coordinate
   beq ChkGERtn               ;if at zero, branch ahead to skip this part
@@ -1255,7 +1251,7 @@ ErACM:
 ;--------------------------------
 
 SolidMTileUpperExt:
-  .byte $10, $61, CRACKED_BRICK_METATILE, $c4
+  .byte $10, $61, CLOUD_METATILE, $c4
 
 .export CheckForSolidMTiles
 CheckForSolidMTiles:

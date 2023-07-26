@@ -2,8 +2,6 @@
 
 .segment "MUSIC"
 
-.macpack longbranch
-
 CH_SQUARE_1 = (1 << 0)
 CH_SQUARE_2 = (1 << 1)
 CH_TRIANGLE = (1 << 2)

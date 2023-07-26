@@ -412,7 +412,9 @@ WSelectBufferTemplate:
 ;-------------------------------------------------------------------------------------
 
 .proc VictoryMode
-
+  ; Reserve the sprite slots for mario still
+  lda #32
+  sta CurrentOAMOffset
   jsr VictoryModeSubroutines  ;run victory mode subroutines
   lda OperMode_Task           ;get current task of victory mode
   beq AutoPlayer              ;if on bridge collapse, skip enemy processing

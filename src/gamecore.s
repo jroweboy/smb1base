@@ -70,17 +70,15 @@ GameCoreRoutine:
     rts
 GameEngine:
   far OBJECT
-    ; reserve OAM slots for the player and slingshot
-    lda #4 * 2 * 4
-    ; ldy PlayerSize
-    ; bne :+
-    ;   lda #16 * 4
-    ; :
-    ; ldy HoldingSlingshot
-    ; beq :+
-    ;   clc
-    ;   adc #12 * 4
-    ; :
+    ; reserve OAM slots for the player and pipeoverlay
+    lda #0
+    ldy InPipeTransition
+    beq :+
+      lda #32
+:
+    sta PlayerOAMOffset
+    clc
+    adc #32
     sta CurrentOAMOffset
 
     lda #13 - 1 ; size of the different object update list
@@ -127,6 +125,11 @@ GameEngine:
     ; jsr RunGameTimer           ;count down the game timer
     jsr ColorRotation          ;cycle one of the background colors
   endfar
+
+  lda InPipeTransition
+  beq :+
+    jsr DrawPipeOverlaySprite
+  :
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music
   bpl NoChgMus
@@ -174,6 +177,58 @@ RunParser:
   farcall AreaParserTaskHandler  ;update the name table with more level graphics
 ExitEng:
   rts                        ;and after all that, we're finally done!
+
+.proc DrawPipeOverlaySprite
+  ; if the player is fully in the pipe, move the overlay down with the sprite
+  lda #$fe
+  ; ldx #(0 << 5) | 0 ; debug show the overlay box
+  ldx #(1 << 5) | 2 ; put the overlay sprite in the BACKGROUND with palette 1
+.repeat 8, I
+  sta Sprite_Tilenumber + (I*4)
+  stx Sprite_Attributes + (I*4)
+.endrepeat
+  lda InPipeTransition
+  cmp #2
+  beq :+
+    lda Player_Rel_XPos
+    jmp SetX
+  :
+  lda PipeXPosition
+  sec
+  sbc ScreenLeft_X_Pos
+SetX:
+.repeat 4, I
+  sta Sprite_X_Position + (I*4)
+.endrepeat
+  clc
+  adc #8
+.repeat 4, I
+  sta Sprite_X_Position + 16 + (I*4)
+.endrepeat
+  ; and finally pick the lower of the two positions, the player or the pipe
+  lda Player_Y_HighPos
+  cmp #1
+  bne SetToBottomOfScreen
+
+  lda PipeYPosition
+  cmp Player_Y_Position
+  bcs DumpYPosition
+    lda Player_Y_Position
+    jmp DumpYPosition
+SetToBottomOfScreen:
+    lda #255-32
+DumpYPosition:
+.repeat 4, I
+    sta Sprite_Y_Position + (I * 4)
+    sta Sprite_Y_Position + (I * 4) + 16
+.if I <> 3
+    clc
+    adc #8
+.endif
+.endrepeat
+  rts
+
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer

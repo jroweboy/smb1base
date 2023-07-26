@@ -395,6 +395,7 @@ StackClear = SwitchToMainIRQ
 .global BitMFilter
 .global ChangeAreaTimer
 
+.global PlayerOAMOffset
 .global CurrentOAMOffset
 .global OriginalOAMOffset
 
@@ -493,6 +494,9 @@ StackClear = SwitchToMainIRQ
 .global CoinTallyFor1Ups
 .global SecondaryMsgCounter
 .global JoypadBitMask
+.global InPipeTransition
+.global PipeXPosition
+.global PipeYPosition
 
 .global FirebarSpinDirection
 .global DestinationPageLoc

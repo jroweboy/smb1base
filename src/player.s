@@ -23,7 +23,8 @@
 ; objects/vine.s
 .import Setup_Vine
 
-.import BubbleCheck
+.import BubbleCheck, SetupPipeTransitionOverlay
+
 
 .export DrawPlayer_Intermediate
 
@@ -67,14 +68,14 @@ PlayerEntrance:
   lda #$00       
   ldy Player_Y_Position     ;if vertical position above a certain
   cpy #$30                  ;point, nullify controller bits and continue
-  bcc AutoControlPlayer     ;with player movement code, do not return
+  jcc AutoControlPlayer     ;with player movement code, do not return
     lda PlayerEntranceCtrl    ;check player entry bits from header
     cmp #$06
     beq ChkBehPipe            ;if set to 6 or 7, execute pipe intro code
     cmp #$07                  ;otherwise branch to normal entry
     bne PlayerRdy
 ChkBehPipe:
-  lda Player_SprAttrib      ;check for sprite attributes
+  lda InPipeTransition      ;check for sprite attributes
   bne IntroEntr             ;branch if found
     lda #$01
     jmp AutoControlPlayer     ;force player to walk to the right
@@ -87,11 +88,17 @@ IntroEntr:
 EntrMode2:
   lda JoypadOverride        ;if controller override bits set here,
   bne VineEntr              ;branch to enter with vine
-  lda #$ff                  ;otherwise, set value here then execute sub
-  jsr MovePlayerYAxis       ;to move player upwards
-  lda Player_Y_Position     ;check to see if player is at a specific coordinate
-  cmp #$91                  ;if player risen to a certain point (this requires pipes
-  bcc PlayerRdy             ;to be at specific height to look/function right) branch
+    lda #3
+    jsr SetupPipeTransitionOverlay
+    lda #$ff                  ;otherwise, set value here then execute sub
+    jsr MovePlayerYAxis       ;to move player upwards
+    lda Player_Y_Position     ;check to see if player is at a specific coordinate
+    cmp #$91                  ;if player risen to a certain point (this requires pipes
+    bcs @ContinuePipeEntry    ;to be at specific height to look/function right) branch
+      lda #0
+      jsr SetupPipeTransitionOverlay
+      jmp PlayerRdy
+@ContinuePipeEntry:
     rts                       ;to the last part, otherwise leave
 VineEntr:
   lda Vine_Height
@@ -131,13 +138,12 @@ ExitEntr:
 
 .proc AutoControlPlayer
   sta SavedJoypadBits         ;override controller bits with contents of A if executing here
-  cmp #Right_Dir
-  bne :+
-    lda #10
-    sta Player_X_Speed
-    ; brk
-    ; nop
-  :
+  ; cmp #Right_Dir
+  ; bne :+
+  ;   lda #10
+  ;   sta Player_X_Speed
+    
+  ; :
   ; rts
   ;; fallthrough
 .endproc
@@ -313,19 +319,27 @@ ChgAreaMode: inc DisableScreenFlag     ;set flag to disable screen output
              lda #$00
              sta OperMode_Task         ;set secondary mode of operation
              sta Sprite0HitDetectFlag  ;disable sprite 0 check
+            ;  lda #0
+             jmp SetupPipeTransitionOverlay
 ExitCAPipe:  rts                       ;leave
 
 EnterSidePipe:
-           lda #$08               ;set player's horizontal speed
-           sta Player_X_Speed
-           ldy #$01               ;set controller right button by default
-           lda Player_X_Position  ;mask out higher nybble of player's
-           and #%00001111         ;horizontal position
-           bne RightPipe
-           sta Player_X_Speed     ;if lower nybble = 0, set as horizontal speed
-           tay                    ;and nullify controller bit override here
-RightPipe: tya                    ;use contents of Y to
-           jmp AutoControlPlayer  ;execute player control routine with ctrl bits nulled
+  lda #$08               ;set player's horizontal speed
+  sta Player_X_Speed
+  lda InPipeTransition
+  bne :+
+    lda #2
+    jsr SetupPipeTransitionOverlay
+:
+  ldy #$01               ;set controller right button by default 
+  lda Player_X_Position  ;mask out higher nybble of player's
+  and #%00001111         ;horizontal position
+  bne RightPipe
+  sta Player_X_Speed     ;if lower nybble = 0, set as horizontal speed
+  tay                    ;and nullify controller bit override here
+RightPipe:
+  tya                    ;use contents of Y to
+  jmp AutoControlPlayer  ;execute player control routine with ctrl bits nulled
 
 ;-------------------------------------------------------------------------------------
 
@@ -396,8 +410,8 @@ PlayerStarting_Y_Pos:
       .byte $00, $20, $b0, $50, $00, $00, $b0, $b0
       .byte $f0
 
-PlayerBGPriorityData:
-      .byte $00, $20, $00, $00, $00, $00, $00, $00
+; PlayerBGPriorityData:
+;       .byte $00, $20, $00, $00, $00, $00, $00, $00
 
 GameTimerData:
       .byte $20 ;dummy byte, used as part of bg priority data
@@ -430,7 +444,8 @@ SetStPos: lda PlayerStarting_X_Pos,y  ;load appropriate horizontal position
           sta Player_X_Position       ;and vertical positions for the player, using
           lda PlayerStarting_Y_Pos,x  ;AltEntranceControl as offset for horizontal and either $0710
           sta Player_Y_Position       ;or value that overwrote $0710 as offset for vertical
-          lda PlayerBGPriorityData,x
+          ; lda PlayerBGPriorityData,x
+          lda #0
           sta Player_SprAttrib        ;set player sprite attributes using offset in X
           jsr GetPlayerColors         ;get appropriate player palette
           ldy GameTimerSetting        ;get timer control value from header
@@ -536,9 +551,7 @@ RenderPlayerSub:
   lda Player_SprAttrib
   sta R4                      ;store player's sprite attributes
   ldx PlayerGfxOffset          ;load graphics table offset
-  ; ldy Player_SprDataOffset     ;get player's sprite data offset
-  ldy #0
-
+  ldy PlayerOAMOffset
 DrawPlayerLoop:
     lda PlayerGraphicsTable,x    ;load player's left side
     sta R0

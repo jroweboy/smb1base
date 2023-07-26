@@ -110,8 +110,8 @@ DiscoLakitu           = $36
 TallEnemy             = $09
 
 ; Metatile constants
-
-CRACKED_BRICK_NONSOLID  = $89
+CRACKED_BRICK_NONSOLID  = $88
+CLOUD_METATILE          = $89
 CRACKED_BRICK_METATILE  = $8a
 CRACKED_BRICK_METATILE2 = $8b
 BRIDGE_METATILE         = $8c

@@ -386,7 +386,7 @@ RendTerr: ldy AreaType               ;check world type for water level
 TerMTile: lda TerrainMetatiles,y     ;otherwise get appropriate metatile for area type
           ldy CloudTypeOverride      ;check for cloud type override
           beq StoreMT                ;if not set, keep value otherwise
-            lda #$88                   ;use cloud block terrain
+            lda #CLOUD_METATILE      ;use cloud block terrain
 StoreMT:  sta R7                    ;store value here
           ldx #$00                   ;initialize X, use as metatile buffer offset
           lda TerrainControl         ;use yet another value from the header
@@ -471,7 +471,7 @@ StrBlock: ldy R0                    ;get offset for block buffer
 ;numbers lower than these with the same attribute bits
 ;will not be stored in the block buffer
 BlockBuffLowBounds:
-  .byte $10, $51, CRACKED_BRICK_METATILE, $c0
+  .byte $10, $51, CLOUD_METATILE, $c0
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store area object identifier

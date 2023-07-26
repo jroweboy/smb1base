@@ -120,8 +120,6 @@ NoiseSfxTable:
   .byte FireBreath 
   .byte BrickBreak 
 
-.macpack longbranch
-
 .export CustomSoundEngine
 CustomSoundEngine:
   BankPRGA #.bank(music_data)
