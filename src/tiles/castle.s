@@ -82,7 +82,7 @@ C_ObjectRow:
       .byte $06, $07, $08
 
 C_ObjectMetatile:
-      .byte $c5, $0c, $89
+      .byte $c5, $0c, BRIDGE_METATILE
 
 CastleBridgeObj:
       ldy #$0c                  ;load length of 13 columns

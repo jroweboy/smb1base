@@ -363,7 +363,7 @@ SetGfxF: jsr RelativeEnemyPosition   ;get new relative coordinates
 FlmeAt:  sty R1                     ;set bowser's flame sprite attributes here
 
          AllocSpr 3
-         sty OriginalOAMOffset
+        ;  sty OriginalOAMOffset
 
          ldx #$00
 DrawFlameLoop:
@@ -388,7 +388,7 @@ DrawFlameLoop:
          bcc DrawFlameLoop
          ldx ObjectOffset           ;reload original enemy offset
          jsr GetEnemyOffscreenBits  ;get offscreen information
-         ldy OriginalOAMOffset
+         ldy CurrentOAMOffset
          lda Enemy_OffscreenBits    ;get enemy object offscreen bits
          lsr                        ;move d0 to carry and result to stack
 ;          pha

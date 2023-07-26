@@ -142,94 +142,95 @@ NoColWrap:
   lda BlockBufferColumnPos
   and #%00011111           ;mask out all but 5 LSB (0-1f)
   sta BlockBufferColumnPos ;and save
-  ldy FirstTimeAreaReset
-  beq Exit
-  cpy #1
-  beq WaitForPage1
-  cpy #2
-  beq LoadIntroData
-  cpy #3
-  beq WaitForPage2
-  cpy #4
-  beq LoadMainData
-WaitForPage1:
-    ; we've reached the end of the level data, now we want to wait for
-    ; we when are about to render the start of the area data
-    cmp #$00
-    bne Exit
-      inc FirstTimeAreaReset
-      rts
-WaitForPage2:
-    ; we've reached the end of the level data, now we want to wait for
-    ; we when are about to render the start of the area data
-    cmp #$10
-    bne Exit
-      inc FirstTimeAreaReset
-      rts
-LoadIntroData:
-    ; cmp #$00
-    ; bne Exit
-    ;   inc FirstTimeAreaReset
-    ;   jmp Exit
-    inc FirstTimeAreaReset
-    lda #1
-    sta AreaObjectPageLoc
-
-    lda #0
-    sta CurrentPageLoc
-    sta AreaDataOffset
-
-    sta BackloadingFlag
-    sta AreaObjectPageSel
-
-    lda #$ff
-    sta AreaObjectLength     ;set area object lengths for all empty
-    sta AreaObjectLength+1
-    sta AreaObjectLength+2
-
-    jsr ReloadAreaPointer
-    
-    jmp GetAreaDataAddrs
-
-      ; jmp Exit
-
-LoadMainData:
-    ; We've waited for a while, now lets start drawing the new level
-    ; cmp #$10
-    ; bne Exit
-
-    lda #0
-    sta Player_PageLoc
-    
-    lda #$ff
-    sta ScreenLeft_PageLoc
-    lda #1
-    sta ScreenRight_PageLoc
-    lda #0
-    ; sta AreaObjectPageLoc
-    sta EnemyObjectPageLoc
-    sta EnemyObjectPageSel
-
-
-
-    lda #0
-    sta EnemyDataOffset
-
-    ; lda #$ff
-    ; sta Enemy_PageLoc + 0
-    ; sta Enemy_PageLoc + 1
-    ; sta Enemy_PageLoc + 2
-    ; sta Enemy_PageLoc + 3
-    ; sta Enemy_PageLoc + 4
-    ; sta Enemy_PageLoc + 5
-    ; sta CurrentPageLoc
-    sta FirstTimeAreaReset
-
-  ; lda #0
-  ; sta FirstTimeAreaReset
-
-Exit:
   rts
+;   ldy FirstTimeAreaReset
+;   beq Exit
+;   cpy #1
+;   beq WaitForPage1
+;   cpy #2
+;   beq LoadIntroData
+;   cpy #3
+;   beq WaitForPage2
+;   cpy #4
+;   beq LoadMainData
+; WaitForPage1:
+;     ; we've reached the end of the level data, now we want to wait for
+;     ; we when are about to render the start of the area data
+;     cmp #$00
+;     bne Exit
+;       inc FirstTimeAreaReset
+;       rts
+; WaitForPage2:
+;     ; we've reached the end of the level data, now we want to wait for
+;     ; we when are about to render the start of the area data
+;     cmp #$10
+;     bne Exit
+;       inc FirstTimeAreaReset
+;       rts
+; LoadIntroData:
+;     ; cmp #$00
+;     ; bne Exit
+;     ;   inc FirstTimeAreaReset
+;     ;   jmp Exit
+;     inc FirstTimeAreaReset
+;     lda #1
+;     sta AreaObjectPageLoc
+
+;     lda #0
+;     sta CurrentPageLoc
+;     sta AreaDataOffset
+
+;     sta BackloadingFlag
+;     sta AreaObjectPageSel
+
+;     lda #$ff
+;     sta AreaObjectLength     ;set area object lengths for all empty
+;     sta AreaObjectLength+1
+;     sta AreaObjectLength+2
+
+;     jsr ReloadAreaPointer
+    
+;     jmp GetAreaDataAddrs
+
+;       ; jmp Exit
+
+; LoadMainData:
+;     ; We've waited for a while, now lets start drawing the new level
+;     ; cmp #$10
+;     ; bne Exit
+
+;     lda #0
+;     sta Player_PageLoc
+    
+;     lda #$ff
+;     sta ScreenLeft_PageLoc
+;     lda #1
+;     sta ScreenRight_PageLoc
+;     lda #0
+;     ; sta AreaObjectPageLoc
+;     sta EnemyObjectPageLoc
+;     sta EnemyObjectPageSel
+
+
+
+;     lda #0
+;     sta EnemyDataOffset
+
+;     ; lda #$ff
+;     ; sta Enemy_PageLoc + 0
+;     ; sta Enemy_PageLoc + 1
+;     ; sta Enemy_PageLoc + 2
+;     ; sta Enemy_PageLoc + 3
+;     ; sta Enemy_PageLoc + 4
+;     ; sta Enemy_PageLoc + 5
+;     ; sta CurrentPageLoc
+;     sta FirstTimeAreaReset
+
+;   ; lda #0
+;   ; sta FirstTimeAreaReset
+
+; Exit:
+;   rts
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -385,7 +386,7 @@ RendTerr: ldy AreaType               ;check world type for water level
 TerMTile: lda TerrainMetatiles,y     ;otherwise get appropriate metatile for area type
           ldy CloudTypeOverride      ;check for cloud type override
           beq StoreMT                ;if not set, keep value otherwise
-          lda #$88                   ;use cloud block terrain
+            lda #$88                   ;use cloud block terrain
 StoreMT:  sta R7                    ;store value here
           ldx #$00                   ;initialize X, use as metatile buffer offset
           lda TerrainControl         ;use yet another value from the header
@@ -408,6 +409,23 @@ TerrBChk: lda Bitmasks,y             ;load bitmask, then perform AND on contents
           beq NextTBit               ;if not set, skip this part (do not write terrain to buffer)
           lda R7
           sta MetatileBuffer,x       ;load terrain type metatile number and store into buffer here
+          cmp #CRACKED_BRICK_METATILE
+          bcc NotFloor
+          ; and its on the floor (to rule out the axe)
+          cpx #$0b
+          bne :+
+          ; check to see if we are okay to paint over the metatile above
+          ; and its on the floor (to rule out the axe)
+          lda MetatileBuffer-1,x
+          bne NotFloor
+            lda #CRACKED_BRICK_NONSOLID
+            sta MetatileBuffer-1,x
+        :
+          cpx #$0c
+          bcc NotFloor ; and its on the floor (to rule out the axe)
+          inc MetatileBuffer,x
+          ; jmp NotFlooor
+NotFloor:
 NextTBit: inx                        ;continue until end of buffer
           cpx #$0d
           beq RendBBuf               ;if we're at the end, break out of this loop
@@ -415,8 +433,8 @@ NextTBit: inx                        ;continue until end of buffer
           cmp #$02
           bne EndUChk                ;if not underground, skip this part
           cpx #$0b
-          bne EndUChk                ;if we're at the bottom of the screen, override
-          lda #CRACKED_BRICK_METATILE ; $54 ;old terrain type with ground level terrain type
+          bcc EndUChk                ;if we're at the bottom of the screen, override
+          lda #CRACKED_BRICK_METATILE
           sta R7
 EndUChk:  iny                        ;increment bitmasks offset in Y
           cpy #$08
@@ -453,19 +471,19 @@ StrBlock: ldy R0                    ;get offset for block buffer
 ;numbers lower than these with the same attribute bits
 ;will not be stored in the block buffer
 BlockBuffLowBounds:
-  .byte $10, $51, $88, $c0
+  .byte $10, $51, CRACKED_BRICK_METATILE, $c0
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store area object identifier
 ;$07 - used as adder to find proper area object code
 
-.proc AreaDataExpired
-  lda FirstTimeAreaReset
-  bne :+
-    inc FirstTimeAreaReset
-:
-  jmp RdyDecode
-.endproc
+; .proc AreaDataExpired
+;   lda FirstTimeAreaReset
+;   bne :+
+;     inc FirstTimeAreaReset
+; :
+;   jmp RdyDecode
+; .endproc
 
 ProcessAreaData:
             ldx #$02                 ;start at the end of area object buffer
@@ -475,8 +493,8 @@ ProcADLoop: stx ObjectOffset
             ldy AreaDataOffset       ;get offset of area data pointer
             lda (AreaData),y         ;get first byte of area object
             cmp #$fd                 ;if end-of-area, skip all this crap
-            ; beq RdyDecode
-            beq AreaDataExpired
+            beq RdyDecode
+            ; beq AreaDataExpired
 Continue:
             lda AreaObjectLength,x   ;check area object buffer flag
             bpl RdyDecode            ;if buffer not negative, branch, otherwise

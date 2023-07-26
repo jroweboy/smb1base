@@ -1052,12 +1052,10 @@ DoFootCheck:
   cmp #$cf                   ;check to see how low player is
   jcs DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
     jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
-    ; jsr QuickBrickShatterWhenBig
     jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
     bcs AwardTouchedCoin       ;if so, branch to some other part of code
       pha                        ;save bottom left metatile to stack
         jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom right of player
-        ; jsr QuickBrickShatterWhenBig
         sta R0                    ;save bottom right metatile here
       pla
       sta R1                    ;pull bottom left metatile and save here
@@ -1257,7 +1255,7 @@ ErACM:
 ;--------------------------------
 
 SolidMTileUpperExt:
-  .byte $10, $61, $88, $c4
+  .byte $10, $61, CRACKED_BRICK_METATILE, $c4
 
 .export CheckForSolidMTiles
 CheckForSolidMTiles:
@@ -1266,7 +1264,7 @@ CheckForSolidMTiles:
   rts
 
 ClimbMTileUpperExt:
-  .byte $24, $6d, $8b, $c6
+  .byte $24, $6d, BRIDGE_METATILE + 1, $c6
 
 CheckForClimbMTiles:
   jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB

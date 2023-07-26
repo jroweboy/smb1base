@@ -2003,17 +2003,6 @@ KeepOnscr:
     lda Left_Right_Buttons      ;check saved controller bits
     cmp OffscrJoypadBitsData,y  ;against bits based on offset
     beq InitPlatScrl            ;if not equal, branch
-      ; invert player speed here instead
-      ; lda Player_X_Speed
-      ; eor #$ff
-      ; clc
-      ; adc #1
-      ; sta Player_X_Speed
-      ; lda AngularMomentum
-      ; eor #$ff
-      ; clc
-      ; adc #1
-      ; sta AngularMomentum
       lda #$00
       sta Player_X_Speed          ;otherwise nullify horizontal speed of player
 InitPlatScrl:

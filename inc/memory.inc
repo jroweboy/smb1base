@@ -535,6 +535,8 @@ StackClear = SwitchToMainIRQ
 .global PrimaryHardMode
 .global WorldSelectNumber
 
+.global DiscoCycleIdx
+
 ; $.global 0770
 
 .global OperMode

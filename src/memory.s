@@ -44,7 +44,7 @@ Misc_State:                     .res  9
 PlayerFacingDir:                .res  1 ; 1 = right, 2 = left
 DestinationPageLoc:             .res  1
 FirebarSpinDirection          = DestinationPageLoc
-VictoryWalkControl:             .res  1 ; jroweboy was 4 bytes
+VictoryWalkControl:             .res  4 ; (FirebarSpinDirection shares this)
 PowerUpType:                    .res  1 ; 0 = shroom, 1 = fireflower, 2 = star, 3 = 1up shroom
 FireballBouncingFlag:           .res  2
 HammerBroJumpTimer:             .res  9
@@ -582,6 +582,8 @@ ScrollFractional:               .res  1
 DisableIntermediate:            .res  1
 PrimaryHardMode:                .res  1
 WorldSelectNumber:              .res  1 ; original (5)
+
+DiscoCycleIdx:                  .res  1
 
 ; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
 

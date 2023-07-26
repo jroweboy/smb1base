@@ -109,11 +109,13 @@ IRQACK      = $f010
   lda CurrentBank
   pha
     BankPRGA #.bank(function)
+    sta CurrentBank
 .endmacro
 
 .macro endfar
   pla
   BankPRGA a
+  sta CurrentBank
 .endscope
 .endmacro
 .endif

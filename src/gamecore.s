@@ -471,7 +471,7 @@ Palette3Data:
        .byte $0f, $07, $17, $1c
        .byte $0f, $07, $17, $00
 
-ColorRotation:
+.proc ColorRotation
               lda FrameCounter         ;get frame counter
               and #$07                 ;mask out all but three LSB
               bne ExitColorRot         ;branch if not set to zero to do this every eighth frame
@@ -512,4 +512,18 @@ GetAreaPal:   lda Palette3Data,y       ;fetch palette to be written based on are
               bcc ExitColorRot         ;if so, branch to leave
               lda #$00
               sta ColorRotateOffset    ;otherwise, init to keep it in range
-ExitColorRot: rts                      ;leave
+ExitColorRot:
+  ; lda FrameCounter
+  ; and #%00000111
+  ; cmp #%00000011
+  ; bne Exit ; Every 8 frames on frame 4 do a disco rotation
+  ;   ldx VRAM_Buffer1_Offset  ;check vram buffer offset
+  ;   cpx #$38
+  ;   bcs Exit
+  ;     lda DiscoCycleIdx
+  ;     and #%00000011
+  ;     clc
+      
+Exit:
+  rts
+.endproc

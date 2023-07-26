@@ -1260,8 +1260,11 @@ Palette2_MTiles:
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
   .byte $8E, $9E, $8F, $9F ;cloud level terrain
+  .byte $44, $83, $44, $82 ;cracked rock terrain (nonsolid)
+  ; Solid Extent
+  .byte $82, $92, $83, $93 ;cracked rock terrain top (new)
+  .byte $92, $93, $92, $93 ;cracked rock terrain bottom (new)
   .byte $39, $49, $39, $49 ;bowser's bridge
-  .byte $82, $92, $83, $93 ;cracked rock terrain
 
 
 Palette3_MTiles:
