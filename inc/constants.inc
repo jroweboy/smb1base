@@ -106,7 +106,7 @@ StarFlagObject        = $31
 JumpspringObject      = $32
 BulletBill_CannonVar  = $33
 RetainerObject        = $35
-FlagpoleShatterObject = $36
+DiscoLakitu           = $36
 TallEnemy             = $09
 
 ; Metatile constants

@@ -105,7 +105,7 @@ JmpEO:
   .word NoRunCode
   .word WarpZoneObject
   .word RunRetainerObj
-  ; .word RunFlagpoleShard ; $36
+  ; .word RunDiscoLakitu
 
 CheckpointEnemyID:
   lda Enemy_ID,x
@@ -180,7 +180,7 @@ InitEnemyRoutines:
   .word NoInitCode
   .word NoInitCode
   .word InitRetainerObj
-  .word EndOfEnemyInitCode ; flagpole shard
+  ; .word InitDiscoLakitu
 
 ;--------------------------------
 

@@ -423,7 +423,7 @@ Fr12S:   lda #Spiny
          sta EnemyFrenzyBuffer      ;set spiny identifier in frenzy buffer
          ldy #$02
 LdLDa:   lda LakituDiffAdj,y        ;load values
-         sta a:R1,y                ;store in zero page
+         sta R1,y                   ;store in zero page
          dey
          bpl LdLDa                  ;do this until all values are stired
          jsr PlayerLakituDiff       ;execute sub to set speed and create spinys

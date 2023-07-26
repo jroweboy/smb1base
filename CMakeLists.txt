@@ -75,6 +75,7 @@ add_executable(${PROJECT_NAME}
   src/objects/hammer_bro.s
   src/objects/jump_spring.s
   src/objects/koopa.s
+  src/objects/lakitu.s
   src/objects/platform.s
   src/objects/podoboo.s
   src/objects/object.s

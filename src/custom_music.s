@@ -120,9 +120,36 @@ NoiseSfxTable:
   .byte FireBreath 
   .byte BrickBreak 
 
+.macpack longbranch
+
 .export CustomSoundEngine
 CustomSoundEngine:
   BankPRGA #.bank(music_data)
+  lda PauseModeFlag         ;is sound already in pause mode?
+  bne InPause
+    lda PauseSoundQueue       ;if not, check pause sfx queue
+    beq RunSoundSubroutines   ;if queue is empty, skip pause mode routine
+InPause:
+    lda GamePauseTimer
+    cmp #$2b
+    jne SkipToPlaying
+    lda PauseSoundQueue       ;check pause queue
+    cmp #2
+    beq UnPause
+    lda #Pause
+    sta PauseModeFlag         ;pause mode to interrupt game sounds
+    jsr famistudio_music_pause
+    ldx NextSFXChannel
+    lda #Pause
+    jsr famistudio_sfx_play
+    jsr BumpSFXChannel
+    jmp SkipToPlaying
+UnPause:
+  lda #0
+  sta PauseModeFlag
+  sta PauseSoundQueue
+  jsr famistudio_music_pause
+RunSoundSubroutines:
   lda PlayPanic
   bne PlayPanicMusic
   lda EventMusicQueue
@@ -187,7 +214,7 @@ SkipMusicProcessing:
     lda #0
     sta NoiseSoundQueue
   :
-
+SkipToPlaying:
   jsr famistudio_update
   BankPRGA CurrentBank
   rts
