@@ -45,8 +45,8 @@ CustomSoundInit:
   jsr famistudio_sfx_init
 
   ; lda #CLOUD_TITLE_MUSIC
-  lda #Cloud
-  jsr famistudio_music_play
+  ; lda #Silence
+  ; jsr famistudio_music_play
 
   rts
 

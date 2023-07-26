@@ -351,6 +351,8 @@ CloudSpriteXOrigin:
 ; .include "bhop/bhop.inc"
 
 .proc banked_init
+  lda #CloudMusic
+  sta AreaMusicQueue
   ; BankPRGA #.lobyte(.bank(TITLE_MUSIC))
   ; BankPRGC #.lobyte(.bank(TITLE_DPCM))
 
