@@ -401,8 +401,8 @@ EnemyGraphicsTable:
   .byte $ff, $ff, $c6, $c7, $d6, $d7  ;             frame 2
   .byte $ff, $8a, $99, $9a, $a9, $aa  ;koopa troopa frame 1
   .byte $ff, $8c, $9b, $9c, $ab, $ac  ;             frame 2
-  .byte $89, $8a, $99, $9a, $a9, $aa  ;para  troopa frame 1
-  .byte $8b, $8c, $9b, $9c, $ab, $ac  ;             frame 2
+  .byte $89, $8a, $ba, $9a, $a9, $aa  ;para  troopa frame 1
+  .byte $8b, $8c, $bb, $9c, $ab, $ac  ;             frame 2
   .byte $ff, $ff, $ff, $ff, $ff, $ff  ;spiny frame 1
   .byte $ff, $ff, $ff, $ff, $ff, $ff  ;      frame 2
   .byte $ff, $ff, $ff, $ff, $ff, $ff  ;spiny's egg frame 1
@@ -436,7 +436,7 @@ EnemyGraphicsTable:
   .byte $d0, $d1, $e0, $e1, $f0, $f1  ;bowser rear frame 1
   .byte $c2, $c3, $f2, $e3, $e2, $ff  ;       front frame 2
   .byte $d0, $d1, $e0, $e1, $c0, $c1  ;       rear frame 2
-  .byte $ff, $ff, $82, $83, $92, $93  ;bullet bill
+  .byte $ff, $ff, $83, $84, $93, $94  ;bullet bill
   .byte $e3, $e3, $c3, $c3, $e3, $e3  ;jumpspring frame 1
   .byte $e2, $e2, $e2, $e2, $ff, $ff  ;           frame 2
   .byte $e1, $e1, $ff, $ff, $ff, $ff  ;           frame 3
