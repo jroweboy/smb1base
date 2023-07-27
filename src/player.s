@@ -481,11 +481,21 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
 ;-------------------------------------------------------------------------------------
 
 .proc DrawPlayer_Intermediate
+CurrentOffset = Local_eb
+LoopCounter = Local_ec
+Condition = Local_ed
+  inc LivesScreenTimer
+  lda LivesScreenTimer
+  lsr
+  lsr
+  lsr
+  lsr
+  sta Condition
   lda #0
-  sta Local_eb ; use as a loop counter
-  sta Local_ec
+  sta CurrentOffset
+  sta LoopCounter
 OuterLoop:
-    lda Local_ec
+    lda LoopCounter
     asl
     asl
     tay
@@ -499,36 +509,40 @@ OuterLoop:
         bne PIntLoop                   ;do this until all data is loaded
       lda #4
       sta R7
-      ldy Local_ec
+      ldy LoopCounter
       ldx PlayerAnimationFrame,y
-      ldy Local_eb                       ;load sprite data offset
+      ldy CurrentOffset               ;load sprite data offset
       jsr DrawPlayerLoop             ;draw player accordingly
-    inc Local_ec
-    lda Local_eb
+    lda CurrentOffset
     clc
     adc #32
-    sta Local_eb
-    bne OuterLoop
+    sta CurrentOffset
+    beq :+
+    lda LoopCounter
+    inc LoopCounter
+    cmp Condition
+    bcc OuterLoop
+:
   rts
 IntermediatePlayerData:
-  .byte $58, $01, $00, $60
-  .byte $48, $01, $00, $50
-  .byte $38, $01, $00, $40
-  .byte $28, $01, $00, $30
-  .byte $18, $01, $00, $20
-  .byte $08, $01, $00, $10
-  .byte $68, $01, $00, $70
-  .byte $78, $01, $00, $80
+  .byte $10, $01, $00, $18
+  .byte $20, $01, $00, $28
+  .byte $30, $01, $00, $38
+  .byte $40, $01, $00, $48
+  .byte $50, $01, $00, $58
+  .byte $60, $01, $00, $68
+  .byte $70, $01, $00, $78
+  .byte $80, $01, $00, $88
 
 PlayerAnimationFrame:
-  .byte PlayerStandGraphicsOffset
+  .byte PlayerAnimCrouching
+  .byte PlayerAnimKilled
   .byte PlayerAnimWalking1
   .byte PlayerAnimSwimming2
   .byte PlayerAnimFireball
   .byte PlayerAnimClimbing1
-  .byte PlayerAnimKilled
+  .byte PlayerStandGraphicsOffset
   .byte PlayerAnimJumping
-  .byte PlayerAnimCrouching
 .endproc
 
 ;-------------------------------------------------------------------------------------

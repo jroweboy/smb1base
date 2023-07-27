@@ -402,8 +402,7 @@ StackClear = SwitchToMainIRQ
 .global SpriteShuffleOffset
 .global SpriteShuffleTemp
 
-; .global FirstTimeAreaReset
-; .global AreaResetCountdown
+.global LivesScreenTimer
 .global SelectedSprite
 ; .global SprShuffleAmtOffset
 ; .global SprShuffleAmt

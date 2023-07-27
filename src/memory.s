@@ -438,6 +438,7 @@ OriginalOAMOffset:              .res  1
 SpriteShuffleOffset:            .res  1
 SpriteShuffleTemp:              .res  1
 
+LivesScreenTimer:               .res  1
 SelectedSprite:                 .res  1
 
 ; FirstTimeAreaReset:             .res  1

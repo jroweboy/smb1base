@@ -34,6 +34,8 @@ APU_FRAMECOUNTER      = $4017
 ;-------------------------------------------------------------------------------------
 ;CONSTANTS
 
+GLOBAL_BACKGROUND_COLOR = $02
+
 ;sound effects constants
 Sfx_SmallJump         = %10000000
 Sfx_Flagpole          = %01000000

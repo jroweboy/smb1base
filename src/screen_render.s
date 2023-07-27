@@ -185,6 +185,7 @@ NoTimeUp:
 ;-------------------------------------------------------------------------------------
 
 ResetSpritesAndScreenTimer:
+  farcall DrawPlayer_Intermediate
   lda ScreenTimer             ;check if screen timer has expired
   bne NoReset                 ;if not, branch to leave
   jsr MoveAllSpritesOffscreen ;otherwise reset sprites now
@@ -205,7 +206,7 @@ DisplayIntermediate:
   beq GameOverInter            ;if so, proceed to display game over screen
   
   ; Switch the IRQ mode when we are loading into a level
-  dec SwitchToMainIRQ
+  ; dec SwitchToMainIRQ
   
   lda AltEntranceControl       ;otherwise check for mode of alternate entry
   bne NoInter                  ;and branch if found
@@ -304,16 +305,16 @@ SetVRAMOffset:
   rts
 
 BGColorCtrl_Addr:
-      .byte $00, $09, $0a, $04
+  .byte $00, $09, $0a, $04
 
 BackgroundColors:
-      .byte $22, $22, $0f, $0f ;used by area type if bg color ctrl not set
-      .byte $0f, $22, $0f, $0f ;used by background color control if set
+  .byte GLOBAL_BACKGROUND_COLOR, GLOBAL_BACKGROUND_COLOR, $0f, $0f ;used by area type if bg color ctrl not set
+  .byte $0f, GLOBAL_BACKGROUND_COLOR, $0f, $0f ;used by background color control if set
 
 PlayerColors:
-      .byte $22, $16, $27, $18 ;mario's colors
-      .byte $22, $30, $27, $19 ;luigi's colors
-      .byte $22, $37, $27, $16 ;fiery (used by both)
+  .byte GLOBAL_BACKGROUND_COLOR, $16, $27, $18 ;mario's colors
+  .byte GLOBAL_BACKGROUND_COLOR, $30, $27, $19 ;luigi's colors
+  .byte GLOBAL_BACKGROUND_COLOR, $37, $27, $16 ;fiery (used by both)
 
 
 ;-------------------------------------------------------------------------------------

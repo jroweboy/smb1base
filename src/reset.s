@@ -651,7 +651,7 @@ CastlePaletteData:
 
 DaySnowPaletteData:
   .byte $3f, $00, $04
-  .byte $22, $30, $00, $10
+  .byte GLOBAL_BACKGROUND_COLOR, $30, $00, $10
   .byte $00
 
 NightSnowPaletteData:
@@ -661,7 +661,7 @@ NightSnowPaletteData:
 
 MushroomPaletteData:
   .byte $3f, $00, $04
-  .byte $22, $27, $16, $0f
+  .byte GLOBAL_BACKGROUND_COLOR, $27, $16, $0f
   .byte $00
 
 BowserPaletteData:

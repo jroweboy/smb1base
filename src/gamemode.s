@@ -340,10 +340,13 @@ IncWorldSel:
   iny                         ;proper display, and put in blank byte before
   sty VRAM_Buffer1+3          ;null terminator
 NullJoypad:
-  lda #$00                    ;clear joypad bits for player 1
+  ; lda #$00                    ;clear joypad bits for player 1
+  ; sta SavedJoypad1Bits
+  lda #$01                    ;clear joypad bits for player 1
   sta SavedJoypad1Bits
 RunDemo:
   jsr GameCoreRoutine         ;run game engine
+  jsr FreezePlayer
   lda GameEngineSubroutine    ;check to see if we're running lose life routine
   cmp #$06
   bne ExitMenu                ;if not, do not do all the resetting below
@@ -390,6 +393,13 @@ GoContinue:
 WSelectBufferTemplate:
   .byte $04, $20, $73, $01, $00, $00
 
+FreezePlayer:
+  lda #0
+  sta Player_X_Speed
+  sta Player_X_MoveForce
+  lda #$90
+  sta Player_X_Position
+  rts
 .endproc
 
 
