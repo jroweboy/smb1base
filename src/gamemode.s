@@ -48,9 +48,10 @@ SecondaryGameSetup:
   lda #$00
   sta DisableScreenFlag     ;enable screen output
   tay
-ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
-  iny
-  bne ClearVRLoop
+ClearVRLoop:
+    sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
+    iny
+    bne ClearVRLoop
   sta GameTimerExpiredFlag  ;clear game timer exp flag
   sta DisableIntermediate   ;clear skip lives display flag
   sta BackloadingFlag       ;clear value here
@@ -272,7 +273,7 @@ GameIsOn:
 ;-------------------------------------------------------------------------------------
 
 .proc GameMenuRoutine
-.import LoadAreaPointer, GameCoreRoutine, DrawMushroomIcon
+.import LoadAreaPointer, GameCoreRoutine
 
   ldy #$00
   lda SavedJoypad1Bits        ;check to see if either player pressed
@@ -309,10 +310,18 @@ SelectBLogic:
   sta SelectTimer
   cpy #$01                    ;was the B button pressed earlier?  if so, branch
   beq IncWorldSel             ;note this will not be run if world selection is disabled
-  ; lda NumberOfPlayers         ;if no, must have been the select button, therefore
-  ; eor #%00000001              ;change number of players and draw icon accordingly
-  ; sta NumberOfPlayers
-  ; jsr DrawMushroomIcon
+  lda SelectedSprite
+  eor #1
+  sta SelectedSprite
+  beq PlayingAsMario
+    ; playing as peach so switch banks
+    BankCHR10 #8
+    BankCHR14 #4
+    bne SwitchedCharacters ; unconditional
+PlayingAsMario:
+    BankCHR10 #4
+    BankCHR14 #8
+SwitchedCharacters:
   jmp NullJoypad
 IncWorldSel:
   ldx WorldSelectNumber       ;increment world select number
@@ -321,12 +330,12 @@ IncWorldSel:
   and #%00000111              ;mask out higher bits
   sta WorldSelectNumber       ;store as current world select number
   jsr GoContinue
-UpdateShroom:
-  lda WSelectBufferTemplate,x ;write template for world select in vram buffer
-  sta VRAM_Buffer1-1,x        ;do this until all bytes are written
-  inx
-  cpx #$06
-  bmi UpdateShroom
+; UpdateShroom:
+;   lda WSelectBufferTemplate,x ;write template for world select in vram buffer
+;   sta VRAM_Buffer1-1,x        ;do this until all bytes are written
+;   inx
+;   cpx #$06
+;   bmi UpdateShroom
   ldy WorldNumber             ;get world number from variable and increment for
   iny                         ;proper display, and put in blank byte before
   sty VRAM_Buffer1+3          ;null terminator
@@ -334,7 +343,7 @@ NullJoypad:
   lda #$00                    ;clear joypad bits for player 1
   sta SavedJoypad1Bits
 RunDemo:
-  ; jsr GameCoreRoutine         ;run game engine
+  jsr GameCoreRoutine         ;run game engine
   lda GameEngineSubroutine    ;check to see if we're running lose life routine
   cmp #$06
   bne ExitMenu                ;if not, do not do all the resetting below
@@ -379,7 +388,7 @@ GoContinue:
   rts
 
 WSelectBufferTemplate:
-      .byte $04, $20, $73, $01, $00, $00
+  .byte $04, $20, $73, $01, $00, $00
 
 .endproc
 

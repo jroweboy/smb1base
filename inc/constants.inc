@@ -111,7 +111,7 @@ TallEnemy             = $09
 
 ; CHR rom tile constants. PPU address to be specific
 
-BRICK_CHUNK_TILE = $73
+BRICK_CHUNK_TILE = $b6
 
 EXPLOSION_TILE_1 = $f0
 EXPLOSION_TILE_2 = $f1

@@ -10,7 +10,7 @@
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, RenderAttributeTables
 .export WritePPUReg1, HandlePipeEntry, MoveVOffset
-.export RemBridge, GiveOneCoin, WriteBlockMetatile, DrawMushroomIcon
+.export RemBridge, GiveOneCoin, WriteBlockMetatile
 
 .segment "RENDER"
 
@@ -334,9 +334,12 @@ NoAltPal:
 ;$00 - vram buffer address table low
 ;$01 - vram buffer address table high
 
-; DrawTitleScreen:
-;   lda OperMode                 ;are we in title screen mode?
-;   bne IncModeTask_B            ;if not, exit
+DrawTitleScreen:
+  lda OperMode                 ;are we in title screen mode?
+  bne IncModeTask_B            ;if not, exit
+  
+  lda #CloudMusic
+  sta AreaMusicQueue
 ;   lda #>TitleScreenDataOffset  ;load address $1ec0 into
 ;   sta PPUADDR              ;the vram address register
 ;   lda #<TitleScreenDataOffset
@@ -359,14 +362,14 @@ NoAltPal:
 ;   cpy #$3a                     ;check if offset points past end of data
 ;   bcc OutputTScr               ;if not, loop back and do another
 ;   lda #$05                     ;set buffer transfer control to $0300,
-;   jmp SetVRAMAddr_B            ;increment task and exit
+  jmp SetVRAMAddr_B            ;increment task and exit
 
-.proc DrawTitleScreen
-.import DrawTitleScreenInternal
-  lda OperMode                 ;are we in title screen mode?
-  bne IncModeTask_B            ;if not, exit
-    farcall DrawTitleScreenInternal, jmp
-.endproc
+; .proc DrawTitleScreen
+; .import DrawTitleScreenInternal
+;   lda OperMode                 ;are we in title screen mode?
+;   bne IncModeTask_B            ;if not, exit
+;     farcall DrawTitleScreenInternal, jmp
+; .endproc
 
 ;-------------------------------------------------------------------------------------
 
@@ -387,31 +390,31 @@ TScrClear:
   sta VRAM_Buffer1-1+$100,x
   dex
   bne TScrClear
-  jsr DrawMushroomIcon       ;draw player select icon
+  ; jsr DrawMushroomIcon       ;draw player select icon
 IncSubtask:
   inc ScreenRoutineTask      ;move onto next task
   rts
 
 ;-------------------------------------------------------------------------------------
 
-.proc DrawMushroomIcon
-  ldy #$07                ;read eight bytes to be read by transfer routine
-IconDataRead:
-  lda MushroomIconData,y  ;note that the default position is set for a
-  sta VRAM_Buffer1-1,y    ;1-player game
-  dey
-  bpl IconDataRead
-  lda NumberOfPlayers     ;check number of players
-  beq ExitIcon            ;if set to 1-player game, we're done
-  lda #$24                ;otherwise, load blank tile in 1-player position
-  sta VRAM_Buffer1+3
-  lda #$ce                ;then load shroom icon tile in 2-player position
-  sta VRAM_Buffer1+5
-ExitIcon:
-  rts
-MushroomIconData:
-  .byte $07, $22, $49, $83, $ce, $24, $24, $00
-.endproc
+; .proc DrawMushroomIcon
+;   ldy #$07                ;read eight bytes to be read by transfer routine
+; IconDataRead:
+;   lda MushroomIconData,y  ;note that the default position is set for a
+;   sta VRAM_Buffer1-1,y    ;1-player game
+;   dey
+;   bpl IconDataRead
+;   lda NumberOfPlayers     ;check number of players
+;   beq ExitIcon            ;if set to 1-player game, we're done
+;   lda #$24                ;otherwise, load blank tile in 1-player position
+;   sta VRAM_Buffer1+3
+;   lda #$ce                ;then load shroom icon tile in 2-player position
+;   sta VRAM_Buffer1+5
+; ExitIcon:
+;   rts
+; MushroomIconData:
+;   .byte $07, $22, $49, $83, $ce, $24, $24, $00
+; .endproc
 
 
 ;-------------------------------------------------------------------------------------
