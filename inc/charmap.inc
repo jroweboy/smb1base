@@ -10,13 +10,13 @@
 ; $ to coin
 .charmap    $24,   $2e
 ; c to copyright
-.charmap    $62,   $CF
+.charmap    $62,   $2f
 ; m to mushroom
-.charmap    $6D,   $CE
+.charmap    $6D,   $2a
 ; / to chain
-.charmap    $2F,   $7F
+.charmap    $2F,   $2d
 ; .
-.charmap    $2E,   $AF
+.charmap    $2E,   $2c
 
 ; 0
 .charmap $30+00,   $00
