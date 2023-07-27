@@ -49,7 +49,7 @@ DrawVine:
          sta Sprite_Attributes+12,y
          sta Sprite_Attributes+20,y
          ldx #$05                   ;set tiles for six sprites
-VineTL:  lda #$7b                   ;set tile number for sprite
+VineTL:  lda #VINE_TILE_2                   ;set tile number for sprite
          sta Sprite_Tilenumber,y
          iny                        ;move offset to next sprite data
          iny
@@ -61,7 +61,7 @@ VineTL:  lda #$7b                   ;set tile number for sprite
          ldy R2                    ;get original offset
          lda R0                    ;get offset to vine adding data
          bne SkpVTop                ;if offset not zero, skip this part
-         lda #$7a
+         lda #VINE_TILE_1
          sta Sprite_Tilenumber,y    ;set other tile number for top of vine
 SkpVTop: ldx #$00                   ;start with the first sprite again
 ChkFTop: lda Vine_Start_Y_Position   ;get original starting vertical coordinate
@@ -110,10 +110,10 @@ SecondSprYPos:
       .byte $08, $00, $08, $00
 
 FirstSprTilenum:
-      .byte $c8, $ca, $c9, $cb
+      .byte HAMMER_HEAD_1, HAMMER_HEAD_2, HAMMER_TAIL_1, HAMMER_TAIL_2
 
 SecondSprTilenum:
-      .byte $c9, $cb, $c8, $ca
+      .byte HAMMER_TAIL_1, HAMMER_TAIL_2, HAMMER_HEAD_1, HAMMER_HEAD_2
 
 HammerSprAttrib:
       .byte $03, $03, $c3, $c3
@@ -194,10 +194,10 @@ SetLast2Platform:
       ldy R2
       sta Sprite_Y_Position+16,y  ;store vertical coordinate or offscreen
       sta Sprite_Y_Position+20,y  ;coordinate into last two sprites as Y coordinate
-      lda #$68 ; $bc                    ;load default tile for platform (girder)
+      lda #PLATFORM_GIRDER ; $bc                    ;load default tile for platform (girder)
       ldx CloudTypeOverride
       beq SetPlatformTilenum      ;if cloud level override flag not set, use
-      lda #$79 ; $fe                    ;otherwise load other tile for platform (puff)
+      lda #PLATFORM_CLOUD ; $fe                    ;otherwise load other tile for platform (puff)
 
 SetPlatformTilenum:
         ldx ObjectOffset            ;get enemy object buffer offset
@@ -268,14 +268,15 @@ NotRsNum: lda Misc_Y_Position,x     ;get vertical coordinate
           lda #$02
           sta Sprite_Attributes,y   ;store attribute byte in both sprites
           sta Sprite_Attributes+4,y
-          lda #$72
+          lda #FLOATEY_NUM_20
           sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
-          lda #$76                  ;that resemble "200"
+          lda #FLOATEY_NUM_0        ;that resemble "200"
           sta Sprite_Tilenumber+4,y
           jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
 
 JumpingCoinTiles:
-      .byte $60, $61, $62, $63
+  .byte JUMPING_COIN_TILE_1, JUMPING_COIN_TILE_2
+  .byte JUMPING_COIN_TILE_3, JUMPING_COIN_TILE_4
 
 JCoinGfxHandler:
       ;    ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
@@ -316,14 +317,10 @@ ExJCGfx: rts                         ;leave
 
 ;tiles arranged in top left, right, bottom left, right order
 PowerUpGfxTable:
-  ; .byte $76, $77, $78, $79 ;regular mushroom
-  ; .byte $d6, $d6, $d9, $d9 ;fire flower
-  ; .byte $8d, $8d, $e4, $e4 ;star
-  ; .byte $76, $77, $78, $79 ;1-up mushroom
-  .byte $6e, $6f, $7e, $7f ;regular mushroom
-  .byte $6d, $6d, $7d, $7d ;fire flower
-  .byte $6c, $6c, $7c, $7c ;star
-  .byte $6e, $6f, $7e, $7f ;1-up mushroom
+  .byte MUSHROOM_TOP_LEFT, MUSHROOM_TOP_RIGHT, MUSHROOM_BOT_LEFT, MUSHROOM_BOT_RIGHT ;regular mushroom
+  .byte FIREFLOWER_TOP_LEFT, FIREFLOWER_TOP_LEFT, FIREFLOWER_BOT_LEFT, FIREFLOWER_BOT_LEFT ;fire flower
+  .byte STAR_TOP_LEFT, STAR_TOP_LEFT, STAR_BOT_LEFT, STAR_BOT_LEFT ;star
+  .byte MUSHROOM_TOP_LEFT, MUSHROOM_TOP_RIGHT, MUSHROOM_BOT_LEFT, MUSHROOM_BOT_RIGHT ;1-up mushroom
 
 PowerUpAttributes:
   .byte $02, $01, $02, $01
@@ -400,93 +397,49 @@ PUpOfs: jmp SprObjectOffscrChk     ;jump to check to see if power-up is offscree
 
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable:
-  .byte $FF, $FF, $82, $83, $92, $93  ;buzzy beetle frame 1
-  .byte $FF, $FF, $84, $85, $94, $95  ;             frame 2
-  .byte $FF, $8B, $9A, $9B, $AA, $AB  ;koopa troopa frame 1
-  .byte $FF, $8D, $9C, $9D, $AC, $AD  ;             frame 2
-  .byte $8A, $8B, $BA, $9B, $AA, $AB  ;koopa paratroopa frame 
-  .byte $8C, $8D, $BB, $9D, $AC, $AD  ;                 frame 
-  .byte $FF, $FF, $86, $87, $96, $97  ;spiny frame 1
-  .byte $FF, $FF, $88, $89, $98, $99  ;      frame 2
-  .byte $FF, $FF, $B3, $A3, $A3, $B3  ;spiny's egg frame 1
-  .byte $FF, $FF, $B4, $A4, $A4, $B4  ;            frame 2
-  .byte $FF, $FF, $CD, $CD, $FD, $FD  ;bloober frame 1
-  .byte $CD, $CD, $DD, $DD, $ED, $ED  ;        frame 2
-  .byte $FF, $FF, $A6, $A7, $B6, $B7  ;cheep-cheep frame 1
-  .byte $FF, $FF, $A5, $A7, $B5, $B7  ;            frame 2
-  .byte $FF, $FF, $80, $81, $90, $91  ;goomba
-  .byte $FF, $FF, $A1, $A1, $B1, $B1  ;koopa shell frame 1 (up
-  .byte $FF, $FF, $A2, $A2, $B1, $B1  ;            frame 2
-  .byte $FF, $FF, $B1, $B1, $A1, $A1  ;koopa shell frame 1 (ri
-  .byte $FF, $FF, $B1, $B1, $A2, $A2  ;            frame 2
-  .byte $FF, $FF, $B0, $B0, $A0, $A0  ;buzzy beetle shell fram
-  .byte $FF, $FF, $B0, $B0, $A0, $A0  ;                   fram
-  .byte $FF, $FF, $A0, $A0, $B0, $B0  ;buzzy beetle shell fram
-  .byte $FF, $FF, $A0, $A0, $B0, $B0  ;                   fram
-  .byte $FF, $FF, $FF, $FF, $B2, $B2  ;defeated goomba
-  .byte $8E, $8F, $9E, $9F, $AE, $AE  ;lakitu frame 1
-  .byte $FF, $FF, $AF, $AF, $AE, $AE  ;       frame 2
-  .byte $EA, $EB, $FA, $FB, $FC, $FC  ;princess
-  .byte $CC, $CC, $DC, $DC, $EC, $EC  ;mushroom retainer
-  .byte $C4, $C5, $F6, $F7, $E6, $E7  ;hammer bro frame 1
-  .byte $C4, $C5, $D4, $D5, $E4, $E5  ;           frame 2
-  .byte $C6, $C7, $D6, $D7, $E6, $E7  ;           frame 3
-  .byte $C6, $C7, $D6, $D7, $E4, $E5  ;           frame 4
-  .byte $CE, $CE, $DE, $DE, $EE, $EE  ;piranha plant frame 1
-  .byte $CF, $CF, $DF, $DF, $EF, $EF  ;              frame 2
-  .byte $FF, $FF, $DA, $DA, $DB, $DB  ;podoboo
-  .byte $C2, $C3, $D2, $D3, $E2, $FF  ;bowser front frame 1
-  .byte $D0, $D1, $E0, $E1, $F0, $F1  ;bowser rear frame 1
-  .byte $C2, $C3, $F2, $E3, $E2, $FF  ;       front frame 2
-  .byte $D0, $D1, $E0, $E1, $C0, $C1  ;       rear frame 2
-  .byte $FF, $FF, $A8, $A9, $B8, $B9  ;bullet bill
-  .byte $6A, $6A, $6B, $6B, $6A, $6A  ;jumpspring frame 1
-  .byte $69, $69, $69, $69, $FF, $FF  ;           frame 2
-  .byte $68, $68, $FF, $FF, $FF, $FF  ;           frame 3
-
-; .byte $fc, $fc, $aa, $ab, $ac, $ad  ;buzzy beetle frame 1
-; .byte $fc, $fc, $ae, $af, $b0, $b1  ;             frame 2
-; .byte $fc, $a5, $a6, $a7, $a8, $a9  ;koopa troopa frame 1
-; .byte $fc, $a0, $a1, $a2, $a3, $a4  ;             frame 2
-; .byte $69, $a5, $6a, $a7, $a8, $a9  ;koopa paratroopa frame 1
-; .byte $6b, $a0, $6c, $a2, $a3, $a4  ;                 frame 2
-; .byte $fc, $fc, $96, $97, $98, $99  ;spiny frame 1
-; .byte $fc, $fc, $9a, $9b, $9c, $9d  ;      frame 2
-; .byte $fc, $fc, $8f, $8e, $8e, $8f  ;spiny's egg frame 1
-; .byte $fc, $fc, $95, $94, $94, $95  ;            frame 2
-; .byte $fc, $fc, $dc, $dc, $df, $df  ;bloober frame 1
-; .byte $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
-; .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1
-; .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2
-; .byte $fc, $fc, $70, $71, $72, $73  ;goomba
-; .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down)
-; .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2
-; .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup)
-; .byte $fc, $fc, $6f, $6f, $6d, $6d  ;            frame 2
-; .byte $fc, $fc, $f4, $f4, $f5, $f5  ;buzzy beetle shell frame 1 (rightsideup)
-; .byte $fc, $fc, $f4, $f4, $f5, $f5  ;                   frame 2
-; .byte $fc, $fc, $f5, $f5, $f4, $f4  ;buzzy beetle shell frame 1 (upside-down)
-; .byte $fc, $fc, $f5, $f5, $f4, $f4  ;                   frame 2
-; .byte $fc, $fc, $fc, $fc, $ef, $ef  ;defeated goomba
-; .byte $b9, $b8, $bb, $ba, $bc, $bc  ;lakitu frame 1
-; .byte $fc, $fc, $bd, $bd, $bc, $bc  ;       frame 2
-; .byte $7a, $7b, $da, $db, $d8, $d8  ;princess
-; .byte $cd, $cd, $ce, $ce, $cf, $cf  ;mushroom retainer
-; .byte $7d, $7c, $d1, $8c, $d3, $d2  ;hammer bro frame 1
-; .byte $7d, $7c, $89, $88, $8b, $8a  ;           frame 2
-; .byte $d5, $d4, $e3, $e2, $d3, $d2  ;           frame 3
-; .byte $d5, $d4, $e3, $e2, $8b, $8a  ;           frame 4
-; .byte $e5, $e5, $e6, $e6, $eb, $eb  ;piranha plant frame 1
-; .byte $ec, $ec, $ed, $ed, $ee, $ee  ;              frame 2
-; .byte $fc, $fc, $d0, $d0, $d7, $d7  ;podoboo
-; .byte $bf, $be, $c1, $c0, $c2, $fc  ;bowser front frame 1
-; .byte $c4, $c3, $c6, $c5, $c8, $c7  ;bowser rear frame 1
-; .byte $bf, $be, $ca, $c9, $c2, $fc  ;       front frame 2
-; .byte $c4, $c3, $c6, $c5, $cc, $cb  ;       rear frame 2
-; .byte $fc, $fc, $e8, $e7, $ea, $e9  ;bullet bill
-; .byte $f2, $f2, $f3, $f3, $f2, $f2  ;jumpspring frame 1
-; .byte $f1, $f1, $f1, $f1, $fc, $fc  ;           frame 2
-; .byte $f0, $f0, $fc, $fc, $fc, $fc  ;           frame 3
+  .byte $ff, $ff, $c4, $c5, $d4, $d5  ;buzzy beetle frame 1
+  .byte $ff, $ff, $c6, $c7, $d6, $d7  ;             frame 2
+  .byte $ff, $8a, $99, $9a, $a9, $aa  ;koopa troopa frame 1
+  .byte $ff, $8c, $9b, $9c, $ab, $ac  ;             frame 2
+  .byte $89, $8a, $99, $9a, $a9, $aa  ;para  troopa frame 1
+  .byte $8b, $8c, $9b, $9c, $ab, $ac  ;             frame 2
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;spiny frame 1
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;      frame 2
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;spiny's egg frame 1
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;            frame 2
+  .byte $ff, $ff, $d8, $d8, $d9, $d9  ;bloober frame 1
+  .byte $d8, $d8, $e6, $e6, $f6, $f6  ;        frame 2
+  .byte $ff, $ff, $e8, $e9, $f8, $f9  ;cheep-cheep frame 1
+  .byte $ff, $ff, $e7, $e9, $f7, $f9  ;            frame 2
+  .byte $ff, $ff, $c0, $c1, $d0, $d1  ;goomba
+  .byte $ff, $ff, $81, $81, $91, $91  ;koopa shell frame 1 (up
+  .byte $ff, $ff, $82, $82, $91, $91  ;            frame 2
+  .byte $ff, $ff, $91, $91, $81, $81  ;koopa shell frame 1 (ri
+  .byte $ff, $ff, $91, $91, $b4, $b4  ;            frame 2
+  .byte $ff, $ff, $90, $90, $80, $80  ;buzzy beetle shell fram
+  .byte $ff, $ff, $90, $90, $80, $80  ;                   fram
+  .byte $ff, $ff, $80, $80, $90, $90  ;buzzy beetle shell fram
+  .byte $ff, $ff, $80, $80, $90, $90  ;                   fram
+  .byte $ff, $ff, $ff, $ff, $e0, $e0  ;defeated goomba
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;lakitu frame 1
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;       frame 2
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;princess
+  .byte $ff, $ff, $ff, $ff, $ff, $ff  ;mushroom retainer
+  .byte $ca, $cb, $c8, $c9, $ec, $ed  ;hammer bro frame 1
+  .byte $ca, $cb, $da, $db, $ea, $eb  ;           frame 2
+  .byte $cc, $cd, $dc, $dd, $ec, $ed  ;           frame 3
+  .byte $cc, $cd, $dc, $dd, $ea, $eb  ;           frame 4
+  .byte $ce, $ce, $de, $de, $ee, $ee  ;piranha plant frame 1
+  .byte $cf, $cf, $df, $df, $ef, $ef  ;              frame 2
+  .byte $ff, $ff, $e4, $e4, $e5, $e5  ;podoboo
+  .byte $c2, $c3, $d2, $d3, $e2, $ff  ;bowser front frame 1
+  .byte $d0, $d1, $e0, $e1, $f0, $f1  ;bowser rear frame 1
+  .byte $c2, $c3, $f2, $e3, $e2, $ff  ;       front frame 2
+  .byte $d0, $d1, $e0, $e1, $c0, $c1  ;       rear frame 2
+  .byte $ff, $ff, $82, $83, $92, $93  ;bullet bill
+  .byte $e3, $e3, $c3, $c3, $e3, $e3  ;jumpspring frame 1
+  .byte $e2, $e2, $e2, $e2, $ff, $ff  ;           frame 2
+  .byte $e1, $e1, $ff, $ff, $ff, $ff  ;           frame 3
 
 EnemyGfxTableOffsets:
   .byte $0c, $0c, $00, $0c, $0c, $a8, $54, $3c
@@ -1012,7 +965,7 @@ MoveESprColOffscreen:
 
 DefaultBlockObjTiles:
       ; .byte $85, $85, $86, $86             ;brick w/ line (these are sprite tiles, not BG!)
-  .byte $bd, $bd, $be, $be
+  .byte BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_2, BRICK_BUMP_TILE_2
 
 DrawBlock:
            lda Block_Rel_YPos            ;get relative vertical coordinate of block object
@@ -1039,13 +992,13 @@ DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
            lda AreaType
            cmp #$01                      ;check for ground level type area
            beq ChkRep                    ;if found, branch to next part
-           lda #$be
+           lda #BRICK_BUMP_TILE_2
            sta Sprite_Tilenumber,y       ;otherwise remove brick tiles with lines
            sta Sprite_Tilenumber+4,y     ;and replace then with lineless brick tiles
 ChkRep:    lda Block_Metatile,x          ;check replacement metatile
            cmp #$c4                      ;if not used block metatile, then
            bne BlkOffscr                 ;branch ahead to use current graphics
-           lda #$bf                      ;set A for used block tile
+           lda #BLOCK_USED_TILE          ;set A for used block tile
            iny                           ;increment Y to write to tile bytes
            jsr DumpFourSpr               ;do sub to dump into all four sprites
            dey                           ;return Y to original offset
@@ -1093,7 +1046,7 @@ DrawBrickChunks:
          beq DChunks                ;use palette and tile number assigned
          lda #$03                   ;otherwise set different palette bits
          sta R0
-         lda #$67                   ;and set tile number for brick chunks
+         lda #BRICK_CHUNK_TILE      ;and set tile number for brick chunks
 ;          lda #$84                   ;and set tile number for brick chunks
 DChunks: 
          ldy OriginalOAMOffset
@@ -1168,8 +1121,7 @@ DrawSingleFireball:
        lsr
        pha                      ;save result to stack
        and #$01                 ;mask out all but last bit
-       eor #$50                 ;set either tile $64 or $65 as fireball tile
-      ;  eor #$64                 ;set either tile $64 or $65 as fireball tile
+       eor #FIREBALL_TILE       ;set either tile $64 or $65 as fireball tile
        sta Sprite_Tilenumber,y  ;thus tile changes every four frames
        pla                      ;get from stack
        lsr                      ;divide by four again
@@ -1385,17 +1337,17 @@ SetupNumSpr:
 ;that appear when you defeat enemies
 FloateyNumTileData:
   .byte $ff, $ff ;dummy
-  .byte $71, $76 ; "100"
-  .byte $72, $76 ; "200"
-  .byte $73, $76 ; "400"
-  .byte $74, $76 ; "500"
-  .byte $75, $76 ; "800"
-  .byte $71, $70 ; "1000"
-  .byte $72, $70 ; "2000"
-  .byte $73, $70 ; "4000"
-  .byte $74, $70 ; "5000"
-  .byte $75, $70 ; "8000"
-  .byte $77, $78 ; "1-UP"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_0 ; "100"
+  .byte FLOATEY_NUM_20, FLOATEY_NUM_0 ; "200"
+  .byte FLOATEY_NUM_40, FLOATEY_NUM_0 ; "400"
+  .byte FLOATEY_NUM_50, FLOATEY_NUM_0 ; "500"
+  .byte FLOATEY_NUM_80, FLOATEY_NUM_0 ; "800"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00 ; "1000"
+  .byte FLOATEY_NUM_20, FLOATEY_NUM_00 ; "2000"
+  .byte FLOATEY_NUM_40, FLOATEY_NUM_00 ; "4000"
+  .byte FLOATEY_NUM_50, FLOATEY_NUM_00 ; "5000"
+  .byte FLOATEY_NUM_80, FLOATEY_NUM_00 ; "8000"
+  .byte FLOATEY_NUM_1, FLOATEY_NUM_UP ; "1-UP"
 
 ;high nybble is digit number, low nybble is number to
 ;add to the digit of the player's score
@@ -1439,10 +1391,10 @@ FlagpoleGfxHandler:
       sta Sprite_Attributes,y        ;set attribute bytes for all three sprites
       sta Sprite_Attributes+4,y
       sta Sprite_Attributes+8,y
-      lda #$d8
+      lda #GOAL_FLAG_TRIANGLE
       sta Sprite_Tilenumber,y        ;put triangle shaped tile
       sta Sprite_Tilenumber+8,y      ;into first and third sprites
-      lda #$d9
+      lda #GOAL_FLAG_SKULL
       sta Sprite_Tilenumber+4,y      ;put skull tile into second sprite
       lda FlagpoleCollisionYPos      ;get vertical coordinate at time of collision
       beq ChkFlagOffscreen           ;if zero, branch ahead
@@ -1469,28 +1421,28 @@ ChkFlagOffscreen:
 ;-------------------------------------------------------------------------------------
 
 MoveSixSpritesOffscreen:
-      lda #$f8                  ;set offscreen coordinate if jumping here
+  lda #$f8                  ;set offscreen coordinate if jumping here
 
 DumpSixSpr:
-      sta Sprite_Data+20,y      ;dump A contents
-      sta Sprite_Data+16,y      ;into third row sprites
+  sta Sprite_Data+20,y      ;dump A contents
+  sta Sprite_Data+16,y      ;into third row sprites
 
 DumpFourSpr:
-      sta Sprite_Data+12,y      ;into second row sprites
+  sta Sprite_Data+12,y      ;into second row sprites
 
 DumpThreeSpr:
-      sta Sprite_Data+8,y
+  sta Sprite_Data+8,y
 
 DumpTwoSpr:
-      sta Sprite_Data+4,y       ;and into first row sprites
-      sta Sprite_Data,y
+  sta Sprite_Data+4,y       ;and into first row sprites
+  sta Sprite_Data,y
 
 ExitDumpSpr:
       rts
 
 FlagpoleScoreNumTiles:
-      .byte $74, $70
-      .byte $72, $70
-      .byte $75, $76
-      .byte $73, $76
-      .byte $71, $76
+  .byte FLOATEY_NUM_50, FLOATEY_NUM_00
+  .byte FLOATEY_NUM_20, FLOATEY_NUM_00
+  .byte FLOATEY_NUM_80, FLOATEY_NUM_0
+  .byte FLOATEY_NUM_40, FLOATEY_NUM_0
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_0

@@ -614,7 +614,7 @@ PlayerAnimStanding = * - BigPlayerTable
 .byte $00, $01, $16, $17, $26, $27, $36, $37 ;big player standing
 
 SwimKickTileNum:
-  .byte $1C, $4A
+  .byte $1c, $4A ; Big, Small
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store player's vertical offscreen bits

@@ -217,7 +217,7 @@ BubbleTimerData:
   sta Sprite_X_Position,y     ;store as X coordinate here
   lda Bubble_Rel_YPos         ;get relative vertical coordinate
   sta Sprite_Y_Position,y     ;store as Y coordinate here
-  lda #$52
+  lda #BUBBLE_TILE
   sta Sprite_Tilenumber,y     ;put air bubble tile into OAM data
   lda #$02
   sta Sprite_Attributes,y     ;set attribute byte
@@ -236,7 +236,7 @@ ExDBub:
 ;-------------------------------------------------------------------------------------
 
 ExplosionTiles:
-  .byte $64, $65, $66
+  .byte EXPLOSION_TILE_1, EXPLOSION_TILE_2, EXPLOSION_TILE_3
 
 DrawExplosion_Fireball:
   ; ldy Alt_SprDataOffset,x  ;get OAM data offset of alternate sort for fireball's explosion

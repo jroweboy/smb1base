@@ -59,14 +59,6 @@ labelled_segment_def TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE
 ;-------------------------------------------------------------------------------------
 LoadAreaPointer:
   ; jroweboy inlined FindAreaPointer
-
-  ; Reset the area loop counters
-  lda #0
-  sta FirstTimeAreaReset
-  sta AreaResetCountdown
-
-ReloadAreaPointer:
-  
   ldy WorldNumber        ;load offset from world variable
   lda WorldAddrOffsets,y
   clc                    ;add area number used to find data

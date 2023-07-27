@@ -65,7 +65,7 @@ SetLSpd:
 SetLMov:
   sty MoveDirection      ;store moving direction
   
-MoveObjectHorizontally:
+MoveHorizontally:
   lda XSpeed                  ;get currently saved value (horizontal
   asl                         ;speed, secondary counter, whatever)
   asl                         ;and move low nybble to high

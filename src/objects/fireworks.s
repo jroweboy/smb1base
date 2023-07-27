@@ -47,7 +47,7 @@ StarFlagXPosAdder:
   .byte $00, $08, $00, $08
 
 StarFlagTileData:
-  .byte $e8, $e9, $f8, $f9
+  .byte STAR_FLAG_TOP_LEFT, STAR_FLAG_TOP_RIGHT, STAR_FLAG_BOT_LEFT, STAR_FLAG_BOT_RIGHT
   ; .byte $54, $55, $56, $57
 
 RunStarFlagObj:

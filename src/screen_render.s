@@ -649,7 +649,7 @@ RisingEntrance:
   jmp IsDownPipe
 ClearTransition:
   ; reset the color for the palette back to the original
-  lda #$1b
+  lda #$27
   jmp SetPaletteColor
   ; rts
 IsRightPipe:
@@ -686,7 +686,7 @@ SetPaletteColor:
   sta VRAM_Buffer1+4,x
   lda VRAM_Buffer1_Offset
   clc 
-  adc #5
+  adc #4
   sta VRAM_Buffer1_Offset
   rts
 
