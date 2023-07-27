@@ -26,7 +26,7 @@
 .import BubbleCheck, SetupPipeTransitionOverlay
 
 
-.export DrawPlayer_Intermediate
+.export DrawPlayer_Intermediate, PlayerGraphicsTable
 
 ; gamemode.s
 .export GameRoutines, PlayerCtrlRoutine, ScrollScreen
@@ -725,13 +725,13 @@ PlayerOffscreenChk:
   lsr
   sta R0                       ;store here
   ldx #$03                      ;check all four rows of player sprites
-  ; lda Player_SprDataOffset      ;get player's sprite data offset
-  ; clc
-  ; adc #$18                      ;add 24 bytes to start at bottom row
-  ldy #$18
+  lda PlayerOAMOffset      ;get player's sprite data offset
+  clc
+  adc #$18                      ;add 24 bytes to start at bottom row
+  tay
 
 PROfsLoop: lda #$f8                      ;load offscreen Y coordinate just in case
-           lsr $00                       ;shift bit into carry
+           lsr R0                       ;shift bit into carry
            bcc NPROffscr                 ;if bit not set, skip, do not move sprites
            jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
 NPROffscr: tya
@@ -740,32 +740,6 @@ NPROffscr: tya
            tay
            dex                           ;decrement row counter
            bpl PROfsLoop                 ;do this until all sprite rows are checked
-  ; ldx PlayerSize
-  ; lda PlayerSizeToOffset,x      ;get player's sprite data offset
-  ; tay                           ;set as offset here
-  ; lda PlayerOffscreenRowLength,x
-  ; sta R1
-  ; lda PlayerSpritesPerRow,x
-  ; tax
-; PROfsLoop:
-;     lsr R0                       ;shift bit into carry
-;     bcc NPROffscr                 ;if bit not set, skip, do not move sprites
-;     lda PlayerSize
-    ; bne DumpOnlyThree
-; .import DumpFourSpr, DumpThreeSpr
-;       lda #$f8                      ;load offscreen Y coordinate just in case
-;       jsr DumpFourSpr                ;otherwise dump offscreen Y coordinate into sprite data
-;       bne NPROffscr
-; DumpOnlyThree:
-;       lda #$f8
-;       jsr DumpThreeSpr
-; NPROffscr:
-    ; tya
-    ; sec                           ;subtract eight bytes to do
-    ; sbc R1                      ;next row up
-    ; tay
-    ; dex                           ;decrement row counter
-    ; bpl PROfsLoop                 ;do this until all sprite rows are checked
   rts                             ;then we are done!
 ; PlayerSizeToOffset:
 ;   .byte 4*4*3, 4*3*2

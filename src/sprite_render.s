@@ -1137,7 +1137,7 @@ FireA: sta Sprite_Attributes,y  ;store attribute byte and leave
 DrawSmallPlatform:
       ;  ldy Enemy_SprDataOffset,x   ;get OAM data offset
     AllocSpr 6
-       lda #$5b                    ;load tile number for small platforms
+       lda #PLATFORM_GIRDER        ;load tile number for small platforms
        iny                         ;increment offset for tile numbers
        jsr DumpSixSpr              ;dump tile number into all six sprites
        iny                         ;increment offset for attributes

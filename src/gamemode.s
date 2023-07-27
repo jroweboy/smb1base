@@ -63,35 +63,9 @@ ClearVRLoop:
   ror                       ;rotate LSB of page location into carry then onto mirror
   rol Mirror_PPUCTRL       ;this is to set the proper PPU name table
   jsr GetAreaMusic          ;load proper music into queue
-  ; lda #$38                  ;load sprite shuffle amounts to be used later
-  ; sta SprShuffleAmt+2
-  ; lda #$48
-  ; sta SprShuffleAmt+1
-  ; lda #$58
-  ; sta SprShuffleAmt
-;   ldx #$0e                  ;load default OAM offsets into $06e4-$06f2
-; ShufAmtLoop:
-;     lda DefaultSprOffsets,x
-;     sta SprDataOffset,x
-;     dex                       ;do this until they're all set
-;     bpl ShufAmtLoop
-;   ldy #$03                  ;set up sprite #0
-; ISpr0Loop:
-;     lda Sprite0Data,y
-;     sta Sprite_Data,y
-;     dey
-;     bpl ISpr0Loop
   inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
   rts
-
-DefaultSprOffsets:
-      .byte $04, $30, $48, $60, $78, $90, $a8, $c0
-      .byte $d8, $e8, $24, $f8, $fc, $28, $2c
-
-; Sprite0Data:
-;       .byte $18, $ff, $23, $58
-
 
 ;-------------------------------------------------------------------------------------
 .proc OperModeExecutionTree
@@ -117,7 +91,10 @@ DefaultSprOffsets:
 .endproc
 
 InitializeGame:
-.import InitializeMemory, LoadAreaPointer
+.import InitializeMemory, LoadAreaPointer, InitFollower
+  ; setup the original banks for mario and peach
+  BankCHR10 #4
+  BankCHR14 #8
   ldy #<WorldSelectNumber  ;clear all memory as in initialization procedure,
   jsr InitializeMemory  ;but this time, clear only as far as $076f
   
@@ -131,6 +108,7 @@ ClrSndLoop:
   jsr LoadAreaPointer
   ; fallthrough
 InitializeArea:
+  farcall InitFollower
   ldy #<SecondaryMsgCounter    ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
   ldx #FRAME_TIMER_COUNT
@@ -345,8 +323,18 @@ NullJoypad:
   lda #$01                    ;clear joypad bits for player 1
   sta SavedJoypad1Bits
 RunDemo:
+  .import F_Player_Hideflag
+  .import RenderPlayerFollower, FreezeFollower
+  lda #$ff
+  sta F_Player_Hideflag
   jsr GameCoreRoutine         ;run game engine
+far PLAYER
+  lda #$90
   jsr FreezePlayer
+  lda #$70
+  jsr FreezeFollower
+  jsr RenderPlayerFollower
+endfar
   lda GameEngineSubroutine    ;check to see if we're running lose life routine
   cmp #$06
   bne ExitMenu                ;if not, do not do all the resetting below
@@ -394,11 +382,10 @@ WSelectBufferTemplate:
   .byte $04, $20, $73, $01, $00, $00
 
 FreezePlayer:
+  sta Player_X_Position
   lda #0
   sta Player_X_Speed
   sta Player_X_MoveForce
-  lda #$90
-  sta Player_X_Position
   rts
 .endproc
 
@@ -438,8 +425,8 @@ FreezePlayer:
 ;-------------------------------------------------------------------------------------
 
 .proc VictoryMode
-  ; Reserve the sprite slots for mario still
-  lda #32
+  ; Reserve the sprite slots for mario AND FOLLOWER still
+  lda #32 + 32
   sta CurrentOAMOffset
   jsr VictoryModeSubroutines  ;run victory mode subroutines
   lda OperMode_Task           ;get current task of victory mode

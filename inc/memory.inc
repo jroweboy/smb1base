@@ -398,6 +398,8 @@ StackClear = SwitchToMainIRQ
 .global PlayerOAMOffset
 .global CurrentOAMOffset
 .global OriginalOAMOffset
+.global FollowerOAMOffset
+.global PlayerFollowerDrawOrder
 
 .global SpriteShuffleOffset
 .global SpriteShuffleTemp
@@ -526,15 +528,15 @@ StackClear = SwitchToMainIRQ
 .global WorldNumber
 .global AreaNumber
 
-.global OffscreenPlayerInfo
-.global OffScr_NumberofLives
+; .global OffscreenPlayerInfo
+; .global OffScr_NumberofLives
+; .global OffScr_HalfwayPage
+; .global OffScr_LevelNumber
+; .global OffScr_Hidden1UpFlag
+; .global OffScr_CoinTally
+; .global OffScr_WorldNumber
+; .global OffScr_AreaNumber
 
-.global OffScr_HalfwayPage
-.global OffScr_LevelNumber
-.global OffScr_Hidden1UpFlag
-.global OffScr_CoinTally
-.global OffScr_WorldNumber
-.global OffScr_AreaNumber
 .global ScrollFractional
 .global DisableIntermediate
 .global PrimaryHardMode

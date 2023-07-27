@@ -70,13 +70,37 @@ GameCoreRoutine:
     rts
 GameEngine:
   far OBJECT
-    ; reserve OAM slots for the player and pipeoverlay
-    lda #0
-    ldy InPipeTransition
-    beq :+
+    ; If we are going through a pipe, we need to reserve
+    ; 16 sprites (8 for each player overlay)
+
+    ; Alternate each frame whether we draw the player or
+    ; follower first
+    ; lda PlayerFollowerDrawOrder
+    ; eor #32
+    ; sta PlayerFollowerDrawOrder
+
+    ; Check to see if the leader is behind something.
+    ; If they are we want to draw them second
+    lda Player_SprAttrib
+    and #(1 << 5)
+    beq :+ ; not behind the door
       lda #32
 :
+    ; if we are in a pipe transition, reserve enough for the sprite overlay
+    ldy InPipeTransition
+    beq :+
+      clc 
+      adc #64
+:
     sta PlayerOAMOffset
+    eor #32
+    sta FollowerOAMOffset
+
+    ; At the end of this mess, we just need to add 32 to the
+    ; bigger number of the two to get the "first" sprite slot
+    ; for everything else for this frame.
+    lda FollowerOAMOffset
+    ora PlayerOAMOffset
     clc
     adc #32
     sta CurrentOAMOffset
@@ -176,6 +200,17 @@ UpdScrollVar:
 RunParser:
   farcall AreaParserTaskHandler  ;update the name table with more level graphics
 ExitEng:
+far PLAYER
+.import CopyPlayerStateToFollower, RenderPlayerFollower, F_Player_Hideflag
+  jsr CopyPlayerStateToFollower
+  lda OperMode
+  beq :+
+  lda F_Player_Hideflag
+  bmi :+
+    ; If we are in the title screen we'll draw the follower later
+    jsr RenderPlayerFollower
+  :
+endfar
   rts                        ;and after all that, we're finally done!
 
 .proc DrawPipeOverlaySprite
