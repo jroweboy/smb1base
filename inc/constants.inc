@@ -158,7 +158,8 @@ BRICK_BUMP_TILE_1 = $b7
 BRICK_BUMP_TILE_2 = $b8
 BLOCK_USED_TILE = $b9
 
-FIREBALL_TILE = $b5 ; must be consecutive!
+FIREBALL_TILE1 = $b4 ; must be consecutive!
+; fireball tile 2 must be b5
 
 GOAL_FLAG_TRIANGLE = $d8
 GOAL_FLAG_SKULL = $d9

@@ -621,7 +621,7 @@ ExitColorRot:
       sta CurrentDiscoColor,y
       lda VRAM_Buffer1_Offset
       clc
-      adc #6
+      adc #4
       sta VRAM_Buffer1_Offset
       jmp Exit
 

@@ -1121,7 +1121,7 @@ DrawSingleFireball:
        lsr
        pha                      ;save result to stack
        and #$01                 ;mask out all but last bit
-       eor #FIREBALL_TILE       ;set either tile $64 or $65 as fireball tile
+       eor #FIREBALL_TILE1       ;set either tile $64 or $65 as fireball tile
        sta Sprite_Tilenumber,y  ;thus tile changes every four frames
        pla                      ;get from stack
        lsr                      ;divide by four again

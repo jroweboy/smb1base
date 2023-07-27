@@ -319,8 +319,8 @@ ChgAreaMode: inc DisableScreenFlag     ;set flag to disable screen output
              lda #$00
              sta OperMode_Task         ;set secondary mode of operation
              sta Sprite0HitDetectFlag  ;disable sprite 0 check
-            ;  lda #0
-             jmp SetupPipeTransitionOverlay
+             jsr SetupPipeTransitionOverlay
+             lda #0
 ExitCAPipe:  rts                       ;leave
 
 EnterSidePipe:
