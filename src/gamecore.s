@@ -190,6 +190,33 @@ CycleTwo:
 ClrPlrPal:
   farcall ResetPalStar           ;do sub to clear player's palette bits in attributes
 SaveAB:
+
+  ; now check the acid timer to see if mario swimming lessons are over
+  lda SwimmingFlag
+  beq NotSwimming
+    ldy DemoTimer
+    beq DoneSwimming
+    ; check for the last bit and start flashing before it ends
+    cpy #4
+    bcs NotSwimming
+      ; start palette cycling to give them a warning its about to end
+      lda FrameCounter           ;get frame counter
+      cpy #$08                   ;if timer still above certain point,
+      bcs :+               ;branch to cycle player's palette quickly
+        lsr                        ;otherwise, divide by 8 to cycle every eighth frame
+        lsr
+    :
+      lsr                        ;if branched here, divide by 2 to cycle every other frame
+      sta R0
+      farcall CyclePlayerPalettePreload     ;do sub to cycle the palette
+      jmp NotSwimming
+DoneSwimming:
+      ; time's up, swimming lessons over.
+      lda #0 ; stop swimming
+      sta SwimmingFlag
+      jsr GetAreaMusic
+      ; fallthrough
+NotSwimming:
   lda A_B_Buttons            ;save current A and B button
   sta PreviousA_B_Buttons    ;into temp variable to be used on next frame
   lda #$00

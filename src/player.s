@@ -53,7 +53,7 @@
   .word PlayerLoseLife
   .word PlayerEntrance
   .word PlayerCtrlRoutine
-  .word $0000 ; PlayerChangeSize
+  .word PlayerTouchAcid
   .word PlayerInjuryBlink
   .word PlayerDeath
   .word PlayerFireFlower
@@ -800,17 +800,28 @@ ChangeSizeOffsetAdder:
 
 ;-------------------------------------------------------------------------------------
 
-; PlayerChangeSize:
-;   lda TimerControl    ;check master timer control
-;   cmp #$f8            ;for specific moment in time
-;   bne EndChgSize      ;branch if before or after that point
-;   jmp InitChangeSize  ;otherwise run code to get growing/shrinking going
-; EndChgSize:
+PlayerTouchAcid:
+  lda TimerControl    ;check master timer control
+  cmp #$f8            ;for specific moment in time
+  bne EndChgSize      ;branch if before or after that point
+  jmp InitTouchAcid   ;otherwise run code to get growing/shrinking going
+EndChgSize:
 ;   cmp #$c4            ;check again for another specific moment
 ;   bne ExitChgSize     ;and branch to leave if before or after that point
-;   jmp DonePlayerTask  ;otherwise do sub to init timer control and set routine
-; ExitChgSize:
-;   rts ; TODO check this RTS can be removed                 ;and then leave
+ExitChgSize:
+  rts ; TODO check this RTS can be removed                 ;and then leave
+
+InitTouchAcid:
+  lda #1 ; make the player swim
+  sta SwimmingFlag
+
+  lda #$18
+  sta DemoTimer
+  lda #WaterEventMusic
+  sta EventMusicQueue
+  
+  jmp DonePlayerTask  ;otherwise do sub to init timer control and set routine
+  ; rts                       ;leave
 
 ;-------------------------------------------------------------------------------------
 
@@ -824,16 +835,6 @@ PlayerInjuryBlink:
 ExitBlink:
   ; bne ExitBoth           ;do unconditional branch to leave
 
-; InitChangeSize:
-;   ldy PlayerChangeSizeFlag  ;if growing/shrinking flag already set
-;   bne ExitBoth              ;then branch to leave
-;   sty PlayerAnimCtrl        ;otherwise initialize player's animation frame control
-;   inc PlayerChangeSizeFlag  ;set growing/shrinking flag
-;   lda PlayerSize
-;   eor #$01                  ;invert player's size
-;   sta PlayerSize
-ExitBoth:
-  rts                       ;leave
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used in CyclePlayerPalette to store current palette to cycle

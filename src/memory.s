@@ -236,6 +236,8 @@ StatTimerHi                   = StatTimer + 2
 NmiDisable:                     .res  1
 NmiSkipped:                     .res  1
 
+PlayPanic:                      .res  1
+
 ; BhopInitalized:                 .res  1
 
 IrqNewScroll:                   .res  1

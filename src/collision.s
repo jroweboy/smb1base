@@ -127,18 +127,18 @@ BlockBuffer_X_Adder:
 ; Added to the sprite position to get the location to check for tile collision
 ;     head, foot l, r, side 1 2    3,   4
 BlockBuffer_Swimming_X_Adder:
-  .byte $08, $03, $0c, $02, $02, $0d, $0d ; swimming
-BlockBuffer_Big_X_Adder:
   .byte $08, $03, $0c, $02, $02, $0d, $0d ; big
+BlockBuffer_Big_X_Adder:
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; swimming
 BlockBuffer_Small_X_Adder:
-  .byte $08, $03, $0c, $02, $02, $0d, $0d ; small
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; small/crouching
 BlockBuffer_Misc_X_Adder:
   .byte $08, $00, $10, $04, $14, $04, $04 ; misc
 
 BlockBuffer_Y_Adder:
-  .byte $04, $20, $20, $08, $18, $08, $18 ; swimming
-  .byte $02, $20, $20, $08, $18, $08, $18 ; big
-  .byte $12, $20, $20, $18, $18, $18, $18 ; small
+  .byte $04, $20, $20, $08, $18, $08, $18 ; big
+  .byte $02, $20, $20, $08, $18, $08, $18 ; swimming
+  .byte $12, $20, $20, $18, $18, $18, $18 ; small/crouching
   .byte $18, $14, $14, $06, $06, $08, $10 ; misc
 
 BlockBufferColli_Feet:
@@ -174,14 +174,9 @@ BlockBufferCollision:
     and #%11110000              ;mask out low nybble
     sec
     sbc #$20                    ;subtract 32 pixels for the status bar
-    bcc HeadWrapped
     sta R2                     ;store result here
     tay                         ;use as offset for block buffer
     lda ($06),y                 ;check current content of block buffer
-    jmp NoHeadWrap
-HeadWrapped:
-    lda #0
-NoHeadWrap:
     sta R3                     ;and store here
     ldy R4                     ;get old contents of Y again
   pla                         ;pull A from stack
@@ -909,10 +904,10 @@ SetFor1Up:
       rts
 
 UpToSuper:
-       lda #$01         ;set player status to super
-       sta PlayerStatus
-      ;  lda #$09         ;set value to be used by subroutine tree (super)
-      lda #$0c            ;set value to be used by subroutine tree (fiery)
+      lda #$01         ;set player status to super
+      sta PlayerStatus
+      lda #$09         ;set value to be used by subroutine tree (super)
+      ; lda #$0c            ;set value to be used by subroutine tree (fiery)
 
 UpToFiery:
        ldy #$00         ;set value to be used as new player state

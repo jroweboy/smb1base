@@ -1,9 +1,9 @@
 .include "common.inc"
 
+.import StartAudioIRQ, CancelAudioIRQ
+
 .segment "BSS"
 
-.export PlayPanic
-PlayPanic: .res 1
 NextSFXChannel: .res 1
 
 .segment "MUSIC_ENGINE"
@@ -29,26 +29,6 @@ FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 0
 FAMISTUDIO_USE_PHASE_RESET = 0
 
 
-.export CustomSoundInit
-CustomSoundInit:
-
-  BankPRGA #.bank(music_data)
-  ldx #<music_data
-  ldy #>music_data
-  lda #0
-  sta PlayPanic
-  sta NextSFXChannel
-  jsr famistudio_init
-
-  ldx #<sfx_data
-  ldy #>sfx_data
-  jsr famistudio_sfx_init
-
-  ; lda #CLOUD_TITLE_MUSIC
-  ; lda #Silence
-  ; jsr famistudio_music_play
-
-  rts
 
 Castleworld = $00 ; : Castleworld
 Cloud = $01 ; : Cloud
@@ -64,11 +44,12 @@ Victory = $0a ; : Victory
 Waterworld = $0b ; : Waterworld
 SavedPrincess = $0c ; : You saved the princess
 SilenceTrack = -1
+DiscoPanicTrack = -2
 
 AreaMusicLUT:
-  .byte SilenceTrack, Starman, EnterPipe, Cloud, Castleworld, Underworld, Waterworld, Overworld
+  .byte SilenceTrack, Starman, EnterPipe, Cloud, DiscoPanicTrack, Underworld, Waterworld, Overworld
 EventMusicLUT:
-  .byte SilenceTrack, HurryUp, Victory, SilenceTrack, InAnotherCastle, SavedPrincess, GameOver, Death
+  .byte SilenceTrack, HurryUp, Victory, Waterworld, InAnotherCastle, SavedPrincess, GameOver, Death
 
 OneUp =       0
 BigJump =     1
@@ -119,6 +100,25 @@ NoiseSfxTable:
   .byte Pause      
   .byte FireBreath 
   .byte BrickBreak 
+
+.export CustomSoundInit
+CustomSoundInit:
+
+  jsr CancelAudioIRQ
+
+  BankPRGA #.bank(music_data)
+  ldx #<music_data
+  ldy #>music_data
+  lda #0
+  sta NextSFXChannel
+  jsr famistudio_init
+
+  ldx #<sfx_data
+  ldy #>sfx_data
+  jsr famistudio_sfx_init
+
+  rts
+
 
 .export CustomSoundEngine
 CustomSoundEngine:
@@ -172,13 +172,21 @@ SkipAreaProcessing:
 PlayNewSong:
   cmp #SilenceTrack
   beq StopMusic
-    jsr famistudio_music_play
-    jmp SkipMusicProcessing
+    cmp #DiscoPanicTrack
+    beq PlayPanicMusic
+      jsr famistudio_music_play
+      jmp SkipMusicProcessing
 StopMusic:
+  jsr CancelAudioIRQ
   jsr famistudio_music_stop
   jmp SkipAreaProcessing
 PlayPanicMusic:
-
+  lda PlayPanic
+  bne :+
+    jsr famistudio_music_stop
+    jsr StartAudioIRQ
+  :
+  ; fallthrough
 SkipMusicProcessing:
 
   ; Now check for sound effects

@@ -71,7 +71,7 @@ GroundMusic           = %00000001
 
 TimeRunningOutMusic   = %01000000
 EndOfLevelMusic       = %00100000
-AltGameOverMusic      = %00010000
+WaterEventMusic       = %00010000
 EndOfCastleMusic      = %00001000
 VictoryMusic          = %00000100
 GameOverMusic         = %00000010

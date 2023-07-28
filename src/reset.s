@@ -54,20 +54,28 @@
 .endproc
 
 .proc load_test_irq_code
-.import __PLAYBACK_CODE_LOAD__, __PLAYBACK_CODE_RUN__, __PLAYBACK_CODE_SIZE__
-	ldx #5
+.import __PLAYBACK_CODE_RUN__
+  ldx #5
 loop:
-		lda TestIRQ, x
-		sta __PLAYBACK_CODE_RUN__, x
-		dex
-		bpl loop
-	rts
+    lda TestIRQ, x
+    sta __PLAYBACK_CODE_RUN__, x
+    dex
+    bpl loop
+  rts
 TestIRQ:
-.byte $8d, $10, $f0, $e6, tmp_irq_a, $40
+  .byte $8d, $10, $f0, $e6, tmp_irq_a, $40
 .endproc
 
 .export StartAudioIRQ
 .proc StartAudioIRQ
+  jsr CancelAudioIRQ
+  
+  lda #1
+  sta PlayPanic
+  sei
+  jsr load_playback_code       ; copy playback code into RAM
+  cli
+
   ; configure VRC7 IRQ
   lda #%00000111
 	sta IRQCONTROL
@@ -84,8 +92,14 @@ RELOAD_RATE = 162
 .export CancelAudioIRQ
 .proc CancelAudioIRQ
   lda #0
+  sta PlayPanic
   sta IRQCONTROL
   rts
+.endproc
+
+.export StartSwimmingIRQ
+.proc StartSwimmingIRQ
+
 .endproc
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -160,38 +174,6 @@ BankPRGC #.bank(sblk_table)    ; not needed since this is in fixed rom
 	jsr decode_async
 BankPRG8 #.bank(LOWCODE)
 
-; MMC3Init:
-  ; setup jmp instruction for the Titlescreen IRQ
-  ; .import TitleScreenIrq
-  ; lda #$4c
-  ; sta IrqPointerJmp
-  ; lda #<TitleScreenIrq
-  ; sta IrqPointer
-  ; lda #>TitleScreenIrq
-  ; sta IrqPointer+1
-
-  ; lda #7 | PRG_FIXED_8
-  ; sta BankShadow
-
-  ; initialize the CHR banks
-  ; TODO move this to run after the title screen
-  ; ldx #5
-  ; :
-  ;   txa
-  ;   ora PRG_FIXED_8
-  ;   sta BANK_SELECT
-  ;   lda GraphicsBankInitValues,x
-  ;   sta BANK_DATA
-  ;   dex
-  ;   bpl :-
-
-  ; enable PRG RAM without write protection
-  ; lda #%10000000
-  ; sta RAM_PROTECT
-  ; disable scanline counter and IRQ
-  ; lda #1
-  ; sta SwitchToMainIRQ
-
 VRC7Init:
   ; setup the jmp instruction for the FarBank Target
   lda #$4c
@@ -243,11 +225,6 @@ WRAM_ENABLE = (1 << 7)
 BAD_EMULATOR:
     jmp BAD_EMULATOR
 :
-
-  sei
-	jsr load_playback_code       ; copy playback code into RAM
-  jsr CancelAudioIRQ
-  cli
 
 ; set up the banks before starting anything else 
 
@@ -337,7 +314,14 @@ SMC_Import idx_smc_pcm_playback
     pla
     rti
 ContinueNMI:
-  cli
+  lda SwimmingFlag
+  beq :+
+    ; reinit the scanline irq
+  :
+  lda PlayPanic
+  beq :+
+    cli
+  :
 
   ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
   dec NmiDisable

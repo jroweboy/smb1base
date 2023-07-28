@@ -189,10 +189,7 @@ __MEMORY_INC = 1
 .global SlingPull_Rel_XPos
 .global SlingPull_Rel_YPos
 
-.global StatTimer
-.global StatTimerLo
-.global StatTimerMd
-.global StatTimerHi
+.global PlayPanic
 
 .global IrqOldScroll
 .global IrqNewScroll
