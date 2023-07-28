@@ -6,7 +6,7 @@
 .import DrawPlayer_Intermediate
 
 .export ScreenRoutines
-.export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors
+.export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, GetSpecificPlayerColor
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, RenderAttributeTables
 .export WritePPUReg1, HandlePipeEntry, MoveVOffset
@@ -262,16 +262,21 @@ NoBGColor:
   ;fallthrough
 
 GetPlayerColors:
+  ; ldy #$00
+  ; lda CurrentPlayer        ;check which player is on the screen
+  ; beq GetSpecificPlayerColor
+  ;   ldy #$04                 ;load offset for luigi
+  ldy #0
+  lda PlayerStatus
+  cmp #1
+  bne GetSpecificPlayerColor
+    ldy #4
+GetSpecificPlayerColor:
   ldx VRAM_Buffer1_Offset  ;get current buffer offset
-  ldy #$00
-  lda CurrentPlayer        ;check which player is on the screen
-  beq ChkFiery
-  ldy #$04                 ;load offset for luigi
-ChkFiery:
-  lda PlayerStatus         ;check player status
+  ; lda PlayerStatus         ;check player status
   cmp #$02
   bne StartClrGet          ;if fiery, load alternate offset for fiery player
-  ldy #$08
+    ldy #$08
 StartClrGet:
   lda #$03                 ;do four colors
   sta R0

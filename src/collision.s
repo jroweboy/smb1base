@@ -868,50 +868,62 @@ ExHCF: rts                      ;and now let's leave
 ;-------------------------------------------------------------------------------------
 
 HandlePowerUpCollision:
-      jsr EraseEnemyObject    ;erase the power-up object
-      lda #$06
-      jsr SetupFloateyNumber  ;award 1000 points to player by default
-      lda #Sfx_PowerUpGrab
-      sta Square2SoundQueue   ;play the power-up sound
-      lda PowerUpType         ;check power-up type
-      cmp #$02
-      bcc Shroom_Flower_PUp   ;if mushroom or fire flower, branch
-      cmp #$03
-      beq SetFor1Up           ;if 1-up mushroom, branch
-      lda #$23                ;otherwise set star mario invincibility
-      sta StarInvincibleTimer ;timer, and load the star mario music
-      lda #StarPowerMusic     ;into the area music queue, then leave
-      sta AreaMusicQueue
+  jsr EraseEnemyObject    ;erase the power-up object
+  lda #$06
+  jsr SetupFloateyNumber  ;award 1000 points to player by default
+  lda #Sfx_PowerUpGrab
+  sta Square2SoundQueue   ;play the power-up sound
+  lda PowerUpType         ;check power-up type
+  cmp #$02
+  bcc Shroom_Flower_PUp   ;if mushroom or fire flower, branch
+  cmp #$03
+  beq SetFor1Up           ;if 1-up mushroom, branch
+  lda #$23                ;otherwise set star mario invincibility
+  sta StarInvincibleTimer ;timer, and load the star mario music
+  lda #StarPowerMusic     ;into the area music queue, then leave
+  sta AreaMusicQueue
 NearbyRTS:
-      rts
+  rts
 
 Shroom_Flower_PUp:
-      lda PlayerStatus    ;if player status = small, branch
-      beq UpToSuper
-      cmp #$01            ;if player status not super, leave
-      bne NearbyRTS
-      ldx ObjectOffset    ;get enemy offset, not necessary
-      lda #$02            ;set player status to fiery
-      sta PlayerStatus
-      jsr GetPlayerColors ;run sub to change colors of player
-      ldx ObjectOffset    ;get enemy offset again, and again not necessary
-      lda #$0c            ;set value to be used by subroutine tree (fiery)
-      jmp UpToFiery       ;jump to set values accordingly
+  lda PlayerStatus    ;if player status = small, branch
+  beq UpToSuper
+  cmp #$01            ;if player status not super, leave
+  bne NearbyRTS
+  ldx ObjectOffset    ;get enemy offset, not necessary
+  lda #$02            ;set player status to fiery
+  sta PlayerStatus
+  ldx ObjectOffset    ;get enemy offset again, and again not necessary
+  lda #$0c            ;set value to be used by subroutine tree (fiery)
+  jmp UpToFiery       ;jump to set values accordingly
 
 SetFor1Up:
-      lda #$0b                 ;change 1000 points into 1-up instead
-      sta FloateyNum_Control,x ;and then leave
-      rts
+  lda #$0b                 ;change 1000 points into 1-up instead
+  sta FloateyNum_Control,x ;and then leave
+  lda #$09         ;set value to be used by subroutine tree (super)\
+  jmp SetPRout     ;set values to stop certain things in motion
+  ; rts
+
+.import GetSpecificPlayerColor
 
 UpToSuper:
-      lda #$01         ;set player status to super
-      sta PlayerStatus
-      lda #$09         ;set value to be used by subroutine tree (super)
-      ; lda #$0c            ;set value to be used by subroutine tree (fiery)
+  ; ldy #4
+  ; jsr GetSpecificPlayerColor
+  lda #$01         ;set player status to super
+  sta PlayerStatus
+  jsr GetPlayerColors ;run sub to change colors of player  
+  ; restore powerup number
+  ldy #1
+  ; lda #$09         ;set value to be used by subroutine tree (super)
+  ; Just use the fire routine next so that we can use the super routine for the 1up
+  lda #$0c            ;set value to be used by subroutine tree (fiery)
+  jmp SetPRout
 
 UpToFiery:
-       ldy #$00         ;set value to be used as new player state
-       jmp SetPRout     ;set values to stop certain things in motion
+  jsr GetPlayerColors ;run sub to change colors of player  
+  lda #$0c            ;set value to be used by subroutine tree (fiery)
+  ldy #$00         ;set value to be used as new player state
+  jmp SetPRout     ;set values to stop certain things in motion
 
 ;-------------------------------------------------------------------------------------
 

@@ -815,7 +815,7 @@ InitTouchAcid:
   lda #1 ; make the player swim
   sta SwimmingFlag
 
-  lda #$18
+  lda #$21
   sta DemoTimer
   lda #WaterEventMusic
   sta EventMusicQueue
