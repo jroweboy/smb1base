@@ -155,6 +155,10 @@ SetInitNTHigh:
 NotCastle:
   BankCHR1C #5
 BankSet:
+
+  ; Also setup the 
+  
+
   lda PrimaryHardMode      ;check to see if primary hard mode has been activated
   bne SetSecHard           ;if so, activate the secondary no matter where we're at
   lda WorldNumber          ;otherwise check world number

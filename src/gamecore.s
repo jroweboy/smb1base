@@ -150,6 +150,17 @@ GameEngine:
     jsr ColorRotation          ;cycle one of the background colors
   endfar
 
+  ; Check to see if its time to disable the overlay to give extra time for
+  ; the follower to exit the pipe
+  lda PipeExitTimer
+  beq :+
+    dec PipeExitTimer
+    bne :+
+      ; a == 0 means to disable the pipe transition overlay
+      .import SetupPipeTransitionOverlay
+      lda #0
+      jsr SetupPipeTransitionOverlay
+  :
   lda InPipeTransition
   beq :+
     jsr DrawPipeOverlaySprite
@@ -218,7 +229,7 @@ endfar
   lda #$fe
   ; ldx #(0 << 5) | 0 ; debug show the overlay box
   ldx #(1 << 5) | 2 ; put the overlay sprite in the BACKGROUND with palette 1
-.repeat 8, I
+.repeat 8 * 2, I
   sta Sprite_Tilenumber + (I*4)
   stx Sprite_Attributes + (I*4)
 .endrepeat
@@ -232,13 +243,13 @@ endfar
   sec
   sbc ScreenLeft_X_Pos
 SetX:
-.repeat 4, I
+.repeat 4 * 2, I
   sta Sprite_X_Position + (I*4)
 .endrepeat
   clc
   adc #8
-.repeat 4, I
-  sta Sprite_X_Position + 16 + (I*4)
+.repeat 4 * 2, I
+  sta Sprite_X_Position + (4 * 4 * 2) + (I*4)
 .endrepeat
   ; and finally pick the lower of the two positions, the player or the pipe
   lda Player_Y_HighPos
@@ -246,17 +257,22 @@ SetX:
   bne SetToBottomOfScreen
 
   lda PipeYPosition
+  clc
+  adc #32
   cmp Player_Y_Position
-  bcs DumpYPosition
+  bcs UsePipePosition
     lda Player_Y_Position
     jmp DumpYPosition
 SetToBottomOfScreen:
     lda #255-32
+    .byte $2c
+UsePipePosition:
+  lda PipeYPosition
 DumpYPosition:
-.repeat 4, I
+.repeat 4 * 2, I
     sta Sprite_Y_Position + (I * 4)
-    sta Sprite_Y_Position + (I * 4) + 16
-.if I <> 3
+    sta Sprite_Y_Position + (I * 4) + (4 * 4 * 2)
+.if I <> (4 * 2 - 1)
     clc
     adc #8
 .endif

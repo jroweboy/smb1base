@@ -5,6 +5,7 @@
 
 .segment "WRAM"
 
+.export FRAME_LAG_COUNT
 FRAME_LAG_COUNT = 16
 
 ; Cloned Data

@@ -79,14 +79,19 @@ GameTimerFireworks:
 SetFWC:
   sta FireworksCounter   ;set fireworks counter here
   sty Enemy_State,x      ;set whatever state we have in star flag object
-
+  ; jroweboy set a little delay for the award timer so it doesn't end too soon
+  lda #6
+  sta EnemyIntervalTimer,x
+  
 IncrementSFTask1:
-AwardGameTimerPoints: ; jroweboy skip adding gametimer points
   inc StarFlagTaskControl  ;increment star flag object task number
-
 StarFlagExit:
   rts                      ;leave
 
+AwardGameTimerPoints: ; jroweboy skip adding gametimer points
+  lda EnemyIntervalTimer, x
+  beq IncrementSFTask1
+  rts
 ; AwardGameTimerPoints:
 ;   lda GameTimerDisplay   ;check all game timer digits for any intervals left
 ;   ora GameTimerDisplay+1

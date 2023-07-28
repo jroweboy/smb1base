@@ -544,6 +544,7 @@ SecondaryMsgCounter:            .res  1
 InPipeTransition:               .res  1
 PipeXPosition:                  .res  1
 PipeYPosition:                  .res  1
+PipeExitTimer:                  .res  1
 
 DestinationPageLoc:             .res  1
 FirebarSpinDirection          = DestinationPageLoc

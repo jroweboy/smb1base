@@ -499,6 +499,7 @@ StackClear = SwitchToMainIRQ
 .global InPipeTransition
 .global PipeXPosition
 .global PipeYPosition
+.global PipeExitTimer
 
 .global FirebarSpinDirection
 .global DestinationPageLoc

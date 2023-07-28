@@ -411,7 +411,7 @@ EnemyGraphicsTable:
   .byte $d8, $d8, $e6, $e6, $f6, $f6  ;        frame 2
   .byte $ff, $ff, $e8, $e9, $f8, $f9  ;cheep-cheep frame 1
   .byte $ff, $ff, $e7, $e9, $f7, $f9  ;            frame 2
-  .byte $ff, $ff, $c0, $c1, $d0, $d1  ;goomba
+  .byte $ff, $ff, $83, $84, $93, $94  ;goomba
   .byte $ff, $ff, $81, $81, $91, $91  ;koopa shell frame 1 (up
   .byte $ff, $ff, $82, $82, $91, $91  ;            frame 2
   .byte $ff, $ff, $91, $91, $81, $81  ;koopa shell frame 1 (ri
@@ -436,7 +436,7 @@ EnemyGraphicsTable:
   .byte $d0, $d1, $e0, $e1, $f0, $f1  ;bowser rear frame 1
   .byte $c2, $c3, $f2, $e3, $e2, $ff  ;       front frame 2
   .byte $d0, $d1, $e0, $e1, $c0, $c1  ;       rear frame 2
-  .byte $ff, $ff, $83, $84, $93, $94  ;bullet bill
+  .byte $ff, $ff, $c0, $c1, $d0, $d1  ;bullet bill
   .byte $e3, $e3, $c3, $c3, $e3, $e3  ;jumpspring frame 1
   .byte $e2, $e2, $e2, $e2, $ff, $ff  ;           frame 2
   .byte $e1, $e1, $ff, $ff, $ff, $ff  ;           frame 3

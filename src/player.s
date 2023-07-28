@@ -95,8 +95,10 @@ EntrMode2:
     lda Player_Y_Position     ;check to see if player is at a specific coordinate
     cmp #$91                  ;if player risen to a certain point (this requires pipes
     bcs @ContinuePipeEntry    ;to be at specific height to look/function right) branch
-      lda #0
-      jsr SetupPipeTransitionOverlay
+    .import FRAME_LAG_COUNT
+      lda #FRAME_LAG_COUNT
+      sta PipeExitTimer
+      ; jsr SetupPipeTransitionOverlay
       jmp PlayerRdy
 @ContinuePipeEntry:
     rts                       ;to the last part, otherwise leave
@@ -320,7 +322,7 @@ ChgAreaMode: inc DisableScreenFlag     ;set flag to disable screen output
              sta OperMode_Task         ;set secondary mode of operation
              sta Sprite0HitDetectFlag  ;disable sprite 0 check
              jsr SetupPipeTransitionOverlay
-             lda #0
+             lda #0 ; make sure we have the value 0 set since its used right after
 ExitCAPipe:  rts                       ;leave
 
 EnterSidePipe:
@@ -618,6 +620,7 @@ PlayerAnimFireball = * - BigPlayerTable
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $2C, $2D ;         frame 3
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $58, $59 ;climbing frame 1
 .byte $FF, $FF, $FF, $FF, $41, $2F, $5A, $5B ;         frame 2
+.export PlayerAnimKilled
 PlayerAnimKilled = * - BigPlayerTable
 .byte $0E, $0F, $1E, $1F, $2E, $2F, $3E, $3F ;killed
 
@@ -749,7 +752,7 @@ NPROffscr: tya
 ;   .byte 4, 3
 PlayerGfxTblOffsets:
   .byte $20, $28, $c8, $18, $00, $40, $50, $58
-  .byte $80, $88, $b8, $78, $60, $a0, $b0, $b8
+  .byte $80, $88, $b8, $78, $60, $a0, PlayerKilledGraphicsOffset, $b8
 ; SizeGraphicsOffsets:
 ;   .byte $00, BigMarioGraphics - SmallMarioGraphics, BigMarioGraphics - SmallMarioGraphics
 
@@ -933,11 +936,11 @@ RdyNextA:
   lda LevelNumber
   cmp #$03                  ;check to see if we have yet reached level -4
   bne NextArea              ;and skip this last part here if not
-  ldy WorldNumber           ;get world number as offset
-  lda CoinTallyFor1Ups      ;check third area coin tally for bonus 1-ups
-  cmp Hidden1UpCoinAmts,y   ;against minimum value, if player has not collected
-  bcc NextArea              ;at least this number of coins, leave flag clear
-  inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
+    ldy WorldNumber           ;get world number as offset
+    lda CoinTallyFor1Ups      ;check third area coin tally for bonus 1-ups
+    cmp Hidden1UpCoinAmts,y   ;against minimum value, if player has not collected
+    bcc NextArea              ;at least this number of coins, leave flag clear
+      inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
 NextArea:
   inc AreaNumber            ;increment area number used for address loader
   jsr LoadAreaPointer       ;get new level pointer
@@ -2009,6 +2012,13 @@ ProcessPlayerAction:
   ldy #$06              ;load offset for crouching
   lda CrouchingFlag     ;get crouching flag
   bne NonAnimatedActs   ;if set, branch to get offset for graphics table
+  lda GameEngineSubroutine
+  cmp #$0a ; player injured routine
+  bne :+
+    ; Use the death sprite when taking damage
+    lda #PlayerKilledGraphicsOffset
+    rts
+  :
   ldy #$00              ;otherwise load offset for jumping
   jmp NonAnimatedActs   ;go to get offset to graphics table
 
