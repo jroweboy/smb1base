@@ -81,17 +81,88 @@ NextVSp: iny                        ;move offset to next OAM data
          ldy R0                    ;return offset set earlier
          rts
 
-SixSpriteStacker:
-  ldx #$06           ;do six sprites
-StkLp: sta Sprite_Data,y ;store X or Y coordinate into OAM data
+FourSpriteStacker:
+  sta R1
+  sty R3
+
+  ; Change the start index for the shuffle each time
+  lda PlatformLastOAMOrder
+  clc
+  adc #3
+  cmp #4
+  bcc @SkipSubtract
+    ; implicit carry set
+    sbc #4
+@SkipSubtract:
+  sta PlatformLastOAMOrder
+
+  ldx #4           ;do six sprites
+StkLp:
+    ; keep platforms from disappearing with too many on screen
+    lda PlatformLastOAMOrder
+    clc
+    adc #3
+    cmp #4
+    bcc @SkipSubtract1
+      ; implicit carry set
+      sbc #4
+  @SkipSubtract1:
+    sta PlatformLastOAMOrder
+    asl
+    asl
+    clc
+    adc R3
+    tay
+    lda R1
+    sta Sprite_Data,y ;store X or Y coordinate into OAM data
     clc
     adc #$08           ;add eight pixels
-    iny
-    iny                ;move offset four bytes forward
-    iny
-    iny
+    sta R1
     dex                ;do another sprite
     bne StkLp          ;do this until all sprites are done
+  ldy R2            ;get saved OAM data offset and leave
+  rts
+
+
+SixSpriteStacker:
+  sta R1
+  sty R3
+
+  ; Change the start index for the shuffle each time
+  lda PlatformLastOAMOrder
+  clc
+  adc #1
+  cmp #6
+  bcc @SkipSubtract
+    ; implicit carry set
+    sbc #6
+@SkipSubtract:
+  sta PlatformLastOAMOrder
+
+  ldx #$06           ;do six sprites
+@loop:
+    ; keep platforms from disappearing with too many on screen
+    lda PlatformLastOAMOrder
+    clc
+    adc #5
+    cmp #6
+    bcc @SkipSubtract1
+      ; implicit carry set
+      sbc #6
+  @SkipSubtract1:
+    sta PlatformLastOAMOrder
+    asl
+    asl
+    clc
+    adc R3
+    tay
+    lda R1
+    sta Sprite_Data,y ;store X or Y coordinate into OAM data
+    clc
+    adc #$08           ;add eight pixels
+    sta R1
+    dex                ;do another sprite
+    bne @loop          ;do this until all sprites are done
   ldy R2            ;get saved OAM data offset and leave
   rts
 
@@ -169,87 +240,136 @@ NoHOffscr:  rts ; TODO check this RTS can be removed                         ;le
 ;-------------------------------------------------------------------------------------
 
 DrawLargePlatform:
-      ; ldy Enemy_SprDataOffset,x   ;get OAM data offset
-  AllocSpr 6
+  ldy AreaType
+  cpy #$03                    ;check for castle-type level
+  beq ShrinkPlatform
+    ldy SecondaryHardMode       ;check for secondary hard mode flag set
+    bne ShrinkPlatform          ;branch if its hardmode
+      AllocSpr 6
+      sty R2                     ;store here
+      iny                         ;add 3 to it for offset
+      iny                         ;to X coordinate
+      iny
+      lda Enemy_Rel_XPos          ;get horizontal relative coordinate
+      jsr SixSpriteStacker        ;store X coordinates using A as base, stack horizontally
+      ldy R2
+      ldx ObjectOffset
+      lda Enemy_Y_Position,x      ;get vertical coordinate
+      jsr DumpSixSpr             ;dump into first four sprites as Y coordinate
+      jmp ProcessTiles
+ShrinkPlatform:
+  AllocSpr 4
   sty R2                     ;store here
   iny                         ;add 3 to it for offset
   iny                         ;to X coordinate
   iny
   lda Enemy_Rel_XPos          ;get horizontal relative coordinate
-  jsr SixSpriteStacker        ;store X coordinates using A as base, stack horizontally
+  jsr FourSpriteStacker        ;store X coordinates using A as base, stack horizontally
   ldx ObjectOffset
+  ldy R2
   lda Enemy_Y_Position,x      ;get vertical coordinate
   jsr DumpFourSpr             ;dump into first four sprites as Y coordinate
-  ldy AreaType
-  cpy #$03                    ;check for castle-type level
-  beq ShrinkPlatform
-  ldy SecondaryHardMode       ;check for secondary hard mode flag set
-  beq SetLast2Platform        ;branch if not set elsewhere
 
-ShrinkPlatform:
-      lda #$f8                    ;load offscreen coordinate if flag set or castle-type level
-
-SetLast2Platform:
-      ; ldy Enemy_SprDataOffset,x   ;get OAM data offset
-      ldy R2
-      sta Sprite_Y_Position+16,y  ;store vertical coordinate or offscreen
-      sta Sprite_Y_Position+20,y  ;coordinate into last two sprites as Y coordinate
-      lda #PLATFORM_GIRDER ; $bc                    ;load default tile for platform (girder)
-      ldx CloudTypeOverride
-      beq SetPlatformTilenum      ;if cloud level override flag not set, use
-      lda #PLATFORM_CLOUD ; $fe                    ;otherwise load other tile for platform (puff)
+ProcessTiles:
+  lda #PLATFORM_GIRDER ; $bc                    ;load default tile for platform (girder)
+  ldx CloudTypeOverride
+  beq SetPlatformTilenum      ;if cloud level override flag not set, use
+  lda #PLATFORM_CLOUD ; $fe                    ;otherwise load other tile for platform (puff)
 
 SetPlatformTilenum:
-        ldx ObjectOffset            ;get enemy object buffer offset
-        iny                         ;increment Y for tile offset
-        jsr DumpSixSpr              ;dump tile number into all six sprites
-        lda #$02                    ;set palette controls
-        iny                         ;increment Y for sprite attributes
-        jsr DumpSixSpr              ;dump attributes into all six sprites
-        inx                         ;increment X for enemy objects
-        jsr GetXOffscreenBits       ;get offscreen bits again
-        dex
+  ldx ObjectOffset            ;get enemy object buffer offset
+  iny                         ;increment Y for tile offset
+  jsr DumpSixSpr              ;dump tile number into all six sprites
+  lda #$02                    ;set palette controls
+  iny                         ;increment Y for sprite attributes
+  jsr DumpSixSpr              ;dump attributes into all six sprites
+  inx                         ;increment X for enemy objects
+  jsr GetXOffscreenBits       ;get offscreen bits again
+  sta R1                      ;check d7 of offscreen bits
+  ; can't use processor flags because of loop earlier, so we need to cmp #ff
+  ; which indicates that all rows are offscreen
+  cmp #$ff
+  bne :+
+    ldy R2
+    jmp MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
+: 
+  ; at least one sprite is on screen
+  ldx #0
+  ; New offscreen check using the same shuffle constant from earlier
+  ; lda PlatformLastOAMOrder
+  @loop:
+    lda PlatformLastOAMOrder
+    clc
+    adc #5
+    cmp #6
+    bcc @SkipSubtract1
+      ; implicit carry set
+      sbc #6
+  @SkipSubtract1:
+    sta PlatformLastOAMOrder
+
+    lda R1
+    and InversePowerOfTwo,x
+    beq :+
+      ; sprite is offscreen so move it offscreen
+      lda PlatformLastOAMOrder
+      asl
+      asl
+      clc
+      adc R2
+      tay
+      lda #$f8
+      sta Sprite_Y_Position,y
+    :
+    
+    inx
+    cpx #6
+    bne @loop
+
+
+  ldx ObjectOffset
+  rts
       ;   ldy Enemy_SprDataOffset,x   ;get OAM data offset
-      ldy R2
-        asl                         ;rotate d7 into carry, save remaining
-        pha                         ;bits to the stack
-        bcc SChk2
-        lda #$f8                    ;if d7 was set, move first sprite offscreen
-        sta Sprite_Y_Position,y
-SChk2:  pla                         ;get bits from stack
-        asl                         ;rotate d6 into carry
-        pha                         ;save to stack
-        bcc SChk3
-        lda #$f8                    ;if d6 was set, move second sprite offscreen
-        sta Sprite_Y_Position+4,y
-SChk3:  pla                         ;get bits from stack
-        asl                         ;rotate d5 into carry
-        pha                         ;save to stack
-        bcc SChk4
-        lda #$f8                    ;if d5 was set, move third sprite offscreen
-        sta Sprite_Y_Position+8,y
-SChk4:  pla                         ;get bits from stack
-        asl                         ;rotate d4 into carry
-        pha                         ;save to stack
-        bcc SChk5
-        lda #$f8                    ;if d4 was set, move fourth sprite offscreen
-        sta Sprite_Y_Position+12,y
-SChk5:  pla                         ;get bits from stack
-        asl                         ;rotate d3 into carry
-        pha                         ;save to stack
-        bcc SChk6
-        lda #$f8                    ;if d3 was set, move fifth sprite offscreen
-        sta Sprite_Y_Position+16,y
-SChk6:  pla                         ;get bits from stack
-        asl                         ;rotate d2 into carry
-        bcc SLChk                   ;save to stack
-        lda #$f8
-        sta Sprite_Y_Position+20,y  ;if d2 was set, move sixth sprite offscreen
-SLChk:  lda Enemy_OffscreenBits     ;check d7 of offscreen bits
-        asl                         ;and if d7 is not set, skip sub
-        bcc ExDLPl
-        jmp MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
-ExDLPl: rts ; TODO check this RTS can be removed
+;       ldy R2
+;         asl                         ;rotate d7 into carry, save remaining
+;         pha                         ;bits to the stack
+;         bcc SChk2
+;         lda #$f8                    ;if d7 was set, move first sprite offscreen
+;         sta Sprite_Y_Position,y
+; SChk2:  pla                         ;get bits from stack
+;         asl                         ;rotate d6 into carry
+;         pha                         ;save to stack
+;         bcc SChk3
+;         lda #$f8                    ;if d6 was set, move second sprite offscreen
+;         sta Sprite_Y_Position+4,y
+; SChk3:  pla                         ;get bits from stack
+;         asl                         ;rotate d5 into carry
+;         pha                         ;save to stack
+;         bcc SChk4
+;         lda #$f8                    ;if d5 was set, move third sprite offscreen
+;         sta Sprite_Y_Position+8,y
+; SChk4:  pla                         ;get bits from stack
+;         asl                         ;rotate d4 into carry
+;         pha                         ;save to stack
+;         bcc SChk5
+;         lda #$f8                    ;if d4 was set, move fourth sprite offscreen
+;         sta Sprite_Y_Position+12,y
+; SChk5:  pla                         ;get bits from stack
+;         asl                         ;rotate d3 into carry
+;         pha                         ;save to stack
+;         bcc SChk6
+;         lda #$f8                    ;if d3 was set, move fifth sprite offscreen
+;         sta Sprite_Y_Position+16,y
+; SChk6:  pla                         ;get bits from stack
+;         asl                         ;rotate d2 into carry
+;         bcc SLChk                   ;save to stack
+;         lda #$f8
+;         sta Sprite_Y_Position+20,y  ;if d2 was set, move sixth sprite offscreen
+; SLChk:
+InversePowerOfTwo:
+.repeat 8, I
+  .byte (1 << (7-I))
+.endrepeat
 
 ;-------------------------------------------------------------------------------------
 
@@ -415,7 +535,7 @@ EnemyGraphicsTable:
   .byte $ff, $ff, $81, $81, $91, $91  ;koopa shell frame 1 (up
   .byte $ff, $ff, $82, $82, $91, $91  ;            frame 2
   .byte $ff, $ff, $91, $91, $81, $81  ;koopa shell frame 1 (ri
-  .byte $ff, $ff, $91, $91, $b4, $b4  ;            frame 2
+  .byte $ff, $ff, $91, $91, $82, $82  ;            frame 2
   .byte $ff, $ff, $90, $90, $80, $80  ;buzzy beetle shell fram
   .byte $ff, $ff, $90, $90, $80, $80  ;                   fram
   .byte $ff, $ff, $80, $80, $90, $90  ;buzzy beetle shell fram

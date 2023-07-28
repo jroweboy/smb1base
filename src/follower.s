@@ -46,8 +46,15 @@ F_Frame: .res 1
   rts
 .endproc
 
-.export FreezeFollower
-.proc FreezeFollower
+.export FreezeFollowerX
+.proc FreezeFollowerX
+  ldx F_Frame
+  sta F_Player_X_Position,x
+  rts
+.endproc
+
+.export FreezeFollowerY
+.proc FreezeFollowerY
   ldx F_Frame
   sta F_Player_X_Position,x
   rts

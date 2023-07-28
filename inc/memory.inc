@@ -223,7 +223,7 @@ __MEMORY_INC = 1
 .global Square1SoundQueue
 
 
-StackClear = SwitchToMainIRQ
+StackClear = DigitModifier
 
 .global IrqPointerJmp
 .global IrqPointer
@@ -397,27 +397,13 @@ StackClear = SwitchToMainIRQ
 .global OriginalOAMOffset
 .global FollowerOAMOffset
 .global PlayerFollowerDrawOrder
+.global PlatformLastOAMOrder
 
 .global SpriteShuffleOffset
 .global SpriteShuffleTemp
 
 .global LivesScreenTimer
 .global SelectedSprite
-; .global SprShuffleAmtOffset
-; .global SprShuffleAmt
-
-; .global SprDataOffset
-; .global Player_SprDataOffset
-
-; .global Enemy_SprDataOffset
-
-; .global Alt_SprDataOffset
-; .global Block_SprDataOffset
-
-; .global Bubble_SprDataOffset
-; .global FBall_SprDataOffset
-
-; .global Misc_SprDataOffset
 
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute

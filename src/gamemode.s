@@ -328,15 +328,15 @@ NullJoypad:
   sta SavedJoypad1Bits
 RunDemo:
   .import F_Player_Hideflag
-  .import RenderPlayerFollower, FreezeFollower
+  .import RenderPlayerFollower, FreezeFollowerX
   lda #$ff
   sta F_Player_Hideflag
   jsr GameCoreRoutine         ;run game engine
 far PLAYER
-  lda #$90
+  lda #$88
   jsr FreezePlayer
   lda #$70
-  jsr FreezeFollower
+  jsr FreezeFollowerX
   jsr RenderPlayerFollower
 endfar
   lda GameEngineSubroutine    ;check to see if we're running lose life routine

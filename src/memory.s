@@ -223,39 +223,18 @@ ShellChainCounter:              .res 7
 FloateyNum_Timer:               .res 8
 DigitModifier:                  .res 6
 
-HoldingSlingshot:                   .res  1
 
-SlingPull_Rel_XPos:             .res  2
-SlingPull_Rel_YPos:             .res  2
-
-StatTimer:                      .res  3
-StatTimerLo                   = StatTimer
-StatTimerMd                   = StatTimer + 1
-StatTimerHi                   = StatTimer + 2
+; DON'T CLEAR PAST HERE
 
 NmiDisable:                     .res  1
 NmiSkipped:                     .res  1
-
 PlayPanic:                      .res  1
-
-; BhopInitalized:                 .res  1
-
 IrqNewScroll:                   .res  1
 IrqOldScroll:                   .res  1
 IrqPPUCTRL:                     .res  1
 IrqNextScanline:                .res  1
-; X_Magnitude:                    .res  1
-; Abs_X_Magnitude:                .res  1
-; Y_Magnitude:                    .res  1
-; Abs_Y_Magnitude:                .res  1
 CurrentA:                       .res  1
 NextBank:                       .res  1
-; PlayerAngle:                    .res  1
-; GroundBounceChain:              .res  1
-; BounceForce:                    .res  1
-; AngularMomentum:                .res  1
-; AngularMomentumTimer:           .res  1
-; InitialFireballYSpeed:          .res  2
 SwitchToMainIRQ:                .res  1
 IrqPointerJmp:                  .res  3
 IrqPointer                    = IrqPointerJmp + 1
@@ -441,6 +420,7 @@ FollowerOAMOffset:              .res  1
 PlayerFollowerDrawOrder:				.res  1
 SpriteShuffleOffset:            .res  1
 SpriteShuffleTemp:              .res  1
+PlatformLastOAMOrder:           .res  1
 
 LivesScreenTimer:               .res  1
 SelectedSprite:                 .res  1
