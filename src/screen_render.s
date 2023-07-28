@@ -699,7 +699,7 @@ SetPaletteColor:
 HandlePipeEntry:
   lda Up_Down_Buttons       ;check saved controller bits from earlier
   and #%00000100            ;for pressing down
-  beq ExPipeE               ;if not pressing down, branch to leave
+  jeq ExPipeE               ;if not pressing down, branch to leave
   lda R0
   cmp #$11                  ;check right foot metatile for warp pipe right metatile
   bne ExPipeE               ;branch to leave if not found
@@ -741,9 +741,12 @@ GetWNum:
   ldy WarpZoneNumbers,x     ;get warp zone numbers
   dey                       ;decrement for use as world number
   sty WorldNumber           ;store as world number and offset
+  ; TODO stop being bad
+  far LEVEL
   ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
   lda AreaAddrOffsets,x     ;get area offset based on world offset
   sta AreaPointer           ;store area offset here to be used to change areas
+  endfar
   lda #Silence
   sta EventMusicQueue       ;silence music
   lda #$00

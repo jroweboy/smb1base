@@ -112,8 +112,13 @@ InitLakitu:
 SetupLakitu:
       lda #$00                   ;erase counter for lakitu's reappearance
       sta LakituReappearTimer
-      jsr InitHorizFlySwimEnemy  ;set $03 as bounding box, set other attributes
-      jmp TallBBox2              ;set $03 as bounding box again (not necessary) and leave
+      sta Enemy_X_Speed,x
+      rts
+      ; jmp InitCustomLakitu
+      ; jsr InitHorizFlySwimEnemy  ;set $03 as bounding box, set other attributes
+      ; jmp TallBBox2              ;set $03 as bounding box again (not necessary) and leave
+
+; InitCustomLakitu:
 
 KillLakitu:
       jmp EraseEnemyObject
@@ -122,101 +127,112 @@ KillLakitu:
 ;$01-$03 - used to hold pseudorandom difference adjusters
 
 PRDiffAdjustData:
-      .byte $26, $2c, $32, $38
-      .byte $20, $22, $24, $26
-      .byte $13, $14, $15, $16
+  .byte $26, $2c, $32, $38
+  .byte $20, $22, $24, $26
+  .byte $13, $14, $15, $16
 
 LakituAndSpinyHandler:
-          lda FrenzyEnemyTimer    ;if timer here not expired, leave
-          bne ExLSHand
-          cpx #$05                ;if we are on the special use slot, leave
-          bcs ExLSHand
-          lda #$80                ;set timer
-          sta FrenzyEnemyTimer
-          ldy #$04                ;start with the last enemy slot
-ChkLak:   lda Enemy_ID,y          ;check all enemy slots to see
-          cmp #Lakitu             ;if lakitu is on one of them
-          beq CreateSpiny         ;if so, branch out of this loop
-          dey                     ;otherwise check another slot
-          bpl ChkLak              ;loop until all slots are checked
-          inc LakituReappearTimer ;increment reappearance timer
-          lda LakituReappearTimer
-          cmp #$07                ;check to see if we're up to a certain value yet
-          bcc ExLSHand            ;if not, leave
-          ldx #$04                ;start with the last enemy slot again
-ChkNoEn:  lda Enemy_Flag,x        ;check enemy buffer flag for non-active enemy slot
-          beq CreateL             ;branch out of loop if found
-          dex                     ;otherwise check next slot
-          bpl ChkNoEn             ;branch until all slots are checked
-          bmi RetEOfs             ;if no empty slots were found, branch to leave
-CreateL:  lda #$00                ;initialize enemy state
-          sta Enemy_State,x
-          lda #Lakitu             ;create lakitu enemy object
-          sta Enemy_ID,x
-          jsr SetupLakitu         ;do a sub to set up lakitu
-          lda #$20
-          jsr PutAtRightExtent    ;finish setting up lakitu
+  lda FrenzyEnemyTimer    ;if timer here not expired, leave
+  bne ExLSHand
+  cpx #$05                ;if we are on the special use slot, leave
+  bcs ExLSHand
+  lda #$80                ;set timer
+  sta FrenzyEnemyTimer
+  ldy #$04                ;start with the last enemy slot
+ChkLak:
+  lda Enemy_ID,y          ;check all enemy slots to see
+  cmp #Lakitu             ;if lakitu is on one of them
+  beq CreateObject         ;if so, branch out of this loop
+  dey                     ;otherwise check another slot
+  bpl ChkLak              ;loop until all slots are checked
+    inc LakituReappearTimer ;increment reappearance timer
+    lda LakituReappearTimer
+    cmp #$07                ;check to see if we're up to a certain value yet
+    bcc ExLSHand            ;if not, leave
+    ldx #$04                ;start with the last enemy slot again
+ChkNoEn:
+  lda Enemy_Flag,x        ;check enemy buffer flag for non-active enemy slot
+  beq CreateL             ;branch out of loop if found
+  dex                     ;otherwise check next slot
+  bpl ChkNoEn             ;branch until all slots are checked
+  bmi RetEOfs             ;if no empty slots were found, branch to leave
+CreateL:
+  lda #$00                ;initialize enemy state
+  sta Enemy_State,x
+  lda #Lakitu             ;create lakitu enemy object
+  sta Enemy_ID,x
+  jsr SetupLakitu         ;do a sub to set up lakitu
+  lda #$20
+  jsr PutAtRightExtent    ;finish setting up lakitu
 RetEOfs:  ldx ObjectOffset        ;get enemy object buffer offset again and leave
 ExLSHand: rts
 
 ;--------------------------------
 
-CreateSpiny:
-          lda Player_Y_Position      ;if player above a certain point, branch to leave
-          cmp #$2c
-          bcc ExLSHand
-          lda Enemy_State,y          ;if lakitu is not in normal state, branch to leave
-          bne ExLSHand
-          lda Enemy_PageLoc,y        ;store horizontal coordinates (high and low) of lakitu
-          sta Enemy_PageLoc,x        ;into the coordinates of the spiny we're going to create
-          lda Enemy_X_Position,y
-          sta Enemy_X_Position,x
-          lda #$01                   ;put spiny within vertical screen unit
-          sta Enemy_Y_HighPos,x
-          lda Enemy_Y_Position,y     ;put spiny eight pixels above where lakitu is
-          sec
-          sbc #$08
-          sta Enemy_Y_Position,x
-          lda PseudoRandomBitReg,x   ;get 2 LSB of LSFR and save to Y
-          and #%00000011
-          tay
-          ldx #$02
-DifLoop:  lda PRDiffAdjustData,y     ;get three values and save them
-          sta R1,x                  ;to $01-$03
-          iny
-          iny                        ;increment Y four bytes for each value
-          iny
-          iny
-          dex                        ;decrement X for each one
-          bpl DifLoop                ;loop until all three are written
-          ldx ObjectOffset           ;get enemy object buffer offset
-          jsr PlayerLakituDiff       ;move enemy, change direction, get value - difference
-          ldy Player_X_Speed         ;check player's horizontal speed
-          cpy #$08
-          bcs SetSpSpd               ;if moving faster than a certain amount, branch elsewhere
-          tay                        ;otherwise save value in A to Y for now
-          lda PseudoRandomBitReg+1,x
-          and #%00000011             ;get one of the LSFR parts and save the 2 LSB
-          beq UsePosv                ;branch if neither bits are set
-          tya
-          eor #%11111111             ;otherwise get two's compliment of Y
-          tay
-          iny
-UsePosv:  tya                        ;put value from A in Y back to A (they will be lost anyway)
-SetSpSpd: jsr SmallBBox              ;set bounding box control, init attributes, lose contents of A
-          ldy #$02                   ;(putting this call elsewhere will preserve A)
-          sta Enemy_X_Speed,x        ;set horizontal speed to zero because previous contents
-          cmp #$00                   ;of A were lost...branch here will never be taken for
-          bmi SpinyRte               ;the same reason
-          dey
-SpinyRte: sty Enemy_MovingDir,x      ;set moving direction to the right
-          lda #$fd
-          sta Enemy_Y_Speed,x        ;set vertical speed to move upwards
-          lda #$01
-          sta Enemy_Flag,x           ;enable enemy object by setting flag
-          lda #$05
-          sta Enemy_State,x          ;put spiny in egg state and leave
-ChpChpEx: rts
+CreateObject:
+  lda Player_Y_Position      ;if player above a certain point, branch to leave
+  cmp #$2c
+  bcc ExLSHand
+  lda Enemy_State,y          ;if lakitu is not in normal state, branch to leave
+  bne ExLSHand
+  lda Enemy_PageLoc,y        ;store horizontal coordinates (high and low) of lakitu
+  sta Enemy_PageLoc,x        ;into the coordinates of the spiny we're going to create
+  lda Enemy_X_Position,y
+  sta Enemy_X_Position,x
+  lda #$01                   ;put spiny within vertical screen unit
+  sta Enemy_Y_HighPos,x
+  lda Enemy_Y_Position,y     ;put spiny eight pixels above where lakitu is
+  clc
+  adc #8 ; 8 pixels below instead since its too high up now
+  ; sec
+  ; sbc #$08
+  sta Enemy_Y_Position,x
+  lda PseudoRandomBitReg,x   ;get 2 LSB of LSFR and save to Y
+  and #%00000011
+  tay
+  ldx #$02
+DifLoop:
+    lda PRDiffAdjustData,y     ;get three values and save them
+    sta R1,x                  ;to $01-$03
+    iny
+    iny                        ;increment Y four bytes for each value
+    iny
+    iny
+    dex                        ;decrement X for each one
+    bpl DifLoop                ;loop until all three are written
+  ldx ObjectOffset           ;get enemy object buffer offset
+  jsr PlayerLakituDiff       ;move enemy, change direction, get value - difference
+  ldy Player_X_Speed         ;check player's horizontal speed
+  cpy #$08
+  bcs SetSpSpd               ;if moving faster than a certain amount, branch elsewhere
+  tay                        ;otherwise save value in A to Y for now
+  lda PseudoRandomBitReg+1,x
+  and #%00000011             ;get one of the LSFR parts and save the 2 LSB
+  beq UsePosv                ;branch if neither bits are set
+    tya
+    eor #%11111111             ;otherwise get two's compliment of Y
+    tay
+    iny
+UsePosv:
+  tya
+SetSpSpd:
+  sta Enemy_X_Speed,x        ;set horizontal speed to zero because previous contents
+  ldy #$02
+  cmp #0
+  bmi SpinyRte               ;the same reason
+    dey
+SpinyRte:
+  sty Enemy_MovingDir,x      ;set moving direction
+  ; lda #$fd
+  lda #0
+  sta Enemy_Y_Speed,x        ;set vertical speed to move upwards
+  lda #$01
+  sta Enemy_Flag,x           ;enable enemy object by setting flag
+  lda #$05
+  sta Enemy_State,x          ;put spiny in egg state and leave
+  jmp SmallBBox              ;set bounding box control, init attributes
+ChpChpEx:
+  rts
 
 
 ;--------------------------------

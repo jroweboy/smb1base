@@ -944,7 +944,7 @@ RdyNextA:
       inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
 NextArea:
   inc AreaNumber            ;increment area number used for address loader
-  jsr LoadAreaPointer       ;get new level pointer
+  farcall LoadAreaPointer       ;get new level pointer
   inc FetchNewGameTimerFlag ;set flag to load new game timer
   jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0
   sta HalfwayPage           ;reset halfway page to 0 (beginning)

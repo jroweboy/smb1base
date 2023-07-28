@@ -729,6 +729,7 @@ NotEgg: jmp CheckForHammerBro  ;skip a big chunk of this if we found spiny but n
 CheckForLakitu:
         cpx #$90                  ;check value for lakitu's offset loaded
         bne CheckUpsideDownShell  ;branch if not loaded
+        
         lda Local_ed
         and #%00100000            ;check for d5 set in enemy state
         bne NoLAFr                ;branch if set
@@ -739,111 +740,111 @@ CheckForLakitu:
 NoLAFr: jmp CheckDefeatedState    ;skip this next part if we found lakitu but alt frame not needed
 
 CheckUpsideDownShell:
-      lda Local_ef                    ;check for enemy object => $04
-      cmp #$04
-      bcs CheckRightSideUpShell  ;branch if true
-      cpy #$02
-      bcc CheckRightSideUpShell  ;branch if enemy state < $02
-      ldx #$5a                   ;set for upside-down koopa shell by default
-      ldy Local_ef
-      cpy #BuzzyBeetle           ;check for buzzy beetle object
-      bne CheckRightSideUpShell
-      ldx #$7e                   ;set for upside-down buzzy beetle shell if found
-      inc R2                    ;increment vertical position by one pixel
+  lda Local_ef                    ;check for enemy object => $04
+  cmp #$04
+  bcs CheckRightSideUpShell  ;branch if true
+  cpy #$02
+  bcc CheckRightSideUpShell  ;branch if enemy state < $02
+  ldx #$5a                   ;set for upside-down koopa shell by default
+  ldy Local_ef
+  cpy #BuzzyBeetle           ;check for buzzy beetle object
+  bne CheckRightSideUpShell
+  ldx #$7e                   ;set for upside-down buzzy beetle shell if found
+  inc R2                    ;increment vertical position by one pixel
 
 CheckRightSideUpShell:
-      lda Local_ec                ;check for value set here
-      cmp #$04               ;if enemy state < $02, do not change to shell, if
-      bne CheckForHammerBro  ;enemy state => $02 but not = $04, leave shell upside-down
-      ldx #$72               ;set right-side up buzzy beetle shell by default
-      inc R2                ;increment saved vertical position by one pixel
-      ldy Local_ef
-      cpy #BuzzyBeetle       ;check for buzzy beetle object
-      beq CheckForDefdGoomba ;branch if found
-      ldx #$66               ;change to right-side up koopa shell if not found
-      inc R2                ;and increment saved vertical position again
+  lda Local_ec                ;check for value set here
+  cmp #$04               ;if enemy state < $02, do not change to shell, if
+  bne CheckForHammerBro  ;enemy state => $02 but not = $04, leave shell upside-down
+  ldx #$72               ;set right-side up buzzy beetle shell by default
+  inc R2                ;increment saved vertical position by one pixel
+  ldy Local_ef
+  cpy #BuzzyBeetle       ;check for buzzy beetle object
+  beq CheckForDefdGoomba ;branch if found
+  ldx #$66               ;change to right-side up koopa shell if not found
+  inc R2                ;and increment saved vertical position again
 
 CheckForDefdGoomba:
-      cpy #Goomba            ;check for goomba object (necessary if previously
-      bne CheckForHammerBro  ;failed buzzy beetle object test)
-      ldx #$54               ;load for regular goomba
-      lda Local_ed                ;note that this only gets performed if enemy state => $02
-      and #%00100000         ;check saved enemy state for d5 set
-      bne CheckForHammerBro  ;branch if set
-      ldx #$8a               ;load offset for defeated goomba
-      dec R2                ;set different value and decrement saved vertical position
+  cpy #Goomba            ;check for goomba object (necessary if previously
+  bne CheckForHammerBro  ;failed buzzy beetle object test)
+  ldx #$54               ;load for regular goomba
+  lda Local_ed                ;note that this only gets performed if enemy state => $02
+  and #%00100000         ;check saved enemy state for d5 set
+  bne CheckForHammerBro  ;branch if set
+  ldx #$8a               ;load offset for defeated goomba
+  dec R2                ;set different value and decrement saved vertical position
 
 CheckForHammerBro:
-      ldy ObjectOffset
-      lda Local_ef                  ;check for hammer bro object
-      cmp #HammerBro
-      bne CheckForBloober      ;branch if not found
-      lda Local_ed
-      beq CheckToAnimateEnemy  ;branch if not in normal enemy state
-      and #%00001000
-      beq CheckDefeatedState   ;if d3 not set, branch further away
-      ldx #$b4                 ;otherwise load offset for different frame
-      bne CheckToAnimateEnemy  ;unconditional branch
+  ldy ObjectOffset
+  lda Local_ef                  ;check for hammer bro object
+  cmp #HammerBro
+  bne CheckForBloober      ;branch if not found
+    lda Local_ed
+    beq CheckToAnimateEnemy  ;branch if not in normal enemy state
+    and #%00001000
+    beq CheckDefeatedState   ;if d3 not set, branch further away
+    ldx #$b4                 ;otherwise load offset for different frame
+    bne CheckToAnimateEnemy  ;unconditional branch
 
 CheckForBloober:
-      cpx #$48                 ;check for cheep-cheep offset loaded
-      beq CheckToAnimateEnemy  ;branch if found
-      lda EnemyIntervalTimer,y
-      cmp #$05
-      bcs CheckDefeatedState   ;branch if some timer is above a certain point
-      cpx #$3c                 ;check for bloober offset loaded
-      bne CheckToAnimateEnemy  ;branch if not found this time
-      cmp #$01
-      beq CheckDefeatedState   ;branch if timer is set to certain point
-      inc R2                  ;increment saved vertical coordinate three pixels
-      inc R2
-      inc R2
-      jmp CheckAnimationStop   ;and do something else
+  cpx #$48                 ;check for cheep-cheep offset loaded
+  beq CheckToAnimateEnemy  ;branch if found
+  lda EnemyIntervalTimer,y
+  cmp #$05
+  bcs CheckDefeatedState   ;branch if some timer is above a certain point
+  cpx #$3c                 ;check for bloober offset loaded
+  bne CheckToAnimateEnemy  ;branch if not found this time
+  cmp #$01
+  beq CheckDefeatedState   ;branch if timer is set to certain point
+  inc R2                  ;increment saved vertical coordinate three pixels
+  inc R2
+  inc R2
+  jmp CheckAnimationStop   ;and do something else
 
 CheckToAnimateEnemy:
-      lda Local_ef                  ;check for specific enemy objects
-      cmp #Goomba
-      beq CheckDefeatedState   ;branch if goomba
-      cmp #$08
-      beq CheckDefeatedState   ;branch if bullet bill (note both variants use $08 here)
-      cmp #Podoboo
-      beq CheckDefeatedState   ;branch if podoboo
-      cmp #$18                 ;branch if => $18
-      bcs CheckDefeatedState
-      ldy #$00    
-      cmp #$15                 ;check for mushroom retainer/princess object
-      bne CheckForSecondFrame  ;which uses different code here, branch if not found
-      iny                      ;residual instruction
-      lda WorldNumber          ;are we on world 8?
-      cmp #World8
-      bcs CheckDefeatedState   ;if so, leave the offset alone (use princess)
-      ldx #$a2                 ;otherwise, set for mushroom retainer object instead
-      lda #$03                 ;set alternate state here
-      sta Local_ec
-      bne CheckDefeatedState   ;unconditional branch
+  lda Local_ef                  ;check for specific enemy objects
+  cmp #Goomba
+  beq CheckDefeatedState   ;branch if goomba
+  cmp #$08
+  beq CheckDefeatedState   ;branch if bullet bill (note both variants use $08 here)
+  cmp #Podoboo
+  beq CheckDefeatedState   ;branch if podoboo
+  cmp #$18                 ;branch if => $18
+  bcs CheckDefeatedState
+  ldy #$00    
+  cmp #$15                 ;check for mushroom retainer/princess object
+  bne CheckForSecondFrame  ;which uses different code here, branch if not found
+    iny                      ;residual instruction
+    lda WorldNumber          ;are we on world 8?
+    cmp #World8
+    bcs CheckDefeatedState   ;if so, leave the offset alone (use princess)
+    ldx #$a2                 ;otherwise, set for mushroom retainer object instead
+    lda #$03                 ;set alternate state here
+    sta Local_ec
+    bne CheckDefeatedState   ;unconditional branch
 
 CheckForSecondFrame:
-      lda FrameCounter            ;load frame counter
-      and EnemyAnimTimingBMask,y  ;mask it (partly residual, one byte not ever used)
-      bne CheckDefeatedState      ;branch if timing is off
+  lda FrameCounter            ;load frame counter
+  and EnemyAnimTimingBMask,y  ;mask it (partly residual, one byte not ever used)
+  bne CheckDefeatedState      ;branch if timing is off
 
 CheckAnimationStop:
-      lda Local_ed                 ;check saved enemy state
-      and #%10100000          ;for d7 or d5, or check for timers stopped
-      ora TimerControl
-      bne CheckDefeatedState  ;if either condition true, branch
-      txa
-      clc
-      adc #$06                ;add $06 to current enemy offset
-      tax                     ;to animate various enemy objects
+  lda Local_ed                 ;check saved enemy state
+  and #%10100000          ;for d7 or d5, or check for timers stopped
+  ora TimerControl
+  bne CheckDefeatedState  ;if either condition true, branch
+    txa
+    clc
+    adc #$06                ;add $06 to current enemy offset
+    tax                     ;to animate various enemy objects
 
 CheckDefeatedState:
-      lda Local_ed               ;check saved enemy state
-      and #%00100000        ;for d5 set
-      beq DrawEnemyObject   ;branch if not set
-      lda Local_ef
-      cmp #$04              ;check for saved enemy object => $04
-      bcc DrawEnemyObject   ;branch if less
+  lda Local_ed               ;check saved enemy state
+  and #%00100000        ;for d5 set
+  beq DrawEnemyObject   ;branch if not set
+    lda Local_ef
+    cmp #$04              ;check for saved enemy object => $04
+    bcc DrawEnemyObject   ;branch if less
       ldy #$01
       sty VerticalFlipFlag  ;set vertical flip flag
       dey
@@ -879,8 +880,8 @@ CheckForVerticalFlip:
   lda Local_ef
   cmp #HammerBro             ;check saved enemy object for hammer bro
   beq FlipEnemyVertically
-  cmp #Lakitu                ;check saved enemy object for lakitu
-  beq FlipEnemyVertically    ;branch for hammer bro or lakitu
+  ; cmp #Lakitu                ;check saved enemy object for lakitu
+  ; beq FlipEnemyVertically    ;branch for hammer bro or lakitu
   cmp #$15
   bcs FlipEnemyVertically    ;also branch if enemy object => $15
   txa

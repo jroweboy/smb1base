@@ -105,7 +105,7 @@ ClrSndLoop:
   bpl ClrSndLoop
   ; lda #$18              ;set demo timer
   ; sta DemoTimer
-  jsr LoadAreaPointer
+  farcall LoadAreaPointer
   ; fallthrough
 InitializeArea:
   farcall InitFollower
@@ -236,7 +236,7 @@ DoneInitArea:
 
 .export ContinueGame
 .proc ContinueGame
-  jsr LoadAreaPointer       ;update level pointer with
+  farcall LoadAreaPointer       ;update level pointer with
   lda #$00                  ;actual world and area numbers, then
   sta PlayerSize            ;reset player's size, status, and
   inc FetchNewGameTimerFlag ;set game timer flag to reload
@@ -357,7 +357,7 @@ ChkContinue:
   lda ContinueWorld           ;load previously saved world number for secret
   jsr GoContinue              ;continue function when pressing A + start
 StartWorld1:
-  jsr LoadAreaPointer
+  farcall LoadAreaPointer
   inc Hidden1UpFlag           ;set 1-up box flag for both players
   ; inc OffScr_Hidden1UpFlag
   inc FetchNewGameTimerFlag   ;set fetch new game timer flag
@@ -590,7 +590,7 @@ ExitMsgs:
   sta LevelNumber            ;and level number control to start at area 1
   sta OperMode_Task          ;initialize secondary mode of operation
   inc WorldNumber            ;increment world number to move onto the next world
-  jsr LoadAreaPointer        ;get area address offset for the next area
+  farcall LoadAreaPointer        ;get area address offset for the next area
   inc FetchNewGameTimerFlag  ;set flag to load game timer from header
   lda #MODE_GAMEPLAY
   sta OperMode               ;set mode of operation to game mode

@@ -105,6 +105,8 @@ IRQACK      = $f010
 
 .macro far function
 .scope
+.assert .bank(function) <> .bank(*), error, "Attempting `far` to the same bank!"
+.assert (.bank(*) <> .bank(LOWCODE)) .or (.bank(*) <> .bank(FIXED)), error, "Attempting `far` when not in a fixed bank!"
 .ident(.concat("farblock_", .string(function))):
   lda CurrentBank
   pha

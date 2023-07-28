@@ -57,25 +57,6 @@ labelled_segment_def TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE
 .endproc
 
 ;-------------------------------------------------------------------------------------
-LoadAreaPointer:
-  ; jroweboy inlined FindAreaPointer
-  ldy WorldNumber        ;load offset from world variable
-  lda WorldAddrOffsets,y
-  clc                    ;add area number used to find data
-  adc AreaNumber
-  tay
-  lda AreaAddrOffsets,y  ;from there we have our area pointer
-  sta AreaPointer
-GetAreaType:
-  and #%01100000       ;mask out all but d6 and d5
-  asl
-  rol
-  rol
-  rol                  ;make %0xx00000 into %000000xx
-  sta AreaType         ;save 2 MSB as area type
-  rts
-
-;-------------------------------------------------------------------------------------
 ;$00 - used in adding to get proper offset
 
 .proc RelativePlayerPosition
@@ -562,22 +543,6 @@ EraseEnemyObject:
   sta Enemy_SprAttrib,x
   sta EnemyFrameTimer,x
   rts
-
-WorldAddrOffsets:
-      .byte World1Areas-AreaAddrOffsets, World2Areas-AreaAddrOffsets
-      .byte World3Areas-AreaAddrOffsets, World4Areas-AreaAddrOffsets
-      .byte World5Areas-AreaAddrOffsets, World6Areas-AreaAddrOffsets
-      .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
-
-AreaAddrOffsets:
-World1Areas: .byte $25, $29, $c0, $26, $60
-World2Areas: .byte $28, $29, $01, $27, $62
-World3Areas: .byte $24, $35, $20, $63
-World4Areas: .byte $22, $29, $41, $2c, $61
-World5Areas: .byte $2a, $31, $26, $62
-World6Areas: .byte $2e, $23, $2d, $60
-World7Areas: .byte $33, $29, $01, $27, $64
-World8Areas: .byte $30, $32, $21, $65
 
 
 ;-------------------------------------------------------------------------------------
