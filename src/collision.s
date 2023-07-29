@@ -116,8 +116,8 @@ BBChk_E:
   rts
 
 BlockBufferAdderData:
-  .byte (BlockBuffer_Swimming_X_Adder - BlockBuffer_X_Adder)
   .byte (BlockBuffer_Big_X_Adder      - BlockBuffer_X_Adder)
+  .byte (BlockBuffer_Swimming_X_Adder - BlockBuffer_X_Adder)
   .byte (BlockBuffer_Small_X_Adder    - BlockBuffer_X_Adder)
 
 ; misc objects use hardcoded offsets
@@ -126,9 +126,9 @@ MISC_BLOCK_BUFFER_START = $16
 BlockBuffer_X_Adder:
 ; Added to the sprite position to get the location to check for tile collision
 ;     head, foot l, r, side 1 2    3,   4
-BlockBuffer_Swimming_X_Adder:
-  .byte $08, $03, $0c, $02, $02, $0d, $0d ; big
 BlockBuffer_Big_X_Adder:
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; big
+BlockBuffer_Swimming_X_Adder:
   .byte $08, $03, $0c, $02, $02, $0d, $0d ; swimming
 BlockBuffer_Small_X_Adder:
   .byte $08, $03, $0c, $02, $02, $0d, $0d ; small/crouching
@@ -1906,8 +1906,6 @@ NoJSFnd: rts           ;leave
 ;$05 - used to store metatile stored in A at beginning of PlayerHeadCollision
 ;$06-$07 - used as block buffer address indirect
 
-BlockYPosAdderData:
-      .byte $04, $12
 
 PlayerHeadCollision:
            pha                      ;store metatile number to stack
@@ -1958,12 +1956,21 @@ PutMTileB: sta Block_Metatile,x     ;store whatever metatile be appropriate here
            pla                      ;pull original metatile from stack
            sta R5                  ;and save here
            ldy #$00                 ;set default offset
-           lda CrouchingFlag        ;is player crouching?
-           bne SmallBP              ;if so, branch to increment offset
-           lda PlayerSize           ;is player big?
-           beq BigBP                ;if so, branch to use default offset
-SmallBP:   iny                      ;increment for small or big and crouching
-BigBP:     lda Player_Y_Position    ;get player's vertical coordinate
+        ; jroweboy: add a new hitbox check for swimming
+          lda SwimmingFlag
+          bne @IsSwimming
+            iny
+            lda CrouchingFlag        ;is player crouching?
+            bne @IsSmall              ;if so, branch to increment offset
+              lda PlayerSize           ;is player big?
+              beq @Write                ;if so, branch to use default offset
+@IsSmall:       iny                      ;increment for small or big and crouching
+            bne @Write
+@IsSwimming: ; also check for crouch swimming
+            lda CrouchingFlag
+            beq @Write
+              iny ; if crouch swimming use the big player hitbox
+@Write:    lda Player_Y_Position    ;get player's vertical coordinate
            clc
            adc BlockYPosAdderData,y ;add value determined by size
            and #$f0                 ;mask out low nybble to get 16-pixel correspondence
@@ -1978,6 +1985,10 @@ InvOBit:   lda SprDataOffset_Ctrl   ;invert control bit used by block objects
            eor #$01                 ;and floatey numbers
            sta SprDataOffset_Ctrl
            rts                      ;leave!
+
+BlockYPosAdderData:
+;     Swimming, Big, Small
+  .byte $00, $04, $12
 
 ; QuickBrickShatterWhenBig:
 ;   ldx PlayerSize
