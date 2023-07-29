@@ -815,8 +815,9 @@ InitTouchAcid:
   lda #1 ; make the player swim
   sta SwimmingFlag
 
+  jsr GetPlayerColors
   lda #$21
-  sta DemoTimer
+  sta PlayerSwimmingTimer
   lda #WaterEventMusic
   sta EventMusicQueue
   

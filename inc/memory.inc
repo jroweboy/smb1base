@@ -341,6 +341,8 @@ StackClear = DigitModifier
 .global Whirlpool_Length
 .global Cannon_Y_Position
 
+.global Enemy_PowerupType
+
 .global Cannon_Timer
 .global Whirlpool_Flag
 
@@ -376,6 +378,7 @@ StackClear = DigitModifier
 .global Misc_Collision_Flag
 .global EnemyFrenzyBuffer
 .global LakituObjectBuffer
+.global LakituActionBuffer
 .global SecondaryHardMode
 .global EnemyFrenzyQueue
 .global FireballCounter
@@ -571,6 +574,10 @@ FRAME_TIMER_COUNT = AirBubbleTimer - Timers
 .global ScreenTimer
 .global WorldEndTimer
 .global DemoTimer
+.global PlayerSwimmingTimer
+.global LakituActionTimer
+.global LakituPowerupTimer
+.global LakituEnemyTimer
 ALL_TIMER_COUNT = DemoTimer - Timers
 
 .global PseudoRandomBitReg

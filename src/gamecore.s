@@ -194,7 +194,7 @@ SaveAB:
   ; now check the acid timer to see if mario swimming lessons are over
   lda SwimmingFlag
   beq NotSwimming
-    ldy DemoTimer
+    ldy PlayerSwimmingTimer
     beq DoneSwimming
     ; check for the last bit and start flashing before it ends
     cpy #4
@@ -215,6 +215,8 @@ DoneSwimming:
       lda #0 ; stop swimming
       sta SwimmingFlag
       jsr GetAreaMusic
+      .import GetPlayerColors
+      jsr GetPlayerColors
       ; fallthrough
 NotSwimming:
   lda A_B_Buttons            ;save current A and B button

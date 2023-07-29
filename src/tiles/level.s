@@ -1002,16 +1002,11 @@ ExitStrID:
   rts
 
 CheckFrenzyBuffer:
+  ; check first for the custom frenzy-esque disco lakitu
+  lda LakituActionBuffer
+  bne DiscoLakituSpawnItem
   lda EnemyFrenzyBuffer    ;if enemy object stored in frenzy buffer
   bne StrFre               ;then branch ahead to store in enemy object buffer
-  lda LakituObjectBuffer
-  cmp #PowerUpObject
-  bne :+
-    lda #0
-    sta LakituObjectBuffer
-    .import SetupPowerUp
-    jmp SetupPowerUp
-  :
   lda Vine_FlagOffset       ;otherwise check vine flag offset
   cmp #$01
   bne ExitStrID               ;if other value <> 1, leave
@@ -1063,6 +1058,31 @@ Inc2B:
   ldx ObjectOffset         ;reload current offset in enemy buffers
   rts                      ;and leave
 
+
+.proc DiscoLakituSpawnItem
+  ; cmp #PowerUpObject
+  ; bne LoadEnemy
+;     ; enemy object
+;     lda #0
+;     jmp Exit
+    ; lda LakituObjectBuffer
+    ; sta Enemy_PowerupType, x
+    ; lda #PowerUpObject
+    ; sta LakituObjectBuffer
+  
+; LoadEnemy:
+;   .import SetupPowerUp
+;   lda LakituObjectBuffer
+;   sta PowerUpType
+; Exit:
+  ; lda LakituObjectBuffer
+  ; sta Enemy_ID,x           ;store contents of frenzy buffer into enemy identifier value
+  ; lda #$00
+  ; sta Enemy_State,x
+  ; sta LakituActionBuffer
+  ; lda #Spiny
+  farcall CheckpointEnemyID, jmp    ;jump ahead to run jump engine and subroutines
+.endproc
 
 ;--------------------------------
 ;$00 - used to store Y position of group enemies

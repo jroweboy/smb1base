@@ -42,7 +42,7 @@ Misc_State:                     .res  9
 ;--------------------------- 
 
 PlayerFacingDir:                .res  1 ; 1 = right, 2 = left
-PowerUpType:                    .res  1 ; 0 = shroom, 1 = fireflower, 2 = star, 3 = 1up shroom
+; PowerUpType:                    .res  1 ; 0 = shroom, 1 = fireflower, 2 = star, 3 = 1up shroom
 FireballBouncingFlag:           .res  2
 HammerBroJumpTimer:             .res  9
 Player_MovingDir:               .res  1
@@ -386,6 +386,10 @@ BoundingBox_DR_XPos           = BoundingBox_LR_Corner
 BoundingBox_DR_YPos:            .res  1
 EnemyBoundingBoxCoord:          .res  80
 
+;--------------------------- Extra info about powerup
+
+Enemy_PowerupType:              .res  6
+
 .segment "BSS2"
 Block_Buffer_1:                 .res  208
 Block_Buffer_2:                 .res  208
@@ -397,6 +401,7 @@ BrickCoinTimerFlag:             .res  2
 Misc_Collision_Flag:            .res  13
 EnemyFrenzyBuffer:              .res  1
 LakituObjectBuffer:             .res  1
+LakituActionBuffer:             .res  1
 SecondaryHardMode:              .res  1
 EnemyFrenzyQueue:               .res  1
 FireballCounter:                .res  1
@@ -626,7 +631,11 @@ InjuryTimer:                    .res  1
 StarInvincibleTimer:            .res  1
 ScreenTimer:                    .res  1
 WorldEndTimer:                  .res  1
-DemoTimer:                      .res  5
+PlayerSwimmingTimer:            .res  1
+LakituActionTimer:              .res  1
+LakituPowerupTimer:             .res  1
+LakituEnemyTimer:               .res  1
+DemoTimer:                      .res  1
 PseudoRandomBitReg:             .res  9 ; probably actually ~8~ 9 bytes (original 9) not sure...
 
 SoundMemory                   = MusicOffset_Noise

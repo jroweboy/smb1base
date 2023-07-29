@@ -106,14 +106,14 @@ FireBulletBill:
 ;--------------------------------
 
 InitLakitu:
-      lda EnemyFrenzyBuffer      ;check to see if an enemy is already in
-      bne KillLakitu             ;the frenzy buffer, and branch to kill lakitu if so
+  lda EnemyFrenzyBuffer      ;check to see if an enemy is already in
+  bne KillLakitu             ;the frenzy buffer, and branch to kill lakitu if so
 
 SetupLakitu:
-      lda #$00                   ;erase counter for lakitu's reappearance
-      sta LakituReappearTimer
-      sta Enemy_X_Speed,x
-      rts
+  lda #$00                   ;erase counter for lakitu's reappearance
+  sta LakituReappearTimer
+  sta Enemy_X_Speed,x
+  rts
       ; jmp InitCustomLakitu
       ; jsr InitHorizFlySwimEnemy  ;set $03 as bounding box, set other attributes
       ; jmp TallBBox2              ;set $03 as bounding box again (not necessary) and leave
@@ -121,7 +121,7 @@ SetupLakitu:
 ; InitCustomLakitu:
 
 KillLakitu:
-      jmp EraseEnemyObject
+  jmp EraseEnemyObject
 
 ;--------------------------------
 ;$01-$03 - used to hold pseudorandom difference adjusters
@@ -167,8 +167,10 @@ CreateL:
   jsr SetupLakitu         ;do a sub to set up lakitu
   lda #$08
   jsr PutAtRightExtent    ;finish setting up lakitu
-RetEOfs:  ldx ObjectOffset        ;get enemy object buffer offset again and leave
-ExLSHand: rts
+RetEOfs:
+  ldx ObjectOffset        ;get enemy object buffer offset again and leave
+ExLSHand:
+  rts
 
 ;--------------------------------
 .export CreateObject
@@ -178,6 +180,18 @@ CreateObject:
   bcc ExLSHand
   lda Enemy_State,y          ;if lakitu is not in normal state, branch to leave
   bne ExLSHand
+  ; Set the new id for the enemy/powerup from the object buffer
+  lda LakituObjectBuffer
+  sta Enemy_ID,x
+  cmp #PowerUpObject
+  bne :+
+    ; play powerup jingle
+    lda #Sfx_GrowPowerUp
+    sta Square2SoundQueue
+    ; lda Enemy_PowerupType,x
+:
+  lda #0
+  sta LakituObjectBuffer
   lda Enemy_PageLoc,y        ;store horizontal coordinates (high and low) of lakitu
   sta Enemy_PageLoc,x        ;into the coordinates of the spiny we're going to create
   lda Enemy_X_Position,y
@@ -220,20 +234,20 @@ UsePosv:
   tya
 SetSpSpd:
   sta Enemy_X_Speed,x        ;set horizontal speed to zero because previous contents
-  ldy #$02
-  cmp #0
-  bmi SpinyRte               ;the same reason
-    dey
-SpinyRte:
-  sty Enemy_MovingDir,x      ;set moving direction
+;   ldy #$02
+;   cmp #0
+;   bmi SpinyRte               ;the same reason
+;     dey
+; SpinyRte:
+;   sty Enemy_MovingDir,x      ;set moving direction
   ; lda #$fd
-  lda #0
+  lda #1
   sta Enemy_Y_Speed,x        ;set vertical speed to move upwards
   lda #$01
   sta Enemy_Flag,x           ;enable enemy object by setting flag
-  lda #$05
-  sta Enemy_State,x          ;put spiny in egg state and leave
-  jmp SmallBBox              ;set bounding box control, init attributes
+  ; lda #$05
+  ; sta Enemy_State,x          ;put spiny in egg state and leave
+  ; jmp SmallBBox              ;set bounding box control, init attributes
 ChpChpEx:
   rts
 
@@ -442,17 +456,48 @@ ChkLS:
 Fr12S:
   ; don't spawn items in the title screen mode
   lda OperMode
-  beq :+
-    lda FrameCounter
-    and #$40
-    beq :+
+  beq @DoneSpawning
+    lda LakituActionTimer
+    bne @DoneSpawning
+      ; Lakitu is read to act again, so pick a random item to throw and try to throw it
+      lda PseudoRandomBitReg
+      and #1
+      tax
+      ldy #1
+    @CheckLoop:
+        lda LakituPowerupTimer,x
+        bne @StillActive
+          ; This action timer is ready, so drop something
+          lda #LAKITU_ACTION_TIMER
+          sta LakituActionTimer
+          lda LakituCooldownTimer,x
+          sta LakituPowerupTimer,x
+          lda LakituActionType,x
+          sta LakituActionBuffer
+          ; and also grab a random object id to spawn later
+          lda PseudoRandomBitReg+1
+          and #3
+          sta R1
+          txa
+          asl
+          asl
+          ora R1
+          tax
+          lda LakituObjectType,x
+          sta LakituObjectBuffer
+          jmp @DoneSpawning
+
+      @StillActive:
+        dey
+        bpl @CheckLoop
       ; lda #PowerUpObject
       ; sta LakituObjectBuffer
     ; lda #Spiny
     ; sta EnemyFrenzyBuffer      ;set spiny identifier in frenzy buffer
     ; .import SetupPowerUp
     ; jsr SetupPowerUp
-:
+@DoneSpawning:
+  ldx ObjectOffset
   ldy #$02
 LdLDa:
   lda LakituDiffAdj,y        ;load values
@@ -475,6 +520,18 @@ SetLSpd:
 SetLMov:
   sty Enemy_MovingDir,x      ;store moving direction
   jmp MoveEnemyHorizontally  ;move lakitu horizontally
+
+; in framerules
+LAKITU_ACTION_TIMER = $15
+
+LakituActionType:
+  ; spiny is an id used for any enemy
+  .byte PowerUpObject, Spiny
+LakituCooldownTimer:
+  .byte $22, $0f
+LakituObjectType:
+  .byte PowerMushroom, FireFlower, PowerStar, OneupMushroom
+  .byte GreenKoopa, Goomba, RedCheepCheep, HammerBro
 
 PlayerLakituDiff:
            ldy #$00                   ;set Y for default value

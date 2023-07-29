@@ -297,16 +297,17 @@ NoPECol:
   rts
 
 CheckForPUpCollision:
-       ldy Enemy_ID,x
-       cpy #PowerUpObject            ;check for power-up object
-       bne EColl                     ;if not found, branch to next part
-       jmp HandlePowerUpCollision    ;otherwise, unconditional jump backwards
-EColl: lda StarInvincibleTimer       ;if star mario invincibility timer expired,
-       beq HandlePECollisions        ;perform task here, otherwise kill enemy like
-       jmp ShellOrBlockDefeat        ;hit with a shell, or from beneath
+  ldy Enemy_ID,x
+  cpy #PowerUpObject            ;check for power-up object
+  bne EColl                     ;if not found, branch to next part
+    jmp HandlePowerUpCollision    ;otherwise, unconditional jump backwards
+EColl:
+  lda StarInvincibleTimer       ;if star mario invincibility timer expired,
+  beq HandlePECollisions        ;perform task here, otherwise kill enemy like
+    jmp ShellOrBlockDefeat        ;hit with a shell, or from beneath
 
 KickedShellPtsData:
-      .byte $0a, $06, $04
+  .byte $0a, $06, $04
 
 HandlePECollisions:
        lda Enemy_CollisionBits,x    ;check enemy collision bits for d0 set
@@ -873,9 +874,11 @@ HandlePowerUpCollision:
   jsr SetupFloateyNumber  ;award 1000 points to player by default
   lda #Sfx_PowerUpGrab
   sta Square2SoundQueue   ;play the power-up sound
-  lda PowerUpType         ;check power-up type
-  cmp #$02
-  bcc Shroom_Flower_PUp   ;if mushroom or fire flower, branch
+  lda Enemy_PowerupType,x ;check power-up type
+  cmp #0
+  beq ShroomPowerup
+  cmp #1
+  beq FlowerPowerup
   cmp #$03
   beq SetFor1Up           ;if 1-up mushroom, branch
   lda #$23                ;otherwise set star mario invincibility
@@ -885,45 +888,25 @@ HandlePowerUpCollision:
 NearbyRTS:
   rts
 
-Shroom_Flower_PUp:
-  lda PlayerStatus    ;if player status = small, branch
-  beq UpToSuper
-  cmp #$01            ;if player status not super, leave
-  bne NearbyRTS
-  ldx ObjectOffset    ;get enemy offset, not necessary
+ShroomPowerup:
+  lda #$09         ;set value to be used by subroutine tree (super)
+  ldy PlayerStatus
+  jmp SetPRout     ;set values to stop certain things in motion
+
+FlowerPowerup:
   lda #$02            ;set player status to fiery
   sta PlayerStatus
-  ldx ObjectOffset    ;get enemy offset again, and again not necessary
+  jsr GetPlayerColors
   lda #$0c            ;set value to be used by subroutine tree (fiery)
-  jmp UpToFiery       ;jump to set values accordingly
+  ldy #$02         ;set value to be used as new player state
+  jmp SetPRout     ;set values to stop certain things in motion
 
 SetFor1Up:
+  ; lda #$01            ;set player status to super (+1 hp)
+  ; sta PlayerHasFollower
   lda #$0b                 ;change 1000 points into 1-up instead
   sta FloateyNum_Control,x ;and then leave
-  lda #$09         ;set value to be used by subroutine tree (super)\
-  jmp SetPRout     ;set values to stop certain things in motion
-  ; rts
-
-.import GetSpecificPlayerColor
-
-UpToSuper:
-  ; ldy #4
-  ; jsr GetSpecificPlayerColor
-  lda #$01         ;set player status to super
-  sta PlayerStatus
-  jsr GetPlayerColors ;run sub to change colors of player  
-  ; restore powerup number
-  ldy #1
-  ; lda #$09         ;set value to be used by subroutine tree (super)
-  ; Just use the fire routine next so that we can use the super routine for the 1up
-  lda #$0c            ;set value to be used by subroutine tree (fiery)
-  jmp SetPRout
-
-UpToFiery:
-  jsr GetPlayerColors ;run sub to change colors of player  
-  lda #$0c            ;set value to be used by subroutine tree (fiery)
-  ldy #$00         ;set value to be used as new player state
-  jmp SetPRout     ;set values to stop certain things in motion
+  rts
 
 ;-------------------------------------------------------------------------------------
 
