@@ -52,6 +52,8 @@ StarFlagTileData:
 
 RunStarFlagObj:
   lda #$00                 ;initialize enemy frenzy buffer
+  ; force to clear the lakitu buffer on level end so he doesn't mess with fireworks
+  sta LakituActionBuffer
   sta EnemyFrenzyBuffer
   lda StarFlagTaskControl  ;check star flag object task number here
   cmp #$05                 ;if greater than 5, branch to exit
