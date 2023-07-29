@@ -317,9 +317,9 @@ BackgroundColors:
   .byte $0f, GLOBAL_BACKGROUND_COLOR, $0f, $0f ;used by background color control if set
 
 PlayerColors:
-  .byte GLOBAL_BACKGROUND_COLOR, $16, $27, $18 ;mario's colors
-  .byte GLOBAL_BACKGROUND_COLOR, $30, $27, $19 ;luigi's colors
-  .byte GLOBAL_BACKGROUND_COLOR, $37, $27, $16 ;fiery (used by both)
+  .byte GLOBAL_BACKGROUND_COLOR, $16, $27, $07 ;mario's colors ;Nesdraug changed colors 
+  .byte GLOBAL_BACKGROUND_COLOR, $15, $27, $06 ;luigi's colors
+  .byte GLOBAL_BACKGROUND_COLOR, $30, $27, $05 ;fiery (used by both)
 
 
 ;-------------------------------------------------------------------------------------
