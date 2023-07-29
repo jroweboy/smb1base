@@ -36,6 +36,7 @@ F_Frame: .res 1
 .export InitFollower
 .proc InitFollower
   lda #0
+  sta F_Frame
   sta F_Player_Hideflag
   lda #$ff
   ldx #FRAME_LAG_COUNT-1
