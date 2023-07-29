@@ -212,8 +212,8 @@ DoneInitArea:
   lda #$00                  ;reset screen routine task control for title screen, game,
   sta ScreenRoutineTask     ;and game over modes
   sta Sprite0HitDetectFlag  ;disable sprite 0 check
-  lda #GameOverMusic
-  sta EventMusicQueue       ;put game over music in secondary queue
+  ; lda #GameOverMusic
+  ; sta EventMusicQueue       ;put game over music in secondary queue
   inc DisableScreenFlag     ;disable screen output
   inc OperMode_Task         ;set secondary mode to 1
   rts

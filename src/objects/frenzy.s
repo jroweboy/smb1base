@@ -463,6 +463,10 @@ Fr12S:
   ; don't spawn items in the title screen mode
   lda OperMode
   beq @DoneSpawning
+  ; and also don't spawn when the player isn't in control
+  lda GameEngineSubroutine
+  cmp #$08 ; PlayerCtrlRoutine
+  bne @DoneSpawning
     lda LakituActionTimer
     bne @DoneSpawning
       ; Lakitu is read to act again, so pick a random item to throw and try to throw it

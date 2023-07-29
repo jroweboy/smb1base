@@ -402,6 +402,7 @@ Misc_Collision_Flag:            .res  13
 EnemyFrenzyBuffer:              .res  1
 LakituObjectBuffer:             .res  1
 LakituActionBuffer:             .res  1
+LakituActionFlag:               .res  1 ; unused?
 SecondaryHardMode:              .res  1
 EnemyFrenzyQueue:               .res  1
 FireballCounter:                .res  1

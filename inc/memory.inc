@@ -379,6 +379,7 @@ StackClear = DigitModifier
 .global EnemyFrenzyBuffer
 .global LakituObjectBuffer
 .global LakituActionBuffer
+.global LakituActionFlag
 .global SecondaryHardMode
 .global EnemyFrenzyQueue
 .global FireballCounter

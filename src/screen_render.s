@@ -125,6 +125,14 @@ WriteTopStatusLine:
 ;-------------------------------------------------------------------------------------
 
 SetupIntermediate:
+
+  lda OperMode                 ;check primary mode of operation
+  beq :+                  ;if in title screen mode, skip this
+    lda AltEntranceControl
+    bne :+
+      lda #IntermediateMusic
+      sta EventMusicQueue
+  :
   lda BackgroundColorCtrl  ;save current background color control
   pha                      ;and player status to stack
     lda PlayerStatus
@@ -189,9 +197,8 @@ ResetSpritesAndScreenTimer:
   lda ScreenTimer             ;check if screen timer has expired
   bne NoReset                 ;if not, branch to leave
   jsr MoveAllSpritesOffscreen ;otherwise reset sprites now
-
 ResetScreenTimer:
-  lda #$07                    ;reset timer again
+  lda #$0a                    ;reset timer again
   sta ScreenTimer
   inc ScreenRoutineTask       ;move onto next task
 NoReset:
@@ -213,8 +220,8 @@ DisplayIntermediate:
   ldy AreaType                 ;check if we are on castle level
   cpy #$03                     ;and if so, branch (possibly residual)
   beq PlayerInter
-  lda DisableIntermediate      ;if this flag is set, skip intermediate lives display
-  bne NoInter                  ;and jump to specific task, otherwise
+    lda DisableIntermediate      ;if this flag is set, skip intermediate lives display
+    bne NoInter                  ;and jump to specific task, otherwise
 PlayerInter:
   farcall DrawPlayer_Intermediate  ;put player in appropriate place for
   lda #$01                     ;lives display, then output lives display to buffer

@@ -140,13 +140,6 @@ ExitEntr:
 
 .proc AutoControlPlayer
   sta SavedJoypadBits         ;override controller bits with contents of A if executing here
-  ; cmp #Right_Dir
-  ; bne :+
-  ;   lda #10
-  ;   sta Player_X_Speed
-    
-  ; :
-  ; rts
   ;; fallthrough
 .endproc
 
@@ -478,6 +471,7 @@ ChkSwimE: ldy AreaType                ;if level not water-type,
           farcall SetupBubble             ;otherwise, execute sub to set up air bubbles
 SetPESub: lda #$07                    ;set to run player entrance subroutine
           sta GameEngineSubroutine    ;on the next frame of game engine
+QuickExit:
           rts
 
 ;-------------------------------------------------------------------------------------
@@ -488,6 +482,9 @@ LoopCounter = Local_ec
 Condition = Local_ed
   inc LivesScreenTimer
   lda LivesScreenTimer
+  sec 
+  sbc #$10 ; delay a small bit after switching to this mode
+  bcc QuickExit
   lsr
   lsr
   lsr
@@ -521,8 +518,8 @@ OuterLoop:
     sta CurrentOffset
     beq :+
     lda LoopCounter
-    inc LoopCounter
     cmp Condition
+    inc LoopCounter
     bcc OuterLoop
 :
   rts

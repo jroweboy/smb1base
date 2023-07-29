@@ -50,7 +50,7 @@ DiscoPanicTrack = -2
 AreaMusicLUT:
   .byte SilenceTrack, Starman, EnterPipe, Cloud, DiscoPanicTrack, Underworld, Waterworld, Overworld
 EventMusicLUT:
-  .byte SilenceTrack, HurryUp, Victory, Waterworld, InAnotherCastle, SavedPrincess, GameOver, Death
+  .byte SilenceTrack, HurryUp, Victory, Waterworld, InAnotherCastle, SavedPrincess, Intermediate, Death
 
 OneUp =       0
 BigJump =     1

@@ -74,7 +74,8 @@ EndOfLevelMusic       = %00100000
 WaterEventMusic       = %00010000
 EndOfCastleMusic      = %00001000
 VictoryMusic          = %00000100
-GameOverMusic         = %00000010
+; GameOverMusic         = %00000010
+IntermediateMusic     = %00000010
 DeathMusic            = %00000001
 
 ;enemy object constants 
