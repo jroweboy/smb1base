@@ -94,37 +94,6 @@ AwardGameTimerPoints: ; jroweboy skip adding gametimer points
   lda EnemyIntervalTimer, x
   beq IncrementSFTask1
   rts
-; AwardGameTimerPoints:
-;   lda GameTimerDisplay   ;check all game timer digits for any intervals left
-;   ora GameTimerDisplay+1
-;   ora GameTimerDisplay+2
-;   beq IncrementSFTask1   ;if no time left on game timer at all, branch to next task
-;   lda FrameCounter
-;   and #%00000100         ;check frame counter for d2 set (skip ahead
-;   beq NoTTick            ;for four frames every four frames) branch if not set
-;   lda #Sfx_TimerTick
-;   sta Square2SoundQueue  ;load timer tick sound
-; NoTTick:
-;   ; ldy #(GameTimerDisplay - DisplayDigits + 2) ;set offset here to subtract from game timer's last digit
-;   ; lda #$ff               ;set adder here to $ff, or -1, to subtract one
-;   ; sta DigitModifier+5    ;from the last digit of the game timer
-;   ; jsr DigitsMathRoutine  ;subtract digit
-;   ; lda #$05               ;set now to add 50 points
-;   ; sta DigitModifier+5    ;per game timer interval subtracted
-; EndAreaPoints:
-;   ldy #$0b               ;load offset for mario's score by default
-;   lda CurrentPlayer      ;check player on the screen
-;   beq ELPGive            ;if mario, do not change
-;   ldy #$11               ;otherwise load offset for luigi's score
-; ELPGive:
-;   jsr DigitsMathRoutine  ;award 50 points per game timer interval
-;   lda CurrentPlayer      ;get player on the screen (or 500 points per
-;   asl                    ;fireworks explosion if branched here from there)
-;   asl                    ;shift to high nybble
-;   asl
-;   asl
-;   ora #%00000100         ;add four to set nybble for game timer
-;   jmp UpdateNumber       ;jump to print the new score and game timer
 
 RaiseFlagSetoffFWorks:
   lda Enemy_Y_Position,x  ;check star flag's vertical position

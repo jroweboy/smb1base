@@ -128,7 +128,6 @@ ExtraLifeMushBlock:
   lda #$03         ;load 1-up mushroom into power-up type
 WriteBlockType:
   pha
-  
   ldy #6                ;start at beginning of enemy slots
 :
     dey
@@ -140,7 +139,9 @@ WriteBlockType:
   ; use custom spawn routine
   jsr SpawnPowerUp
   ldy R4
+  rts
 @noslots:
+  pla
   rts
 
 VineBlock:
@@ -309,9 +310,9 @@ CreatePowerupInSlotY:
   sta Enemy_Flag,y          ;set buffer flag
   lda #$03
   sta Enemy_BoundBoxCtrl,y  ;set bounding box size control for power-up object
-  lda Enemy_PowerupType,y
-  cmp #$02                  ;check currently loaded power-up type
-  bcs PutBehind             ;if star or 1-up, branch ahead
+  ; lda Enemy_PowerupType,y
+  ; cmp #$02                  ;check currently loaded power-up type
+  ; bcs PutBehind             ;if star or 1-up, branch ahead
 ;   lda PlayerStatus          ;otherwise check player's current status
 ;   cmp #$02
 ;   bcc StrType               ;if player not fiery, use status as power-up type

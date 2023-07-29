@@ -1075,13 +1075,20 @@ Inc2B:
 ;   lda LakituObjectBuffer
 ;   sta PowerUpType
 ; Exit:
+
   ; lda LakituObjectBuffer
+  ; sta Enemy_PowerupType, x
+  ; ; just 
+  ; lda #PowerUpObject
   ; sta Enemy_ID,x           ;store contents of frenzy buffer into enemy identifier value
   ; lda #$00
   ; sta Enemy_State,x
-  ; sta LakituActionBuffer
+  ; sty LakituActionBuffer
+  
+  ldy #0
+  farcall CreateObject, jmp
   ; lda #Spiny
-  farcall CheckpointEnemyID, jmp    ;jump ahead to run jump engine and subroutines
+  ; farcall CheckpointEnemyID, jmp    ;jump ahead to run jump engine and subroutines
 .endproc
 
 ;--------------------------------

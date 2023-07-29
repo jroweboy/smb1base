@@ -171,7 +171,7 @@ InitEnemyRoutines:
   .word PlatLiftUp
   .word PlatLiftDown
   .word InitBowser
-  .word InitLakituThrownObject   ;possibly dummy value
+  .word InitLakituPowerup   ;possibly dummy value
   .word Setup_Vine
 
   .word NoInitCode ;for objects $30-$36
@@ -181,23 +181,23 @@ InitEnemyRoutines:
   .word NoInitCode
   .word InitRetainerObj
 
-InitLakituThrownObject:
-  lda LakituActionBuffer
-  cmp #PowerUpObject
-  beq @SpawnPowerup
-    
-    rts
-@SpawnPowerup:
+InitLakituPowerup:
+  lda #PowerUpObject
+  sta Enemy_ID,x
+  lda #%10000000
+  sta Enemy_State,x          ;put spiny in egg state and leave
+  lda #Sfx_GrowPowerUp
+  sta Square2SoundQueue
   lda LakituObjectBuffer
   sta Enemy_PowerupType,x
-  stx R3
-  txa
-  tay
-  ldx #0 ; use lakitu slot to copy position data from  
-.import CreatePowerupInSlotY
-  jsr CreatePowerupInSlotY
-  ldy R4
-  ldx R3
+;   stx R3
+;   txa
+;   tay
+;   ldx #0 ; use lakitu slot to copy position data from  
+; .import CreatePowerupInSlotY
+;   jsr CreatePowerupInSlotY
+;   ldy R4
+;   ldx R3
   rts
 
 ;--------------------------------

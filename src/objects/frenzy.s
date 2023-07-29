@@ -181,17 +181,20 @@ CreateObject:
   lda Enemy_State,y          ;if lakitu is not in normal state, branch to leave
   bne ExLSHand
   ; Set the new id for the enemy/powerup from the object buffer
-  lda LakituObjectBuffer
-  sta Enemy_ID,x
+  lda LakituActionBuffer
   cmp #PowerUpObject
-  bne :+
-    ; play powerup jingle
-    lda #Sfx_GrowPowerUp
-    sta Square2SoundQueue
-    ; lda Enemy_PowerupType,x
+  beq :+
+    lda LakituObjectBuffer
+    ; ; play powerup jingle
+    ; lda #Sfx_GrowPowerUp
+    ; sta Square2SoundQueue
+    ; lda #PowerUpObject
+    ; sta Enemy_ID,x
+    ; bne @continue  ; unconditional
 :
-  lda #0
-  sta LakituObjectBuffer
+  ; lda LakituObjectBuffer
+  sta Enemy_ID,x
+@continue:
   lda Enemy_PageLoc,y        ;store horizontal coordinates (high and low) of lakitu
   sta Enemy_PageLoc,x        ;into the coordinates of the spiny we're going to create
   lda Enemy_X_Position,y
@@ -245,9 +248,12 @@ SetSpSpd:
   sta Enemy_Y_Speed,x        ;set vertical speed to move upwards
   lda #$01
   sta Enemy_Flag,x           ;enable enemy object by setting flag
-  ; lda #$05
-  ; sta Enemy_State,x          ;put spiny in egg state and leave
   ; jmp SmallBBox              ;set bounding box control, init attributes
+  lda LakituObjectBuffer
+  jsr CheckpointEnemyID    ;jump ahead to run jump engine and subroutines
+  lda #0
+  sta LakituObjectBuffer
+  sta LakituActionBuffer
 ChpChpEx:
   rts
 
