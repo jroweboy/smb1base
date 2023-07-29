@@ -951,7 +951,7 @@ PositionEnemyObj:
   lda (EnemyData),y
   and #%00001111           ;check for special row $0e
   cmp #$0e                 ;if found, jump elsewhere
-  beq ParseRow0e
+  jeq ParseRow0e
   jmp CheckThreeBytes      ;if not found, unconditional jump
 
 CheckRightExtBounds:
@@ -975,7 +975,7 @@ CheckRightExtBounds:
   and #%01000000           ;check to see if hard mode bit is set
   beq CheckForEnemyGroup   ;if not, branch to check for group enemy objects
   lda SecondaryHardMode    ;if set, check to see if secondary hard mode flag
-  beq Inc2B                ;is on, and if not, branch to skip this object completely
+  jeq Inc2B                ;is on, and if not, branch to skip this object completely
 
 CheckForEnemyGroup:
   lda (EnemyData),y      ;get second byte and mask out 2 MSB
@@ -1004,13 +1004,20 @@ ExitStrID:
 CheckFrenzyBuffer:
   lda EnemyFrenzyBuffer    ;if enemy object stored in frenzy buffer
   bne StrFre               ;then branch ahead to store in enemy object buffer
+  lda LakituObjectBuffer
+  cmp #PowerUpObject
+  bne :+
+    lda #0
+    sta LakituObjectBuffer
+    .import SetupPowerUp
+    jmp SetupPowerUp
+  :
   lda Vine_FlagOffset       ;otherwise check vine flag offset
   cmp #$01
   bne ExitStrID               ;if other value <> 1, leave
   lda #VineObject          ;otherwise put vine in enemy identifier
 StrFre:
   sta Enemy_ID,x           ;store contents of frenzy buffer into enemy identifier value
-
 InitEnemyObject:
   lda #$00                 ;initialize enemy state
   sta Enemy_State,x

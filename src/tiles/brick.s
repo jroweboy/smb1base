@@ -263,7 +263,7 @@ UseMiscS:  sty JumpCoinMiscOffset  ;store offset of misc object buffer here (res
            rts
 
 ;-------------------------------------------------------------------------------------
-
+.export SetupPowerUp
 SetupPowerUp:
            lda #PowerUpObject        ;load power-up identifier into
            sta Enemy_ID+5            ;special use slot of enemy object buffer

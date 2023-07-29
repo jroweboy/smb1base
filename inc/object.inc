@@ -65,7 +65,6 @@
 .global Setup_Vine
 .global InitRetainerObj
 .global EndOfEnemyInitCode
-.global InitDiscoLakitu
 
 ; Object movement code
 .global MoveNormalEnemy

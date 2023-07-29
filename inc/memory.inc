@@ -375,6 +375,7 @@ StackClear = DigitModifier
 .global BrickCoinTimerFlag
 .global Misc_Collision_Flag
 .global EnemyFrenzyBuffer
+.global LakituObjectBuffer
 .global SecondaryHardMode
 .global EnemyFrenzyQueue
 .global FireballCounter

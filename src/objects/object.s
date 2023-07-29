@@ -180,7 +180,6 @@ InitEnemyRoutines:
   .word NoInitCode
   .word NoInitCode
   .word InitRetainerObj
-  ; .word InitDiscoLakitu
 
 ;--------------------------------
 
@@ -405,45 +404,56 @@ FlmEx:
 ;--------------------------------
 
 RunNormalEnemies:
-          lda #$00                  ;init sprite attributes
-          sta Enemy_SprAttrib,x
-          jsr GetEnemyOffscreenBits
-          jsr RelativeEnemyPosition
-          jsr EnemyGfxHandler
-          jsr GetEnemyBoundBox
-          jsr EnemyToBGCollisionDet
-          jsr EnemiesCollision
-          jsr PlayerEnemyCollision
-          ldy TimerControl          ;if master timer control set, skip to last routine
-          bne SkipMove
-          jsr EnemyMovementSubs
-SkipMove: jmp OffscreenBoundsCheck
+  lda #$00                  ;init sprite attributes
+  sta Enemy_SprAttrib,x
+  lda Enemy_ID,x
+  cmp #Lakitu
+  beq LakituCustom
+    jsr GetEnemyOffscreenBits
+    jsr RelativeEnemyPosition
+    jsr EnemyGfxHandler
+    jsr GetEnemyBoundBox
+    jsr EnemyToBGCollisionDet
+    jsr EnemiesCollision
+    jsr PlayerEnemyCollision
+FinishEnemyMovement:
+  ldy TimerControl          ;if master timer control set, skip to last routine
+  bne SkipMove
+    jsr EnemyMovementSubs
+SkipMove:
+  jmp OffscreenBoundsCheck
+
+.import LakituGraphicsHandler
+LakituCustom:
+  jsr RelativeEnemyPosition
+  jsr LakituGraphicsHandler
+  jmp FinishEnemyMovement
 
 EnemyMovementSubs:
-      lda Enemy_ID,x
-      jsr JumpEngine
+  lda Enemy_ID,x
+  jsr JumpEngine
 
-      .word MoveNormalEnemy      ;only objects $00-$14 use this table
-      .word MoveNormalEnemy
-      .word MoveNormalEnemy
-      .word MoveNormalEnemy
-      .word MoveNormalEnemy
-      .word ProcHammerBro
-      .word MoveNormalEnemy
-      .word MoveBloober
-      .word MoveBulletBill
-      .word NoMoveCode
-      .word MoveSwimmingCheepCheep
-      .word MoveSwimmingCheepCheep
-      .word MovePodoboo
-      .word MovePiranhaPlant
-      .word MoveJumpingEnemy
-      .word ProcMoveRedPTroopa
-      .word MoveFlyGreenPTroopa
-      .word MoveLakitu
-      .word MoveNormalEnemy
-      .word NoMoveCode   ;dummy
-      .word MoveFlyingCheepCheep
+  .word MoveNormalEnemy      ;only objects $00-$14 use this table
+  .word MoveNormalEnemy
+  .word MoveNormalEnemy
+  .word MoveNormalEnemy
+  .word MoveNormalEnemy
+  .word ProcHammerBro
+  .word MoveNormalEnemy
+  .word MoveBloober
+  .word MoveBulletBill
+  .word NoMoveCode
+  .word MoveSwimmingCheepCheep
+  .word MoveSwimmingCheepCheep
+  .word MovePodoboo
+  .word MovePiranhaPlant
+  .word MoveJumpingEnemy
+  .word ProcMoveRedPTroopa
+  .word MoveFlyGreenPTroopa
+  .word MoveLakitu
+  .word MoveNormalEnemy
+  .word NoMoveCode   ;dummy
+  .word MoveFlyingCheepCheep
 
 ;--------------------------------
 

@@ -743,17 +743,17 @@ CheckForSpiny:
 NotEgg: jmp CheckForHammerBro  ;skip a big chunk of this if we found spiny but not in egg
 
 CheckForLakitu:
-        cpx #$90                  ;check value for lakitu's offset loaded
-        bne CheckUpsideDownShell  ;branch if not loaded
+;         cpx #$90                  ;check value for lakitu's offset loaded
+;         bne CheckUpsideDownShell  ;branch if not loaded
         
-        lda Local_ed
-        and #%00100000            ;check for d5 set in enemy state
-        bne NoLAFr                ;branch if set
-        lda FrenzyEnemyTimer
-        cmp #$10                  ;check timer to see if we've reached a certain range
-        bcs NoLAFr                ;branch if not
-        ldx #$96                  ;if d6 not set and timer in range, load alt frame for lakitu
-NoLAFr: jmp CheckDefeatedState    ;skip this next part if we found lakitu but alt frame not needed
+;         lda Local_ed
+;         and #%00100000            ;check for d5 set in enemy state
+;         bne NoLAFr                ;branch if set
+;         lda FrenzyEnemyTimer
+;         cmp #$10                  ;check timer to see if we've reached a certain range
+;         bcs NoLAFr                ;branch if not
+;         ldx #$96                  ;if d6 not set and timer in range, load alt frame for lakitu
+; NoLAFr: jmp CheckDefeatedState    ;skip this next part if we found lakitu but alt frame not needed
 
 CheckUpsideDownShell:
   lda Local_ef                    ;check for enemy object => $04
@@ -971,7 +971,7 @@ EggExc:
   ora #%01000000
   sta Sprite_Attributes+12,y  ;store with horizontal and vertical flip in
   sta Sprite_Attributes+20,y  ;second and third row right sprites
-  bne CheckToMirrorLakitu ; unconditional
+  ; bne CheckToMirrorLakitu ; unconditional
 ; MirrorGoomba:
 ;   cpx #$02              ;check for defeated state
 ;   bcs MirrorEnemyGfx
@@ -989,32 +989,32 @@ EggExc:
 ;     lda Sprite_Attributes+12,y
 ;     eor #%01000000
 ;     sta Sprite_Attributes+12,y
+; CheckToMirrorLakitu:
+;         lda Local_ef                     ;check for lakitu enemy object
+;         cmp #Lakitu
+;         bne CheckToMirrorJSpring    ;branch if not found
+;         lda VerticalFlipFlag
+;         bne NVFLak                  ;branch if vertical flip flag set
+;         lda Sprite_Attributes+16,y  ;save vertical flip and palette bits
+;         and #%10000001              ;in third row left sprite
+;         sta Sprite_Attributes+16,y
+;         lda Sprite_Attributes+20,y  ;set horizontal flip and palette bits
+;         ora #%01000001              ;in third row right sprite
+;         sta Sprite_Attributes+20,y
+;         ldx FrenzyEnemyTimer        ;check timer
+;         cpx #$10
+;         bcs SprObjectOffscrChk      ;branch if timer has not reached a certain range
+;         sta Sprite_Attributes+12,y  ;otherwise set same for second row right sprite
+;         and #%10000001
+;         sta Sprite_Attributes+8,y   ;preserve vertical flip and palette bits for left sprite
+;         bcc SprObjectOffscrChk      ;unconditional branch
+; NVFLak: lda Sprite_Attributes,y     ;get first row left sprite attributes
+;         and #%10000001
+;         sta Sprite_Attributes,y     ;save vertical flip and palette bits
+;         lda Sprite_Attributes+4,y   ;get first row right sprite attributes
+;         ora #%01000001              ;set horizontal flip and palette bits
+;         sta Sprite_Attributes+4,y   ;note that vertical flip is left as-is
 CheckToMirrorLakitu:
-        lda Local_ef                     ;check for lakitu enemy object
-        cmp #Lakitu
-        bne CheckToMirrorJSpring    ;branch if not found
-        lda VerticalFlipFlag
-        bne NVFLak                  ;branch if vertical flip flag set
-        lda Sprite_Attributes+16,y  ;save vertical flip and palette bits
-        and #%10000001              ;in third row left sprite
-        sta Sprite_Attributes+16,y
-        lda Sprite_Attributes+20,y  ;set horizontal flip and palette bits
-        ora #%01000001              ;in third row right sprite
-        sta Sprite_Attributes+20,y
-        ldx FrenzyEnemyTimer        ;check timer
-        cpx #$10
-        bcs SprObjectOffscrChk      ;branch if timer has not reached a certain range
-        sta Sprite_Attributes+12,y  ;otherwise set same for second row right sprite
-        and #%10000001
-        sta Sprite_Attributes+8,y   ;preserve vertical flip and palette bits for left sprite
-        bcc SprObjectOffscrChk      ;unconditional branch
-NVFLak: lda Sprite_Attributes,y     ;get first row left sprite attributes
-        and #%10000001
-        sta Sprite_Attributes,y     ;save vertical flip and palette bits
-        lda Sprite_Attributes+4,y   ;get first row right sprite attributes
-        ora #%01000001              ;set horizontal flip and palette bits
-        sta Sprite_Attributes+4,y   ;note that vertical flip is left as-is
-
 CheckToMirrorJSpring:
       lda Local_ef                     ;check for jumpspring object (any frame)
       cmp #$18
@@ -1554,7 +1554,7 @@ ChkFlagOffscreen:
       lda Enemy_OffscreenBits        ;get offscreen bits
       and #%00001110                 ;mask out all but d3-d1
       beq ExitDumpSpr                ;if none of these bits set, branch to leave
-
+  ; fallthrough
 ;-------------------------------------------------------------------------------------
 
 MoveSixSpritesOffscreen:
@@ -1583,3 +1583,78 @@ FlagpoleScoreNumTiles:
   .byte FLOATEY_NUM_80, FLOATEY_NUM_0
   .byte FLOATEY_NUM_40, FLOATEY_NUM_0
   .byte FLOATEY_NUM_10, FLOATEY_NUM_0
+
+.export LakituGraphicsHandler
+.proc LakituGraphicsHandler
+  lda #2
+  sta R0
+ColLoop:
+  ; check to see if this row is offscreen
+  
+  
+  ; draw one column of lakitu
+  AllocSpr 4
+
+  lda Enemy_SprAttrib
+  ora #1
+  sta Sprite_Attributes, y
+  sta Sprite_Attributes + 4, y
+  sta Sprite_Attributes + 8, y
+  sta Sprite_Attributes + 12, y
+
+  lda #$8d
+  clc
+  adc R0
+  sta Sprite_Tilenumber, y
+  adc #$10
+  sta Sprite_Tilenumber + 4, y
+  adc #$10
+  sta Sprite_Tilenumber + 8, y
+  adc #$10
+  sta Sprite_Tilenumber + 12, y
+
+  lda R0
+  asl
+  asl
+  asl
+  clc
+  adc Enemy_Rel_XPos,x
+  sta Sprite_X_Position, y
+  sta Sprite_X_Position + 4, y
+  sta Sprite_X_Position + 8, y
+  sta Sprite_X_Position + 12, y
+
+  lda Enemy_Rel_YPos,x
+  sta Sprite_Y_Position, y
+  clc
+  adc #8
+  sta Sprite_Y_Position + 4, y
+  adc #8
+  sta Sprite_Y_Position + 8, y
+  adc #8
+  sta Sprite_Y_Position + 12, y
+
+  dec R0
+  bpl ColLoop
+  rts
+
+LakituMetasprite:
+  .byte   0,  0,$8d,1
+  .byte   0,  8,$9d,1
+  .byte   0, 16,$ad,1
+  .byte   0, 24,$bd,1
+
+  .byte   8,  0,$8e,1
+  .byte   8,  8,$9e,1
+  .byte   8, 16,$ae,1
+  .byte   8, 24,$be,1
+
+  .byte  16,  0,$8f,1
+  .byte  16,  8,$9f,1
+  .byte  16, 16,$af,1
+  .byte  16, 24,$bf,1
+.endproc
+
+.proc DrawMetasprite
+  rts
+.endproc

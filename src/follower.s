@@ -149,7 +149,6 @@ DrawPlayerLoop:
     bne DrawPlayerLoop           ;do this until all rows are drawn
 
   ldx F_Frame
-  ; jsr F_GetOffscreen
   jsr F_YOffscreenBits
   sta R0
 

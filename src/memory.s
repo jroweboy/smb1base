@@ -396,6 +396,7 @@ JumpCoinMiscOffset:             .res  5
 BrickCoinTimerFlag:             .res  2
 Misc_Collision_Flag:            .res  13
 EnemyFrenzyBuffer:              .res  1
+LakituObjectBuffer:             .res  1
 SecondaryHardMode:              .res  1
 EnemyFrenzyQueue:               .res  1
 FireballCounter:                .res  1

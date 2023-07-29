@@ -8,15 +8,18 @@ end
 
 PlayerSize = getlabel("PlayerSize")
 PlayerStatus = getlabel("PlayerStatus")
-PlayerAngle = getlabel("PlayerAngle")
-PlayerXPos = getlabel("SprObject_X_Position")
-PlayerYPos = getlabel("SprObject_Y_Position")
+-- PlayerAngle = getlabel("PlayerAngle")
+PlayerXPos = getlabel("SprObject_Rel_XPos")
+PlayerYPos = getlabel("SprObject_Rel_YPos")
 PlayerXSpeed = getlabel("SprObject_X_Speed")
 PlayerYSpeed = getlabel("SprObject_Y_Speed")
 
 playersizetoggle = false
 
 function Main()
+  x = emu.read(PlayerXPos, emu.memType.nesDebug)
+  y = emu.read(PlayerYPos, emu.memType.nesDebug)
+  emu.drawPixel(x, y, 0xFF0000)
   input = emu.getInput(0)
   -- make player have fire flower
   if input.select and input.down then

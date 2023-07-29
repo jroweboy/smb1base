@@ -65,6 +65,16 @@ ClearVRLoop:
   jsr GetAreaMusic          ;load proper music into queue
   inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
+
+.import SpawnLakitu
+  ; spawn the disco lakitu here
+  ldx #0
+  ldy #0
+  farcall SpawnLakitu
+  
+  ; lda #$01 ; turn off lakitu for now
+  ; sta Enemy_State,x
+  ; farcall EndFrenzy
   rts
 
 ;-------------------------------------------------------------------------------------

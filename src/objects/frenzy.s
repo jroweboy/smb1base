@@ -156,19 +156,22 @@ ChkNoEn:
   dex                     ;otherwise check next slot
   bpl ChkNoEn             ;branch until all slots are checked
   bmi RetEOfs             ;if no empty slots were found, branch to leave
+  
+.export SpawnLakitu
+SpawnLakitu:
 CreateL:
   lda #$00                ;initialize enemy state
   sta Enemy_State,x
   lda #Lakitu             ;create lakitu enemy object
   sta Enemy_ID,x
   jsr SetupLakitu         ;do a sub to set up lakitu
-  lda #$20
+  lda #$08
   jsr PutAtRightExtent    ;finish setting up lakitu
 RetEOfs:  ldx ObjectOffset        ;get enemy object buffer offset again and leave
 ExLSHand: rts
 
 ;--------------------------------
-
+.export CreateObject
 CreateObject:
   lda Player_Y_Position      ;if player above a certain point, branch to leave
   cmp #$2c
@@ -421,41 +424,57 @@ NextFSlot:
 ;$01-$03 - used to hold difference adjusters
 
 LakituDiffAdj:
-      .byte $15, $30, $40
+  .byte $15, $30, $40
 
 MoveLakitu:
-         lda Enemy_State,x          ;check lakitu's enemy state
-         and #%00100000             ;for d5 set
-         beq ChkLS                  ;if not set, continue with code
-         jmp MoveD_EnemyVertically  ;otherwise jump to move defeated lakitu downwards
-ChkLS:   lda Enemy_State,x          ;if lakitu's enemy state not set at all,
-         beq Fr12S                  ;go ahead and continue with code
-         lda #$00
-         sta LakituMoveDirection,x  ;otherwise initialize moving direction to move to left
-         sta EnemyFrenzyBuffer      ;initialize frenzy buffer
-         lda #$10
-         bne SetLSpd                ;load horizontal speed and do unconditional branch
-Fr12S:   lda #Spiny
-         sta EnemyFrenzyBuffer      ;set spiny identifier in frenzy buffer
-         ldy #$02
-LdLDa:   lda LakituDiffAdj,y        ;load values
-         sta R1,y                   ;store in zero page
-         dey
-         bpl LdLDa                  ;do this until all values are stired
-         jsr PlayerLakituDiff       ;execute sub to set speed and create spinys
-SetLSpd: sta LakituMoveSpeed,x      ;set movement speed returned from sub
-         ldy #$01                   ;set moving direction to right by default
-         lda LakituMoveDirection,x
-         and #$01                   ;get LSB of moving direction
-         bne SetLMov                ;if set, branch to the end to use moving direction
-         lda LakituMoveSpeed,x
-         eor #$ff                   ;get two's compliment of moving speed
-         clc
-         adc #$01
-         sta LakituMoveSpeed,x      ;store as new moving speed
-         iny                        ;increment moving direction to left
-SetLMov: sty Enemy_MovingDir,x      ;store moving direction
-         jmp MoveEnemyHorizontally  ;move lakitu horizontally
+  lda Enemy_State,x          ;check lakitu's enemy state
+  and #%00100000             ;for d5 set
+  beq ChkLS                  ;if not set, continue with code
+    jmp MoveD_EnemyVertically  ;otherwise jump to move defeated lakitu downwards
+ChkLS:
+  lda Enemy_State,x          ;if lakitu's enemy state not set at all,
+  beq Fr12S                  ;go ahead and continue with code
+    lda #$00
+    sta LakituMoveDirection,x  ;otherwise initialize moving direction to move to left
+    sta EnemyFrenzyBuffer      ;initialize frenzy buffer
+    lda #$10
+    bne SetLSpd                ;load horizontal speed and do unconditional branch
+Fr12S:
+  ; don't spawn items in the title screen mode
+  lda OperMode
+  beq :+
+    lda FrameCounter
+    and #$40
+    beq :+
+      ; lda #PowerUpObject
+      ; sta LakituObjectBuffer
+    ; lda #Spiny
+    ; sta EnemyFrenzyBuffer      ;set spiny identifier in frenzy buffer
+    ; .import SetupPowerUp
+    ; jsr SetupPowerUp
+:
+  ldy #$02
+LdLDa:
+  lda LakituDiffAdj,y        ;load values
+  sta R1,y                   ;store in zero page
+  dey
+  bpl LdLDa                  ;do this until all values are stired
+  jsr PlayerLakituDiff       ;execute sub to set speed and create spinys
+SetLSpd:
+  sta LakituMoveSpeed,x      ;set movement speed returned from sub
+  ldy #$01                   ;set moving direction to right by default
+  lda LakituMoveDirection,x
+  and #$01                   ;get LSB of moving direction
+  bne SetLMov                ;if set, branch to the end to use moving direction
+  lda LakituMoveSpeed,x
+  eor #$ff                   ;get two's compliment of moving speed
+  clc
+  adc #$01
+  sta LakituMoveSpeed,x      ;store as new moving speed
+  iny                        ;increment moving direction to left
+SetLMov:
+  sty Enemy_MovingDir,x      ;store moving direction
+  jmp MoveEnemyHorizontally  ;move lakitu horizontally
 
 PlayerLakituDiff:
            ldy #$00                   ;set Y for default value
@@ -511,7 +530,7 @@ ChkSpinyO: lda Enemy_ID,x             ;check for spiny object
 ChkEmySpd: lda Enemy_Y_Speed,x        ;check vertical speed
            bne SubDifAdj              ;branch if nonzero
            ldy #$00                   ;otherwise reinit offset
-SubDifAdj: lda a:R1,y                ;get one of three saved values from earlier
+SubDifAdj: lda R1,y                ;get one of three saved values from earlier
            ldy R0                    ;get saved horizontal difference
 SPixelLak: sec                        ;subtract one for each pixel of horizontal difference
            sbc #$01                   ;from one of three saved values
