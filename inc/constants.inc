@@ -111,6 +111,12 @@ RetainerObject        = $35
 DiscoLakitu           = $36
 TallEnemy             = $09
 
+; powerup constants
+PowerMushroom = $00
+FireFlower    = $01
+PowerStar     = $02
+OneupMushroom = $03
+
 ; CHR rom tile constants. PPU address to be specific
 
 BRICK_CHUNK_TILE = $b6
@@ -179,6 +185,9 @@ CLOUD_METATILE          = $89
 CRACKED_BRICK_METATILE  = $8a
 CRACKED_BRICK_METATILE2 = $8b
 BRIDGE_METATILE         = $8c
+
+MUSHROOM_BOX_METATILE   = $c0
+FIREFLOWER_BOX_METATILE = $c1
 
 .enum
   World1

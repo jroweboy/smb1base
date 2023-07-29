@@ -71,7 +71,9 @@ ClearVRLoop:
   ldx #0
   ldy #0
   farcall SpawnLakitu
-  
+  ; but don't do a enemy frenzy
+  lda #0
+  sta EnemyFrenzyBuffer
   ; lda #$01 ; turn off lakitu for now
   ; sta Enemy_State,x
   ; farcall EndFrenzy

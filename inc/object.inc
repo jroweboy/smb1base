@@ -66,6 +66,7 @@
 .global InitRetainerObj
 .global EndOfEnemyInitCode
 
+
 ; Object movement code
 .global MoveNormalEnemy
 .global ProcHammerBro

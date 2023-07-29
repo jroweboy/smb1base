@@ -449,17 +449,24 @@ DrawPowerUp:
       ; ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
   AllocSpr 4
   sty OriginalOAMOffset
+  
+  ldx ObjectOffset
   lda Enemy_Rel_YPos         ;get relative vertical coordinate
   clc
   adc #$08                   ;add eight pixels
   sta R2                    ;store result here
   lda Enemy_Rel_XPos         ;get relative horizontal coordinate
   sta R5                    ;store here
-  ldx PowerUpType            ;get power-up type
+  lda Enemy_PowerupType,x
+  tax
+  ; ldx PowerUpType            ;get power-up type
   lda PowerUpAttributes,x    ;get attribute data for power-up type
-  ora Enemy_SprAttrib+5      ;add background priority bit if set
+  ldx ObjectOffset
+  ora Enemy_SprAttrib,x      ;add background priority bit if set
   sta R4                    ;store attributes here
-  txa
+  lda Enemy_PowerupType,x
+  ; ldx PowerUpType
+  ; txa
   pha                        ;save power-up type to the stack
     asl
     asl                        ;multiply by four to get proper offset
@@ -467,7 +474,6 @@ DrawPowerUp:
     lda #$01
     sta R7                    ;set counter here to draw two rows of sprite object
     sta R3                    ;init d1 of flip control
-
 PUpDrawLoop:
       lda PowerUpGfxTable,x      ;load left tile of power-up object
       sta R0
@@ -476,6 +482,7 @@ PUpDrawLoop:
       dec R7                    ;decrement counter
     bpl PUpDrawLoop            ;branch until two rows are drawn
     ; ldy Enemy_SprDataOffset+5  ;get sprite data offset again
+    ; ldx ObjectOffset
     ldy OriginalOAMOffset
   pla                        ;pull saved power-up type from the stack
   beq PUpOfs                 ;if regular mushroom, branch, do not change colors or flip
@@ -486,10 +493,11 @@ PUpDrawLoop:
     dex                        ;check power-up type for fire flower
     beq FireFlowerPaletteCycle       ;if found, skip this part
 StarPaletteCycle:
+  ldx ObjectOffset
   lda FrameCounter           ;get frame counter
   lsr                        ;divide by 2 to change colors every two frames
   and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
-  ora Enemy_SprAttrib+5      ;add background priority bit if any set
+  ora Enemy_SprAttrib,x      ;add background priority bit if any set
   sta Sprite_Attributes,y    ;set as new palette bits for top left and
   sta Sprite_Attributes+4,y  ;top right sprites for fire flower and star
   sta Sprite_Attributes+8,y  ;otherwise set new palette bits  for bottom left
@@ -497,13 +505,14 @@ StarPaletteCycle:
   jmp FlipPUpRightSide
 
 FireFlowerPaletteCycle:
+  ldx ObjectOffset
   lda FrameCounter           ;get frame counter
   lsr                        ;divide by 2 to change colors every two frames
   and #%00000001             ;mask out all but d1 and d0 (previously d2 and d1)
   ; set fireflower to cycle only between palette 1 and 2
   clc
   adc #1
-  ora Enemy_SprAttrib+5      ;add background priority bit if any set
+  ora Enemy_SprAttrib,x      ;add background priority bit if any set
   sta Sprite_Attributes,y    ;set as new palette bits for top left and
   sta Sprite_Attributes+4,y  ;top right sprites for fire flower and star
   sta Sprite_Attributes+8,y  ;otherwise set new palette bits  for bottom left
@@ -1618,13 +1627,13 @@ ColLoop:
   asl
   asl
   clc
-  adc Enemy_Rel_XPos,x
+  adc Enemy_Rel_XPos
   sta Sprite_X_Position, y
   sta Sprite_X_Position + 4, y
   sta Sprite_X_Position + 8, y
   sta Sprite_X_Position + 12, y
 
-  lda Enemy_Rel_YPos,x
+  lda Enemy_Rel_YPos
   sta Sprite_Y_Position, y
   clc
   adc #8
