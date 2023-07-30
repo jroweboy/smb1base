@@ -512,7 +512,7 @@ StackClear = DigitModifier
 
 .global HalfwayPage
 .global LevelNumber
-.global Hidden1UpFlag
+; .global Hidden1UpFlag
 .global CoinTally
 .global WorldNumber
 .global AreaNumber

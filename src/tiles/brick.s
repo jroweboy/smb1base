@@ -20,10 +20,10 @@
 ;$07 - used to save ID of brick object
 
 Hidden1UpBlock:
-  lda Hidden1UpFlag  ;if flag not set, do not render object
-  beq ExitDecBlock
-    lda #$00           ;if set, init for the next one
-    sta Hidden1UpFlag
+  ; lda Hidden1UpFlag  ;if flag not set, do not render object
+  ; beq ExitDecBlock
+  ;   lda #$00           ;if set, init for the next one
+  ;   sta Hidden1UpFlag
     jmp BrickWithItem  ;jump to code shared with unbreakable bricks
 
 QuestionBlock:

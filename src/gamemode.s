@@ -375,7 +375,7 @@ ChkContinue:
   jsr GoContinue              ;continue function when pressing A + start
 StartWorld1:
   farcall LoadAreaPointer
-  inc Hidden1UpFlag           ;set 1-up box flag for both players
+  ; inc Hidden1UpFlag           ;set 1-up box flag for both players
   ; inc OffScr_Hidden1UpFlag
   inc FetchNewGameTimerFlag   ;set fetch new game timer flag
   inc OperMode                ;set next game mode

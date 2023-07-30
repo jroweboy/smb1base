@@ -812,7 +812,7 @@ GetWNum:
   sta AreaNumber            ;initialize area number used for area address offset
   sta LevelNumber           ;initialize level number used for world display
   sta AltEntranceControl    ;initialize mode of entry
-  inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
+  ; inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
   inc FetchNewGameTimerFlag ;set flag to load new game timer
 ExPipeE:
   rts                       ;leave!!!

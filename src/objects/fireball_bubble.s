@@ -308,8 +308,10 @@ KillFireBall:
   asl
   clc
   adc #$1c              ;then add $1c or 28 bytes to it
-  tay                   ;to use fireball's bounding box coordinates 
-  ldx #$04
+  tay                   ;to use fireball's bounding box coordinates
+
+  ; Check the extra enemy slot as well since we let enemies spawn there now
+  ldx #$05
 
 FireballEnemyCDLoop:
   stx R1                     ;store enemy object offset here
