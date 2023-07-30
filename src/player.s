@@ -466,7 +466,7 @@ ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to ski
           ldx #$05                    ;set offset in X for last enemy object buffer slot
           ldy #$00                    ;set offset in Y for object coordinates used earlier
           farcall Setup_Vine              ;do a sub to grow vine
-ChkSwimE: ldy AreaType                ;if level not water-type,
+ChkSwimE: ldy SwimmingFlag                ;if level not water-type,
           bne SetPESub                ;skip this subroutine
           farcall SetupBubble             ;otherwise, execute sub to set up air bubbles
 SetPESub: lda #$07                    ;set to run player entrance subroutine
@@ -941,7 +941,10 @@ RdyNextA:
     ; bcc NextArea              ;at least this number of coins, leave flag clear
       ; inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
 NextArea:
-  inc AreaNumber            ;increment area number used for address loader
+  ; inc AreaNumber            ;increment area number used for address loader
+
+  inc WorldNumber 
+
   farcall LoadAreaPointer       ;get new level pointer
   inc FetchNewGameTimerFlag ;set flag to load new game timer
   jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0

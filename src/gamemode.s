@@ -66,6 +66,16 @@ ClearVRLoop:
   inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
 
+  ; if we are in title screen mode spawn him
+  lda OperMode
+  beq SpawnLakituAnyway
+  lda WorldNumber
+  cmp #3
+  bcc NoLakituSpawn
+  cmp #5
+  bcs NoLakituSpawn
+
+SpawnLakituAnyway:
 .import SpawnLakitu
   ; spawn the disco lakitu here
   ldx #0
@@ -74,6 +84,7 @@ ClearVRLoop:
   ; but don't do a enemy frenzy
   lda #0
   sta EnemyFrenzyBuffer
+NoLakituSpawn:
   ; lda #$01 ; turn off lakitu for now
   ; sta Enemy_State,x
   ; farcall EndFrenzy

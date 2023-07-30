@@ -38,7 +38,7 @@ NextVO: txa                      ;store object offset to next available vine slo
 ;$02 - used as vertical high nybble of block buffer offset
 
 VineHeightData:
-      .byte $30, $60
+      .byte $60, $60
 
 VineObjectHandler:
            cpx #$05                  ;check enemy offset for special use slot
@@ -52,9 +52,9 @@ VineObjectHandler:
            lsr                       ;shift d1 into carry
            lsr
            bcc RunVSubs              ;if d1 not set (2 frames every 4) skip this part
-           lda Enemy_Y_Position+5
+           lda Enemy_Y_Position,x
            sbc #$01                  ;subtract vertical position of vine
-           sta Enemy_Y_Position+5    ;one pixel every frame it's time
+           sta Enemy_Y_Position,x    ;one pixel every frame it's time
            inc Vine_Height            ;increment vine height
 RunVSubs:  lda Vine_Height            ;if vine still very small,
            cmp #$08                  ;branch to leave

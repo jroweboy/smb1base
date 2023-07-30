@@ -224,9 +224,15 @@ LargePlatformSubroutines:
 ;$02 - used to hold page location of rope
 
 BalancePlatform:
+      ; jroweboy: bandaid
+      ; attempt to kill balance platforms that go offscreen
+       lda Enemy_PageLoc,x       ;check high byte of horizontal position
+       cmp ScreenLeft_PageLoc
+       bcc @KillItWithFire
        lda Enemy_Y_HighPos,x       ;check high byte of vertical position
        cmp #$03
        bne DoBPl
+@KillItWithFire:
        jmp EraseEnemyObject        ;if far below screen, kill the object
 DoBPl: lda Enemy_State,x           ;get object's state (set to $ff or other platform offset)
        bpl CheckBalPlatform        ;if doing other balance platform, branch to leave
@@ -303,7 +309,7 @@ DoOtherPlatform:
        jsr PositionPlayerOnVPlat   ;and use it to position player accordingly
 
 DrawEraseRope:
-;          ldy ObjectOffset            ;get enemy object offset
+         ldy ObjectOffset            ;get enemy object offset
 ;          lda Enemy_Y_Speed,y         ;check to see if current platform is
 ;          ora Enemy_Y_MoveForce,y     ;moving at all
 ;          beq ExitRp                  ;if not, skip all of this and branch to leave

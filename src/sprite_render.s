@@ -30,7 +30,7 @@ DrawVine:
       ;    ldy Enemy_SprDataOffset,x  ;get sprite data offset
       ReserveSpr 6
          sty R2                    ;store sprite data offset here
-         jsr SixSpriteStacker       ;stack six sprites on top of each other vertically
+         jsr SixSpriteStackerVanilla ;stack six sprites on top of each other vertically
          lda Enemy_Rel_XPos         ;get relative horizontal coordinate
          sta Sprite_X_Position,y    ;store in first, third and fifth sprites
          sta Sprite_X_Position+8,y
@@ -97,7 +97,7 @@ FourSpriteStacker:
   sta PlatformLastOAMOrder
 
   ldx #4           ;do six sprites
-StkLp:
+@StkLp:
     ; keep platforms from disappearing with too many on screen
     lda PlatformLastOAMOrder
     clc
@@ -119,10 +119,23 @@ StkLp:
     adc #$08           ;add eight pixels
     sta R1
     dex                ;do another sprite
-    bne StkLp          ;do this until all sprites are done
+    bne @StkLp          ;do this until all sprites are done
   ldy R2            ;get saved OAM data offset and leave
   rts
 
+SixSpriteStackerVanilla:
+       ldx #$06           ;do six sprites
+@StkLp: sta Sprite_Data,y  ;store X or Y coordinate into OAM data
+       clc
+       adc #$08           ;add eight pixels
+       iny
+       iny                ;move offset four bytes forward
+       iny
+       iny
+       dex                ;do another sprite
+       bne @StkLp          ;do this until all sprites are done
+       ldy $02            ;get saved OAM data offset and leave
+       rts
 
 SixSpriteStacker:
   sta R1

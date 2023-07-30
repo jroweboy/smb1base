@@ -144,10 +144,29 @@ WriteBlockType:
   pla
   rts
 
-VineBlock:
-  ldx #$05                ;load last slot for enemy object buffer
+.proc VineBlock
+;   ldx #6                ;start at beginning of enemy slots
+; :
+;     dex
+;     bmi noslots
+;     lda Enemy_Flag,x        ;check enemy buffer flag for empty slot
+;     bne :-              ;if set, branch and keep checking
+; SpawnVine:
+  ; ldx #6
+  ; jsr EraseEnemyObject
+  ldx #5
+  jsr EraseEnemyObject
   ldy SprDataOffset_Ctrl  ;get control bit
   farcall Setup_Vine, jmp ;set up vine object
+
+; noslots:
+;   ; no room for the vine so just kill enemy in slot $5 and use it
+;   ; lda #0
+;   ; sta Enemy_Flag,x  ;if found, deactivate enemy object flag
+;   ldx #5
+;   jsr EraseEnemyObject
+;   jmp SpawnVine
+.endproc
 
 ;--------------------------------
 

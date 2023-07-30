@@ -53,8 +53,10 @@ ProcFireballs:
   jsr FireballObjCore  ;process second fireball object, then do air bubbles
 
 ProcAirBubbles:
-  lda AreaType                ;if not water type level, skip the rest of this
-  bne BublExit
+  ; lda AreaType                ;if not water type level, skip the rest of this
+  ; bne BublExit
+  lda SwimmingFlag
+  beq BublExit
   ldx #$02                    ;otherwise load counter and use as offset
 :
     stx ObjectOffset            ;store offset
