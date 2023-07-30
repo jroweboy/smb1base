@@ -600,7 +600,7 @@ WaterPaletteData:
 GroundPaletteData:
   .byte $3f, $00, $20
   .byte $0f, $13, $03, $0f ;green platfrom, pipe color
-  .byte $0f, $33, $03, $0f ;nesdraug change ground color
+  .byte $04, $33, $03, $0f ;nesdraug change ground color
   .byte $0f, $30, $21, $0f
   .byte $0f, $27, $17, $0f
   .byte $0f, $16, $27, $18

@@ -1351,9 +1351,9 @@ MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
 
 Palette1_MTiles:
   .byte $7D, $7D, $7E, $7E ;vertical rope
-  .byte $5C, $24, $5C, $24 ;horizontal rope
-  .byte $24, $7D, $5D, $6D ;left pulley
-  .byte $5E, $6E, $24, $7E ;right pulley
+  .byte $E8, $F7, $E7, $F8 ;horizontal rope ;nesdraug change
+  .byte $E6, $F6, $E7, $F7 ;left pulley   
+  .byte $5C, $F7, $5D, $6E ;right pulley
   .byte $24, $24, $24, $24 ;blank used for balance rope
   .byte $77, $48, $78, $48 ;castle top
   .byte $48, $48, $27, $27 ;castle window left

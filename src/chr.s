@@ -13,7 +13,7 @@
 ; .incbin "../Super Mario Bros. (World).nes", $9010, $1000
 ; .incbin "../Super Mario Bros. (World).nes", $8010, $1000
 
-.incbin "../chr/arranged_bg.chr"
+.incbin "../chr/arranged_bg.chr" ;_
 .incbin "../chr/arranged_sprites.chr"
 
 .incbin "../chr/peach_spritesheet.chr"

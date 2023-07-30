@@ -650,7 +650,7 @@ GetAreaPal:   lda Palette3Data,y       ;fetch palette to be written based on are
               sta ColorRotateOffset    ;otherwise, init to keep it in range
 ExitColorRot:
   lda FrameCounter
-  and #%00111111
+  and #%00000111 ;nesdraug edit the disco cycle 
   ; cmp #%00000011
   bne Exit ; Every 32 frames on frame 4 do a disco rotation
     inc DiscoCycleIdx
