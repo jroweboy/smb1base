@@ -720,10 +720,10 @@ BankNumForFloor:
   .byte $02, $09
 
 CycleForPalette1:
-  .byte $30, $16, $38, $2a
+  .byte $30, $31, $38, $2c
 CycleForPalette2:
-  .byte $21, $14, $27, $24
+  .byte $21, $23, $25, $24
 ; Choose dark colors for the outline
 CycleForPalette3: 
-  .byte $0f, $01, $04, $0a
+  .byte $0f, $0f, $0f, $0f
 .endproc
