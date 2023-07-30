@@ -128,10 +128,17 @@ SetupIntermediate:
 
   lda OperMode                 ;check primary mode of operation
   beq :+                  ;if in title screen mode, skip this
+    ; if you can't move the character don't play the music
     lda AltEntranceControl
     bne :+
-      lda #IntermediateMusic
-      sta EventMusicQueue
+    ;   ; last check i swear. if there is area music don't play
+    ;   lda AreaMusicBuffer
+    ;   bpl :+
+    lda DisableIntermediate
+    bne :+
+        ; play loading screen music
+        lda #IntermediateMusic
+        sta EventMusicQueue
   :
   lda BackgroundColorCtrl  ;save current background color control
   pha                      ;and player status to stack
@@ -1253,9 +1260,11 @@ MetatileGraphics_High: .hibytes MetatileGraphics
 Palette0_MTiles:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
-  .byte $24, $24, $24, $30 ;bush left
-  .byte $31, $24, $32, $24 ;bush middle
-  .byte $24, $33, $24, $24 ;bush right
+BUSH_TOPLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $24, $24, $24, $d0 ;bush top left
+  .byte $e1, $f1, $e2, $f2 ;bush middle
+BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $24, $d1, $24, $d2 ;bush top middle
   .byte $24, $34, $34, $26 ;mountain left
   .byte $26, $26, $38, $26 ;mountain left bottom/middle center
   .byte $24, $35, $24, $36 ;mountain middle top
@@ -1348,11 +1357,20 @@ Palette2_MTiles:
   .byte $43, $24, $24, $24 ;cloud bottom right
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
-  .byte $44, $83, $44, $82 ;cracked rock terrain (nonsolid)
+BUSH_LEFT_METATILE = $80 + (* - Palette2_MTiles) / 4
+  .byte $44, $82, $e0, $f0 ;bush left
+BUSH_RIGHT_METATILE = $80 + (* - Palette2_MTiles) / 4
+  .byte $e3, $f3, $44, $83 ;bush right
+CRACKED_BRICK_NONSOLID = $80 + (* - Palette2_MTiles) / 4
+  .byte $44, $82, $44, $83 ;cracked rock terrain (nonsolid)
+CLOUD_METATILE = $80 + (* - Palette2_MTiles) / 4
   ; Solid Extent
   .byte $8E, $9E, $8F, $9F ;cloud level terrain
+CRACKED_BRICK_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $82, $92, $83, $93 ;cracked rock terrain top (new)
+CRACKED_BRICK_METATILE2 = $80 + (* - Palette2_MTiles) / 4
   .byte $92, $93, $92, $93 ;cracked rock terrain bottom (new)
+BRIDGE_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $39, $49, $39, $49 ;bowser's bridge
 
 

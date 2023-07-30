@@ -67,22 +67,22 @@ RunStarFlagObj:
   .word DelayToAreaEnd
 
 GameTimerFireworks:
-  ldy #$05               ;set default state for star flag object
-  lda GameTimerDisplay+2 ;get game timer's last digit
-  cmp #$01
-  beq SetFWC             ;if last digit of game timer set to 1, skip ahead
-  ldy #$03               ;otherwise load new value for state
-  cmp #$03
-  beq SetFWC             ;if last digit of game timer set to 3, skip ahead
-  ldy #$00               ;otherwise load one more potential value for state
-  cmp #$06
-  beq SetFWC             ;if last digit of game timer set to 6, skip ahead
+  ; ldy #$05               ;set default state for star flag object
+  ; lda GameTimerDisplay+2 ;get game timer's last digit
+  ; cmp #$01
+  ; beq SetFWC             ;if last digit of game timer set to 1, skip ahead
+  ; ldy #$03               ;otherwise load new value for state
+  ; cmp #$03
+  ; beq SetFWC             ;if last digit of game timer set to 3, skip ahead
+  ; ldy #$00               ;otherwise load one more potential value for state
+  ; cmp #$06
+  ; beq SetFWC             ;if last digit of game timer set to 6, skip ahead
   lda #$ff               ;otherwise set value for no fireworks
 SetFWC:
   sta FireworksCounter   ;set fireworks counter here
   sty Enemy_State,x      ;set whatever state we have in star flag object
   ; jroweboy set a little delay for the award timer so it doesn't end too soon
-  lda #6
+  lda #8
   sta EnemyIntervalTimer,x
   
 IncrementSFTask1:
@@ -149,8 +149,9 @@ DelayToAreaEnd:
   jsr DrawStarFlag          ;do sub to draw star flag
   lda EnemyIntervalTimer,x  ;if interval timer set in previous task
   bne StarFlagExit2         ;not yet expired, branch to leave
-  lda EventMusicBuffer      ;if event music buffer empty,
-  beq IncrementSFTask2      ;branch to increment task
+  jmp IncrementSFTask2
+  ; lda EventMusicBuffer      ;if event music buffer empty,
+  ; beq IncrementSFTask2      ;branch to increment task
 
 StarFlagExit2:
   rts                       ;otherwise leave

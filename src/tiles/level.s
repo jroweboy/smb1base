@@ -166,29 +166,23 @@ NoColWrap:
   rts
 .endproc
 
-;-------------------------------------------------------------------------------------
-;$00 - used as counter, store for low nybble for background, ceiling byte for terrain
-;$01 - used to store floor byte for terrain
-;$07 - used to store terrain metatile
-;$06-$07 - used to store block buffer address
-
 BSceneDataOffsets:
   .byte $00, $30, $60
 
 BackSceneryData:
-  .byte $93, $00, $00, $11, $12, $12, $13, $00 ;clouds
+  .byte $83, $00, $00, $11, $12, $12, $13, $00 ;clouds
   .byte $00, $51, $52, $53, $00, $00, $00, $00
   .byte $00, $00, $01, $02, $02, $03, $00, $00
-  .byte $00, $00, $00, $00, $91, $92, $93, $00
+  .byte $00, $00, $00, $00, $81, $82, $83, $00
   .byte $00, $00, $00, $51, $52, $53, $41, $42
-  .byte $43, $00, $00, $00, $00, $00, $91, $92
+  .byte $43, $00, $00, $00, $00, $00, $81, $82
 
   .byte $97, $87, $88, $89, $99, $00, $00, $00 ;mountains and bushes
-  .byte $11, $12, $13, $a4, $a5, $a5, $a5, $a6
-  .byte $97, $98, $99, $01, $02, $03, $00, $a4
-  .byte $a5, $a6, $00, $11, $12, $12, $12, $13
+  .byte $11, $12, $13, $94, $95, $95, $95, $96
+  .byte $97, $98, $99, $01, $02, $03, $00, $94
+  .byte $95, $96, $00, $11, $12, $12, $12, $13
   .byte $00, $00, $00, $00, $01, $02, $02, $03
-  .byte $00, $a4, $a5, $a5, $a6, $00, $00, $00
+  .byte $00, $94, $95, $95, $96, $00, $00, $00
 
   .byte $11, $12, $12, $13, $00, $00, $00, $00 ;trees and fences
   .byte $00, $00, $00, $9c, $00, $8b, $aa, $aa
@@ -201,9 +195,9 @@ BackSceneryMetatiles:
   .byte $80, $83, $00 ;cloud left
   .byte $81, $84, $00 ;cloud middle
   .byte $82, $85, $00 ;cloud right
-  .byte $02, $00, $00 ;bush left
-  .byte $03, $00, $00 ;bush middle
-  .byte $04, $00, $00 ;bush right
+  .byte BUSH_TOPLEFT_METATILE, BUSH_LEFT_METATILE, $00 ;bush left
+  .byte BUSH_TOPMIDDLE_METATILE, $03, $00 ;bush middle
+  .byte $00, BUSH_RIGHT_METATILE, $00 ;bush right
   .byte $00, $05, $06 ;mountain left
   .byte $07, $06, $0a ;mountain middle
   .byte $00, $08, $09 ;mountain right
@@ -249,6 +243,13 @@ AreaParserCore:
       lda BackloadingFlag       ;check to see if we are starting right of start
       beq RenderSceneryTerrain  ;if not, go ahead and render background, foreground and terrain
       jsr ProcessAreaData       ;otherwise skip ahead and load level data
+
+
+;-------------------------------------------------------------------------------------
+;$00 - used as counter, store for low nybble for background, ceiling byte for terrain
+;$01 - used to store floor byte for terrain
+;$07 - used to store terrain metatile
+;$06-$07 - used to store block buffer address
 
 .import GetBlockBufferAddr, Bitmasks
 RenderSceneryTerrain:
@@ -883,43 +884,44 @@ ChkEnemyFrenzy:
 ;$07 - used to hold high nybble of position of extended right boundary
 
 ProcessEnemyData:
-        ldy EnemyDataOffset      ;get offset of enemy object data
-        lda (EnemyData),y        ;load first byte
-        cmp #$ff                 ;check for EOD terminator
-        bne CheckEndofBuffer
-        jmp CheckFrenzyBuffer    ;if found, jump to check frenzy buffer, otherwise
+  ldy EnemyDataOffset      ;get offset of enemy object data
+  lda (EnemyData),y        ;load first byte
+  cmp #$ff                 ;check for EOD terminator
+  bne CheckEndofBuffer
+  jmp CheckFrenzyBuffer    ;if found, jump to check frenzy buffer, otherwise
 
 CheckEndofBuffer:
-        and #%00001111           ;check for special row $0e
-        cmp #$0e
-        beq CheckRightBounds     ;if found, branch, otherwise
-        cpx #$05                 ;check for end of buffer
-        bcc CheckRightBounds     ;if not at end of buffer, branch
-        iny
-        lda (EnemyData),y        ;check for specific value here
-        and #%00111111           ;not sure what this was intended for, exactly
-        cmp #$2e                 ;this part is quite possibly residual code
-        beq CheckRightBounds     ;but it has the effect of keeping enemies out of
-        rts                      ;the sixth slot
+  and #%00001111           ;check for special row $0e
+  cmp #$0e
+  beq CheckRightBounds     ;if found, branch, otherwise
+  ; Changed to allow enemies into slot 6 (used to be reserved for powerups)
+  cpx #$06                 ;check for end of buffer
+  bcc CheckRightBounds     ;if not at end of buffer, branch
+  iny
+  lda (EnemyData),y        ;check for specific value here
+  and #%00111111           ;not sure what this was intended for, exactly
+  cmp #$2e                 ;this part is quite possibly residual code
+  beq CheckRightBounds     ;but it has the effect of keeping enemies out of
+  rts                      ;the sixth slot
 
 CheckRightBounds:
-        lda ScreenRight_X_Pos    ;add 48 to pixel coordinate of right boundary
-        clc
-        adc #$30
-        and #%11110000           ;store high nybble
-        sta R7
-        lda ScreenRight_PageLoc  ;add carry to page location of right boundary
-        adc #$00
-        sta R6                  ;store page location + carry
-        ldy EnemyDataOffset
-        iny
-        lda (EnemyData),y        ;if MSB of enemy object is clear, branch to check for row $0f
-        asl
-        bcc CheckPageCtrlRow
-        lda EnemyObjectPageSel   ;if page select already set, do not set again
-        bne CheckPageCtrlRow
-        inc EnemyObjectPageSel   ;otherwise, if MSB is set, set page select 
-        inc EnemyObjectPageLoc   ;and increment page control
+  lda ScreenRight_X_Pos    ;add 48 to pixel coordinate of right boundary
+  clc
+  adc #$30
+  and #%11110000           ;store high nybble
+  sta R7
+  lda ScreenRight_PageLoc  ;add carry to page location of right boundary
+  adc #$00
+  sta R6                  ;store page location + carry
+  ldy EnemyDataOffset
+  iny
+  lda (EnemyData),y        ;if MSB of enemy object is clear, branch to check for row $0f
+  asl
+  bcc CheckPageCtrlRow
+  lda EnemyObjectPageSel   ;if page select already set, do not set again
+  bne CheckPageCtrlRow
+  inc EnemyObjectPageSel   ;otherwise, if MSB is set, set page select 
+  inc EnemyObjectPageLoc   ;and increment page control
 
 CheckPageCtrlRow:
   dey
@@ -1084,7 +1086,7 @@ Inc2B:
   ; lda #$00
   ; sta Enemy_State,x
   ; sty LakituActionBuffer
-  
+
   ldy #0
   farcall CreateObject, jmp
   ; lda #Spiny
