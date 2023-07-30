@@ -22,13 +22,13 @@ PowerUpObjHandler:
   bne RunPUSubs              ;branch ahead to enemy object routines
   lda Enemy_PowerupType,x    ;check power-up type
   ; cmp #PowerMushroom
-  beq ShroomM                ;if normal mushroom, branch ahead to move it
+  ; beq ShroomM                ;if normal mushroom, branch ahead to move it
 ;  cmp #$03
-  cmp #OneupMushroom
-  beq ShroomM                ;if 1-up mushroom, branch ahead to move it
+  ; cmp #OneupMushroom
+  ; beq ShroomM                ;if 1-up mushroom, branch ahead to move it
 ;  cmp #$02
   cmp #PowerStar
-  bne RunPUSubs              ;if not star, branch elsewhere to skip movement
+  bne ShroomM              ;if not star, branch elsewhere to skip movement
     jsr MoveJumpingEnemy       ;otherwise impose gravity on star power-up and make it jump
     jsr EnemyJump              ;note that green paratroopa shares the same code here 
     jmp RunPUSubs              ;then jump to other power-up subroutines
