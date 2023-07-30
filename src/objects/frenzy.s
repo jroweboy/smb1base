@@ -541,7 +541,7 @@ LakituCooldownTimer:
   .byte $22, $0f
 LakituObjectType:
   .byte PowerMushroom, FireFlower, PowerStar, OneupMushroom
-  .byte GreenKoopa, Goomba, RedCheepCheep, HammerBro
+  .byte GreenKoopa, Goomba, Podoboo, HammerBro
 
 PlayerLakituDiff:
            ldy #$00                   ;set Y for default value
