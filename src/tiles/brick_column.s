@@ -8,7 +8,7 @@
 ;--------------------------------
 
 SolidBlockMetatiles:
-      .byte $69, $61, $61, $62
+      .byte $69, $61, $61, $62 
 
 BrickMetatiles:
       .byte $22, $51, $52, $52
