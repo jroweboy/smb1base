@@ -4,7 +4,7 @@
 ; core.s ???
 .import GameCoreRoutine, ScreenRoutines, UpdScrollVar
 .import EnemiesAndLoopsCore, RelativePlayerPosition, PlayerGfxHandler
-.import LoadAreaPointer, TerminateGame
+.import LoadAreaPointer, TerminateGame, WritePlayerNames
 
 .import IncModeTask_B
 
@@ -304,9 +304,14 @@ SelectBLogic:
   sta SelectTimer
   cpy #$01                    ;was the B button pressed earlier?  if so, branch
   beq IncWorldSel             ;note this will not be run if world selection is disabled
-  lda SelectedSprite
+
+  ; change the sprite slot and also the current player
+  lda CurrentLeader
   eor #1
-  sta SelectedSprite
+  sta CurrentLeader
+
+  jsr WritePlayerNames
+
   beq PlayingAsMario
     ; playing as peach so switch banks
     BankCHR10 #8
@@ -347,7 +352,7 @@ RunDemo:
 far PLAYER
   lda #$88
   jsr FreezePlayer
-  lda #$70
+  lda #$66
   jsr FreezeFollowerX
   jsr RenderPlayerFollower
 endfar

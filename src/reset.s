@@ -574,7 +574,7 @@ SkipMainOper:
       DaySnowPaletteData, NightSnowPaletteData, MushroomPaletteData, \
       MarioThanksMessage, LuigiThanksMessage, MushroomRetainerSaved, \
       PrincessSaved1, PrincessSaved2, WorldSelectMessage1, \
-      WorldSelectMessage2
+      WorldSelectMessage2, LeadFollow
 
 VRAM_AddrTable_Low: .lobytes VRAM_AddrTable
 VRAM_AddrTable_High: .hibytes VRAM_AddrTable
@@ -688,6 +688,11 @@ WorldSelectMessage1:
 WorldSelectMessage2:
   .byte $26, $88, $11
   .byte "TO SELECT A WORLD"
+  .byte $00
+
+LeadFollow:
+  .byte $22, $a8, $0e
+  .byte "FOLLOWS  LEADS"
   .byte $00
 
 .endproc

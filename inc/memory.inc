@@ -408,7 +408,7 @@ StackClear = DigitModifier
 .global SpriteShuffleTemp
 
 .global LivesScreenTimer
-.global SelectedSprite
+.global CurrentLeader
 
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute

@@ -430,7 +430,7 @@ SpriteShuffleTemp:              .res  1
 PlatformLastOAMOrder:           .res  1
 
 LivesScreenTimer:               .res  1
-SelectedSprite:                 .res  1
+CurrentLeader:                 .res  1
 
 ; FirstTimeAreaReset:             .res  1
 ; AreaResetCountdown:             .res  1

@@ -35,7 +35,7 @@
   .word GetAlternatePalette1
   .word DrawTitleScreen
   .word ClearBuffersDrawIcon
-  .word WriteTopScore
+  .word WritePlayerNamesTask
 .endproc
 
 
@@ -360,45 +360,29 @@ DrawTitleScreen:
   
   lda #CloudMusic
   sta AreaMusicQueue
-;   lda #>TitleScreenDataOffset  ;load address $1ec0 into
-;   sta PPUADDR              ;the vram address register
-;   lda #<TitleScreenDataOffset
-;   sta PPUADDR
-;   lda #$03                     ;put address $0300 into
-;   sta R1                      ;the indirect at $00
-;   ldy #$00
-;   sty R0
-;   lda PPUDATA                 ;do one garbage read
-; OutputTScr:
-;   lda PPUDATA                 ;get title screen from chr-rom
-;   sta (R0),y                  ;store 256 bytes into buffer
-;   iny
-;   bne ChkHiByte                ;if not past 256 bytes, do not increment
-;   inc R1                      ;otherwise increment high byte of indirect
-; ChkHiByte:
-;   lda R1                      ;check high byte?
-;   cmp #$04                     ;at $0400?
-;   bne OutputTScr               ;if not, loop back and do another
-;   cpy #$3a                     ;check if offset points past end of data
-;   bcc OutputTScr               ;if not, loop back and do another
-;   lda #$05                     ;set buffer transfer control to $0300,
-  jmp SetVRAMAddr_B            ;increment task and exit
 
-; .proc DrawTitleScreen
-; .import DrawTitleScreenInternal
-;   lda OperMode                 ;are we in title screen mode?
-;   bne IncModeTask_B            ;if not, exit
-;     farcall DrawTitleScreenInternal, jmp
-; .endproc
+  ; Draw Lead / Follow Text
+  lda #19
+  jmp SetVRAMAddr_B            ;increment task and exit
 
 ;-------------------------------------------------------------------------------------
 
-WriteTopScore:
-  ; lda #$fa           ;run display routine to display top score on title
-  ; jsr UpdateNumber
+WritePlayerNamesTask:
+  jsr WritePlayerNames
 IncModeTask_B:
   inc OperMode_Task  ;move onto next mode
   rts
+
+.export WritePlayerNames
+.proc WritePlayerNames
+  lda #$22
+  ldx #$91
+  jsr DrawCurrentLeaderName
+  lda #$22
+  ldx #$8a
+  jmp DrawCurrentFollowerName
+.endproc
+
 ;-------------------------------------------------------------------------------------
 
 ClearBuffersDrawIcon:
@@ -416,6 +400,61 @@ IncSubtask:
   rts
 
 ;-------------------------------------------------------------------------------------
+
+.proc DrawCurrentFollowerName
+  pha
+    lda CurrentLeader
+    eor #1
+    sta CurrentLeader
+  pla
+  jsr DrawCurrentLeaderName
+  lda CurrentLeader
+  eor #1
+  sta CurrentLeader
+  rts
+.endproc
+
+.proc DrawCurrentLeaderName
+; a = hibyte of addr x = lobyte
+  ldy VRAM_Buffer1_Offset
+  sta VRAM_Buffer1,y
+  txa 
+  sta VRAM_Buffer1+1,y
+
+  tya
+  clc
+  adc #8
+  sta VRAM_Buffer1_Offset
+
+  ; length
+  lda #5
+  sta VRAM_Buffer1+2,y
+  ; null terminator
+  lda #0
+  sta VRAM_Buffer1+8,y
+
+  lda CurrentLeader
+  beq :+
+    ; peach
+    lda #6
+: ; Mario
+  tax
+
+@loop:
+  lda LeaderName,x
+  beq @exit
+  sta VRAM_Buffer1+3,y
+  inx
+  iny
+  bne @loop
+@exit:
+  rts
+
+LeaderName:
+  .byte "MARIO", $00
+  .byte "PEACH", $00
+
+.endproc
 
 ; .proc DrawMushroomIcon
 ;   ldy #$07                ;read eight bytes to be read by transfer routine
