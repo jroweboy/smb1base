@@ -34,7 +34,7 @@ APU_FRAMECOUNTER      = $4017
 ;-------------------------------------------------------------------------------------
 ;CONSTANTS
 
-GLOBAL_BACKGROUND_COLOR = $0f
+GLOBAL_BACKGROUND_COLOR = $0c ;nesdraug sky color
 
 ;sound effects constants
 Sfx_SmallJump         = %10000000

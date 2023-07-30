@@ -599,12 +599,12 @@ WaterPaletteData:
 
 GroundPaletteData:
   .byte $3f, $00, $20
-  .byte $0f, $29, $1a, $0f
-  .byte $0f, $36, $17, $0f
+  .byte $0f, $13, $03, $0f ;green platfrom, pipe color
+  .byte $0f, $33, $03, $0f ;nesdraug change ground color
   .byte $0f, $30, $21, $0f
   .byte $0f, $27, $17, $0f
   .byte $0f, $16, $27, $18
-  .byte $0f, $1a, $30, $27
+  .byte $0f, $03, $30, $26 ; green enemy color 
   .byte $0f, $16, $30, $27
   .byte $0f, $0f, $36, $17
   .byte $00
@@ -612,13 +612,13 @@ GroundPaletteData:
 UndergroundPaletteData:
   .byte $3f, $00, $20
   .byte $0f, $29, $1a, $09
-  .byte $0f, $3c, $1c, $0f
+  .byte $0f, $1c, $0c, $0f
   .byte $0f, $30, $21, $1c
   .byte $0f, $27, $17, $1c
   .byte $0f, $16, $27, $18
-  .byte $0f, $1c, $36, $17
-  .byte $0f, $16, $30, $27
-  .byte $0f, $0c, $3c, $1c
+  .byte $0f, $0c, $36, $17 ;underground koopa
+  .byte $0f, $07, $30, $27 ;underground red enemy
+  .byte $0f, $0c, $3c, $1c ;underground goomba
   .byte $00
 
 CastlePaletteData:
