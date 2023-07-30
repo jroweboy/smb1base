@@ -198,9 +198,9 @@ BackSceneryMetatiles:
   .byte BUSH_TOPLEFT_METATILE, BUSH_LEFT_METATILE, $00 ;bush left
   .byte BUSH_TOPMIDDLE_METATILE, $03, $00 ;bush middle
   .byte $00, BUSH_RIGHT_METATILE, $00 ;bush right
-  .byte $00, $05, $06 ;mountain left
-  .byte $07, $06, $0a ;mountain middle
-  .byte $00, $08, $09 ;mountain right
+  .byte $00,                        MOUNTAIN_MIDLEFT_METATILE,  MOUNTAIN_MIDMID_METATILE ;mountain left
+  .byte MOUNTAIN_MIDTOP_METATILE,   MOUNTAIN_MIDMID_METATILE,   MOUNTAIN_BOTMID_METATILE ;mountain middle
+  .byte MOUNTAIN_TOPRIGHT_METATILE, MOUNTAIN_MIDRIGHT_METATILE, MOUNTAIN_BOTRIGHT_METATILE ;mountain right
   .byte $4d, $00, $00 ;fence
   .byte $0d, $0f, $4e ;tall tree
   .byte $0e, $4e, $4e ;short tree

@@ -1299,17 +1299,27 @@ MetatileGraphics_High: .hibytes MetatileGraphics
 Palette0_MTiles:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
+
 BUSH_TOPLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $24, $24, $24, $d0 ;bush top left
   .byte $e1, $f1, $e2, $f2 ;bush middle
 BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $24, $d1, $24, $d2 ;bush top middle
-  .byte $24, $34, $34, $26 ;mountain left
-  .byte $26, $26, $38, $26 ;mountain left bottom/middle center
-  .byte $24, $35, $24, $36 ;mountain middle top
-  .byte $37, $26, $24, $37 ;mountain right
-  .byte $38, $26, $26, $26 ;mountain right bottom
-  .byte $26, $26, $26, $26 ;mountain middle bottom
+
+MOUNTAIN_MIDLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $fa, $fb, $eb, $ee ;mountain left
+MOUNTAIN_MIDMID_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $fc, $fd, $ee, $ff ;mountain left bottom/middle center
+MOUNTAIN_MIDTOP_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $dc, $dd, $ec, $ed ;mountain middle top
+MOUNTAIN_MIDRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
+MOUNTAIN_BOTRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $ee, $ff, $ee, $ff ;mountain right mid/bottom
+MOUNTAIN_TOPRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $de, $ee, $df, $ef
+MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $fe, $ee, $fe, $fe ;mountain middle bottom
+
   .byte $24, $44, $24, $44 ;bridge guardrail
   .byte $24, $CF, $CF, $24 ;chain
   .byte $3E, $4E, $3F, $4F ;tall tree top, top half
