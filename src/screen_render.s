@@ -1307,18 +1307,18 @@ BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $24, $d1, $24, $d2 ;bush top middle
 
 MOUNTAIN_MIDLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
-  .byte $fa, $fb, $eb, $ee ;mountain left
+  .byte $fa, $ec, $fb, $ed ;mountain left
 MOUNTAIN_MIDMID_METATILE = $00 + (* - Palette0_MTiles) / 4
-  .byte $fc, $fd, $ee, $ff ;mountain left bottom/middle center
+  .byte $fc, $ee, $fd, $db ;mountain left bottom/middle center
 MOUNTAIN_MIDTOP_METATILE = $00 + (* - Palette0_MTiles) / 4
-  .byte $dc, $dd, $ec, $ed ;mountain middle top
+  .byte $dc, $ec, $dd, $ed ;mountain middle top
 MOUNTAIN_MIDRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
 MOUNTAIN_BOTRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
-  .byte $ee, $ff, $ee, $ff ;mountain right mid/bottom
+  .byte $ee, $ee, $ff, $ff ;mountain right mid/bottom
 MOUNTAIN_TOPRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $de, $ee, $df, $ef
 MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
-  .byte $fe, $ee, $fe, $fe ;mountain middle bottom
+  .byte $ee, $ee, $ff, $ff ;mountain middle bottom
 
   .byte $24, $44, $24, $44 ;bridge guardrail
   .byte $24, $CF, $CF, $24 ;chain
