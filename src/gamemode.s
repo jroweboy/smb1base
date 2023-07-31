@@ -319,10 +319,10 @@ ChkSelect:
 ;   bcs ResetTitle              ;if carry flag set, demo over, thus branch
 ;   jmp RunDemo                 ;otherwise, run game engine for demo
 ; ChkWorldSel:
-  ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
-  beq NullJoypad
-  cmp #B_Button               ;if so, check to see if the B button was pressed
-  bne NullJoypad
+  ; ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
+  ; beq NullJoypad
+  ; cmp #B_Button               ;if so, check to see if the B button was pressed
+  ; bne NullJoypad
   iny                         ;if so, increment Y and execute same code as select
 SelectBLogic:
   ; lda DemoTimer               ;if select or B pressed, check demo timer one last time
@@ -425,10 +425,11 @@ InitScores:
 ExitMenu:
   rts
 GoContinue:
-  sta WorldNumber             ;start both players at the first area
+  sta LevelNumber
+  sta AreaNumber             ;start both players at the first area
   ; sta OffScr_WorldNumber      ;of the previously saved world number
-  ldx #$00                    ;note that on power-up using this function
-  stx AreaNumber              ;will make no difference
+  ; ldx #$00                    ;note that on power-up using this function
+  ; stx AreaNumber              ;will make no difference
   ; stx OffScr_AreaNumber
   rts
 

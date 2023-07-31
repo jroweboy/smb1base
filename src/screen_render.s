@@ -35,6 +35,7 @@
   .word GetAlternatePalette1
   .word DrawTitleScreen
   .word ClearBuffersDrawIcon
+  .word WriteCreditsTask
   .word WritePlayerNamesTask
 .endproc
 
@@ -367,7 +368,7 @@ GameOverInter:
   sta ScreenTimer
   ; lda #$03                     ;output game over screen to buffer
   ; jsr WriteGameText
-  jmp IncModeTask_B
+  rts
 NoInter:
   lda #$08                     ;set for specific task and leave
   sta ScreenRoutineTask
@@ -517,7 +518,7 @@ PanicMarioNametableDataLen = * - PanicMarioNametableData
 
 DrawTitleScreen:
   lda OperMode                 ;are we in title screen mode?
-  bne IncModeTask_B            ;if not, exit
+  bne AnotheRRTS            ;if not, exit
 
   ; bank in the title screen graphics
   BankCHR4 #11
@@ -542,14 +543,43 @@ DrawTitleScreen:
   sta VRAM_Buffer1-1
   lda #5
   jmp SetVRAMAddr_B            ;increment task and exit
+AnotheRRTS:
+  rts
 
 ;-------------------------------------------------------------------------------------
 
-WritePlayerNamesTask:
-  jsr WritePlayerNames
-IncModeTask_B:
-  inc OperMode_Task  ;move onto next mode
+.proc WriteCreditsTask
+  ldx #EndCredits - Credits
+  stx VRAM_Buffer1_Offset
+:
+    lda Credits,x
+    sta VRAM_Buffer1,x
+    dex
+    bpl :-
+  
+  inc ScreenRoutineTask
   rts
+
+Credits:
+  .byte $23,$8a,L1
+L1 = L2 - *
+  .byte "TEAM NESDRAUG/JROWEBOY"
+L2 = *
+  .byte $23,$af,L3
+L3 = L4 - *
+  .byte "SMBARENA 2023 JAM"
+L4 = *
+  .byte $00
+EndCredits = *
+.endproc
+
+.proc WritePlayerNamesTask
+  jsr WritePlayerNames
+  ; also write the credits
+  inc OperMode_Task
+  rts
+.endproc
+
 
 .export WritePlayerNames
 .proc WritePlayerNames
@@ -565,7 +595,7 @@ IncModeTask_B:
 
 ClearBuffersDrawIcon:
   lda OperMode               ;check game mode
-  bne IncModeTask_B          ;if not title screen mode, leave
+  bne LocalRTS          ;if not title screen mode, leave
   ldx #$00                   ;otherwise, clear buffer space
 TScrClear:
   sta VRAM_Buffer1-1,x
@@ -580,6 +610,7 @@ TScrClear:
   
 IncSubtask:
   inc ScreenRoutineTask      ;move onto next task
+LocalRTS:
   rts
 
 ;-------------------------------------------------------------------------------------
