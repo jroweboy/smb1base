@@ -7,8 +7,8 @@ WorldAddrOffsets:
       .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
 
 AreaAddrOffsets:
-World1Areas: .byte $25, $29, $c0, $26, $28, $30, $60
-World2Areas: .byte $60, $01, $27, $62, $24, $35, $20
+World1Areas: .byte $25, $29, $c0, $26, $28, $60, $30
+World2Areas: .byte $30, $01, $27, $62, $24, $35, $20
 World3Areas: .byte $24, $35, $20, $63, $22, $29, $41
 World4Areas: .byte $22, $29, $41, $2c, $61, $2a, $31
 World5Areas: .byte $2a, $31, $26, $62, $2e, $23, $2d

@@ -7,8 +7,8 @@ WorldAddrOffsets:
       .db World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
 
 AreaAddrOffsets:
-World1Areas: .db $25, $29, $c0, $26, $28, $30, $60
-World2Areas: .db $60, $01, $27, $62, $24, $35, $20
+World1Areas: .db $25, $29, $c0, $26, $28, $60, $30
+World2Areas: .db $30, $01, $27, $62, $24, $35, $20
 World3Areas: .db $24, $35, $20, $63, $22, $29, $41
 World4Areas: .db $22, $29, $41, $2c, $61, $2a, $31
 World5Areas: .db $2a, $31, $26, $62, $2e, $23, $2d
