@@ -147,7 +147,7 @@ for filename in sys.argv[1:]:
             b = file.read(1)[0]
             c = c+1
             out+="${0:02x}".format(b)
-            if c in range (5,6):
+            if c in range (7,8):
                 break
             else:
                 out+=", "
