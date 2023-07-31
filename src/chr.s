@@ -8,14 +8,18 @@
 ; .endrepeat
 
 
-.segment "CHR_ORIGINAL"
+.segment "CHR_IN_PRG1"
 ; Switch sprites and bg
 ; .incbin "../Super Mario Bros. (World).nes", $9010, $1000
 ; .incbin "../Super Mario Bros. (World).nes", $8010, $1000
-
-.incbin "../chr/arranged_bg.chr" ;_
+.export CHR1
+CHR1:
+.incbin "../chr/arranged_bg.chr"
 .incbin "../chr/arranged_sprites.chr"
 
+.segment "CHR_IN_PRG2"
+.export CHR2
+CHR2:
 .incbin "../chr/peach_spritesheet.chr"
 .incbin "../chr/alternate_disco_floor.chr"
 .incbin "../chr/title_screen_bg.chr"

@@ -125,6 +125,25 @@ delay_256x_11_clocks_:
 	dex                      ;2
 	jmp delay_256x_16_clocks ;3
 
+.proc SetCHRbanks
+  BankCHR0 x
+  inx
+  BankCHR4 x
+  inx
+  BankCHR8 x
+  inx
+  BankCHRC x
+  inx
+  BankCHR10 x
+  inx
+  BankCHR14 x
+  inx
+  BankCHR18 x
+  inx
+  BankCHR1C x
+  rts
+.endproc
+
 .proc Start
   sei                          ;pretty standard 6502 type init here
   cld
@@ -140,6 +159,7 @@ delay_256x_11_clocks_:
   bpl :-
 : lda PPUSTATUS
   bpl :-
+
   ldy #ColdBootOffset          ;load default cold boot pointer
   ldx #$05                     ;this is where we check for a warm boot
 WBootCheck:
@@ -179,22 +199,7 @@ VRC7Init:
   lda #$4c
   sta TargetAddrJmp
   ldx #0
-  BankCHR0 x
-  inx
-  BankCHR4 x
-  inx
-  BankCHR8 x
-  inx
-  BankCHRC x
-  inx
-  BankCHR10 x
-  inx
-  BankCHR14 x
-  inx
-  BankCHR18 x
-  inx
-  BankCHR1C x
-
+  jsr SetCHRbanks
 
 HORIZONTAL_MIRRORING = (1 << 0)
 DISABLE_VRC7_CHANNELS = (1 << 6)
@@ -233,6 +238,44 @@ BAD_EMULATOR:
 .import CustomSoundInit
   
   jsr CustomSoundInit
+
+
+  ; Initialize the CHR RAM with the contents of CHRPRG
+  .import CHR1, CHR2
+  BankPRG8 #.bank(CHR1)
+  ; mega loop to write all of the data from the CHRPRG to the 
+  lda #0
+  sta R0
+  lda #1
+  sta R2
+  
+  ldx #8
+  lda #0
+  sta PPUMASK
+  lda PPUSTATUS
+  megaloop:
+    lda #$80
+    sta R1
+    ldy #0
+    sty PPUADDR
+    sty PPUADDR
+    @outerloop:
+      @innerloop:
+        lda (R0),y
+        sta PPUDATA
+        iny
+        bne @innerloop
+      inc R1
+      lda R1
+      cmp #$a0
+      bne @outerloop
+    BankPRG8 #.bank(CHR2)
+    jsr SetCHRbanks
+    dec R2
+    bpl megaloop
+  
+  ldx #0
+  jsr SetCHRbanks
 
   ; Now set the initial 8 bank
   BankPRG8 #.bank(LOWCODE)
