@@ -1501,9 +1501,9 @@ MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $59, $69, $5A, $6A ;tree ledge left edge
   .byte $5A, $6C, $5A, $6C ;tree ledge middle
   .byte $5A, $6A, $5B, $6B ;tree ledge right edge
-  .byte $A0, $B0, $A1, $B1 ;mushroom left edge
-  .byte $A2, $B2, $A3, $B3 ;mushroom middle
-  .byte $A4, $B4, $A5, $B5 ;mushroom right edge
+  .byte $E4, $F4, $E5, $F5 ;mushroom left edge
+  .byte $E6, $F6, $E7, $F7 ;mushroom middle
+  .byte $E8, $F8, $E9, $F9 ;mushroom right edge
   .byte $54, $64, $55, $65 ;sideways pipe end top
   .byte $56, $66, $56, $66 ;sideways pipe shaft top
   .byte $57, $67, $71, $71 ;sideways pipe joint top
@@ -1532,8 +1532,8 @@ Palette1_MTiles:
   .byte $73, $73, $73, $73 ;green ledge stump
   .byte $3A, $4A, $3B, $4B ;fence
   .byte $3C, $3C, $3D, $3D ;tree trunk
-  .byte $A6, $4E, $A7, $4F ;mushroom stump top
-  .byte $4E, $4E, $4F, $4F ;mushroom stump bottom
+  .byte $C4, $D4, $C5, $D5 ;mushroom stump top ;nesdraug fix meta tiles 
+  .byte $C4, $D4, $C5, $D5 ;mushroom stump bottom
   .byte $47, $48, $47, $48 ;breakable brick w/ line 
   .byte $48, $48, $48, $48 ;breakable brick 
   .byte $47, $48, $47, $48 ;breakable brick (not used)

@@ -1500,12 +1500,12 @@ FloateyNumTileData:
   .byte FLOATEY_NUM_20, $ff  ; "200"
   .byte FLOATEY_NUM_20, $ff  ; "400"
   .byte FLOATEY_NUM_20, $ff  ; "500"
-  .byte FLOATEY_NUM_10, $ff  ; "800"
-  .byte FLOATEY_NUM_10, $ff  ; "1000"
-  .byte FLOATEY_NUM_10, $ff  ; "2000"
-  .byte FLOATEY_NUM_10, $ff  ; "4000"
-  .byte FLOATEY_NUM_10, $ff  ; "5000"
-  .byte FLOATEY_NUM_10, $ff  ; "8000"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00  ; "800"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00  ; "1000"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00  ; "2000"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00  ; "4000"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00  ; "5000"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00  ; "8000"
   .byte FLOATEY_NUM_1, FLOATEY_NUM_UP ; "1-UP"
 
 ;high nybble is digit number, low nybble is number to

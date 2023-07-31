@@ -666,7 +666,7 @@ NightSnowPaletteData:
 
 MushroomPaletteData:
   .byte $3f, $00, $04
-  .byte GLOBAL_BACKGROUND_COLOR, $27, $16, $0f
+  .byte GLOBAL_BACKGROUND_COLOR, $34, $14, $04 ;nesdraug palette change
   .byte $00
 
 BowserPaletteData:
