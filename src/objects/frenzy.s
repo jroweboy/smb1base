@@ -535,7 +535,7 @@ SetLMov:
   jmp MoveEnemyHorizontally  ;move lakitu horizontally
 
 ; in framerules
-LAKITU_ACTION_TIMER = $15
+LAKITU_ACTION_TIMER = $10
 
 LakituActionType:
   ; spiny is an id used for any enemy

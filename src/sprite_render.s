@@ -1559,7 +1559,7 @@ FlagpoleGfxHandler:
       lda FlagpoleCollisionYPos      ;get vertical coordinate at time of collision
       beq ChkFlagOffscreen           ;if zero, branch ahead
       tya
-      clc                            ;add 12 bytes to sprite data offset
+      clc                            ;add 12  bytes to sprite data offset
       adc #$0c
       tay                            ;put back in Y
       lda FlagpoleScore              ;get offset used to award points for touching flagpole
