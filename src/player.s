@@ -77,6 +77,10 @@ PlayerEntrance:
 ChkBehPipe:
   lda InPipeTransition      ;check for sprite attributes
   bne IntroEntr             ;branch if found
+    ; set to flip the bits to make the player face the opposite direction than they are travelling
+    ; aka moonwalk
+    lda #%00000011
+    sta PlayerMoonwalkFlag
     lda #$01
     jmp AutoControlPlayer     ;force player to walk to the right
 IntroEntr:
@@ -131,6 +135,7 @@ PlayerRdy:
   sta AltEntranceControl    ;init mode of entry
   sta DisableCollisionDet   ;init collision detection disable flag
   sta JoypadOverride        ;nullify controller override bits
+  sta PlayerMoonwalkFlag
 ExitEntr:
   rts                       ;leave!
 
@@ -559,7 +564,9 @@ RenderPlayerSub:
   sta R5                      ;store it here also
   lda Player_Rel_YPos
   sta R2                      ;store player's vertical position
+  ; jroweboy: force the player to moon walk if in auto control mode
   lda PlayerFacingDir
+  eor PlayerMoonwalkFlag
   sta R3                      ;store player's facing direction
   lda Player_SprAttrib
   sta R4                      ;store player's sprite attributes

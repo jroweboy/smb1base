@@ -17,6 +17,7 @@ F_Player_Y_HighPos:   .res FRAME_LAG_COUNT
 F_Player_Y_Position:  .res FRAME_LAG_COUNT
 F_Player_SprAttrib:   .res FRAME_LAG_COUNT
 F_PlayerGfxOffset:    .res FRAME_LAG_COUNT
+F_PlayerMoonwalkFlag: .res FRAME_LAG_COUNT
 
 .export F_Player_Hideflag
 ; Special flags
@@ -90,6 +91,9 @@ F_Frame: .res 1
   lda PlayerGfxOffset
   sta F_PlayerGfxOffset,x
 
+  lda PlayerMoonwalkFlag
+  sta F_PlayerMoonwalkFlag,x
+
   ; wrap the pointer around
   inx
   cpx #FRAME_LAG_COUNT
@@ -123,6 +127,7 @@ F_Frame: .res 1
   ; sta R2                      ;store player's vertical position
   
   lda F_PlayerFacingDir,x  ;load vertical coordinate low
+  eor F_PlayerMoonwalkFlag,x
   sta R3
   ; lda PlayerFacingDir
   ; sta R3                      ;store player's facing direction

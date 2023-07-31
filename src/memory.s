@@ -483,6 +483,8 @@ DemoAction:                     .res  1
 DemoActionTimer:                .res  1
 PrimaryMsgCounter:              .res  1
 
+PlayerMoonwalkFlag:          .res  1
+
 ScreenLeft_PageLoc:             .res  1
 ScreenEdge_PageLoc            = ScreenLeft_PageLoc
 

@@ -437,6 +437,7 @@ StackClear = DigitModifier
 .global DemoAction
 .global DemoActionTimer
 .global PrimaryMsgCounter
+.global PlayerMoonwalkFlag
 
 .global ScreenEdge_PageLoc
 .global ScreenLeft_PageLoc
