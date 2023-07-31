@@ -518,7 +518,10 @@ PanicMarioNametableDataLen = * - PanicMarioNametableData
 
 DrawTitleScreen:
   lda OperMode                 ;are we in title screen mode?
-  bne AnotheRRTS            ;if not, exit
+  beq :+
+    inc OperMode_Task
+    rts
+:              ;if not, exit
 
   ; bank in the title screen graphics
   BankCHR4 #11
@@ -543,8 +546,6 @@ DrawTitleScreen:
   sta VRAM_Buffer1-1
   lda #5
   jmp SetVRAMAddr_B            ;increment task and exit
-AnotheRRTS:
-  rts
 
 ;-------------------------------------------------------------------------------------
 
@@ -595,7 +596,7 @@ EndCredits = *
 
 ClearBuffersDrawIcon:
   lda OperMode               ;check game mode
-  bne LocalRTS          ;if not title screen mode, leave
+  bne IncModeTask_B          ;if not title screen mode, leave
   ldx #$00                   ;otherwise, clear buffer space
 TScrClear:
   sta VRAM_Buffer1-1,x
@@ -610,7 +611,9 @@ TScrClear:
   
 IncSubtask:
   inc ScreenRoutineTask      ;move onto next task
-LocalRTS:
+  rts
+IncModeTask_B:
+  inc OperMode_Task  ;move onto next mode
   rts
 
 ;-------------------------------------------------------------------------------------

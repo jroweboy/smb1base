@@ -321,9 +321,9 @@ ChkSelect:
 ; ChkWorldSel:
   ; ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
   ; beq NullJoypad
-  ; cmp #B_Button               ;if so, check to see if the B button was pressed
-  ; bne NullJoypad
-  iny                         ;if so, increment Y and execute same code as select
+  cmp #B_Button               ;if so, check to see if the B button was pressed
+  bne NullJoypad
+    iny                         ;if so, increment Y and execute same code as select
 SelectBLogic:
   ; lda DemoTimer               ;if select or B pressed, check demo timer one last time
   ; beq ResetTitle              ;if demo timer expired, branch to reset title screen mode
@@ -425,7 +425,7 @@ InitScores:
 ExitMenu:
   rts
 GoContinue:
-  sta LevelNumber
+  ; sta LevelNumber
   sta AreaNumber             ;start both players at the first area
   ; sta OffScr_WorldNumber      ;of the previously saved world number
   ; ldx #$00                    ;note that on power-up using this function
