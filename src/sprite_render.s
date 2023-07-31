@@ -1611,8 +1611,34 @@ FlagpoleScoreNumTiles:
   lda #2
   sta R0
 ColLoop:
-  ; check to see if this row is offscreen
-  
+  ; check to see if this column is offscreen
+  lda R0
+  asl
+  asl
+  asl
+  ; carry is clear
+  adc Enemy_X_Position
+  sta R1
+  lda Enemy_PageLoc
+  adc #0
+  sta R2
+  lda R1
+  sec
+  sbc ScreenLeft_X_Pos
+  lda R2
+  sbc ScreenLeft_PageLoc
+  bcs @NotOffLeftEdge
+@OffScreen:
+    dec R0
+    bpl ColLoop
+    rts
+@NotOffLeftEdge:
+  lda R1
+  sec
+  sbc ScreenRight_X_Pos
+  lda R2
+  sbc ScreenRight_PageLoc
+  bcs @OffScreen
   
   ; draw one column of lakitu
   AllocSpr 4
@@ -1657,26 +1683,22 @@ ColLoop:
   sta Sprite_Y_Position + 12, y
 
   dec R0
-  bpl ColLoop
+  jpl ColLoop
   rts
 
-LakituMetasprite:
-  .byte   0,  0,$8d,1
-  .byte   0,  8,$9d,1
-  .byte   0, 16,$ad,1
-  .byte   0, 24,$bd,1
+; LakituMetasprite:
+;   .byte   0,  0,$8d,1
+;   .byte   0,  8,$9d,1
+;   .byte   0, 16,$ad,1
+;   .byte   0, 24,$bd,1
 
-  .byte   8,  0,$8e,1
-  .byte   8,  8,$9e,1
-  .byte   8, 16,$ae,1
-  .byte   8, 24,$be,1
+;   .byte   8,  0,$8e,1
+;   .byte   8,  8,$9e,1
+;   .byte   8, 16,$ae,1
+;   .byte   8, 24,$be,1
 
-  .byte  16,  0,$8f,1
-  .byte  16,  8,$9f,1
-  .byte  16, 16,$af,1
-  .byte  16, 24,$bf,1
-.endproc
-
-.proc DrawMetasprite
-  rts
+;   .byte  16,  0,$8f,1
+;   .byte  16,  8,$9f,1
+;   .byte  16, 16,$af,1
+;   .byte  16, 24,$bf,1
 .endproc

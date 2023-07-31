@@ -3,7 +3,7 @@
 .include "player.inc"
 
 ; objects/object.s
-.import FloateyNumbersRoutine, MiscObjectsCore, ProcessSingleEnemy, HandleDiscoLakitu
+.import FloateyNumbersRoutine, MiscObjectsCore, ProcessSingleEnemy
 ; objects/cannon.s
 .import ProcessCannons
 ; music.s
