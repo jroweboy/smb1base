@@ -243,7 +243,13 @@ NoReset:
 :
   cmp #$58
   bne :+
+    lda LevelNumber
+    cmp #4
+    beq @Panic
     ldy #4
+    jmp DrawLoadingscreenMessage
+  @Panic:
+    ldy #5
     jmp DrawLoadingscreenMessage
 :
 
@@ -303,7 +309,7 @@ L7 = * - LoadingscreenMessage
 L8 = * - LoadingscreenMessage
   .byte $22, $e5, L9 - L8 - 4, "LEVEL 4 - CLUB HOUSE", $00
 L9 = * - LoadingscreenMessage
-  .byte $22, $e5, La - L9 - 4, "LEVEL 5 - BOWSERS KEEP", $00
+  .byte $22, $e5, La - L9 - 4, "LEVEL 5 - BOWSERS DISCO", $00
 La = * - LoadingscreenMessage
 
 Offsets:

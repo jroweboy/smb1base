@@ -76,10 +76,10 @@ ClearVRLoop:
   ; if we are in title screen mode spawn him
   lda OperMode
   beq SpawnLakituAnyway
-  lda WorldNumber
-  cmp #3
+  lda LevelNumber
+  cmp #3-1
   bcc NoLakituSpawn
-  cmp #5
+  cmp #5-1
   bcs NoLakituSpawn
 
 SpawnLakituAnyway:
