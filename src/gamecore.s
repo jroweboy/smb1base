@@ -661,6 +661,9 @@ ExitColorRot:
       lda DiscoCycleIdx
       and #%00000011
       beq BankSwitchCHR
+      ; Don't cycle the third palette
+      cmp #3
+      beq Exit
       ; Otherwise change a single color
       tay
       dey
@@ -724,7 +727,7 @@ CycleForPalette1:
   .byte $30, $31, $38, $2c
 CycleForPalette2:
   .byte $21, $23, $25, $24
-; Choose dark colors for the outline
+; THESE SHOULD NO LONGER BE CYCLED
 CycleForPalette3: 
-  .byte $0f, $0f, $0f, $0f
+  .byte $01, $11, $12, $31
 .endproc

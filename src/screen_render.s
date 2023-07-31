@@ -990,12 +990,16 @@ GiveOneCoin:
   ; jsr DigitsMathRoutine  ;update the coin tally
   inc CoinTally          ;increment onscreen player's coin amount
   lda CoinTally
-  cmp #100               ;does player have 100 coins yet?
+  cmp #10               ;does player have 100 coins yet?
   bne NoZSup
   ; bne CoinPoints         ;if not, skip all of this
   lda #$00
   sta CoinTally          ;otherwise, reinitialize coin amount
-  ; inc NumberofLives      ;give the player an extra life
+  ; un hide the follower if hidden and add one life
+.import F_Player_Hideflag
+  sta F_Player_Hideflag
+  lda #1
+  sta NumberofLives
   lda #Sfx_ExtraLife
   sta Square2SoundQueue  ;play 1-up sound
 

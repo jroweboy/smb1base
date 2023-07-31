@@ -51,11 +51,11 @@ SecondaryGameSetup:
   lda AreaType
   cmp #3
   beq ImmaCastle
-    lda #$01
-    bne WriteLives
+    lda #1
+    bne WriteLivesForLevel
 ImmaCastle:
     lda #0
-WriteLives:
+WriteLivesForLevel:
   sta NumberofLives
 
   ; switch back to the regular game graphics
@@ -341,7 +341,7 @@ SelectBLogic:
   sta CurrentLeader
 
   jsr WritePlayerNames
-  
+
   lda CurrentLeader
   beq PlayingAsMario
     ; playing as peach so switch banks

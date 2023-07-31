@@ -251,6 +251,8 @@ HoleDie:
       iny
       sty EventMusicQueue         ;otherwise play death music
       sty DeathMusicLoaded        ;and set value here
+      ldy #$0f
+      sty DeathTimer
 HoleBottom:
   ldy #$06
   sty R7                     ;change value here
@@ -259,7 +261,7 @@ ChkHoleX:
   bmi ExitCtrl                ;if less, branch to leave
     dex                         ;otherwise decrement flag in X
     bmi CloudExit               ;if flag was clear, branch to set modes and other values
-      ldy EventMusicBuffer        ;check to see if music is still playing
+      ldy DeathTimer        ;check to see if music is still playing
       bne ExitCtrl                ;branch to leave if so
         lda #$06                    ;otherwise set to run lose life routine
         sta GameEngineSubroutine    ;on next frame

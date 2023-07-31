@@ -574,12 +574,12 @@ FRAME_TIMER_COUNT = AirBubbleTimer - Timers
 .global StarInvincibleTimer
 .global ScreenTimer
 .global WorldEndTimer
-.global DemoTimer
 .global PlayerSwimmingTimer
 .global LakituActionTimer
 .global LakituPowerupTimer
 .global LakituEnemyTimer
-ALL_TIMER_COUNT = DemoTimer - Timers
+.global DeathTimer
+ALL_TIMER_COUNT = DeathTimer - Timers
 
 .global PseudoRandomBitReg
 
