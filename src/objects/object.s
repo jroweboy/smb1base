@@ -246,44 +246,45 @@ MiscLoop:
 ;$02 - used to set maximum speed
 
 ProcJumpCoin:
-;            ldy Misc_State,x          ;check misc object state
-;            dey                       ;decrement to see if it's set to 1
-;            beq JCoinRun              ;if so, branch to handle jumping coin
-;            inc Misc_State,x          ;otherwise increment state to either start off or as timer
-;            lda Misc_X_Position,x     ;get horizontal coordinate for misc object
-;            clc                       ;whether its jumping coin (state 0 only) or floatey number
-;            adc ScrollAmount          ;add current scroll speed
-;            sta Misc_X_Position,x     ;store as new horizontal coordinate
-;            lda Misc_PageLoc,x        ;get page location
-;            adc #$00                  ;add carry
-;            sta Misc_PageLoc,x        ;store as new page location
-;            lda Misc_State,x
-;            cmp #$30                  ;check state of object for preset value
-;            bne RunJCSubs             ;if not yet reached, branch to subroutines
-;            lda #$00
-;            sta Misc_State,x          ;otherwise nullify object state
-;            jmp MiscLoopBack          ;and move onto next slot
-; JCoinRun:  txa             
-;            clc                       ;add 13 bytes to offset for next subroutine
-;            adc #$0d
-;            tax
-;            lda #$50                  ;set downward movement amount
-;            sta R0
-;            lda #$06                  ;set maximum vertical speed
-;            sta R2
-;            lsr                       ;divide by 2 and set
-;            sta R1                   ;as upward movement amount (apparently residual)
-;            lda #$00                  ;set A to impose gravity on jumping coin
-;            jsr ImposeGravity         ;do sub to move coin vertically and impose gravity on it
-;            ldx ObjectOffset          ;get original misc object offset
-;            lda Misc_Y_Speed,x        ;check vertical speed
-;            cmp #$05
-;            bne RunJCSubs             ;if not moving downward fast enough, keep state as-is
-;            inc Misc_State,x          ;otherwise increment state to change to floatey number
-; RunJCSubs: jsr RelativeMiscPosition  ;get relative coordinates
-;            jsr GetMiscOffscreenBits  ;get offscreen information
-;            jsr GetMiscBoundBox       ;get bounding box coordinates (why?)
-;            jsr JCoinGfxHandler       ;draw the coin or floatey number
+           ldy Misc_State,x          ;check misc object state
+           dey                       ;decrement to see if it's set to 1
+           beq JCoinRun              ;if so, branch to handle jumping coin
+           inc Misc_State,x          ;otherwise increment state to either start off or as timer
+           lda Misc_X_Position,x     ;get horizontal coordinate for misc object
+           clc                       ;whether its jumping coin (state 0 only) or floatey number
+           adc ScrollAmount          ;add current scroll speed
+           sta Misc_X_Position,x     ;store as new horizontal coordinate
+           lda Misc_PageLoc,x        ;get page location
+           adc #$00                  ;add carry
+           sta Misc_PageLoc,x        ;store as new page location
+           lda Misc_State,x
+           cmp #$30                  ;check state of object for preset value
+           bne RunJCSubs             ;if not yet reached, branch to subroutines
+           lda #$00
+           sta Misc_State,x          ;otherwise nullify object state
+           jmp MiscLoopBack          ;and move onto next slot
+JCoinRun:  txa             
+           clc                       ;add 13 bytes to offset for next subroutine
+           adc #$0d
+           tax
+           lda #$50                  ;set downward movement amount
+           sta R0
+           lda #$06                  ;set maximum vertical speed
+           sta R2
+           lsr                       ;divide by 2 and set
+           sta R1                   ;as upward movement amount (apparently residual)
+           lda #$00                  ;set A to impose gravity on jumping coin
+           jsr ImposeGravity         ;do sub to move coin vertically and impose gravity on it
+           ldx ObjectOffset          ;get original misc object offset
+           lda Misc_Y_Speed,x        ;check vertical speed
+           cmp #$05
+           bne RunJCSubs             ;if not moving downward fast enough, keep state as-is
+           inc Misc_State,x          ;otherwise increment state to change to floatey number
+RunJCSubs: 
+          ; jsr RelativeMiscPosition  ;get relative coordinates
+          ;  jsr GetMiscOffscreenBits  ;get offscreen information
+          ;  jsr GetMiscBoundBox       ;get bounding box coordinates (why?)
+          ;  jsr JCoinGfxHandler       ;draw the coin or floatey number
 
 MiscLoopBack: 
            dex                       ;decrement misc object offset

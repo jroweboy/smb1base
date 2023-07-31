@@ -102,7 +102,7 @@ BlockCode:
   jsr JumpEngine          ;run appropriate subroutine depending on block number
   .word MushroomBlock
   .word FireFlowerBlock
-  .word CoinBlock
+  .word DeadBlock
   .word ExtraLifeMushBlock
   .word MushroomBlock
   .word VineBlock
@@ -219,10 +219,10 @@ CheckTopOfBlock:
     bne TopEx               ;if not, branch to leave
       lda #$00
       sta ($06),y             ;otherwise put blank metatile where coin was
-      jmp RemoveCoin_Axe      ;write blank metatile to vram buffer
+      jsr RemoveCoin_Axe      ;write blank metatile to vram buffer
 
-      ; ldx SprDataOffset_Ctrl  ;get control bit
-      ; jmp SetupJumpCoin       ;create jumping coin object and update coin variables
+      ldx SprDataOffset_Ctrl  ;get control bit
+      jmp SetupJumpCoin       ;create jumping coin object and update coin variables
 TopEx:
   rts ; TODO check this RTS can be removed                     ;leave!
 
@@ -259,53 +259,54 @@ SpawnBrickChunks:
 ;$06 - used to store low byte of block buffer address
 
 CoinBlock:
-  ; jsr FindEmptyMiscSlot   ;set offset for empty or last misc object buffer slot
-  ; lda Block_PageLoc,x     ;get page location of block object
-  ; sta Misc_PageLoc,y      ;store as page location of misc object
-  ; lda Block_X_Position,x  ;get horizontal coordinate of block object
-  ; ora #$05                ;add 5 pixels
-  ; sta Misc_X_Position,y   ;store as horizontal coordinate of misc object
-  ; lda Block_Y_Position,x  ;get vertical coordinate of block object
-  ; sbc #$10                ;subtract 16 pixels
-  ; sta Misc_Y_Position,y   ;store as vertical coordinate of misc object
-  ; jmp JCoinC              ;jump to rest of code as applies to this misc object
+  jsr FindEmptyMiscSlot   ;set offset for empty or last misc object buffer slot
+  lda Block_PageLoc,x     ;get page location of block object
+  sta Misc_PageLoc,y      ;store as page location of misc object
+  lda Block_X_Position,x  ;get horizontal coordinate of block object
+  ora #$05                ;add 5 pixels
+  sta Misc_X_Position,y   ;store as horizontal coordinate of misc object
+  lda Block_Y_Position,x  ;get vertical coordinate of block object
+  sbc #$10                ;subtract 16 pixels
+  sta Misc_Y_Position,y   ;store as vertical coordinate of misc object
+  jmp JCoinC              ;jump to rest of code as applies to this misc object
 
-; SetupJumpCoin:
-;         jsr FindEmptyMiscSlot  ;set offset for empty or last misc object buffer slot
-;         lda Block_PageLoc2,x   ;get page location saved earlier
-;         sta Misc_PageLoc,y     ;and save as page location for misc object
-;         lda R6                ;get low byte of block buffer offset
-;         asl
-;         asl                    ;multiply by 16 to use lower nybble
-;         asl
-;         asl
-;         ora #$05               ;add five pixels
-;         sta Misc_X_Position,y  ;save as horizontal coordinate for misc object
-;         lda R2                ;get vertical high nybble offset from earlier
-;         adc #$20               ;add 32 pixels for the status bar
-;         sta Misc_Y_Position,y  ;store as vertical coordinate
+SetupJumpCoin:
+        jsr FindEmptyMiscSlot  ;set offset for empty or last misc object buffer slot
+        lda Block_PageLoc2,x   ;get page location saved earlier
+        sta Misc_PageLoc,y     ;and save as page location for misc object
+        lda R6                ;get low byte of block buffer offset
+        asl
+        asl                    ;multiply by 16 to use lower nybble
+        asl
+        asl
+        ora #$05               ;add five pixels
+        sta Misc_X_Position,y  ;save as horizontal coordinate for misc object
+        lda R2                ;get vertical high nybble offset from earlier
+        adc #$20               ;add 32 pixels for the status bar
+        sta Misc_Y_Position,y  ;store as vertical coordinate
 JCoinC: 
-  ; lda #$fb
-  ; sta Misc_Y_Speed,y     ;set vertical speed
-  ; lda #$01
-  ; sta Misc_Y_HighPos,y   ;set vertical high byte
-  ; sta Misc_State,y       ;set state for misc object
-  ; sta Square2SoundQueue  ;load coin grab sound
-  ldx ObjectOffset       ;store current control bit as misc object offset 
-  ; jsr GiveOneCoin        ;update coin tally on the screen and coin amount variable
+  lda #$fb
+  sta Misc_Y_Speed,y     ;set vertical speed
+  lda #$01
+  sta Misc_Y_HighPos,y   ;set vertical high byte
+  sta Misc_State,y       ;set state for misc object
+  sta Square2SoundQueue  ;load coin grab sound
+  stx ObjectOffset       ;store current control bit as misc object offset 
+  jsr GiveOneCoin        ;update coin tally on the screen and coin amount variable
   ; inc CoinTallyFor1Ups   ;increment coin tally used to activate 1-up block flag
+DeadBlock:
   rts
 
-; FindEmptyMiscSlot:
-;            ldy #$08                ;start at end of misc objects buffer
-; FMiscLoop: lda Misc_State,y        ;get misc object state
-;            beq UseMiscS            ;branch if none found to use current offset
-;            dey                     ;decrement offset
-;            cpy #$05                ;do this for three slots
-;            bne FMiscLoop           ;do this until all slots are checked
-;            ldy #$08                ;if no empty slots found, use last slot
-; UseMiscS:  sty JumpCoinMiscOffset  ;store offset of misc object buffer here (residual)
-;            rts
+FindEmptyMiscSlot:
+           ldy #$08                ;start at end of misc objects buffer
+FMiscLoop: lda Misc_State,y        ;get misc object state
+           beq UseMiscS            ;branch if none found to use current offset
+           dey                     ;decrement offset
+           cpy #$05                ;do this for three slots
+           bne FMiscLoop           ;do this until all slots are checked
+           ldy #$08                ;if no empty slots found, use last slot
+UseMiscS:  sty JumpCoinMiscOffset  ;store offset of misc object buffer here (residual)
+           rts
 
 ;-------------------------------------------------------------------------------------
 SetupPowerUp:
