@@ -523,10 +523,7 @@ SkipSprite0:
   beq NotSwitched
     lda #0
     sta F_Player_Switched
-    
     lda CurrentLeader
-    eor #1
-    sta CurrentLeader
     beq PlayingAsMario
       ; playing as peach so switch banks
       BankCHR10 #8

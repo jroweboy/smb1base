@@ -934,6 +934,8 @@ SetFor1Up:
   ; un hide the follower if hidden and add one life
 .import F_Player_Hideflag
   sta F_Player_Hideflag
+  lda #Sfx_ExtraLife
+  sta Square2SoundQueue   ;play the one-up sound instead
   lda #1
   sta NumberofLives
   lda #$0b                 ;change 1000 points into 1-up instead

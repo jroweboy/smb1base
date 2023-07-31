@@ -612,6 +612,7 @@ ALL_TIMER_COUNT = DeathTimer - Timers
 
 _WarmBootOffset = DisplayDigits
 
+.global OriginalLeader
 .global CurrentLeader
 .global DisplayDigits
 .global TopScoreDisplay

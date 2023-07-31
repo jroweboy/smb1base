@@ -952,6 +952,7 @@ RdyNextA:
   bne ExitNA                ;beyond last valid task number, branch to leave
   inc LevelNumber           ;increment level number used for game logic
 NextArea:
+
   inc AreaNumber            ;increment area number used for address loader
   farcall LoadAreaPointer       ;get new level pointer
   ; inc FetchNewGameTimerFlag ;set flag to load new game timer

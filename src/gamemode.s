@@ -37,6 +37,7 @@
 ;-------------------------------------------------------------------------------------
 PrimaryGameSetup:
 .import GetAreaMusic
+  
   ; lda #$01
   ; sta FetchNewGameTimerFlag   ;set flag to load game timer from header
   ; sta OffScr_NumberofLives
@@ -47,16 +48,15 @@ SecondaryGameSetup:
   lda #0
   sta EventMusicBuffer
 
-  ; Start each level with the follower EXCEPT the castle level
-  lda AreaType
-  cmp #3
-  beq ImmaCastle
-    lda #1
-    bne WriteLivesForLevel
-ImmaCastle:
-    lda #0
-WriteLivesForLevel:
-  sta NumberofLives
+  ; Also setup the follower
+  farcall InitFollower
+  ; but if they don't have the extra lives don't show them yet
+  lda NumberofLives
+  bne :+
+    lda #$ff
+    .import F_Player_Hideflag
+    sta F_Player_Hideflag
+  :
 
   ; switch back to the regular game graphics
   lda OperMode
@@ -148,9 +148,10 @@ ClrSndLoop:
   ; lda #$18              ;set demo timer
   ; sta DemoTimer
   farcall LoadAreaPointer
+
+
   ; fallthrough
 InitializeArea:
-  farcall InitFollower
   ldy #<SecondaryMsgCounter    ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
   ldx #FRAME_TIMER_COUNT
@@ -197,9 +198,6 @@ SetInitNTHigh:
 NotCastle:
   BankCHR1C #5
 BankSet:
-
-  ; Also setup the 
-  
 
   lda PrimaryHardMode      ;check to see if primary hard mode has been activated
   bne SetSecHard           ;if so, activate the secondary no matter where we're at
@@ -336,8 +334,9 @@ SelectBLogic:
   beq IncWorldSel             ;note this will not be run if world selection is disabled
 
   ; change the sprite slot and also the current player
-  lda CurrentLeader
+  lda OriginalLeader
   eor #1
+  sta OriginalLeader
   sta CurrentLeader
 
   jsr WritePlayerNames

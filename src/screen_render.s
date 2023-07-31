@@ -338,6 +338,26 @@ PlayerInter:
   ; lda #$01                     ;lives display, then output lives display to buffer
 OutputInter:
   ; jsr WriteGameText
+
+  ; Start each level with the follower EXCEPT the castle level
+  lda AreaType
+  cmp #3
+  beq ImmaCastle
+    lda #1
+    bne WriteLivesForLevel
+ImmaCastle:
+    lda #0
+WriteLivesForLevel:
+  sta NumberofLives
+  
+
+  lda OriginalLeader
+  sta CurrentLeader
+  ; Flag the leader to be changed just in case.
+  .import F_Player_Switched
+  lda #1
+  sta F_Player_Switched
+
   jsr ResetScreenTimer
   lda #$00
   sta DisableScreenFlag        ;reenable screen output

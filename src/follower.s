@@ -133,6 +133,9 @@ F_StopPoint: .res 1
   ; but hide the follower since they ded
   sta F_Player_Hideflag
 
+  lda CurrentLeader
+  eor #1
+  sta CurrentLeader
   lda #1
   sta F_Player_Switched
 
