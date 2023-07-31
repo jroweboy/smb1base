@@ -151,6 +151,10 @@ GameEngine:
     jsr ColorRotation          ;cycle one of the background colors
   endfar
 
+  ; Add a COIN hud
+
+  ; jsr CoinHUD
+
   ; Check to see if its time to disable the overlay to give extra time for
   ; the follower to exit the pipe
   lda PipeExitTimer
@@ -253,6 +257,31 @@ far PLAYER
   :
 endfar
   rts                        ;and after all that, we're finally done!
+
+.proc CoinHUD
+  AllocSpr 3
+  lda #$2e
+  sta Sprite_Tilenumber,y
+  lda #$29
+  sta Sprite_Tilenumber+4,y
+  lda CoinTally
+  sta Sprite_Tilenumber+8,y
+  lda #24
+  sta Sprite_X_Position,y
+  lda #32
+  sta Sprite_X_Position,y
+  lda #40
+  sta Sprite_X_Position,y
+  lda #16
+  sta Sprite_Y_Position,y
+  sta Sprite_Y_Position+4,y
+  sta Sprite_Y_Position+8,y
+  lda #16
+  sta Sprite_Y_Position,y
+  sta Sprite_Y_Position+4,y
+  sta Sprite_Y_Position+8,y
+  rts
+.endproc
 
 .proc DrawPipeOverlaySprite
   ; if the player is fully in the pipe, move the overlay down with the sprite

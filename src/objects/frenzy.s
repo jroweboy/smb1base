@@ -498,6 +498,9 @@ Fr12S:
           jmp @DoneSpawning
 
       @StillActive:
+        txa
+        eor #1
+        tax
         dey
         bpl @CheckLoop
       ; lda #PowerUpObject

@@ -635,7 +635,7 @@ ScreenTimer:                    .res  1
 WorldEndTimer:                  .res  1
 PlayerSwimmingTimer:            .res  1
 LakituActionTimer:              .res  1
-LakituPowerupTimer:             .res  1
+LakituPowerupTimer:             .res  2
 LakituEnemyTimer:               .res  1
 DeathTimer:                     .res  1
 PseudoRandomBitReg:             .res  9 ; probably actually ~8~ 9 bytes (original 9) not sure...
