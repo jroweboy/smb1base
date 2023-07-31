@@ -1410,9 +1410,9 @@ MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
 
 Palette1_MTiles:
   .byte $7D, $7D, $7E, $7E ;vertical rope
-  .byte $E8, $F7, $E7, $F8 ;horizontal rope ;nesdraug change
-  .byte $E6, $F6, $E7, $F7 ;left pulley   
-  .byte $5C, $F7, $5D, $6E ;right pulley
+  .byte $32, $41, $31, $42 ;horizontal rope ;nesdraug change
+  .byte $30, $40, $31, $41 ;left pulley   
+  .byte $5C, $41, $5D, $6E ;right pulley
   .byte $24, $24, $24, $24 ;blank used for balance rope
   .byte $77, $48, $78, $48 ;castle top
   .byte $48, $48, $27, $27 ;castle window left
@@ -1442,7 +1442,7 @@ Palette1_MTiles:
   .byte $48, $48, $48, $48 ;brick (1-up)
   .byte $24, $24, $24, $24 ;hidden block (1 coin)
   .byte $24, $24, $24, $24 ;hidden block (1-up)
-  .byte $80, $90, $81, $91 ;solid block (3-d block)
+  .byte $c8, $d8, $c9, $d9 ;solid block (3-d block)
   .byte $B6, $B7, $B6, $B7 ;solid block (white wall)
   .byte $45, $24, $45, $24 ;bridge
   .byte $86, $96, $87, $97 ;bullet bill cannon barrel

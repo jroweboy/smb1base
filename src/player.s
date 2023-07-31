@@ -932,18 +932,8 @@ RdyNextA:
   cmp #$05                  ;if star flag task control not yet set
   bne ExitNA                ;beyond last valid task number, branch to leave
   inc LevelNumber           ;increment level number used for game logic
-  ; lda LevelNumber
-  ; cmp #$03                  ;check to see if we have yet reached level -4
-  ; bne NextArea              ;and skip this last part here if not
-    ; ldy WorldNumber           ;get world number as offset
-    ; lda CoinTallyFor1Ups      ;check third area coin tally for bonus 1-ups
-    ; cmp Hidden1UpCoinAmts,y   ;against minimum value, if player has not collected
-    ; bcc NextArea              ;at least this number of coins, leave flag clear
-      ; inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
 NextArea:
   inc AreaNumber            ;increment area number used for address loader
-  ; inc WorldNumber 
-
   farcall LoadAreaPointer       ;get new level pointer
   inc FetchNewGameTimerFlag ;set flag to load new game timer
   jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0

@@ -46,7 +46,7 @@ PrimaryGameSetup:
   ; sta NumberofLives           ;give each player three lives
   ; sta OffScr_NumberofLives
 SecondaryGameSetup:
-  ; bank in the title screen graphics
+  ; switch back to the regular game graphics
   lda OperMode
   beq :+
     BankCHR4 #1
