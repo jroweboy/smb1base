@@ -516,7 +516,28 @@ RotPRandomBit:
         ; jsr SpriteShuffler
 SkipSprite0:
 
+  ; if we switched players, switch the CHR banks and keep going
   
+  .import F_Player_Switched
+  lda F_Player_Switched
+  beq NotSwitched
+    lda #0
+    sta F_Player_Switched
+    
+    lda CurrentLeader
+    eor #1
+    sta CurrentLeader
+    beq PlayingAsMario
+      ; playing as peach so switch banks
+      BankCHR10 #8
+      BankCHR14 #4
+      bne SwitchedCharacters ; unconditional
+  PlayingAsMario:
+      BankCHR10 #4
+      BankCHR14 #8
+  SwitchedCharacters:
+NotSwitched:
+
   lda PlayPanic
   beq :+
   BankPRG8 #.bank(DECODE)

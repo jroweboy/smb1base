@@ -18,10 +18,18 @@ F_Player_Y_Position:  .res FRAME_LAG_COUNT
 F_Player_SprAttrib:   .res FRAME_LAG_COUNT
 F_PlayerGfxOffset:    .res FRAME_LAG_COUNT
 F_PlayerMoonwalkFlag: .res FRAME_LAG_COUNT
+F_Player_X_MoveForce:  .res FRAME_LAG_COUNT
+F_Player_Y_MoveForce:  .res FRAME_LAG_COUNT
+F_Player_YMoveForceFractional:  .res FRAME_LAG_COUNT
+F_Player_X_Speed:  .res FRAME_LAG_COUNT
+F_Player_Y_Speed:  .res FRAME_LAG_COUNT
 
 .export F_Player_Hideflag
 ; Special flags
 F_Player_Hideflag:    .res 1
+
+.export F_Player_Switched
+F_Player_Switched:    .res 1
 
 ; Calculated Data
 ; F_Player_Rel_XPos: .res 1
@@ -32,6 +40,8 @@ F_Player_Hideflag:    .res 1
 ; Write head of the circular buffer
 F_Frame: .res 1
 
+F_StopPoint: .res 1
+
 .segment "PLAYER"
 
 .export InitFollower
@@ -39,12 +49,24 @@ F_Frame: .res 1
   lda #0
   sta F_Frame
   sta F_Player_Hideflag
+  sta F_Player_Switched
   lda #$ff
+  sta F_StopPoint
   ldx #FRAME_LAG_COUNT-1
   :
     sta F_Player_Y_Position,x
     dex
     bpl :-
+  rts
+.endproc
+
+.export SetFollowerStopPoint
+.proc SetFollowerStopPoint
+  lda F_Frame
+  pha 
+    jsr CopyPlayerStateToFollower
+  pla
+  sta F_StopPoint
   rts
 .endproc
 
@@ -62,13 +84,97 @@ F_Frame: .res 1
   rts
 .endproc
 
+.export CopyFollowerStateToPlayer
+.proc CopyFollowerStateToPlayer
+  ldx F_StopPoint
+
+  lda F_Player_X_MoveForce,x
+  sta Player_X_MoveForce
+
+  lda F_Player_Y_MoveForce,x
+  sta Player_Y_MoveForce
+
+  lda F_Player_YMoveForceFractional,x
+  sta Player_YMoveForceFractional
+
+  lda F_Player_X_Speed,x
+  sta Player_X_Speed
+
+  lda F_Player_Y_Speed,x
+  sta Player_Y_Speed
+
+  lda F_PlayerFacingDir,x
+  sta PlayerFacingDir
+
+  lda F_Player_X_Position,x
+  sta Player_X_Position
+
+  lda F_Player_PageLoc,x
+  sta Player_PageLoc
+
+  lda F_Player_Y_HighPos,x
+  sta Player_Y_HighPos
+
+  lda F_Player_Y_Position,x
+  sta Player_Y_Position
+
+  lda F_Player_SprAttrib,x
+  sta Player_SprAttrib
+
+  lda F_PlayerGfxOffset,x
+  sta PlayerGfxOffset
+
+  lda F_PlayerMoonwalkFlag,x
+  sta PlayerMoonwalkFlag
+
+  ; start tracking the state again
+  lda #$ff
+  sta F_StopPoint
+  ; but hide the follower since they ded
+  sta F_Player_Hideflag
+
+  lda #1
+  sta F_Player_Switched
+
+  rts
+.endproc
+
 .export CopyPlayerStateToFollower
 .proc CopyPlayerStateToFollower
+  ldx F_StopPoint
+  bmi @NoStopPoint
+    ; follower is stopped so don't copy state for now
+    ldx F_Frame
+    cpx F_StopPoint
+    beq :+
+    inx
+      cpx #FRAME_LAG_COUNT
+      bne :+
+        ldx #0
+  :
+    stx F_Frame
+    rts
+@NoStopPoint:
 
   ldx F_Frame
 
   ; lda Player_State
   ; sta F_Player_State,x
+
+  lda Player_X_MoveForce
+  sta F_Player_X_MoveForce,x
+
+  lda Player_Y_MoveForce
+  sta F_Player_Y_MoveForce,x
+
+  lda Player_YMoveForceFractional
+  sta F_Player_YMoveForceFractional,x
+
+  lda Player_X_Speed
+  sta F_Player_X_Speed,x
+
+  lda Player_Y_Speed
+  sta F_Player_Y_Speed,x
 
   lda PlayerFacingDir
   sta F_PlayerFacingDir,x
@@ -110,6 +216,11 @@ F_Frame: .res 1
   ; Calculate follower position/offscreen information
   ; using the older data but with the current screen position
   ldx F_Frame
+;   cpx F_StopPoint
+;   bne :+
+;     ; stop point reached so no longer rendering the new state
+;     rts
+; :
 
   lda #4
   sta R7

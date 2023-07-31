@@ -37,15 +37,27 @@
 ;-------------------------------------------------------------------------------------
 PrimaryGameSetup:
 .import GetAreaMusic
-  lda #$01
-  sta FetchNewGameTimerFlag   ;set flag to load game timer from header
-  lda #$00
-  sta PlayerSize              ;set player's size to LARGE
-  
-  ; lda #$02
-  ; sta NumberofLives           ;give each player three lives
+  ; lda #$01
+  ; sta FetchNewGameTimerFlag   ;set flag to load game timer from header
   ; sta OffScr_NumberofLives
 SecondaryGameSetup:
+
+  lda #$00
+  sta PlayerSize              ;set player's size to LARGE
+  lda #0
+  sta EventMusicBuffer
+
+  ; Start each level with the follower EXCEPT the castle level
+  lda AreaType
+  cmp #3
+  beq ImmaCastle
+    lda #$01
+    bne WriteLives
+ImmaCastle:
+    lda #0
+WriteLives:
+  sta NumberofLives
+
   ; switch back to the regular game graphics
   lda OperMode
   beq :+
@@ -269,7 +281,7 @@ DoneInitArea:
   farcall LoadAreaPointer       ;update level pointer with
   lda #$00                  ;actual world and area numbers, then
   sta PlayerSize            ;reset player's size, status, and
-  inc FetchNewGameTimerFlag ;set game timer flag to reload
+  ; inc FetchNewGameTimerFlag ;set game timer flag to reload
   lda #$00                  ;game timer from header
   sta TimerControl          ;also set flag for timers to count again
   sta PlayerStatus
@@ -329,7 +341,8 @@ SelectBLogic:
   sta CurrentLeader
 
   jsr WritePlayerNames
-
+  
+  lda CurrentLeader
   beq PlayingAsMario
     ; playing as peach so switch banks
     BankCHR10 #8
@@ -395,7 +408,7 @@ StartWorld1:
   farcall LoadAreaPointer
   ; inc Hidden1UpFlag           ;set 1-up box flag for both players
   ; inc OffScr_Hidden1UpFlag
-  inc FetchNewGameTimerFlag   ;set fetch new game timer flag
+  ; inc FetchNewGameTimerFlag   ;set fetch new game timer flag
   inc OperMode                ;set next game mode
   lda WorldSelectEnableFlag   ;if world select flag is on, then primary
   sta PrimaryHardMode         ;hard mode must be on as well
@@ -626,7 +639,7 @@ ExitMsgs:
   sta OperMode_Task          ;initialize secondary mode of operation
   inc WorldNumber            ;increment world number to move onto the next world
   farcall LoadAreaPointer        ;get area address offset for the next area
-  inc FetchNewGameTimerFlag  ;set flag to load game timer from header
+  ; inc FetchNewGameTimerFlag  ;set flag to load game timer from header
   lda #MODE_GAMEPLAY
   sta OperMode               ;set mode of operation to game mode
 EndExitOne:

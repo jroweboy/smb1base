@@ -188,14 +188,14 @@ PlayPanicMusic:
     jsr StartAudioIRQ
   :
   ; try playing event music to see how that works
-  ldx EventMusicQueue
-  beq SkipMusicProcessing
-      stx EventMusicBuffer
-      lda #0
-      sta EventMusicQueue
-      ldy CountLeadingZeroLookup,x
-      lda EventMusicLUT, y
-      jsr famistudio_music_play
+  ; ldx EventMusicQueue
+  ; beq SkipMusicProcessing
+  ;     stx EventMusicBuffer
+  ;     lda #0
+  ;     sta EventMusicQueue
+  ;     ldy CountLeadingZeroLookup,x
+  ;     lda EventMusicLUT, y
+  ;     jsr famistudio_music_play
 
 SkipMusicProcessing:
 

@@ -150,7 +150,11 @@ ExitEntr:
 
 PlayerCtrlRoutine:
   lda GameEngineSubroutine    ;check task here
-  cmp #$0b                    ;if certain value is set, branch to skip controller bit loading
+  ; prevent moving on death
+  cmp #$0b
+  beq SizeChk
+  ; or on damaged
+  cmp #$0a
   beq SizeChk
     lda AreaType                ;are we in a water type area?
     bne SaveJoyp                ;if not, branch
@@ -222,6 +226,9 @@ PlayerSubs:
       and #%11011111              ;otherwise nullify player's
       sta Player_SprAttrib        ;background priority flag
 PlayerHole:
+  lda GameEngineSubroutine
+  cmp #$0a ; Ignore falling into hole check if taking damage
+  beq ExitCtrl
   lda Player_Y_HighPos        ;check player's vertical high byte
   cmp #$02                    ;for below the screen
   bmi ExitCtrl                ;branch to leave if not that far down
@@ -360,7 +367,6 @@ HalfwayPageNybbles:
   sta Sprite0HitDetectFlag
   lda #Silence             ;silence music
   sta EventMusicQueue
-  ; dec NumberofLives        ;take one life from player
   ; bpl StillInGame          ;if player still has lives, branch
   ; lda #$00
   ; sta OperMode_Task        ;initialize mode task,
@@ -448,18 +454,18 @@ SetStPos: lda PlayerStarting_X_Pos,y  ;load appropriate horizontal position
           lda #0
           sta Player_SprAttrib        ;set player sprite attributes using offset in X
           jsr GetPlayerColors         ;get appropriate player palette
-          ldy GameTimerSetting        ;get timer control value from header
-          beq ChkOverR                ;if set to zero, branch (do not use dummy byte for this)
-          lda FetchNewGameTimerFlag   ;do we need to set the game timer? if not, use 
-          beq ChkOverR                ;old game timer setting
-          lda GameTimerData,y         ;if game timer is set and game timer flag is also set,
-          sta GameTimerDisplay        ;use value of game timer control for first digit of game timer
-          lda #$01
-          sta GameTimerDisplay+2      ;set last digit of game timer to 1
-          lsr
-          sta GameTimerDisplay+1      ;set second digit of game timer
-          sta FetchNewGameTimerFlag   ;clear flag for game timer reset
-          sta StarInvincibleTimer     ;clear star mario timer
+          ; ldy GameTimerSetting        ;get timer control value from header
+          ; beq ChkOverR                ;if set to zero, branch (do not use dummy byte for this)
+          ; lda FetchNewGameTimerFlag   ;do we need to set the game timer? if not, use 
+          ; beq ChkOverR                ;old game timer setting
+          ; lda GameTimerData,y         ;if game timer is set and game timer flag is also set,
+          ; sta GameTimerDisplay        ;use value of game timer control for first digit of game timer
+          ; lda #$01
+          ; sta GameTimerDisplay+2      ;set last digit of game timer to 1
+          ; lsr
+          ; sta GameTimerDisplay+1      ;set second digit of game timer
+          ; sta FetchNewGameTimerFlag   ;clear flag for game timer reset
+          ; sta StarInvincibleTimer     ;clear star mario timer
 ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to skip this part
           beq ChkSwimE
           lda #$03                    ;set player state to climbing
@@ -835,9 +841,10 @@ PlayerInjuryBlink:
   cmp #$f0               ;for specific moment in time
   bcs ExitBlink          ;branch if before that point
   cmp #$c8               ;check again for another specific point
-  beq DonePlayerTask     ;branch if at that point, and not before or after
-  jmp PlayerCtrlRoutine  ;otherwise run player control routine
+  beq SwapPlayerAndFollower     ;branch if at that point, and not before or after
+    jmp PlayerCtrlRoutine  ;otherwise run player control routine
 ExitBlink:
+  rts
   ; bne ExitBoth           ;do unconditional branch to leave
 
 
@@ -849,7 +856,10 @@ PlayerDeath:
   cmp #$f0               ;for specific moment in time
   bcs ExitTask           ;branch to leave if before that point
   jmp PlayerCtrlRoutine  ;otherwise run player control routine
-
+SwapPlayerAndFollower:
+  ; Switch follower into player data
+  .import CopyFollowerStateToPlayer
+  jsr CopyFollowerStateToPlayer
 DonePlayerTask:
   lda #$00
   sta TimerControl          ;initialize master timer control to continue timers
@@ -942,7 +952,7 @@ RdyNextA:
 NextArea:
   inc AreaNumber            ;increment area number used for address loader
   farcall LoadAreaPointer       ;get new level pointer
-  inc FetchNewGameTimerFlag ;set flag to load new game timer
+  ; inc FetchNewGameTimerFlag ;set flag to load new game timer
   jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0
   sta HalfwayPage           ;reset halfway page to 0 (beginning)
   lda #Silence

@@ -669,6 +669,7 @@ AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (origi
 
     ; _WarmBootOffset:            .res  1   ; Warm boot offset
 
+OriginalLeader:                 .res  1
 CurrentLeader:                 .res  1
 ; each display has to be 6 ram values because the math routine
 DisplayDigits:                  .res  6

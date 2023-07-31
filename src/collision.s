@@ -320,9 +320,9 @@ HandlePECollisions:
        cpy #Spiny                   ;branch if spiny
        beq ChkForPlayerInjury
        cpy #PiranhaPlant            ;branch if piranha plant
-       beq InjurePlayer
+       jeq InjurePlayer
        cpy #Podoboo                 ;branch if podoboo
-       beq InjurePlayer
+       jeq InjurePlayer
        cpy #BulletBill_CannonVar    ;branch if bullet bill
        beq ChkForPlayerInjury
        cpy #$15                     ;branch if object => $15
@@ -360,7 +360,7 @@ ExPEC: rts ; TODO check this RTS can be removed                          ;leave!
 ChkForPlayerInjury:
           lda Player_Y_Speed     ;check player's vertical speed
           bmi ChkInj             ;perform procedure below if player moving upwards
-          bne EnemyStomped       ;or not at all, and branch elsewhere if moving downwards
+          jne EnemyStomped       ;or not at all, and branch elsewhere if moving downwards
 ChkInj:   lda Enemy_ID,x         ;branch if enemy object < $07
           cmp #Bloober
           bcc ChkETmrs
@@ -368,9 +368,9 @@ ChkInj:   lda Enemy_ID,x         ;branch if enemy object < $07
           clc
           adc #$0c
           cmp Enemy_Y_Position,x ;compare modified player's position to enemy's position
-          bcc EnemyStomped       ;branch if this player's position above (less than) enemy's
+          jcc EnemyStomped       ;branch if this player's position above (less than) enemy's
 ChkETmrs: lda StompTimer         ;check stomp timer
-          bne EnemyStomped       ;branch if set
+          jne EnemyStomped       ;branch if set
           lda InjuryTimer        ;check to see if injured invincibility timer still
           bne ExInjColRoutines   ;counting down, and branch elsewhere to leave if so
           lda Player_Rel_XPos
@@ -387,38 +387,67 @@ InjurePlayer:
       bne ExInjColRoutines     ;at zero, and branch to leave if so
 
 ForceInjury:
-          ldx PlayerStatus          ;check player's status
-          beq KillPlayer            ;branch if small
-          sta PlayerStatus          ;otherwise set player's status to small
-          lda #$08
-          sta InjuryTimer           ;set injured invincibility timer
-          asl
-          sta Square1SoundQueue     ;play pipedown/injury sound
-          jsr GetPlayerColors       ;change player's palette if necessary
-          lda #$0a                  ;set subroutine to run on next frame
-SetKRout: ldy #$01                  ;set new player state
-SetPRout: sta GameEngineSubroutine  ;load new value to run subroutine on next frame
-          sty Player_State          ;store new player state
-          ldy #$ff
-          sty TimerControl          ;set master timer control flag to halt timers
-          iny
-          sty ScrollAmount          ;initialize scroll speed
 
+  .import SetFollowerStopPoint
+  farcall SetFollowerStopPoint
+  lda PlayerFacingDir
+  lsr
+  bcc @FacingLeft
+     ; player facing right so bounce left
+    lda #$e3
+    bne @Save
+@FacingLeft:
+    ; player facing left so bounce right
+    lda #256 - $e3
+@Save:
+  sta Player_X_Speed
+  lda #$fc
+  sta Player_Y_Speed   ;set new vertical speed
+
+  lda NumberofLives          ;check player's status
+  beq KillPlayer            ;branch if small
+    dec NumberofLives
+    ; lda #Silence
+    ; sta EventMusicQueue
+    ; restore
+    lda EventMusicBuffer
+    beq :+
+      lda #0
+      sta EventMusicBuffer
+      lda AreaMusicBuffer
+      sta AreaMusicQueue
+  :
+    ;otherwise set player's status to no powerup
+    lda #0
+    sta PlayerStatus
+    lda #$08
+    sta InjuryTimer           ;set injured invincibility timer
+    asl
+    sta Square1SoundQueue     ;play pipedown/injury sound
+    jsr GetPlayerColors       ;change player's palette if necessary
+    lda #$0a                  ;set subroutine to run on next frame
+SetKRout:
+    ldy #$01                  ;set new player state
+SetPRout:
+  sta GameEngineSubroutine  ;load new value to run subroutine on next frame
+  sty Player_State          ;store new player state
+  ldy #$ff
+  sty TimerControl          ;set master timer control flag to halt timers
+  iny
+  sty ScrollAmount          ;initialize scroll speed
 ExInjColRoutines:
-      ldx ObjectOffset              ;get enemy offset and leave
-      rts
+  ldx ObjectOffset              ;get enemy offset and leave
+  rts
 
 KillPlayer:
-      stx Player_X_Speed   ;halt player's horizontal movement by initializing speed
-      inx
-      stx EventMusicQueue  ;set event music queue to death music
-      lda #$fc
-      sta Player_Y_Speed   ;set new vertical speed
-      lda #$0b             ;set subroutine to run on next frame
-      bne SetKRout         ;branch to set player's state and other things
+  ; stx Player_X_Speed   ;halt player's horizontal movement by initializing speed
+  lda #DeathMusic
+  sta EventMusicQueue  ;set event music queue to death music
+  lda #$0b             ;set subroutine to run on next frame
+  bne SetKRout         ;branch to set player's state and other things
 
 StompedEnemyPtsData:
-      .byte $02, $06, $05, $06
+  .byte $02, $06, $05, $06
 
 EnemyStomped:
       lda Enemy_ID,x             ;check for spiny, branch to hurt player
@@ -949,7 +978,11 @@ PlayerBGCollision:
   lda DisableCollisionDet   ;if collision detection disabled flag set,
   bne ExPBGCol              ;branch to leave
   lda GameEngineSubroutine
-  cmp #$0b                  ;if running routine #11 or $0b
+  ;if running routine Death routine
+  cmp #$0b
+  beq ExPBGCol              ;branch to leave
+  ;jroweboy also check if running routine PlayerInjury
+  cmp #$0a
   beq ExPBGCol              ;branch to leave
   cmp #$04
   bcc ExPBGCol              ;if running routines $00-$03 branch to leave
