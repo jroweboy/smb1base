@@ -354,8 +354,8 @@ RightPipe:
 
 ;page numbers are in order from -1 to -4
 HalfwayPageNybbles:
-      .byte $76, $40 ;1-2=5, 1-2=6, 1-
-      .byte $65, $70
+      .byte $75, $40 ;1-2=5, 1-2=6, 1- ;nesdraug fix these
+      .byte $05, $70
       .byte $66, $40
       .byte $66, $40
       .byte $66, $40
