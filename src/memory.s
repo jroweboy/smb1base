@@ -430,7 +430,6 @@ SpriteShuffleTemp:              .res  1
 PlatformLastOAMOrder:           .res  1
 
 LivesScreenTimer:               .res  1
-CurrentLeader:                 .res  1
 
 ; FirstTimeAreaReset:             .res  1
 ; AreaResetCountdown:             .res  1
@@ -670,6 +669,7 @@ AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (origi
 
     ; _WarmBootOffset:            .res  1   ; Warm boot offset
 
+CurrentLeader:                 .res  1
 ; each display has to be 6 ram values because the math routine
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits

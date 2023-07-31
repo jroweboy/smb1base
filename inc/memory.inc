@@ -408,7 +408,6 @@ StackClear = DigitModifier
 .global SpriteShuffleTemp
 
 .global LivesScreenTimer
-.global CurrentLeader
 
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute
@@ -613,6 +612,7 @@ ALL_TIMER_COUNT = DemoTimer - Timers
 
 _WarmBootOffset = DisplayDigits
 
+.global CurrentLeader
 .global DisplayDigits
 .global TopScoreDisplay
 

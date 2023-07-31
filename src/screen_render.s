@@ -201,6 +201,9 @@ NoTimeUp:
 
 ResetSpritesAndScreenTimer:
   farcall DrawPlayer_Intermediate
+.import ColorRotation
+  jsr ColorRotation          ;cycle one of the background colors
+
   lda ScreenTimer             ;check if screen timer has expired
   bne NoReset                 ;if not, branch to leave
   jsr MoveAllSpritesOffscreen ;otherwise reset sprites now
@@ -209,8 +212,103 @@ ResetScreenTimer:
   sta ScreenTimer
   inc ScreenRoutineTask       ;move onto next task
 NoReset:
+
+  lda LivesScreenTimer
+  cmp #3
+  bcs :+
+    ; setup the new attribute data
+    cmp #2
+    beq @Worldmessage
+      tay
+      jmp DrawLoadingscreenMessage
+  @Worldmessage:
+    ldy LevelNumber
+    iny
+    iny
+    iny
+    iny
+    iny
+    iny
+    jmp DrawLoadingscreenMessage
+:
+  cmp #$10
+  bne :+
+    ldy #2
+    jmp DrawLoadingscreenMessage
+:
+  cmp #$28
+  bne :+
+    ldy #3
+    jmp DrawLoadingscreenMessage
+:
+  cmp #$58
+  bne :+
+    ldy #4
+    jmp DrawLoadingscreenMessage
+:
+
   rts
 
+.proc DrawLoadingscreenMessage
+;   cpy #5
+;   bcc :+
+;     rts
+; :
+  cpy #2 ; check if the player name message
+  bne @other
+    sty R0
+    lda #$20
+    ldx #$cc
+    jsr DrawCurrentLeaderName
+    ldy R0
+@other:
+  ldx Offsets,y ; start offset
+  lda Offsets+1,y
+  sec
+  sbc Offsets,y ; end offset
+  sta R0 ; length
+  lda VRAM_Buffer1_Offset
+  tay
+  clc
+  adc R0
+  sta VRAM_Buffer1_Offset
+  sta R0
+:
+    lda LoadingscreenMessage,x
+    sta VRAM_Buffer1,y
+    inx
+    iny
+    cpy R0
+    bcc :-
+  rts
+
+LoadingscreenMessage:
+  .byte $3f, $01, $01, $30, $00
+L0 = * - LoadingscreenMessage
+  .byte $23, $dc, $04, $aa, $aa, $aa, $aa, $00
+L1 = * - LoadingscreenMessage
+  .byte $20, $d2, $02, "IS", $00
+L2 = * - LoadingscreenMessage
+  .byte $21, $50, $08, "READY TO", $00
+L3 = * - LoadingscreenMessage
+  .byte $21, $d4, $07, "BOOGIE!", $00
+L4 = * - LoadingscreenMessage
+  .byte $21, $d4, $0a, "P A N I C!", $00
+L5 = * - LoadingscreenMessage
+  .byte $22, $e5, L6 - L5 - 4, "LEVEL 1 - NIGHT LIFE", $00
+L6 = * - LoadingscreenMessage
+  .byte $22, $e5, L7 - L6 - 4, "LEVEL 2 - UNDERGROUND", $00
+L7 = * - LoadingscreenMessage
+  .byte $22, $e5, L8 - L7 - 4, "LEVEL 3 - STREET LIFE", $00
+L8 = * - LoadingscreenMessage
+  .byte $22, $e5, L9 - L8 - 4, "LEVEL 4 - CLUB HOUSE", $00
+L9 = * - LoadingscreenMessage
+  .byte $22, $e5, La - L9 - 4, "LEVEL 5 - BOWSERS KEEP", $00
+La = * - LoadingscreenMessage
+
+Offsets:
+  .byte $0, L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, La
+.endproc
 ;-------------------------------------------------------------------------------------
 
 DisplayIntermediate:
@@ -230,8 +328,8 @@ DisplayIntermediate:
     lda DisableIntermediate      ;if this flag is set, skip intermediate lives display
     bne NoInter                  ;and jump to specific task, otherwise
 PlayerInter:
-  farcall DrawPlayer_Intermediate  ;put player in appropriate place for
-  lda #$01                     ;lives display, then output lives display to buffer
+  ; farcall DrawPlayer_Intermediate  ;put player in appropriate place for
+  ; lda #$01                     ;lives display, then output lives display to buffer
 OutputInter:
   ; jsr WriteGameText
   jsr ResetScreenTimer

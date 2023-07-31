@@ -607,6 +607,7 @@ Palette3Data:
        .byte $0f, $07, $17, $1c
        .byte $0f, $07, $17, $00
 
+.export ColorRotation
 .proc ColorRotation
               lda FrameCounter         ;get frame counter
               and #$07                 ;mask out all but three LSB
