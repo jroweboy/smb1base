@@ -10,6 +10,7 @@
 
 .segment "LEVEL"
 
+
 ;-------------------------------------------------------------------------------------
 .export LoadAreaPointer
 .proc LoadAreaPointer

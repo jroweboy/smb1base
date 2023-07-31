@@ -7,12 +7,12 @@ WorldAddrOffsets:
       .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
 
 AreaAddrOffsets:
-World1Areas: .byte $25, $29, $c0, $26, $28, $2f, $60
-World2Areas: .byte $01, $27, $62, $24, $34, $20, $63
-World3Areas: .byte $24, $34, $20, $63, $22, $29, $41
+World1Areas: .byte $25, $29, $c0, $26, $28, $2c, $60
+World2Areas: .byte $01, $27, $62, $2f, $24, $34, $20
+World3Areas: .byte $2f, $24, $34, $20, $63, $22, $29
 World4Areas: .byte $22, $29, $41, $2b, $61, $2a, $30
-World5Areas: .byte $2a, $30, $26, $62, $2d, $23, $2c
-World6Areas: .byte $2d, $23, $2c, $60, $32, $29, $01
+World5Areas: .byte $2a, $30, $26, $62, $2d, $23, $60
+World6Areas: .byte $2d, $23, $60, $32, $29, $01, $27
 World7Areas: .byte $32, $29, $01, $27, $64, $2f, $31
 World8Areas: .byte $2f, $31, $21, $65, $1f, $06, $1c
 
@@ -454,10 +454,10 @@ L_GroundArea12:
       .byte $fd
 
 L_GroundArea13:
-      .byte $97, $11, $0f, $26, $fe, $10, $2b, $92, $57, $12
-      .byte $c0, $41, $5b, $92, $19, $93, $17, $94, $7c, $14
+      .byte $97, $11, $0f, $26, $7e, $42, $af, $22, $fe, $10
+      .byte $fe, $11, $1d, $c6, $19, $93, $09, $94, $7c, $14
       .byte $7f, $11, $93, $41, $bf, $15, $fc, $13, $ff, $11
-      .byte $2f, $95, $50, $42, $51, $12, $58, $14, $a6, $12
+      .byte $2f, $95, $4e, $12, $50, $42, $58, $14, $a6, $12
       .byte $db, $12, $1b, $93, $46, $43, $7b, $12, $8d, $49
       .byte $b7, $14, $1b, $94, $49, $0b, $bb, $12, $fc, $13
       .byte $ff, $12, $03, $c1, $2f, $15, $43, $12, $4b, $13

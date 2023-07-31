@@ -402,10 +402,11 @@ endfar
 ChkContinue:
   ; ldy DemoTimer               ;if timer for demo has expired, reset modes
   ; beq ResetTitle
-  asl                         ;check to see if A button was also pushed
-  bcc StartWorld1             ;if not, don't load continue function's world number
-  lda ContinueWorld           ;load previously saved world number for secret
-  jsr GoContinue              ;continue function when pressing A + start
+  ; asl                         ;check to see if A button was also pushed
+  ; bcc StartWorld1             ;if not, don't load continue function's world number
+  ; lda ContinueWorld           ;load previously saved world number for secret
+  ; jsr GoContinue              ;continue function when pressing A + start
+
 StartWorld1:
   farcall LoadAreaPointer
   ; inc Hidden1UpFlag           ;set 1-up box flag for both players
@@ -425,13 +426,19 @@ InitScores:
 ExitMenu:
   rts
 GoContinue:
-  ; sta LevelNumber
   sta AreaNumber             ;start both players at the first area
+  sta CoinTally
+  tax
+  lda AreaNumberToLevelNumber,x
+  sta LevelNumber
   ; sta OffScr_WorldNumber      ;of the previously saved world number
   ; ldx #$00                    ;note that on power-up using this function
   ; stx AreaNumber              ;will make no difference
   ; stx OffScr_AreaNumber
   rts
+
+AreaNumberToLevelNumber:
+  .byte $00, $01, $01, $02, $03, $05, $05
 
 WSelectBufferTemplate:
   .byte $04, $20, $73, $01, $00, $00

@@ -245,7 +245,7 @@ NoReset:
   cmp #$58
   bne :+
     lda LevelNumber
-    cmp #4
+    cmp #5
     beq @Panic
     ldy #4
     jmp DrawLoadingscreenMessage
