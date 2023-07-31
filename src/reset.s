@@ -239,40 +239,39 @@ BAD_EMULATOR:
   
   jsr CustomSoundInit
 
-
   ; Initialize the CHR RAM with the contents of CHRPRG
-  .import CHR1, CHR2
-  BankPRG8 #.bank(CHR1)
-  ; mega loop to write all of the data from the CHRPRG to the 
-  lda #0
-  sta R0
-  lda #1
-  sta R2
+  ; .import CHR1, CHR2
+  ; BankPRG8 #.bank(CHR1)
+  ; ; mega loop to write all of the data from the CHRPRG to the 
+  ; lda #0
+  ; sta R0
+  ; lda #1
+  ; sta R2
   
-  ldx #8
-  lda #0
-  sta PPUMASK
-  lda PPUSTATUS
-  megaloop:
-    lda #$80
-    sta R1
-    ldy #0
-    sty PPUADDR
-    sty PPUADDR
-    @outerloop:
-      @innerloop:
-        lda (R0),y
-        sta PPUDATA
-        iny
-        bne @innerloop
-      inc R1
-      lda R1
-      cmp #$a0
-      bne @outerloop
-    BankPRG8 #.bank(CHR2)
-    jsr SetCHRbanks
-    dec R2
-    bpl megaloop
+  ; ldx #8
+  ; lda #0
+  ; sta PPUMASK
+  ; lda PPUSTATUS
+  ; megaloop:
+  ;   lda #$80
+  ;   sta R1
+  ;   ldy #0
+  ;   sty PPUADDR
+  ;   sty PPUADDR
+  ;   @outerloop:
+  ;     @innerloop:
+  ;       lda (R0),y
+  ;       sta PPUDATA
+  ;       iny
+  ;       bne @innerloop
+  ;     inc R1
+  ;     lda R1
+  ;     cmp #$a0
+  ;     bne @outerloop
+  ;   BankPRG8 #.bank(CHR2)
+  ;   jsr SetCHRbanks
+  ;   dec R2
+  ;   bpl megaloop
   
   ldx #0
   jsr SetCHRbanks
@@ -391,6 +390,41 @@ ScreenOff:
   lda VRAM_AddrTable_High,x
   sta IrqR1
   jsr UpdateScreen          ;update screen with buffer contents
+  
+  lda CoinTally
+  cmp CoinHudNumber
+  jeq NoCoinUpdate
+    ; if the coin value changed, check to see if we have enough time to
+    ; write CHR -RAM this frame. We can estimate this by whatever the pointer
+    ; in IrqR0 is at.
+    ; lda R0
+    ; cmp #$30
+    ; bcs NoCoinUpdate
+      ; we didn't do any bg writes so we have some time to write the new number
+      ; .import CHR1
+      ; BankPRG8 #.bank(CHR1)
+    ;   lda CoinTally
+    ;   asl
+    ;   asl
+    ;   asl
+    ;   asl
+    ;   tax
+    ;   ; numbers 0-9 are the first 128 bytes in the bank
+    ;   lda #$1f
+    ;   sta PPUADDR
+    ;   lda #$20
+    ;   sta PPUADDR
+    ; .repeat 16,I
+    ;   lda $8000 + I,x
+    ;   sta PPUDATA
+    ; .endrepeat
+    ldx CoinTally
+    stx CoinHudNumber
+    ; Change the fixed bank
+    lda CoinTallyBankLUT,x 
+    BankCHR1C a
+NoCoinUpdate:
+
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
   cpx #$06
@@ -405,6 +439,7 @@ InitBuffer:
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
   
+
   ; lda Sprite0HitDetectFlag  ;check for flag here
   ; beq :+
   ; jroweboy - set up Irq scroll split
@@ -583,7 +618,7 @@ NotSwitched:
   BankPRG8 #.bank(DECODE)
   .import fill_buffer
     jsr fill_buffer
-  BankPRG8 #.bank(LOWCODE)
+  ; BankPRG8 #.bank(LOWCODE)
 :
   ; copy the PPUCTRL flags to the version that we will write in the IRQ.
   ; this will restore the nmt select flags for the main screen in IRQ
@@ -617,12 +652,20 @@ NotSwitched:
   ; :
   ; lda BankShadow
   ; sta BANK_SELECT
-  
+  lda #0
+  sta IrqR0
+  sta IrqR1
 SkipMainOper:
   ply
   plx
   pla
   rti                       ;we are done until the next frame!
+  
+.export CoinTallyBankLUT
+CoinTallyBankLUT:
+.repeat 10, I
+  .byte I + $10
+.endrepeat
 
 ;-------------------------------------------------------------------------------------
 ;$00 - vram buffer address table low, also used for pseudorandom bit

@@ -153,7 +153,7 @@ GameEngine:
 
   ; Add a COIN hud
 
-  ; jsr CoinHUD
+  jsr CoinHUD
 
   ; Check to see if its time to disable the overlay to give extra time for
   ; the follower to exit the pipe
@@ -260,26 +260,26 @@ endfar
 
 .proc CoinHUD
   AllocSpr 3
-  lda #$2e
+  lda #$f0
   sta Sprite_Tilenumber,y
-  lda #$29
+  lda #$f1
   sta Sprite_Tilenumber+4,y
-  lda CoinTally
+  lda #$f2
   sta Sprite_Tilenumber+8,y
   lda #24
   sta Sprite_X_Position,y
   lda #32
-  sta Sprite_X_Position,y
+  sta Sprite_X_Position+4,y
   lda #40
-  sta Sprite_X_Position,y
+  sta Sprite_X_Position+8,y
   lda #16
   sta Sprite_Y_Position,y
   sta Sprite_Y_Position+4,y
   sta Sprite_Y_Position+8,y
-  lda #16
-  sta Sprite_Y_Position,y
-  sta Sprite_Y_Position+4,y
-  sta Sprite_Y_Position+8,y
+  lda #02
+  sta Sprite_Attributes,y
+  sta Sprite_Attributes+4,y
+  sta Sprite_Attributes+8,y
   rts
 .endproc
 

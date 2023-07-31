@@ -291,8 +291,8 @@ JCoinC:
   ; sta Misc_Y_HighPos,y   ;set vertical high byte
   ; sta Misc_State,y       ;set state for misc object
   ; sta Square2SoundQueue  ;load coin grab sound
-  stx ObjectOffset       ;store current control bit as misc object offset 
-  jsr GiveOneCoin        ;update coin tally on the screen and coin amount variable
+  ldx ObjectOffset       ;store current control bit as misc object offset 
+  ; jsr GiveOneCoin        ;update coin tally on the screen and coin amount variable
   ; inc CoinTallyFor1Ups   ;increment coin tally used to activate 1-up block flag
   rts
 

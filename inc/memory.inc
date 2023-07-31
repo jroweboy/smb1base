@@ -514,6 +514,7 @@ StackClear = DigitModifier
 .global LevelNumber
 ; .global Hidden1UpFlag
 .global CoinTally
+.global CoinHudNumber
 .global WorldNumber
 .global AreaNumber
 

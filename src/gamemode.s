@@ -196,7 +196,10 @@ SetInitNTHigh:
     BankCHR1C #7
     bne BankSet
 NotCastle:
-  BankCHR1C #5
+.import CoinTallyBankLUT
+  ldx CoinTally
+  lda CoinTallyBankLUT,x
+  BankCHR1C a
 BankSet:
 
   lda PrimaryHardMode      ;check to see if primary hard mode has been activated

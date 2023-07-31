@@ -568,6 +568,7 @@ HalfwayPage:                    .res  1
 LevelNumber:                    .res  1
 ; Hidden1UpFlag:                  .res  1
 CoinTally:                      .res  1
+CoinHudNumber:                  .res  1
 WorldNumber:                    .res  1
 AreaNumber:                     .res  1
 

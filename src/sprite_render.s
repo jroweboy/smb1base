@@ -7,7 +7,7 @@
 
 .export DrawSingleFireball, DrawSmallPlatform, DrawFireball
 .export DrawVine, DrawLargePlatform, DrawPowerUp
-.export DrawOneSpriteRow, JCoinGfxHandler, DrawHammer, DrawBrickChunks, DrawBlock
+.export DrawOneSpriteRow, DrawHammer, DrawBrickChunks, DrawBlock
 .export FlagpoleGfxHandler, DumpFourSpr, DumpThreeSpr
 
 .export DumpTwoSpr, FloateyNumbersRoutine
@@ -405,40 +405,41 @@ NotRsNum: lda Misc_Y_Position,x     ;get vertical coordinate
           sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
           lda #FLOATEY_NUM_0        ;that resemble "200"
           sta Sprite_Tilenumber+4,y
-          jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
+          rts
+          ; jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
 
-JumpingCoinTiles:
-  .byte JUMPING_COIN_TILE_1, JUMPING_COIN_TILE_2
-  .byte JUMPING_COIN_TILE_3, JUMPING_COIN_TILE_4
+; JumpingCoinTiles:
+;   .byte JUMPING_COIN_TILE_1, JUMPING_COIN_TILE_2
+;   .byte JUMPING_COIN_TILE_3, JUMPING_COIN_TILE_4
 
-JCoinGfxHandler:
-      ;    ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
-      AllocSpr 2
-         lda Misc_State,x            ;get state of misc object
-         cmp #$02                    ;if 2 or greater, 
-         bcs DrawFloateyNumber_Coin  ;branch to draw floatey number
-         lda Misc_Y_Position,x       ;store vertical coordinate as
-         sta Sprite_Y_Position,y     ;Y coordinate for first sprite
-         clc
-         adc #$08                    ;add eight pixels
-         sta Sprite_Y_Position+4,y   ;store as Y coordinate for second sprite
-         lda Misc_Rel_XPos           ;get relative horizontal coordinate
-         sta Sprite_X_Position,y
-         sta Sprite_X_Position+4,y   ;store as X coordinate for first and second sprites
-         lda FrameCounter            ;get frame counter
-         lsr                         ;divide by 2 to alter every other frame
-         and #%00000011              ;mask out d2-d1
-         tax                         ;use as graphical offset
-         lda JumpingCoinTiles,x      ;load tile number
-         iny                         ;increment OAM data offset to write tile numbers
-         jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
-         dey                         ;decrement to get old offset
-         lda #$02
-         sta Sprite_Attributes,y     ;set attribute byte in first sprite
-         lda #$82
-         sta Sprite_Attributes+4,y   ;set attribute byte with vertical flip in second sprite
-         ldx ObjectOffset            ;get misc object offset
-ExJCGfx: rts                         ;leave
+; JCoinGfxHandler:
+;       ;    ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
+;       AllocSpr 2
+;          lda Misc_State,x            ;get state of misc object
+;          cmp #$02                    ;if 2 or greater, 
+;          bcs DrawFloateyNumber_Coin  ;branch to draw floatey number
+;          lda Misc_Y_Position,x       ;store vertical coordinate as
+;          sta Sprite_Y_Position,y     ;Y coordinate for first sprite
+;          clc
+;          adc #$08                    ;add eight pixels
+;          sta Sprite_Y_Position+4,y   ;store as Y coordinate for second sprite
+;          lda Misc_Rel_XPos           ;get relative horizontal coordinate
+;          sta Sprite_X_Position,y
+;          sta Sprite_X_Position+4,y   ;store as X coordinate for first and second sprites
+;          lda FrameCounter            ;get frame counter
+;          lsr                         ;divide by 2 to alter every other frame
+;          and #%00000011              ;mask out d2-d1
+;          tax                         ;use as graphical offset
+;          lda JumpingCoinTiles,x      ;load tile number
+;          iny                         ;increment OAM data offset to write tile numbers
+;          jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
+;          dey                         ;decrement to get old offset
+;          lda #$02
+;          sta Sprite_Attributes,y     ;set attribute byte in first sprite
+;          lda #$82
+;          sta Sprite_Attributes+4,y   ;set attribute byte with vertical flip in second sprite
+;          ldx ObjectOffset            ;get misc object offset
+; ExJCGfx: rts                         ;leave
 
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - used to hold tiles for drawing the power-up, $00 also used to hold power-up type

@@ -8,8 +8,8 @@ nes2prg $80000
 ; nes2prg $2c000
 ; nes2prg $24000
 ; nes2prg $20000
-; nes2chr $4000
-nes2chrram $4000
+nes2chr $8000
+; nes2chrram $4000
 ; nes2chr $20000
 nes2mirror 'V'
 nes2tv 'N'
