@@ -754,7 +754,7 @@ MushroomPaletteData:
 
 BowserPaletteData:
   .byte $3f, $14, $04
-  .byte $0f, $1a, $30, $27
+  .byte $0f, $0b, $30, $19 ;nesdraug change 
   .byte $00
 
 MarioThanksMessage:

@@ -4,7 +4,7 @@
 
 .import RenderAttributeTables, RenderAreaGraphics
 .import GetScreenPosition
-.import WriteGameText ;now
+.import WriteGameText ;
 
 .export AreaParserTaskHandler, GetAreaDataAddrs, ProcLoopCommand, AreaParserTaskLoop
 
