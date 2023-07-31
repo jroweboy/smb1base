@@ -41,10 +41,17 @@ PrimaryGameSetup:
   sta FetchNewGameTimerFlag   ;set flag to load game timer from header
   lda #$00
   sta PlayerSize              ;set player's size to LARGE
+  
   ; lda #$02
   ; sta NumberofLives           ;give each player three lives
   ; sta OffScr_NumberofLives
 SecondaryGameSetup:
+  ; bank in the title screen graphics
+  lda OperMode
+  beq :+
+    BankCHR4 #1
+    BankCHR8 #2
+:
   lda #$00
   sta DisableScreenFlag     ;enable screen output
   tay

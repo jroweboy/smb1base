@@ -941,9 +941,8 @@ RdyNextA:
     ; bcc NextArea              ;at least this number of coins, leave flag clear
       ; inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
 NextArea:
-  ; inc AreaNumber            ;increment area number used for address loader
-
-  inc WorldNumber 
+  inc AreaNumber            ;increment area number used for address loader
+  ; inc WorldNumber 
 
   farcall LoadAreaPointer       ;get new level pointer
   inc FetchNewGameTimerFlag ;set flag to load new game timer
