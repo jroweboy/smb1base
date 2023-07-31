@@ -1509,9 +1509,9 @@ MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
 
   .byte $24, $44, $24, $44 ;bridge guardrail
   .byte $24, $CF, $CF, $24 ;chain
-  .byte $3E, $4E, $3F, $4F ;tall tree top, top half
-  .byte $3E, $4C, $3F, $4D ;short tree top
-  .byte $4E, $4C, $4F, $4D ;tall tree top, bottom half
+  .byte $3E, $4E, $3F, $4F ;tall tree top, top half ;nesdraug fix
+  .byte $A0, $B0, $A1, $B1 ;short tree top
+  .byte $3C, $4C, $3D, $4D ;tall tree top, bottom half
   .byte $50, $60, $51, $61 ;warp pipe end left, points up
   .byte $52, $62, $53, $63 ;warp pipe end right, points up
   .byte $50, $60, $51, $61 ;decoration pipe end left, points up
@@ -1549,9 +1549,9 @@ Palette1_MTiles:
   .byte $79, $48, $7A, $48 ;castle top w/ brick
   .byte $7B, $27, $7C, $27 ;entrance top
   .byte $27, $27, $27, $27 ;entrance bottom
-  .byte $73, $73, $73, $73 ;green ledge stump
+  .byte $82, $92, $83, $93 ;green ledge stump
   .byte $3A, $4A, $3B, $4B ;fence
-  .byte $3C, $3C, $3D, $3D ;tree trunk
+  .byte $C0, $C2, $C1, $C3 ;tree trunk ;nesdraug color 
   .byte $C4, $D4, $C5, $D5 ;mushroom stump top ;nesdraug fix meta tiles 
   .byte $C4, $D4, $C5, $D5 ;mushroom stump bottom
   .byte $47, $48, $47, $48 ;breakable brick w/ line 
