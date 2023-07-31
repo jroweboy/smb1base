@@ -18,6 +18,7 @@
 
 .incbin "../chr/peach_spritesheet.chr"
 .incbin "../chr/alternate_disco_floor.chr"
+.incbin "../chr/title_screen_bg.chr"
 
 ; include the new title screen graphics
 ; .segment "CHR_TITLE_BG_0"

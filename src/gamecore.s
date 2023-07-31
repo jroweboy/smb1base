@@ -712,12 +712,12 @@ BankSwitchCHR:
   sta CurrentFloorTileBank
   tax
   lda BankNumForFloor, x
-  BankCHR8 a
+  BankCHRC a
 Exit:
   rts
 
 BankNumForFloor:
-  .byte $02, $09
+  .byte $03, $09
 
 CycleForPalette1:
   .byte $30, $31, $38, $2c

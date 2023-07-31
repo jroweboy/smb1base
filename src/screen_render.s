@@ -354,15 +354,69 @@ NoAltPal:
 ;$00 - vram buffer address table low
 ;$01 - vram buffer address table high
 
+
+PanicMarioNametableData:
+  .byte $21,$24,$03
+  .byte $41,$42,$43
+  .byte $21,$44,$17
+  .byte $44,$45,$46,$47,$48,$49,$4a,$4b,$4c,$4d,$40,$4e,$4f,$50,$51,$40,$40,$40,$40,$40,$40,$40,$40
+  .byte $21,$64,$17
+  .byte $52,$53,$54,$55,$56,$57,$58,$59,$5a,$5b,$5c,$5d,$5e,$5f,$60,$61,$62,$63,$64,$65,$40,$66,$67
+  .byte $21,$84,$17
+  .byte $68,$69,$6a,$6b,$6c,$6d,$6e,$6f,$70,$71,$40,$72,$73,$74,$75,$76,$77,$78,$79,$7a,$7b,$7c,$7d
+  .byte $21,$a4,$17
+  .byte $7e,$7f,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89,$8a,$40,$8b,$8c,$8d,$8e,$8f,$90,$91,$92,$93
+  .byte $21,$c4,$17
+  .byte $40,$94,$95,$96,$97,$98,$99,$9a,$9b,$9c,$9d,$9e,$9f,$a0,$a1,$a2,$a3,$a4,$a5,$a6,$40,$a7,$a8
+  .byte $21,$e4,$17
+  .byte $a9,$aa,$ab,$ac,$ad,$40,$ae,$af,$b0,$b1,$b2,$b3,$b4,$b5,$b6,$40,$40,$40,$40,$40,$40,$40,$40
+  .byte $22,$04,$17
+  .byte $40,$40,$40,$40,$40,$40,$b7,$b8,$b9,$ba,$bb,$bc,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+; Palette and attribute data
+  .byte $23,$d1,$06
+  .byte $55,$5a,$5a,$5a,$5a,$5a
+  .byte $23,$d9,$07
+  .byte $55,$55,$55,$55,$55,$55,$55
+  .byte $23,$d9,$07
+  .byte $55,$55,$55,$55,$55,$55,$55
+  .byte $23,$e2,$02
+  .byte $55,$55
+  .byte $23,$ea,$04
+  .byte $05,$05,$05,$05
+  .byte $3f,$05,$03
+  .byte $31,$25,$38
+; null terminator
+  .byte $00
+
+PanicMarioNametableDataLen = * - PanicMarioNametableData
+.assert PanicMarioNametableDataLen < 256, error, "Overflows a page"
+
 DrawTitleScreen:
   lda OperMode                 ;are we in title screen mode?
   bne IncModeTask_B            ;if not, exit
+
+  ; bank in the title screen graphics
+  BankCHR4 #11
+  BankCHR8 #12
   
   lda #CloudMusic
   sta AreaMusicQueue
 
-  ; Draw Lead / Follow Text
-  lda #19
+  lda #7
+  sta R0
+  ; write the headers
+
+  ldx #PanicMarioNametableDataLen
+  ; ldy #PanicMarioNametableDataLen+1
+:
+    lda PanicMarioNametableData,x
+    sta VRAM_Buffer1-1,x
+    dex
+    bne :-
+
+  lda PanicMarioNametableData
+  sta VRAM_Buffer1-1
+  lda #5
   jmp SetVRAMAddr_B            ;increment task and exit
 
 ;-------------------------------------------------------------------------------------
@@ -395,6 +449,11 @@ TScrClear:
   dex
   bne TScrClear
   ; jsr DrawMushroomIcon       ;draw player select icon
+  
+  ; Draw Lead / Follow Text
+  lda #19
+  sta VRAM_Buffer_AddrCtrl
+  
 IncSubtask:
   inc ScreenRoutineTask      ;move onto next task
   rts
@@ -1398,27 +1457,27 @@ Palette1_MTiles:
   .byte $24, $5F, $24, $6F ;flag ball (residual object)
 
 Palette2_MTiles:
-  .byte $24, $24, $24, $30 ;cloud left
-  .byte $31, $24, $32, $24 ;cloud middle
-  .byte $24, $33, $24, $24 ;cloud right
-  .byte $24, $24, $40, $24 ;cloud bottom left
-  .byte $41, $24, $42, $24 ;cloud bottom middle
-  .byte $43, $24, $24, $24 ;cloud bottom right
+  .byte $24, $24, $24, $c4 ;cloud left
+  .byte $c5, $24, $c6, $24 ;cloud middle
+  .byte $24, $c7, $24, $24 ;cloud right
+  .byte $24, $24, $d4, $24 ;cloud bottom left
+  .byte $d5, $24, $d6, $24 ;cloud bottom middle
+  .byte $d7, $24, $24, $24 ;cloud bottom right
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
 BUSH_LEFT_METATILE = $80 + (* - Palette2_MTiles) / 4
-  .byte $44, $82, $e0, $f0 ;bush left
+  .byte $ea, $e6, $e0, $f0 ;bush left
 BUSH_RIGHT_METATILE = $80 + (* - Palette2_MTiles) / 4
-  .byte $e3, $f3, $44, $83 ;bush right
+  .byte $e3, $f3, $ea, $e7 ;bush right
 CRACKED_BRICK_NONSOLID = $80 + (* - Palette2_MTiles) / 4
-  .byte $44, $82, $44, $83 ;cracked rock terrain (nonsolid)
+  .byte $ea, $e6, $ea, $e7 ;cracked rock terrain (nonsolid)
 CLOUD_METATILE = $80 + (* - Palette2_MTiles) / 4
   ; Solid Extent
   .byte $8E, $9E, $8F, $9F ;cloud level terrain
 CRACKED_BRICK_METATILE = $80 + (* - Palette2_MTiles) / 4
-  .byte $82, $92, $83, $93 ;cracked rock terrain top (new)
+  .byte $e6, $f6, $e7, $f7 ;cracked rock terrain top (new)
 CRACKED_BRICK_METATILE2 = $80 + (* - Palette2_MTiles) / 4
-  .byte $92, $93, $92, $93 ;cracked rock terrain bottom (new)
+  .byte $f6, $f7, $f6, $f7 ;cracked rock terrain bottom (new)
 BRIDGE_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $39, $49, $39, $49 ;bowser's bridge
 
