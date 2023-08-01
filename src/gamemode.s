@@ -580,28 +580,27 @@ ExitVWalk:
   bne IncMsgCounter         ;if set, branch to increment message counters
   lda PrimaryMsgCounter     ;otherwise load primary message counter
   beq ThankPlayer           ;if set to zero, branch to print first message
-  ldy WorldNumber           ;check world number
-  cpy #World8
-  bne MRetainerMsg          ;if not at world 8, skip to next part
+  ldy #8
+  ; ldy WorldNumber           ;check world number
+  ; cpy #World8
+  ; bne MRetainerMsg          ;if not at world 8, skip to next part
   cmp #$03                  ;check primary message counter again
   bcc IncMsgCounter         ;if not at 3 yet (world 8 only), branch to increment
   sbc #$01                  ;otherwise subtract one
-  jmp ThankPlayer           ;and skip to next part
-MRetainerMsg:
-  cmp #$02                  ;check primary message counter
-  bcc IncMsgCounter         ;if not at 2 yet (world 1-7 only), branch
+;   jmp ThankPlayer           ;and skip to next part
+; MRetainerMsg:
+;   cmp #$02                  ;check primary message counter
+;   bcc IncMsgCounter         ;if not at 2 yet (world 1-7 only), branch
 ThankPlayer:
   tay                       ;put primary message counter into Y
   bne SecondPartMsg         ;if counter nonzero, skip this part, do not print first message
-  lda CurrentPlayer         ;otherwise get player currently on the screen
+  lda CurrentLeader         ;otherwise get player currently on the screen
   beq EvalForMusic          ;if mario, branch
   iny                       ;otherwise increment Y once for luigi and
   bne EvalForMusic          ;do an unconditional branch to the same place
 SecondPartMsg:
   iny                       ;increment Y to do world 8's message
-  lda WorldNumber
-  cmp #World8               ;check world number
-  beq EvalForMusic          ;if at world 8, branch to next part
+  jmp EvalForMusic          ;if at world 8, branch to next part
   dey                       ;otherwise decrement Y for world 1-7's message
   cpy #$04                  ;if counter at 4 (world 1-7 only)
   bcs SetEndTimer           ;branch to set victory end timer
@@ -610,6 +609,8 @@ SecondPartMsg:
 EvalForMusic:
   cpy #$03                  ;if counter not yet at 3 (world 8 only), branch
   bne PrintMsg              ;to print message only (note world 1-7 will only
+  .import CancelAudioIRQ
+  jsr CancelAudioIRQ
   lda #VictoryMusic         ;reach this code if counter = 0, and will always branch)
   sta EventMusicQueue       ;otherwise load victory music first (world 8 only)
 PrintMsg:
@@ -642,9 +643,10 @@ ExitMsgs:
 
   lda WorldEndTimer          ;check to see if world end timer expired
   bne EndExitOne             ;branch to leave if not
-  ldy WorldNumber            ;check world number
-  cpy #World8                ;if on world 8, player is done with game, 
-  bcs EndChkBButton          ;thus branch to read controller
+  ; ldy WorldNumber            ;check world number
+  ; cpy #World8                ;if on world 8, player is done with game, 
+  ; bcs EndChkBButton          ;thus branch to read controller
+  jmp EndChkBButton
   lda #$00
   sta AreaNumber             ;otherwise initialize area number used as offset
   sta LevelNumber            ;and level number control to start at area 1

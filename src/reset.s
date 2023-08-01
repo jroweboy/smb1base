@@ -764,7 +764,7 @@ MarioThanksMessage:
 
 LuigiThanksMessage:
   .byte $25, $48, $10
-  .byte "THANK YOU LUIGI!"
+  .byte "THANK YOU PEACH!"
   .byte $00
 
 MushroomRetainerSaved:
@@ -775,23 +775,23 @@ MushroomRetainerSaved:
   .byte $00
 
 PrincessSaved1:
-  .byte $25, $a7, $13
-  .byte "YOUR QUEST IS OVER."
+  .byte $25, $a3, $1b
+  .byte "NOW THAT BOWSER IS DEFEATED"
   .byte $00
 
 PrincessSaved2:
-  .byte $25, $e3, $1b
-  .byte "WE PRESENT YOU A NEW QUEST."
+  .byte $25, $e6, $13
+  .byte "ITS TIME TO BOOGIE!"
   .byte $00
 
 WorldSelectMessage1:
-  .byte $26, $4a, $0d
-  .byte "PUSH BUTTON B"
+  .byte $26, $4c, $09
+  .byte "SMB ARENA"
   .byte $00
 
 WorldSelectMessage2:
-  .byte $26, $88, $11
-  .byte "TO SELECT A WORLD"
+  .byte $26, $87, $13
+  .byte "NESDRAUG / JROWEBOY"
   .byte $00
 
 LeadFollow:

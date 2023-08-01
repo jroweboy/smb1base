@@ -816,7 +816,7 @@ NoSideC: ldx ObjectOffset           ;return with enemy object buffer offset
          rts
 
 BowserIdentities:
-      .byte Goomba, GreenKoopa, BuzzyBeetle, Spiny, Lakitu, Bloober, HammerBro, Bowser
+      .byte Bowser, Bowser, Bowser, Bowser, Bowser, Bowser, Bowser, Bowser
 HandleEnemyFBallCol:
       jsr RelativeEnemyPosition  ;get relative coordinate of enemy
       ldx R1                    ;get current enemy object offset

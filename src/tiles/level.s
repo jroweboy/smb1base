@@ -345,7 +345,7 @@ TerrBChk: lda Bitmasks,y             ;load bitmask, then perform AND on contents
           lda AreaType
           cmp #3
           bne :+
-            ; castle theme we want to overrdie the brick for just the floor
+            ; castle theme we want to override the brick for just the floor
             cpx #$0b
             bne :+
             lda #CRACKED_BRICK_METATILE
