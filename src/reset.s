@@ -780,7 +780,7 @@ PrincessSaved1:
   .byte $00
 
 PrincessSaved2:
-  .byte $25, $e6, $13
+  .byte $25, $e7, $13
   .byte "ITS TIME TO BOOGIE!"
   .byte $00
 

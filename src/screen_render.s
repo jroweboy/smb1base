@@ -306,18 +306,20 @@ L5 = * - LoadingscreenMessage
 L6 = * - LoadingscreenMessage
   .byte $22, $e5, L7 - L6 - 4, "LEVEL 2 - UNDERGROUND", $00
 L7 = * - LoadingscreenMessage
-  .byte $22, $e5, L8 - L7 - 4, "LEVEL 3 - STREET LIFE", $00
+  .byte $22, $e5, L8 - L7 - 4, "LEVEL 2 - UNDERGROUND", $00
 L8 = * - LoadingscreenMessage
-  .byte $22, $e5, L9 - L8 - 4, "LEVEL 4 - CLUB HOUSE", $00
+  .byte $22, $e5, L9 - L8 - 4, "LEVEL 3 - STREET LIFE", $00
 L9 = * - LoadingscreenMessage
-  .byte $22, $e2, La - L9 - 4, "LEVEL 5 - WRONG NEIGHBORHOOD", $00
+  .byte $22, $e5, La - L9 - 4, "LEVEL 4 - CLUB HOUSE", $00
 La = * - LoadingscreenMessage
-  .byte $22, $e5, Lb - La - 4, "LEVEL 5 - BOWSERS DISCO", $00
+  .byte $22, $e2, Lb - La - 4, "LEVEL 5 - WRONG NEIGHBORHOOD", $00
 Lb = * - LoadingscreenMessage
+  .byte $22, $e5, Lc - Lb - 4, "LEVEL 5 - BOWSERS DISCO", $00
+Lc = * - LoadingscreenMessage
 
 Offsets:
 ; duplicate L6 so level 2 with the area transition functions properly
-  .byte $0, L0, L1, L2, L3, L4, L5, L6, L6, L7, L8, L9, La, Lb
+  .byte $0, L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, La, Lb, Lc
 .endproc
 ;-------------------------------------------------------------------------------------
 

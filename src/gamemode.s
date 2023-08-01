@@ -4,7 +4,7 @@
 ; core.s ???
 .import GameCoreRoutine, ScreenRoutines, UpdScrollVar
 .import EnemiesAndLoopsCore, RelativePlayerPosition, PlayerGfxHandler
-.import LoadAreaPointer, TerminateGame, WritePlayerNames
+.import LoadAreaPointer, WritePlayerNames
 
 .import IncModeTask_B
 
@@ -266,18 +266,18 @@ DoneInitArea:
 ;   bne TerminateGame
 ;   lda ScreenTimer       ;if not pressed, wait for
 ;   bne GameIsOn          ;screen timer to expire
-; TerminateGame:
-;   lda #Silence          ;silence music
-;   sta EventMusicQueue
-;   ; jsr TransposePlayers  ;check if other player can keep
-;   bcc ContinueGame      ;going, and do so if possible
-;   lda WorldNumber       ;otherwise put world number of current
-;   sta ContinueWorld     ;player into secret continue function variable
-;   lda #$00
-;   sta OperMode_Task     ;reset all modes to title screen and
-;   sta ScreenTimer       ;leave
-;   sta OperMode
-;   rts
+TerminateGame:
+  lda #Silence          ;silence music
+  sta EventMusicQueue
+  ; jsr TransposePlayers  ;check if other player can keep
+  ; bcc ContinueGame      ;going, and do so if possible
+  ; lda WorldNumber       ;otherwise put world number of current
+  ; sta ContinueWorld     ;player into secret continue function variable
+  lda #$00
+  sta OperMode_Task     ;reset all modes to title screen and
+  sta ScreenTimer       ;leave
+  sta OperMode
+  rts
 
 .export ContinueGame
 .proc ContinueGame
@@ -321,8 +321,8 @@ ChkSelect:
 ;   bcs ResetTitle              ;if carry flag set, demo over, thus branch
 ;   jmp RunDemo                 ;otherwise, run game engine for demo
 ; ChkWorldSel:
-  ; ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
-  ; beq NullJoypad
+  ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
+  beq NullJoypad
   cmp #B_Button               ;if so, check to see if the B button was pressed
   bne NullJoypad
     iny                         ;if so, increment Y and execute same code as select
@@ -362,6 +362,10 @@ IncWorldSel:
   inx
   txa
   and #%00000111              ;mask out higher bits
+  cmp #7
+  bne :+
+    lda #0
+  :
   sta WorldSelectNumber       ;store as current world select number
   jsr GoContinue
 ; UpdateShroom:
@@ -488,6 +492,8 @@ FreezePlayer:
 
 ;-------------------------------------------------------------------------------------
 
+  .import ColorRotation
+
 .proc VictoryMode
   ; Reserve the sprite slots for mario AND FOLLOWER still
   lda #32 + 32
@@ -495,6 +501,9 @@ FreezePlayer:
   jsr VictoryModeSubroutines  ;run victory mode subroutines
   lda OperMode_Task           ;get current task of victory mode
   beq AutoPlayer              ;if on bridge collapse, skip enemy processing
+
+  jsr ColorRotation          ;cycle one of the background colors
+
   ldx #$00
   stx ObjectOffset            ;otherwise reset enemy object offset 
   ; TODO Consolidate farcall 
@@ -699,7 +708,7 @@ EndChkBButton:
   sta WorldSelectEnableFlag
   ; lda #$ff                   ;remove onscreen player's lives
   ; sta NumberofLives
-  ; jsr TerminateGame          ;do sub to continue other player or end game
+  jsr TerminateGame          ;do sub to continue other player or end game
 EndExitTwo:
   rts                        ;leave
 .endproc
