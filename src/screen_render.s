@@ -229,6 +229,7 @@ NoReset:
     iny
     iny
     iny
+    iny
     jmp DrawLoadingscreenMessage
 :
   cmp #$10
@@ -315,7 +316,8 @@ La = * - LoadingscreenMessage
 Lb = * - LoadingscreenMessage
 
 Offsets:
-  .byte $0, L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, La, Lb
+; duplicate L6 so level 2 with the area transition functions properly
+  .byte $0, L0, L1, L2, L3, L4, L5, L6, L6, L7, L8, L9, La, Lb
 .endproc
 ;-------------------------------------------------------------------------------------
 
