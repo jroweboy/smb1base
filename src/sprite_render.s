@@ -1600,12 +1600,12 @@ DumpTwoSpr:
 ExitDumpSpr:
       rts
 
-FlagpoleScoreNumTiles:
-  .byte FLOATEY_NUM_50, FLOATEY_NUM_00
-  .byte FLOATEY_NUM_20, FLOATEY_NUM_00
-  .byte FLOATEY_NUM_80, FLOATEY_NUM_0
-  .byte FLOATEY_NUM_40, FLOATEY_NUM_0
-  .byte FLOATEY_NUM_10, FLOATEY_NUM_0
+FlagpoleScoreNumTiles: ;nesdraug fix these 
+  .byte FLOATEY_NUM_1, FLOATEY_NUM_UP ; "1-UP"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00
+  .byte FLOATEY_NUM_20, $ff
 
 .export LakituGraphicsHandler
 .proc LakituGraphicsHandler
