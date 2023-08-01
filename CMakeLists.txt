@@ -8,6 +8,13 @@ add_executable(${PROJECT_NAME}
 
   chr/arranged_bg.chr
   chr/arranged_sprites.chr
+  chr/alternate_disco_floor.chr
+  chr/peach_spritesheet.chr
+
+  chr/fixed_number_0_3.chr
+  chr/fixed_number_4_7.chr
+  chr/fixed_number_8_9.chr
+  chr/title_screen_bg_new.chr
 
   inc/charmap.inc
   inc/common.inc

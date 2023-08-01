@@ -342,6 +342,15 @@ NoCloud2: ldy #$00                   ;start at beginning of bitmasks
 TerrBChk: lda Bitmasks,y             ;load bitmask, then perform AND on contents of first byte
           bit R0
           beq NextTBit               ;if not set, skip this part (do not write terrain to buffer)
+          lda AreaType
+          cmp #3
+          bne :+
+            ; castle theme we want to overrdie the brick for just the floor
+            cpx #$0b
+            bne :+
+            lda #CRACKED_BRICK_METATILE
+            .byte $2c
+        : 
           lda R7
           sta MetatileBuffer,x       ;load terrain type metatile number and store into buffer here
           cmp #CRACKED_BRICK_METATILE
