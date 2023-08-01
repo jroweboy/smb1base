@@ -47,9 +47,6 @@ add_executable(${PROJECT_NAME}
   src/sprite_render.s
   src/title_screen.s
   # src/trigtable.s
-  
-  audio/panic/superblocks_panic.s
-  audio/panic/blocks_panic.inc
 
   src/ssdpcm/buffer.s
   src/ssdpcm/decode_ss2_async_fullunroll.s
@@ -111,6 +108,18 @@ add_executable(${PROJECT_NAME}
   src/nes.cfg
   # chr/lanky_mario.chr
 )
+
+
+target_sources(${PROJECT_NAME} PUBLIC
+  audio/panicuncut/superblocks_panicuncut.s
+  audio/panicuncut/blocks_panicuncut.inc
+)
+
+# To compile the cut version uncomment this
+# target_sources(${PROJECT_NAME} PUBLIC
+#   audio/paniccut/superblocks_paniccut.s
+#   audio/paniccut/blocks_paniccut.inc
+# )
 
 target_include_directories(${PROJECT_NAME} PUBLIC audio/ inc/ gen/)
 
