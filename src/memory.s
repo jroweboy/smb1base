@@ -412,7 +412,7 @@ NumberofGroupEnemies:           .res  1 ; only used in one subroutine , HandleGr
 ColorRotateOffset:              .res  1
 PlayerGfxOffset:                .res  1
 WarpZoneControl:                .res  1
-FireworksCounter:               .res  1 ; original 2
+FireworksCounter:               .res  2 ; original 2 (just safety keeping it 2 for now)
 MultiLoopCorrectCntr:           .res  1
 MultiLoopPassCntr:              .res  1
 JumpspringForce:                .res  1
@@ -538,7 +538,7 @@ PipeExitTimer:                  .res  1
 
 DestinationPageLoc:             .res  1
 FirebarSpinDirection          = DestinationPageLoc
-VictoryWalkControl:             .res  4 ; (FirebarSpinDirection shares this)
+VictoryWalkControl:             .res  5 ; (FirebarSpinDirection shares this)
 
 AreaType:                       .res  1 ; 074e
 
