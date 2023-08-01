@@ -1600,12 +1600,12 @@ Palette1_MTiles:
   .byte $47, $48, $47, $48 ;brick with line (vine)
   .byte $47, $48, $47, $48 ;brick with line (star)
   .byte $47, $48, $47, $48 ;brick with line (coins)
-  .byte $80, $90, $81, $91 ;brick with line (1-up)
+  .byte $80, $90, $81, $91 ;brick with line (1-up)  ;deathblock 
   .byte $48, $48, $48, $48 ;brick (power-up)
   .byte $48, $48, $48, $48 ;brick (vine)
   .byte $48, $48, $48, $48 ;brick (star)
-  .byte $48, $48, $48, $48 ;brick (coins)
-  .byte $48, $48, $48, $48 ;brick (1-up)
+  .byte $48, $48, $48, $48 ;brick (coins) 
+  .byte $80, $90, $81, $91  ;brick (1-up)   ;deathblock 
   .byte $24, $24, $24, $24 ;hidden block (1 coin)
   .byte $24, $24, $24, $24 ;hidden block (1-up)
   .byte $c8, $d8, $c9, $d9 ;solid block (3-d block)

@@ -1303,7 +1303,8 @@ CheckForClimbMTiles:
   rts
 
 CheckForDeathblock: ; BOOKMARK new routine Deathblock
-         cmp #$5e              ;check for Deathblock  5e? or 59? what is it
+         cmp #$59              ;check for Deathblock  5e? or 59? what is it
+         cmp #$5e 
          beq:+
          clc
          :
