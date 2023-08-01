@@ -1,6 +1,6 @@
 .include "common.inc"
 
-; .segment "CHR_ROTATE" 
+; .segment "CHR_ROTATE" ;
 
 
 ; .repeat MARIO_ROTATION_ANGLE_MAX,I
