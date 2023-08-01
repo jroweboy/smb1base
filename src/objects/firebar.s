@@ -153,7 +153,7 @@ SetupGFB: sta Local_ef                     ;save high byte of spinning thing, mo
           lda #$01
           sta R0                     ;set $01 value here (not necessary)
           jsr FirebarCollision        ;draw fireball part and do collision detection
-          ldy #$05                    ;load value for short firebars by default
+          ldy #$02                    ;load value for short firebars by default ;nesdraug firebar
           lda Enemy_ID,x
           cmp #$1f                    ;are we doing a long firebar?
           bcc SetMFbar                ;no, branch then
