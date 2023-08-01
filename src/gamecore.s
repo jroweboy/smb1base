@@ -44,6 +44,7 @@ GameCoreSubRoutine:
   .word ProcessWhirlpools
   .word FlagpoleRoutine
 
+.export HandlePlayer
 HandlePlayer:
   jsr GetPlayerOffscreenBits ;get offscreen bits for player object
   jsr RelativePlayerPosition ;get relative coordinates for player object
@@ -65,6 +66,11 @@ GameCoreRoutine:
   ; lda SavedJoypadBits,x      ;use appropriate player's controller bits
   ; sta SavedJoypadBits        ;as the master controller bits
   farcall GameRoutines           ;execute one of many possible subs
+
+  lda GameEngineSubroutine
+  cmp #$0d ;; in bowser cutscene
+  jeq SkipEverythingElse
+
   lda OperMode_Task          ;check major task of operating mode
   cmp #$03                   ;if we are supposed to be here,
   bcs GameEngine             ;branch to the game engine itself
@@ -150,6 +156,8 @@ GameEngine:
     ; jsr RunGameTimer           ;count down the game timer
     jsr ColorRotation          ;cycle one of the background colors
   endfar
+
+SkipEverythingElse:
 
   ; Add a COIN hud
 
@@ -259,6 +267,11 @@ endfar
   rts                        ;and after all that, we're finally done!
 
 .proc CoinHUD
+  lda LevelNumber
+  cmp #5
+  bcc :+
+    rts
+  :
   AllocSpr 3
   lda #$f0
   sta Sprite_Tilenumber,y

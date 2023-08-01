@@ -63,6 +63,14 @@
 ;-------------------------------------------------------------------------------------
 
 PlayerEntrance:
+  lda AreaNumber
+  cmp #5
+  bne :+
+    ; HACK - override player entrance to make my new cutscene in $0d
+    lda #$0d
+    sta GameEngineSubroutine
+    rts
+:
   lda AltEntranceControl    ;check for mode of alternate entry
   cmp #$02
   beq EntrMode2             ;if found, branch to enter from pipe or with vine
@@ -1639,6 +1647,140 @@ NoJSChk:
   lda #$04                ;set maximum vertical speed here
   jmp ImposeGravitySprObj ;then jump to move player vertically
 
+.pushseg
+.segment "BSS2"
+
+CutsceneAction: .res 1
+CutsceneFirstTime: .res 1
+ActionFirstTime: .res 1
+.popseg
+
 .proc BowserCutscene
+  lda CutsceneFirstTime
+  bne :+
+    lda #0
+    sta ScreenTimer
+    BankCHR1C #7
+    lda #1
+    sta CutsceneFirstTime
+:
+  lda ScreenTimer
+  beq :+
+    rts
+  :
+
+  .import HandlePlayer
+  jsr HandlePlayer
+
+  lda CutsceneAction
+  asl
+  tay
+  lda ActionTable,y
+  sta R0
+  lda ActionTable+1,y
+  sta R1
+  jmp (R0)
+
+ActionTable:
+  .word (StartMoonWalking)
+  .word (StopMoonWalking)
+  .word (SpawnBowser)
+  .word (LandBowser)
+  .word (End)
+
+LandBowser:
+  lda LakituEnemyTimer
+  bne :+
+    ; time up stop falling.
+    inc CutsceneAction
+    rts
+  :
+  ; run bowser actions
+  ldx #0
+  farcall ProcessSingleEnemy
+  ; lda #$04                ;set maximum vertical speed here
+  ; ldx #1
+  ; jmp ImposeGravitySprObj ;then jump to move player vertically
+  rts
+
+SpawnBowser:
+  ; lda ActionFirstTime
+  ; bne :+
+  ldx #0
+  .import InitBowser
+  farcall InitBowser
+
+  lda #5
+  sta LakituEnemyTimer
+
+  lda #$80
+  sta Enemy_Flag
+  lda #$2d
+  sta Enemy_ID
+  lda ScreenLeft_PageLoc
+  sta Enemy_PageLoc
+  lda #$b0
+  sta Enemy_X_Position
+  lda Player_Y_Position
+  sta Enemy_Y_Position
+  lda #$01
+  sta Enemy_Y_HighPos
+  farcall CheckpointEnemyID     ;process each enemy object separately
+  lda #$fe
+  sta Enemy_Y_MoveForce
+  lda #0
+  sta Enemy_X_MoveForce
+  sta Enemy_YMoveForceFractional
+  inc CutsceneAction
+  rts
+
+StopMoonWalking:
+  lda LakituEnemyTimer
+  cmp #1
+  beq @stopfollower
+  cmp #0
+  bne @exit
+    lda #Silence
+    sta EventMusicQueue
+    lda #0
+    sta ActionFirstTime
+    inc CutsceneAction
+    rts
+@stopfollower:
+  lda #$00
+  jsr AutoControlPlayer
+  .import SetFollowerStopPoint
+  jsr SetFollowerStopPoint
+  rts
+
+@exit:
+  lda #$01
+  jsr AutoControlPlayer
+  rts
+
+End:
+  lda #$00
+  jsr AutoControlPlayer
+  rts
+
+StartMoonWalking:
+  lda ActionFirstTime
+  bne :+
+    lda #5
+    sta LakituEnemyTimer
+    lda #1
+    sta ActionFirstTime
+  :
+
+  lda #%00000011
+  sta PlayerMoonwalkFlag
+  lda #$01
+  jsr AutoControlPlayer
+
+  lda #0
+  sta ActionFirstTime
+  inc CutsceneAction
+
+  rts
 
 .endproc

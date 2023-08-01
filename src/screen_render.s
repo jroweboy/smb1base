@@ -312,9 +312,11 @@ L8 = * - LoadingscreenMessage
 L9 = * - LoadingscreenMessage
   .byte $22, $e5, La - L9 - 4, "LEVEL 5 - BOWSERS DISCO", $00
 La = * - LoadingscreenMessage
+  .byte $22, $e5, Lb - La - 4, "LEVEL 5 - BOWSERS DISCO", $00
+Lb = * - LoadingscreenMessage
 
 Offsets:
-  .byte $0, L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, La
+  .byte $0, L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, La, Lb
 .endproc
 ;-------------------------------------------------------------------------------------
 

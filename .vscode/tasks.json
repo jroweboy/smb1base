@@ -140,7 +140,7 @@
         },
         {
             "label": "compile",
-            "runOptions": {"instanceLimit": 1},
+            "runOptions": {"instanceLimit": 4},
             // "type": "cmake",
             // "command": "build",
             "type": "process",
