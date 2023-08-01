@@ -1675,9 +1675,13 @@ CutsceneAction: .res 1
 CutsceneFirstTime: .res 1
 ActionFirstTime: .res 1
 BowserDrawingFlag: .res 1
+FlameDrawingFlag: .res 1
+PlayerPhysicsEnabled: .res 1
+ActionCallCount: .res 1
 
 .popseg
 
+.import F_PlayerGfxOffset, F_PlayerFacingDir, F_Player_PageLoc, F_Player_X_Position
 .import BowserGfxHandler
 .import MoveJumpingEnemy
 
@@ -1689,6 +1693,14 @@ BowserDrawingFlag: .res 1
     BankCHR1C #7
     lda #1
     sta CutsceneFirstTime
+    ldx #0
+    jsr EraseEnemyObject
+    ldx #1
+    jsr EraseEnemyObject
+    ldx #2
+    jsr EraseEnemyObject
+    ldx #3
+    jsr EraseEnemyObject
 :
   lda ScreenTimer
   beq :+
@@ -1707,15 +1719,53 @@ BowserDrawingFlag: .res 1
   sta R1
   jsr Jumper
 
-  .import HandlePlayer
+  ldx #0
+  stx ObjectOffset
+  lda PlayerPhysicsEnabled
+  beq :+
+    ; lda Square1SoundQueue
+    ; pha
+    ;   lda #0
+    ;   sta Player_State
+    ;   jsr ProcJumping
+    ; pla
+    ; sta Square1SoundQueue
+    ; jsr JSMove
+    lda Player_X_Position
+    sec
+    sbc #2
+    sta Player_X_Position
+    lda Player_PageLoc
+    sbc #0
+    sta Player_PageLoc
 
-  jsr HandlePlayer
+    lda #$70
+    sta R0
+    lda #$05
+    sta R1
+    lda #$0c
+    sta R2
+    ldx #0
+    lda #0
+    sta R7
+    jsr ImposeGravity
+    ; jsr FindPlayerAction
+  :
   lda BowserDrawingFlag
   beq :+
     ldx #0
     stx ObjectOffset
     farcall BowserGfxHandler
   :
+  lda FlameDrawingFlag
+  beq :+
+    ldx #3
+    stx ObjectOffset
+    .import RunBowserFlame
+    farcall RunBowserFlame
+  :
+.import HandlePlayer
+  jsr HandlePlayer
   rts
 
 
@@ -1730,11 +1780,229 @@ ActionTable:
   .word (SpawnBowser)
   .word (LandBowser)
   .word (Fireball)
+  .word (PlayerHit)
+  .word (PlayerOffscreen)
+  .word (BowserSecondJump)
+  .word (BowserWalkForward)
+  .word (BowserDragFollower)
+  .word (PlayerChase)
   .word (LoadLevel)
 
-Fireball:
-  ; lda Enemy
-  inc CutsceneAction
+PlayerChase:
+  lda LakituEnemyTimer
+  beq :+
+    rts
+  :
+  
+  lda ActionFirstTime
+  bne :+
+    lda #0
+    sta PlayerPhysicsEnabled
+
+    lda #$b0
+    sta Player_Y_Position
+    sta Player_Rel_YPos
+    lda #0
+    sta Player_X_Position
+    sta Player_PageLoc
+    sta Player_Rel_XPos
+    lda #1
+    sta Player_Y_HighPos
+    inc ActionFirstTime
+  :
+  lda Player_Rel_XPos
+  clc
+  adc #3
+  sta Player_Rel_XPos
+  cmp #$f0
+  bcc :+
+    lda #Sfx_PipeDown_Injury
+    sta Square1SoundQueue
+    inc CutsceneAction
+  :
+  lda #0
+  sta PlayerMoonwalkFlag
+  lda #B_Button | Right_Dir
+  jsr AutoControlPlayer
+  rts
+
+BowserDragFollower:
+  inc ActionCallCount
+  lda Enemy_X_Position
+  cmp #$f0
+  bcs :+
+    lda Enemy_X_Position
+    clc
+    adc #1
+    sta Enemy_X_Position
+    lda Enemy_PageLoc
+    adc #0
+    sta Enemy_PageLoc
+  :
+  lda Enemy_X_Position
+  cmp #$f0
+  bcc :+
+    lda BowserDrawingFlag
+    beq :+
+      lda #0
+      sta BowserDrawingFlag
+      lda #Sfx_PipeDown_Injury
+      sta Square1SoundQueue
+  :
+  ldx F_Frame
+  lda F_Player_X_Position,x
+  clc
+  adc #1
+  sta F_Player_X_Position,x
+  lda F_Player_X_Position,x
+  cmp #$f0
+  bcc :+
+    ; follower offscreen finally so move on
+    .import F_Player_Hideflag
+    lda #$ff
+    sta F_Player_Hideflag
+    lda #0
+    sta ActionFirstTime
+    lda #8
+    sta LakituEnemyTimer
+    lda #Sfx_PipeDown_Injury
+    sta Square1SoundQueue
+    inc CutsceneAction
+    rts
+  :
+  lda ActionCallCount
+  and #%00001111
+  bne :+
+    ; lda #Sfx_Blast
+    ; sta Square2SoundQueue
+
+    lda BowserBodyControls
+    eor #1
+    sta BowserBodyControls
+  :
+  rts
+
+BowserWalkForward:
+  inc ActionCallCount
+  lda Enemy_X_Position
+  cmp #88
+  bne :+
+    ldx F_Frame
+    lda #1
+    sta F_PlayerFacingDir,x
+    lda #PlayerAnimKilled
+    sta F_PlayerGfxOffset,x
+    lda #0
+    sta ActionFirstTime
+    inc CutsceneAction
+    rts
+  :
+  sec
+  sbc #1
+  sta Enemy_X_Position
+  lda ActionCallCount
+  and #%00001111
+  bne :+
+    ldx F_Frame
+    lda #2
+    sta F_PlayerFacingDir,x
+    lda #PlayerAnimStanding
+    sta F_PlayerGfxOffset,x
+
+    ; lda #Sfx_Blast
+    ; sta Square2SoundQueue
+
+    lda BowserBodyControls
+    eor #1
+    sta BowserBodyControls
+  :
+  rts
+
+BowserSecondJump:
+  lda ActionFirstTime
+  bne :+
+    lda #$fc
+    sta Enemy_Y_Speed
+    inc ActionFirstTime
+  :
+  lda CutsceneAction
+  pha 
+    lda #88
+    sta R4
+    lda #176
+    sta R5
+    lda #2
+    sta R6
+    jsr BowserJump
+  pla
+  cmp CutsceneAction
+  beq :+
+    ldx F_Frame
+    lda #2
+    sta F_PlayerFacingDir,x
+    lda #PlayerAnimKilled
+    sta F_PlayerGfxOffset,x
+    lda #0
+    sta ActionFirstTime
+    ; inc CutsceneAction
+  :
+  rts
+  
+LoopForever:
+  rts
+
+PlayerOffscreen:
+  lda Player_Y_HighPos
+  cmp #2
+  bne :+
+    ; set the follow character to shocked?
+    ldx F_Frame
+    lda #PlayerAnimWalking3
+    sta F_PlayerGfxOffset,x
+    rts
+  :
+  cmp #3
+  bne :+
+    ; finish the task after long enough of falling
+    inc CutsceneAction
+    lda #0
+    sta ActionFirstTime
+    rts 
+  :
+  rts
+
+PlayerHit:
+  
+  lda ActionFirstTime
+  bne :+
+    lda #2
+    sta LakituEnemyTimer
+    lda #1
+    sta ActionFirstTime
+:
+  lda LakituEnemyTimer
+  cmp #1
+  bne :+
+    ; close bowsers mouth 
+    lda #%10000000
+    sta BowserBodyControls
+    rts
+:
+  cmp #0
+  bne :+
+    ; player death
+    lda #Sfx_PipeDown_Injury
+    sta Square1SoundQueue
+    lda #PlayerAnimKilled
+    sta PlayerGfxOffset
+    lda #1
+    sta PlayerPhysicsEnabled
+    lda #$f9
+    sta Player_Y_Speed
+    lda #0
+    sta ActionFirstTime
+    inc CutsceneAction
+:
   rts
 
 LoadBowserPalette:
@@ -1771,25 +2039,91 @@ TurnAround:
 :
   rts
 
+Fireball:
+  lda ActionFirstTime
+  bne :+
+    lda #3
+    sta LakituEnemyTimer
+    lda #1
+    sta ActionFirstTime
+:
+  lda LakituEnemyTimer
+  bne :+
+    inc CutsceneAction
+
+    ldy #0
+    ldx #3
+    .import SpawnFromMouth
+    farcall SpawnFromMouth
+    lda #Sfx_BowserFlame
+    sta NoiseSoundQueue
+
+    lda #1
+    sta FlameDrawingFlag
+
+    ; force the fireball to go down to my new depth
+    lda #1
+    sta Enemy_Y_MoveForce,x
+    lda #4
+    ldx #3
+    sta BowserFlamePRandomOfs,x
+    lda #0
+    sta ActionFirstTime
+    
+    ; open bowsers mouth 
+    lda #0 ; %10000000
+    sta BowserBodyControls
+:
+  rts
+
 LandBowser:
+  lda CutsceneAction
+  pha 
+    lda #168
+    sta R4
+    lda #112
+    sta R5
+    lda #2
+    sta R6
+    jsr BowserJump
+  pla
+  cmp CutsceneAction
+  beq :+
+    .import F_PlayerGfxOffset
+    ldx F_Frame
+    lda #PlayerAnimCrouching
+    sta F_PlayerGfxOffset,x
+  :
+  rts
+
+BowserJump:
   lda Enemy_X_Position
-  cmp #160
+  cmp R4
   bcc @SkipAdd
     sec
-    sbc #1
+    sbc R6
     sta Enemy_X_Position
 @SkipAdd:
 
   ldx #0
   stx ObjectOffset
   inx 
-  lda #$04
+  
+  lda #$70
+  sta R0
+  lda #$05
+  sta R1
+  ; lda #$0c
+  ; sta R2
+  lda #$00
+  sta R7
+  lda #$0c
   jsr ImposeGravitySprObj
 
   lda Enemy_Y_Position
-  cmp #112
+  cmp R5
   bcc :+
-    lda #112
+    lda R5
     sta Enemy_Y_Position
 
     lda #Sfx_Blast
@@ -1820,7 +2154,7 @@ SpawnBowser:
   ; sta Enemy_ID
   lda #0
   sta Enemy_PageLoc
-  lda #$c0
+  lda #$c8
   sta Enemy_X_Position
   lda #48
   sta Enemy_Y_Position
@@ -1835,12 +2169,23 @@ SpawnBowser:
   stx ObjectOffset
   farcall CheckpointEnemyID
 
+
+  ; close bowsers mouth
+  lda #%10000000
+  sta BowserBodyControls
   lda #2
   sta Enemy_MovingDir
+  ; set to start jumping speed
+  lda #$fd
+  sta Enemy_Y_Speed
+  lda #$f3
+  sta Enemy_Y_MoveForce
+  lda #0
+  sta Enemy_YMoveForceFractional
+
+  ; move head to the right position
   lda #48-8
   sta Enemy_Y_Position+1
-  lda #$fb
-  sta Enemy_Y_Speed,x
 
   inc CutsceneAction
   inc BowserDrawingFlag

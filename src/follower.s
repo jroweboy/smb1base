@@ -9,7 +9,7 @@
 FRAME_LAG_COUNT = 16
 
 
-.export F_PlayerGfxOffset
+.export F_PlayerGfxOffset, F_Player_X_Position, F_Player_PageLoc
 
 ; Cloned Data
 ; F_Player_State:       .res FRAME_LAG_COUNT

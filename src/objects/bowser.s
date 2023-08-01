@@ -148,7 +148,7 @@ FeetTmr:
   dec BowserFeetCounter      ;decrement timer to control bowser's feet
   bne ResetMDr               ;if not expired, skip this part
   lda #$20                   ;otherwise, reset timer
-  sta BowserFeetCounter        
+  sta BowserFeetCounter
   lda BowserBodyControls     ;and invert bit used
   eor #%00000001             ;to control bowser's feet
   sta BowserBodyControls
@@ -324,6 +324,7 @@ SetFlameTimer:
       lda FlameTimerData,y      ;load value to be used then leave
 ExFl: rts
 
+.export ProcBowserFlame
 ProcBowserFlame:
          lda TimerControl            ;if master timer control flag set,
          bne SetGfxF                 ;skip all of this
@@ -415,12 +416,14 @@ ExFlmeD: rts                        ;leave
 
 ;--------------------------------
 
+; jroweboy: shhh i added a secret sauce here lol don't look
 FlameYPosData:
-      .byte $90, $80, $70, $90
+      .byte $90, $80, $70, $90, $b0
 
 FlameYMFAdderData:
       .byte $ff, $01
 
+.export InitBowserFlame
 InitBowserFlame:
         lda FrenzyEnemyTimer        ;if timer not expired yet, branch to leave
         bne ExFlmeD
@@ -456,7 +459,7 @@ PutAtRightExtent:
       adc #$00                  ;add carry
       sta Enemy_PageLoc,x
       jmp FinishFlame           ;skip this part to finish setting values
-
+.export SpawnFromMouth
 SpawnFromMouth:
        lda Enemy_X_Position,y    ;get bowser's horizontal position
        sec
