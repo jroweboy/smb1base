@@ -1628,7 +1628,7 @@ Palette2_MTiles:
   .byte $24, $c7, $24, $24 ;cloud right
   .byte $24, $24, $d4, $24 ;cloud bottom left ;nesdraug fix
   .byte $d5, $24, $d6, $24 ;cloud bottom middle
-  .byte $d7, $24, $d,, $24 ;cloud bottom right
+  .byte $d7, $24, $d5, $24 ;cloud bottom right
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
 BUSH_LEFT_METATILE = $80 + (* - Palette2_MTiles) / 4

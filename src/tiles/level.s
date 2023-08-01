@@ -4,11 +4,11 @@
 
 .import RenderAttributeTables, RenderAreaGraphics
 .import GetScreenPosition
-.import WriteGameText ;
+.import WriteGameText 
 
 .export AreaParserTaskHandler, GetAreaDataAddrs, ProcLoopCommand, AreaParserTaskLoop
 
-.segment "LEVEL"
+.segment "LEVEL" 
 
 
 ;-------------------------------------------------------------------------------------
