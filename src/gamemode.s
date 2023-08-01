@@ -61,8 +61,10 @@ SecondaryGameSetup:
   ; switch back to the regular game graphics
   lda OperMode
   beq :+
+    BankCHR0 #0
     BankCHR4 #1
     BankCHR8 #2
+    BankCHRC #3
 :
   lda #$00
   sta DisableScreenFlag     ;enable screen output

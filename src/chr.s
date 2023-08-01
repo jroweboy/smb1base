@@ -23,7 +23,7 @@
 ; CHR2:
 .incbin "../chr/peach_spritesheet.chr"
 .incbin "../chr/alternate_disco_floor.chr"
-.incbin "../chr/title_screen_bg.chr"
+.incbin "../chr/title_screen_bg_new.chr"
 
 .segment "CHR_NUMBERS"
 
