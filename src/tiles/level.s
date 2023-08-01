@@ -638,7 +638,7 @@ RunAObj:  lda R0                    ;get stored value and add offset to it
       .word BrickWithItem     ;brick, vine
       .word BrickWithItem     ;brick, star
       .word BrickWithCoins    ;brick, coins
-      .word BrickWithItem     ;brick, 1-up
+      .word BrickWithItem     ;brick, 1-up 
       .word WaterPipe
       .word EmptyBlock
       .word Jumpspring

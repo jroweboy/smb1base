@@ -1040,6 +1040,8 @@ HeadChk:
     beq DoFootCheck             ;player, and branch if nothing above player's head
       jsr CheckForCoinMTiles      ;check to see if player touched coin with their head
       bcs AwardTouchedCoin        ;if so, branch to some other part of code
+      jsr CheckForDeathblock     															;bookmark deathblock
+      bcs AwardDeathblock  																	;bookmark deathblock
         ldy Player_Y_Speed          ;check player's vertical speed
         bpl DoFootCheck             ;if player not moving upwards, branch elsewhere
         ldy R4                     ;check lower nybble of vertical coordinate returned
@@ -1071,6 +1073,8 @@ DoFootCheck:
     jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom left of player
     jsr CheckForCoinMTiles     ;check to see if player touched coin with their left foot
     bcs AwardTouchedCoin       ;if so, branch to some other part of code
+    jsr CheckForDeathblock     															;bookmark deathblock
+	  bcs AwardDeathblock  																	;bookmark deathblock
       pha                        ;save bottom left metatile to stack
         jsr BlockBufferColli_Feet  ;do player-to-bg collision detection on bottom right of player
         sta R0                    ;save bottom right metatile here
@@ -1084,6 +1088,9 @@ DoFootCheck:
 AwardTouchedCoin:
   jmp HandleCoinMetatile     ;follow the code to erase coin and award to player 1 coin
   ;implicit rts
+
+AwardDeathblock:  ;nesdraug added death block
+      jmp InjurePlayer     ;follow the code to injure player ;bookmark deathblock ;nesdraug added death block
 
 ChkFootMTile:
   jsr CheckForClimbMTiles    ;check to see if player landed on climbable metatiles
@@ -1294,6 +1301,13 @@ CheckForClimbMTiles:
   jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
   cmp ClimbMTileUpperExt,x  ;compare current metatile with climbable metatiles
   rts
+
+CheckForDeathblock: ; BOOKMARK new routine Deathblock
+         cmp #$5e              ;check for Deathblock  5e? or 59? what is it
+         beq:+
+         clc
+         :
+         rts   ;end of new routine 
 
 CheckForCoinMTiles:
   cmp #$c2              ;check for regular coin
