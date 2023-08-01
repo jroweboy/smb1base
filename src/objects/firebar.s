@@ -118,30 +118,32 @@ QuickExit:
       rts
 
 ProcFirebar:
-          jsr GetEnemyOffscreenBits   ;get offscreen information
-          lda Enemy_OffscreenBits     ;check for d3 set
-          and #%00001000              ;if so, branch to leave
-          bne QuickExit
-          lda TimerControl            ;if master timer control set, branch
-          bne SusFbar                 ;ahead of this part
-          lda FirebarSpinSpeed,x      ;load spinning speed of firebar
-          jsr FirebarSpin             ;modify current spinstate
-          and #%00011111              ;mask out all but 5 LSB
-          sta FirebarSpinState_High,x ;and store as new high byte of spinstate
-SusFbar:  lda FirebarSpinState_High,x ;get high byte of spinstate
-          ldy Enemy_ID,x              ;check enemy identifier
-          cpy #$1f
-          bcc SetupGFB                ;if < $1f (long firebar), branch
-          cmp #$08                    ;check high byte of spinstate
-          beq SkpFSte                 ;if eight, branch to change
-          cmp #$18
-          bne SetupGFB                ;if not at twenty-four branch to not change
-SkpFSte:  clc
-          adc #$01                    ;add one to spinning thing to avoid horizontal state
-          sta FirebarSpinState_High,x
-SetupGFB: sta Local_ef                     ;save high byte of spinning thing, modified or otherwise
-          jsr RelativeEnemyPosition   ;get relative coordinates to screen
-
+  jsr GetEnemyOffscreenBits   ;get offscreen information
+  lda Enemy_OffscreenBits     ;check for d3 set
+  and #%00001000              ;if so, branch to leave
+  bne QuickExit
+    lda TimerControl            ;if master timer control set, branch
+    bne SusFbar                 ;ahead of this part
+      lda FirebarSpinSpeed,x      ;load spinning speed of firebar
+      jsr FirebarSpin             ;modify current spinstate
+      and #%00011111              ;mask out all but 5 LSB
+      sta FirebarSpinState_High,x ;and store as new high byte of spinstate
+SusFbar:
+    lda FirebarSpinState_High,x ;get high byte of spinstate
+    ldy Enemy_ID,x              ;check enemy identifier
+    cpy #$1f
+    bcc SetupGFB                ;if < $1f (long firebar), branch
+      cmp #$08                    ;check high byte of spinstate
+      beq SkpFSte                 ;if eight, branch to change
+    cmp #$18
+    bne SetupGFB                ;if not at twenty-four branch to not change
+SkpFSte:
+      clc
+      adc #$01                    ;add one to spinning thing to avoid horizontal state
+      sta FirebarSpinState_High,x
+SetupGFB:
+    sta Local_ef                     ;save high byte of spinning thing, modified or otherwise
+    jsr RelativeEnemyPosition   ;get relative coordinates to screen
           AllocSpr 6
 
           lda Enemy_Rel_YPos          ;get relative vertical coordinate
@@ -249,7 +251,8 @@ ChkVFBD: cmp #$08                 ;if difference => 8 pixels, skip ahead of this
          lda R6                  ;if firebar on far right on the screen, skip this,
          cmp #$f0                 ;because, really, what's the point?
          bcs Chk2Ofs
-         lda Sprite_X_Position+4  ;get OAM X coordinate for sprite #1
+        ;  lda Sprite_X_Position+4  ;get OAM X coordinate for sprite #1
+         lda Sprite_X_Position  ;get OAM X coordinate for sprite #1
          clc
          adc #$04                 ;add four pixels
          sta R4                  ;store here

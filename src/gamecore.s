@@ -37,12 +37,14 @@ GameCoreSubRoutine:
   .word ProcessSingleEnemy
   .word ProcessSingleEnemy
   .word ProcFireball_Bubble
-  .word HandlePlayer
+  .word DONOTHING
   .word HandleBlocks
   .word MiscObjectsCore
   .word ProcessCannons
   .word ProcessWhirlpools
   .word FlagpoleRoutine
+
+DONOTHING:
 
 .export HandlePlayer
 HandlePlayer:
@@ -112,6 +114,9 @@ GameEngine:
     adc #32
     sta CurrentOAMOffset
 
+    ; force player to happen first because this is stupid.
+    jsr HandlePlayer
+
     lda #13 - 1 ; size of the different object update list
     sta SpriteShuffleTemp
     lda SpriteShuffleOffset
@@ -154,11 +159,11 @@ GameEngine:
     ; jsr ProcessWhirlpools      ;process whirlpools
     ; jsr FlagpoleRoutine        ;process the flagpole
     ; jsr RunGameTimer           ;count down the game timer
-    jsr ColorRotation          ;cycle one of the background colors
   endfar
 
 SkipEverythingElse:
 
+  jsr ColorRotation          ;cycle one of the background colors
   ; Add a COIN hud
 
   jsr CoinHUD
