@@ -69,7 +69,7 @@ UndergroundMusic      = %00000100
 WaterMusic            = %00000010
 GroundMusic           = %00000001
 
-TimeRunningOutMusic   = %01000000
+CastleThemeMusic      = %01000000
 EndOfLevelMusic       = %00100000
 WaterEventMusic       = %00010000
 EndOfCastleMusic      = %00001000

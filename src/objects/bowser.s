@@ -117,7 +117,6 @@ PRandomRange:
   .byte $21, $41, $11, $31
 
 RunBowser:
-
   lda Enemy_State,x       ;if d5 in enemy state is not set
   and #%00100000          ;then branch elsewhere to run bowser
   beq BowserControl
@@ -262,7 +261,7 @@ SetFBTmr:
 
 
 ;--------------------------------
-
+.export BowserGfxHandler
 BowserGfxHandler:
   jsr ProcessBowserHalf    ;do a sub here to process bowser's front
   ldy #$10                 ;load default value here to position bowser's rear

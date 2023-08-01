@@ -616,8 +616,8 @@ NoStopSfx: ldx AreaMusicBuffer
            ldy #$00
            sty NoteLengthTblAdder    ;default value for additional length byte offset
            sty AreaMusicBuffer       ;clear area music buffer
-           cmp #TimeRunningOutMusic  ;is it time running out music?
-           bne FindEventMusicHeader
+        ;    cmp #TimeRunningOutMusic  ;is it time running out music?
+        ;    bne FindEventMusicHeader
            ldx #$08                  ;load offset to be added to length byte of header
            stx NoteLengthTblAdder
            bne FindEventMusicHeader  ;unconditional branch
@@ -692,8 +692,8 @@ HandleSquare2Music:
 
 EndOfMusicData:
         lda EventMusicBuffer     ;check secondary buffer for time running out music
-        cmp #TimeRunningOutMusic
-        bne NotTRO
+        ; cmp #TimeRunningOutMusic
+        ; bne NotTRO
         lda AreaMusicBuffer_Alt  ;load previously saved contents of primary buffer
         bne MusicLoopBack        ;and start playing the song again if there is one
 NotTRO: and #VictoryMusic        ;check for victory music (the only secondary that loops)

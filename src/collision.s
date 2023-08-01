@@ -410,13 +410,13 @@ ForceInjury:
     ; lda #Silence
     ; sta EventMusicQueue
     ; restore
-    lda EventMusicBuffer
-    beq :+
-      lda #0
-      sta EventMusicBuffer
-      lda AreaMusicBuffer
-      sta AreaMusicQueue
-  :
+  ;   lda EventMusicBuffer
+  ;   beq :+
+  ;     lda #0
+  ;     sta EventMusicBuffer
+  ;     lda AreaMusicBuffer
+  ;     sta AreaMusicQueue
+  ; :
     ;otherwise set player's status to no powerup
     lda #0
     sta PlayerStatus

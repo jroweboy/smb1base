@@ -50,7 +50,7 @@ DiscoPanicTrack = -2
 AreaMusicLUT:
   .byte SilenceTrack, Starman, EnterPipe, Cloud, DiscoPanicTrack, Underworld, Waterworld, Overworld
 EventMusicLUT:
-  .byte SilenceTrack, HurryUp, Victory, Waterworld, InAnotherCastle, SavedPrincess, Intermediate, Death
+  .byte SilenceTrack, Castleworld, Victory, Waterworld, InAnotherCastle, SavedPrincess, Intermediate, Death
 
 OneUp =       0
 BigJump =     1
@@ -250,12 +250,12 @@ BumpSFXChannel:
 ; and set song playing to 0
 .export CustomMusicLoopCallback
 CustomMusicLoopCallback:
-	lda EventMusicBuffer
-	cmp #TimeRunningOutMusic
-	bne :+
-    lda AreaMusicBuffer
-    sta AreaMusicQueue
-:
+	; lda EventMusicBuffer
+	; cmp #TimeRunningOutMusic
+	; bne :+
+    ; lda AreaMusicBuffer
+    ; sta AreaMusicQueue
+; :
   lda #0
   sta EventMusicBuffer
 	rts

@@ -223,8 +223,7 @@ NoReset:
       tay
       jmp DrawLoadingscreenMessage
   @Worldmessage:
-    ldy LevelNumber
-    iny
+    ldy AreaNumber
     iny
     iny
     iny
@@ -244,8 +243,8 @@ NoReset:
 :
   cmp #$58
   bne :+
-    lda LevelNumber
-    cmp #5
+    lda AreaNumber
+    cmp #6
     beq @Panic
     ldy #4
     jmp DrawLoadingscreenMessage
@@ -310,7 +309,7 @@ L7 = * - LoadingscreenMessage
 L8 = * - LoadingscreenMessage
   .byte $22, $e5, L9 - L8 - 4, "LEVEL 4 - CLUB HOUSE", $00
 L9 = * - LoadingscreenMessage
-  .byte $22, $e5, La - L9 - 4, "LEVEL 5 - BOWSERS DISCO", $00
+  .byte $22, $e2, La - L9 - 4, "LEVEL 5 - WRONG NEIGHBORHOOD", $00
 La = * - LoadingscreenMessage
   .byte $22, $e5, Lb - La - 4, "LEVEL 5 - BOWSERS DISCO", $00
 Lb = * - LoadingscreenMessage

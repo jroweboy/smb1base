@@ -267,7 +267,7 @@ endfar
   rts                        ;and after all that, we're finally done!
 
 .proc CoinHUD
-  lda LevelNumber
+  lda AreaNumber
   cmp #5
   bcc :+
     rts

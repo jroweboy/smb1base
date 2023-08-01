@@ -90,10 +90,10 @@ ClearVRLoop:
   ; if we are in title screen mode spawn him
   lda OperMode
   beq SpawnLakituAnyway
-  lda LevelNumber
-  cmp #3-1
+  lda AreaNumber
+  cmp #3
   bcc NoLakituSpawn
-  cmp #5-1
+  cmp #5
   bcs NoLakituSpawn
 
 SpawnLakituAnyway:
@@ -204,17 +204,17 @@ NotCastle:
   BankCHR1C a
 BankSet:
 
-  lda PrimaryHardMode      ;check to see if primary hard mode has been activated
-  bne SetSecHard           ;if so, activate the secondary no matter where we're at
-  lda WorldNumber          ;otherwise check world number
-  cmp #World5              ;if less than 5, do not activate secondary
-  bcc CheckHalfway
-  bne SetSecHard           ;if not equal to, then world > 5, thus activate
-  lda LevelNumber          ;otherwise, world 5, so check level number
-  cmp #Level3              ;if 1 or 2, do not set secondary hard mode flag
-  bcc CheckHalfway
-SetSecHard:
-  inc SecondaryHardMode    ;set secondary hard mode flag for areas 5-3 and beyond
+  ; lda PrimaryHardMode      ;check to see if primary hard mode has been activated
+  ; bne SetSecHard           ;if so, activate the secondary no matter where we're at
+  ; lda WorldNumber          ;otherwise check world number
+  ; cmp #World5              ;if less than 5, do not activate secondary
+  ; bcc CheckHalfway
+  ; bne SetSecHard           ;if not equal to, then world > 5, thus activate
+  ; lda LevelNumber          ;otherwise, world 5, so check level number
+  ; cmp #Level3              ;if 1 or 2, do not set secondary hard mode flag
+  ; bcc CheckHalfway
+; SetSecHard:
+  ; inc SecondaryHardMode    ;set secondary hard mode flag for areas 5-3 and beyond
 CheckHalfway:
   lda HalfwayPage
   beq DoneInitArea

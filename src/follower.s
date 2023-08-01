@@ -8,6 +8,9 @@
 .export FRAME_LAG_COUNT
 FRAME_LAG_COUNT = 16
 
+
+.export F_PlayerGfxOffset
+
 ; Cloned Data
 ; F_Player_State:       .res FRAME_LAG_COUNT
 F_PlayerFacingDir:    .res FRAME_LAG_COUNT
@@ -31,6 +34,8 @@ F_Player_Hideflag:    .res 1
 .export F_Player_Switched
 F_Player_Switched:    .res 1
 
+.export F_PlayerFacingDir
+
 ; Calculated Data
 ; F_Player_Rel_XPos: .res 1
 ; F_Player_Rel_YPos: .res 1
@@ -38,6 +43,7 @@ F_Player_Switched:    .res 1
 
 ; Other
 ; Write head of the circular buffer
+.export F_Frame
 F_Frame: .res 1
 
 F_StopPoint: .res 1

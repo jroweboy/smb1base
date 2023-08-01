@@ -260,20 +260,39 @@ HoleDie:
       iny
       sty EventMusicQueue         ;otherwise play death music
       sty DeathMusicLoaded        ;and set value here
-      ldy #$0f
-      sty DeathTimer
+      ; check if we are in a castle area and shorten the death timer if we are
+      pha
+        lda AreaType
+        cmp #3
+        beq castletheme
+          ldy #$0f
+          .byte $2c
+        castletheme:
+          ldy #$01
+        sty DeathTimer
+      pla 
 HoleBottom:
-  ldy #$06
-  sty R7                     ;change value here
+  ; fast death for falling in castles as well
+  pha
+    lda AreaType
+    cmp #3
+    beq castletheme2
+      ldy #$06
+      .byte $2c
+    castletheme2:
+      ldy #$01
+    sty R7
+  pla
 ChkHoleX:
-  cmp R7                     ;compare vertical high byte with value set here
-  bmi ExitCtrl                ;if less, branch to leave
+  cmp R7                      ;compare vertical high byte with value set here
+  bmi CheckDeathTimerToo                ;if less, branch to leave
     dex                         ;otherwise decrement flag in X
     bmi CloudExit               ;if flag was clear, branch to set modes and other values
-      ldy DeathTimer        ;check to see if music is still playing
-      bne ExitCtrl                ;branch to leave if so
-        lda #$06                    ;otherwise set to run lose life routine
-        sta GameEngineSubroutine    ;on next frame
+CheckDeathTimerToo:
+  ldy DeathTimer        ;check to see if music is still playing
+  bne ExitCtrl                ;branch to leave if so
+    lda #$06                    ;otherwise set to run lose life routine
+    sta GameEngineSubroutine    ;on next frame
 ExitCtrl:
   rts                         ;leave
 
@@ -365,11 +384,11 @@ RightPipe:
 HalfwayPageNybbles:
       .byte $75, $40 ;1-2=5, 1-2=6, 1- ;nesdraug fix these
       .byte $00, $00
-      .byte $66, $40
-      .byte $66, $40
-      .byte $66, $40
-      .byte $66, $60
-      .byte $65, $70
+      .byte $00, $00
+      .byte $00, $00
+      .byte $00, $00
+      .byte $00, $00
+      .byte $00, $00
       .byte $00, $00
 
 .proc PlayerLoseLife
@@ -385,13 +404,16 @@ HalfwayPageNybbles:
   ; sta OperMode             ;and leave
   ; rts
 ; StillInGame:
-  lda WorldNumber          ;multiply world number by 2 and use
-  asl                      ;as offset
+  ; lda WorldNumber          ;multiply world number by 2 and use
+  ; asl                      ;as offset
+  ; tax
+  ; lda LevelNumber          ;if in area -3 or -4, increment
+  ; and #$02                 ;offset by one byte, otherwise
+  ; beq GetHalfway           ;leave offset alone
+  ; inx
+  lda AreaNumber
+  lsr
   tax
-  lda LevelNumber          ;if in area -3 or -4, increment
-  and #$02                 ;offset by one byte, otherwise
-  beq GetHalfway           ;leave offset alone
-  inx
 GetHalfway:
   ldy HalfwayPageNybbles,x ;get halfway page number with offset
   lda LevelNumber          ;check area number's LSB
@@ -961,7 +983,6 @@ RdyNextA:
   bne ExitNA                ;beyond last valid task number, branch to leave
   inc LevelNumber           ;increment level number used for game logic
 NextArea:
-
   inc AreaNumber            ;increment area number used for address loader
   farcall LoadAreaPointer       ;get new level pointer
   ; inc FetchNewGameTimerFlag ;set flag to load new game timer
@@ -1648,12 +1669,17 @@ NoJSChk:
   jmp ImposeGravitySprObj ;then jump to move player vertically
 
 .pushseg
-.segment "BSS2"
+.segment "SHORTRAM"
 
 CutsceneAction: .res 1
 CutsceneFirstTime: .res 1
 ActionFirstTime: .res 1
+BowserDrawingFlag: .res 1
+
 .popseg
+
+.import BowserGfxHandler
+.import MoveJumpingEnemy
 
 .proc BowserCutscene
   lda CutsceneFirstTime
@@ -1669,8 +1695,8 @@ ActionFirstTime: .res 1
     rts
   :
 
-  .import HandlePlayer
-  jsr HandlePlayer
+  ; reserve enough room for both player and follower
+  AllocSpr 16
 
   lda CutsceneAction
   asl
@@ -1679,59 +1705,148 @@ ActionFirstTime: .res 1
   sta R0
   lda ActionTable+1,y
   sta R1
+  jsr Jumper
+
+  .import HandlePlayer
+
+  jsr HandlePlayer
+  lda BowserDrawingFlag
+  beq :+
+    ldx #0
+    stx ObjectOffset
+    farcall BowserGfxHandler
+  :
+  rts
+
+
+Jumper:
   jmp (R0)
 
 ActionTable:
   .word (StartMoonWalking)
+  .word (LoadBowserPalette)
   .word (StopMoonWalking)
+  .word (TurnAround)
   .word (SpawnBowser)
   .word (LandBowser)
-  .word (End)
+  .word (Fireball)
+  .word (LoadLevel)
 
-LandBowser:
+Fireball:
+  ; lda Enemy
+  inc CutsceneAction
+  rts
+
+LoadBowserPalette:
+  lda VRAM_Buffer1_Offset
+  clc
+  adc #6
+  sta VRAM_Buffer1_Offset
+  tay
+  ldx #6
+  :
+    lda BowserPaletteWrite,x
+    sta VRAM_Buffer1,y
+    dex
+    dey
+    bpl :-
+  inc CutsceneAction
+  rts
+BowserPaletteWrite:
+  .byte $3f, $15, $03
+  .byte $0b, $30, $19
+  .byte $00
+
+TurnAround:
   lda LakituEnemyTimer
   bne :+
-    ; time up stop falling.
     inc CutsceneAction
-    rts
-  :
-  ; run bowser actions
+    lda #0
+    sta ActionFirstTime
+    lda #2
+    sta PlayerFacingDir
+    .import F_PlayerFacingDir, F_Frame
+    ldx F_Frame
+    sta F_PlayerFacingDir,x
+:
+  rts
+
+LandBowser:
+  lda Enemy_X_Position
+  cmp #160
+  bcc @SkipAdd
+    sec
+    sbc #1
+    sta Enemy_X_Position
+@SkipAdd:
+
   ldx #0
-  farcall ProcessSingleEnemy
-  ; lda #$04                ;set maximum vertical speed here
-  ; ldx #1
-  ; jmp ImposeGravitySprObj ;then jump to move player vertically
+  stx ObjectOffset
+  inx 
+  lda #$04
+  jsr ImposeGravitySprObj
+
+  lda Enemy_Y_Position
+  cmp #112
+  bcc :+
+    lda #112
+    sta Enemy_Y_Position
+
+    lda #Sfx_Blast
+    sta Square2SoundQueue
+    inc CutsceneAction
+
+    .import F_PlayerGfxOffset
+    ldx F_Frame
+    lda #PlayerAnimCrouching
+    sta F_PlayerGfxOffset,x
+  :
   rts
 
 SpawnBowser:
   ; lda ActionFirstTime
   ; bne :+
-  ldx #0
-  .import InitBowser
-  farcall InitBowser
-
+  ; ldx #1
+  ; .import InitBowser
+  ; farcall InitBowser
   lda #5
   sta LakituEnemyTimer
 
-  lda #$80
+  lda #$01
   sta Enemy_Flag
-  lda #$2d
-  sta Enemy_ID
-  lda ScreenLeft_PageLoc
+  ; lda #%00100000
+  ; sta Enemy_State
+  ; lda #$2d
+  ; sta Enemy_ID
+  lda #0
   sta Enemy_PageLoc
-  lda #$b0
+  lda #$c0
   sta Enemy_X_Position
-  lda Player_Y_Position
+  lda #48
   sta Enemy_Y_Position
   lda #$01
   sta Enemy_Y_HighPos
-  farcall CheckpointEnemyID     ;process each enemy object separately
-  lda #$fe
-  sta Enemy_Y_MoveForce
-  lda #0
-  sta Enemy_X_MoveForce
-  sta Enemy_YMoveForceFractional
+  lda #$02
+  sta Enemy_MovingDir
+
+  lda #$2d
+  sta Enemy_ID
+  ldx #0
+  stx ObjectOffset
+  farcall CheckpointEnemyID
+
+  lda #2
+  sta Enemy_MovingDir
+  lda #48-8
+  sta Enemy_Y_Position+1
+  lda #$fb
+  sta Enemy_Y_Speed,x
+
   inc CutsceneAction
+  inc BowserDrawingFlag
+
+  lda #CastleThemeMusic
+  sta EventMusicQueue
   rts
 
 StopMoonWalking:
@@ -1740,6 +1855,12 @@ StopMoonWalking:
   beq @stopfollower
   cmp #0
   bne @exit
+  ; last frame
+    lda #$00
+    sta Player_X_MoveForce
+    sta Player_X_Speed
+    lda #1
+    sta LakituEnemyTimer
     lda #Silence
     sta EventMusicQueue
     lda #0
@@ -1749,8 +1870,12 @@ StopMoonWalking:
 @stopfollower:
   lda #$00
   jsr AutoControlPlayer
-  .import SetFollowerStopPoint
-  jsr SetFollowerStopPoint
+  lda ActionFirstTime
+  bne :+
+    .import SetFollowerStopPoint
+    jsr SetFollowerStopPoint
+    inc ActionFirstTime
+  :
   rts
 
 @exit:
@@ -1758,15 +1883,15 @@ StopMoonWalking:
   jsr AutoControlPlayer
   rts
 
-End:
-  lda #$00
-  jsr AutoControlPlayer
+LoadLevel:
+  inc DisableIntermediate   ;set flag to skip world and lives display
+  jmp NextArea              ;jump to increment to next area and set modes
   rts
 
 StartMoonWalking:
   lda ActionFirstTime
   bne :+
-    lda #5
+    lda #4
     sta LakituEnemyTimer
     lda #1
     sta ActionFirstTime
