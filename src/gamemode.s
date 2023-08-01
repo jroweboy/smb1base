@@ -444,16 +444,16 @@ AreaNumberToLevelNumber:
 
 WSelectBufferTemplate:
   .byte $04, $20, $73, $01, $00, $00
+.endproc
 
+
+.export FreezePlayer
 FreezePlayer:
   sta Player_X_Position
   lda #0
   sta Player_X_Speed
   sta Player_X_MoveForce
   rts
-.endproc
-
-
 ;-------------------------------------------------------------------------------------
 
 ; .proc DemoEngine
@@ -521,6 +521,10 @@ AutoPlayer:
   ldx ScreenRight_PageLoc  ;get page location of right side of screen
   inx                      ;increment to next page
   stx DestinationPageLoc   ;store here
+  .import CancelAudioIRQ
+  jsr CancelAudioIRQ
+  .import FollowerVictorySetup
+  farcall FollowerVictorySetup
   lda #EndOfCastleMusic
   sta EventMusicQueue      ;play win castle music
   ; jroweboy (just inline it its literally just one more byte)
@@ -575,7 +579,27 @@ ExitVWalk:
 
 ;-------------------------------------------------------------------------------------
 
+.import FreezeFollowerX, RenderPlayerFollower, AutoControlPlayer, F_StopPoint
+
 .proc PrintVictoryMessages
+
+  ; lda EventMusicBuffer
+  ; cmp #4
+  ; bne :+
+  ;   lda #$ff
+  ;   sta F_StopPoint
+  ;   lda #1
+  ;   sta VictoryWalkControl
+  ;   jsr PlayerCtrlRoutine
+  ;   lda #$80
+  ;   jsr FreezePlayer
+  ; :
+  far FreezeFollowerX
+  lda #$b8
+  jsr FreezeFollowerX
+  jsr RenderPlayerFollower
+  endfar
+
   lda SecondaryMsgCounter   ;load secondary message counter
   bne IncMsgCounter         ;if set, branch to increment message counters
   lda PrimaryMsgCounter     ;otherwise load primary message counter
@@ -601,11 +625,11 @@ ThankPlayer:
 SecondPartMsg:
   iny                       ;increment Y to do world 8's message
   jmp EvalForMusic          ;if at world 8, branch to next part
-  dey                       ;otherwise decrement Y for world 1-7's message
-  cpy #$04                  ;if counter at 4 (world 1-7 only)
-  bcs SetEndTimer           ;branch to set victory end timer
-  cpy #$03                  ;if counter at 3 (world 1-7 only)
-  bcs IncMsgCounter         ;branch to keep counting
+  ; dey                       ;otherwise decrement Y for world 1-7's message
+  ; cpy #$04                  ;if counter at 4 (world 1-7 only)
+  ; bcs SetEndTimer           ;branch to set victory end timer
+  ; cpy #$03                  ;if counter at 3 (world 1-7 only)
+  ; bcs IncMsgCounter         ;branch to keep counting
 EvalForMusic:
   cpy #$03                  ;if counter not yet at 3 (world 8 only), branch
   bne PrintMsg              ;to print message only (note world 1-7 will only
@@ -613,6 +637,8 @@ EvalForMusic:
   jsr CancelAudioIRQ
   lda #VictoryMusic         ;reach this code if counter = 0, and will always branch)
   sta EventMusicQueue       ;otherwise load victory music first (world 8 only)
+  ; farcall ReEnableFollower
+
 PrintMsg:
   tya                       ;put primary message counter in A
   clc                       ;add $0c or 12 to counter thus giving an appropriate value,
@@ -640,6 +666,12 @@ ExitMsgs:
 ;-------------------------------------------------------------------------------------
 
 .proc PlayerEndWorld
+
+  far FreezeFollowerX
+  lda #$b8
+  jsr FreezeFollowerX
+  jsr RenderPlayerFollower
+  endfar
 
   lda WorldEndTimer          ;check to see if world end timer expired
   bne EndExitOne             ;branch to leave if not

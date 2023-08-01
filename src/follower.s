@@ -9,7 +9,7 @@
 FRAME_LAG_COUNT = 16
 
 
-.export F_PlayerGfxOffset, F_Player_X_Position, F_Player_PageLoc
+.export F_PlayerGfxOffset, F_Player_X_Position, F_Player_PageLoc, F_StopPoint
 
 ; Cloned Data
 ; F_Player_State:       .res FRAME_LAG_COUNT
@@ -50,6 +50,18 @@ F_StopPoint: .res 1
 
 .segment "PLAYER"
 
+; .export ReEnableFollower
+; .proc ReEnableFollower
+
+;   lda #0
+;   sta F_Frame
+;   sta F_Player_Hideflag
+;   sta F_Player_Switched
+;   lda #$ff
+;   sta F_StopPoint
+;   rts
+; .endproc
+
 .export InitFollower
 .proc InitFollower
   lda #0
@@ -63,6 +75,35 @@ F_StopPoint: .res 1
     sta F_Player_Y_Position,x
     dex
     bpl :-
+  rts
+.endproc
+
+.export FollowerVictorySetup
+.proc FollowerVictorySetup
+  lda #0
+  sta F_Frame
+  sta F_StopPoint
+  ; re-enable drawing the follower
+  sta F_Player_Hideflag
+
+  jsr DoCopyAnyway
+
+
+  lda #0
+  sta F_Frame
+  sta F_StopPoint
+
+  ; but add one to the page and set the correct x/y position
+  inc F_Player_PageLoc
+  lda #$02
+  sta F_PlayerFacingDir
+  lda #$b0
+  sta F_Player_Y_Position
+  lda #$b8
+  sta F_Player_X_Position
+  .import PlayerAnimStanding
+  lda #PlayerAnimStanding
+  sta F_PlayerGfxOffset
   rts
 .endproc
 
@@ -86,7 +127,7 @@ F_StopPoint: .res 1
 .export FreezeFollowerY
 .proc FreezeFollowerY
   ldx F_Frame
-  sta F_Player_X_Position,x
+  sta F_Player_Y_Position,x
   rts
 .endproc
 
@@ -149,7 +190,7 @@ F_StopPoint: .res 1
 .endproc
 
 .export CopyPlayerStateToFollower
-.proc CopyPlayerStateToFollower
+CopyPlayerStateToFollower:
   ldx F_StopPoint
   bmi @NoStopPoint
     ; follower is stopped so don't copy state for now
@@ -165,11 +206,11 @@ F_StopPoint: .res 1
     rts
 @NoStopPoint:
 
+DoCopyAnyway:
   ldx F_Frame
 
   ; lda Player_State
   ; sta F_Player_State,x
-
   lda Player_X_MoveForce
   sta F_Player_X_MoveForce,x
 
@@ -217,7 +258,6 @@ F_StopPoint: .res 1
 :
   stx F_Frame
   rts
-.endproc
 
 .export RenderPlayerFollower
 .proc RenderPlayerFollower
@@ -272,6 +312,59 @@ DrawPlayerLoop:
     jsr DrawOneSpriteRow
     dec R7                      ;decrement rows of sprites to draw
     bne DrawPlayerLoop           ;do this until all rows are drawn
+
+
+  ; only do X offscreen checking if we are in victory mode. otherwise
+  ; its wasted cycles
+  lda OperMode
+  cmp #2
+  bne NotInVictoryMode
+
+    
+    lda #1
+    sta R0
+    @ColLoop:
+      ldx F_Frame
+      lda R0
+      asl
+      asl
+      asl
+      ; carry is clear
+      adc F_Player_X_Position,x
+      sta R1
+      lda F_Player_PageLoc,x
+      adc #0
+      sta R2
+      lda R1
+      sec
+      sbc ScreenLeft_X_Pos
+      lda R2
+      sbc ScreenLeft_PageLoc
+      bcs @NotOffLeftEdge
+    @OffScreen:
+        lda R0
+        asl
+        asl
+        adc FollowerOAMOffset
+        tay
+        lda #$f8
+        sta Sprite_Y_Position, y
+        sta Sprite_Y_Position + 8, y
+        sta Sprite_Y_Position + 16, y
+        sta Sprite_Y_Position + 24, y
+        dec R0
+        bpl @ColLoop
+        rts
+    @NotOffLeftEdge:
+      lda R1
+      sec
+      sbc ScreenRight_X_Pos
+      lda R2
+      sbc ScreenRight_PageLoc
+      bcs @OffScreen
+
+; we still need to check Y offscreen in regular game play as that comes up a lot
+NotInVictoryMode:
 
   ldx F_Frame
   jsr F_YOffscreenBits

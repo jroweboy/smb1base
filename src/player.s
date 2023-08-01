@@ -151,7 +151,7 @@ ExitEntr:
 
 ;-------------------------------------------------------------------------------------
 ;$07 - used to hold upper limit of high byte when player falls down hole
-
+.export AutoControlPlayer
 .proc AutoControlPlayer
   sta SavedJoypadBits         ;override controller bits with contents of A if executing here
   ;; fallthrough
@@ -672,7 +672,7 @@ PlayerAnimKilled = * - BigPlayerTable
 .byte $FF, $FF, $00, $01, $46, $47, $48, $48 ;intermediate grow frame
 PlayerAnimStanding = * - BigPlayerTable
 .byte $00, $01, $16, $17, $26, $27, $36, $37 ;big player standing
-
+.export PlayerAnimStanding
 SwimKickTileNum:
   .byte $1c, $4A ; Big, Small
 
