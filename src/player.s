@@ -378,14 +378,9 @@ RightPipe:
 
 ;page numbers are in order from -1 to -4
 HalfwayPageNybbles:
-      .byte $70, $65 ; level 1: 7 2=5, 3=6
-      .byte $55, $55
-      .byte $00, $00
-      .byte $00, $00
-      .byte $00, $00
-      .byte $00, $00
-      .byte $00, $00
-      .byte $00, $00
+  .byte $70, $65 ; level 1=7, 2=5, 3=6
+  .byte $57, $99 ; level 4=5, 5=7, 6=9
+  .byte $00, $00
 
 .proc PlayerLoseLife
   inc DisableScreenFlag    ;disable screen and sprite 0 check

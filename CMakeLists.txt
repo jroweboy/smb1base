@@ -14,6 +14,11 @@ set(SRCS
   chr/alternate_disco_floor.chr
   chr/peach_spritesheet.chr
 
+  chr/CLEAN_arranged_bg.chr
+  chr/CLEAN_arranged_sprites.chr
+  chr/CLEAN_alternate_disco_floor.chr
+  chr/CLEAN_title_screen_bg_new.chr
+
   chr/fixed_number_0_3.chr
   chr/fixed_number_4_7.chr
   chr/fixed_number_8_9.chr
@@ -31,7 +36,6 @@ set(SRCS
   inc/object.inc
 
   # src/bhop.s
-  src/chr.s
   src/collision.s
   src/common.s
   # src/dpcm.s
@@ -57,18 +61,6 @@ set(SRCS
   src/ssdpcm/playback_irq.s
   src/ssdpcm/superblock_load.s
   src/ssdpcm/ram_locations_common.s
-
-  # src/bhop/bhop_internal.inc
-  # src/bhop/bhop.inc
-  # src/bhop/commands.asm
-  # src/bhop/config.inc
-  # src/bhop/effects.asm
-  # src/bhop/longbranch.inc
-  # src/bhop/midi_lut.inc
-  # src/bhop/vibrato_lut.inc
-  # src/bhop/word_util.inc
-  # src/bhop/zsaw.asm
-  # src/bhop/zsaw.inc
 
   src/objects/blooper.s
   src/objects/bowser.s
@@ -118,12 +110,15 @@ add_executable(${UNCUT} ${SRCS})
 target_sources(${CLEAN} PUBLIC
   audio/paniccut/superblocks_paniccut.s
   audio/paniccut/blocks_paniccut.inc
+
+  src/chr_clean.s
 )
-target_compile_options(${CLEAN} PUBLIC -D PRODUCE_CLEAN_VERSION=1)
+target_compile_options(${CLEAN} PUBLIC -DPRODUCE_CLEAN_VERSION --asm-define PRODUCE_CLEAN_VERSION)
 
 target_sources(${UNCUT} PUBLIC
   audio/panicuncut/superblocks_panicuncut.s
   audio/panicuncut/blocks_panicuncut.inc
+  src/chr_uncut.s
 )
 
 target_include_directories(${CLEAN} PUBLIC audio/ inc/ gen/)

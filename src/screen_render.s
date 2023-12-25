@@ -1535,7 +1535,7 @@ Palette0_MTiles:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
 
-.if .defined(PRODUCE_CLEAN_VERSION)
+.ifdef PRODUCE_CLEAN_VERSION
 ; Moved "bar" bushes to palette 2 for the clean version since its now a disco table 
   .res 12
 .else
@@ -1651,7 +1651,7 @@ Palette2_MTiles:
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
 
-.if .defined(PRODUCE_CLEAN_VERSION)
+.ifdef PRODUCE_CLEAN_VERSION
 BUSH_TOPLEFT_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $24, $24, $24, $d0 ;bush top left
 BUSH_MIDDLE_METATILE = $80 + (* - Palette2_MTiles) / 4

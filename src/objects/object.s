@@ -571,6 +571,7 @@ PlayerHammerCollision:
         adc #$01
         sta Misc_X_Speed,x        ;set to send hammer flying the opposite direction
         lda StarInvincibleTimer   ;if star mario invincibility timer set,
+        ora PlayerTempInvuln
         bne ExPHC                 ;branch to leave
         jmp InjurePlayer          ;otherwise jump to hurt player, do not return
 ClHCol: lda #$00                  ;clear collision flag

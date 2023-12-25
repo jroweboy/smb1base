@@ -223,6 +223,7 @@ FirebarCollision:
          pha                      ;to the stack for now
          lda StarInvincibleTimer  ;if star mario invincibility timer
          ora TimerControl         ;or master timer controls set
+         ora PlayerTempInvuln
          bne NoColFB              ;then skip all of this
          sta R5                  ;otherwise initialize counter
          ldy Player_Y_HighPos
