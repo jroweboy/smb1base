@@ -239,7 +239,7 @@ BumpSFXChannel:
   lda NextSFXChannel
   clc
   adc #FAMISTUDIO_SFX_CH1
-  cmp #FAMISTUDIO_SFX_CH2+1
+  cmp #FAMISTUDIO_SFX_CH1+1
   bcc :+
     lda #0
   :

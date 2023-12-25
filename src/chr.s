@@ -15,14 +15,23 @@
 ; .incbin "../Super Mario Bros. (World).nes", $8010, $1000
 ; .export CHR1
 ; CHR1:
+.if .defined(PRODUCE_CLEAN_VERSION)
+.incbin "../chr/CLEAN_arranged_bg.chr"
+.incbin "../chr/CLEAN_arranged_sprites.chr"
+.else
 .incbin "../chr/arranged_bg.chr"
 .incbin "../chr/arranged_sprites.chr"
+.endif
 
 ; .segment "CHR_IN_PRG2"
 ; .export CHR2
 ; CHR2:
 .incbin "../chr/peach_spritesheet.chr"
+.if .defined(PRODUCE_CLEAN_VERSION)
+.incbin "../chr/CLEAN_alternate_disco_floor.chr"
+.else
 .incbin "../chr/alternate_disco_floor.chr"
+.endif
 .incbin "../chr/title_screen_bg_new.chr"
 
 .segment "CHR_NUMBERS"

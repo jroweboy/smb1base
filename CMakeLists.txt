@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(PROJECT_NAME smb1base)
+set(PROJECT_NAME panic_at_the_mario_disco)
 
 project(${PROJECT_NAME} ASM C)
 
-add_executable(${PROJECT_NAME}
+set(CLEAN ${PROJECT_NAME}_clean)
+set(UNCUT ${PROJECT_NAME}_uncut)
+
+set(SRCS
 
   chr/arranged_bg.chr
   chr/arranged_sprites.chr
@@ -109,20 +112,24 @@ add_executable(${PROJECT_NAME}
   # chr/lanky_mario.chr
 )
 
+add_executable(${CLEAN} ${SRCS})
+add_executable(${UNCUT} ${SRCS})
 
-target_sources(${PROJECT_NAME} PUBLIC
+target_sources(${CLEAN} PUBLIC
+  audio/paniccut/superblocks_paniccut.s
+  audio/paniccut/blocks_paniccut.inc
+)
+target_compile_options(${CLEAN} PUBLIC -D PRODUCE_CLEAN_VERSION=1)
+
+target_sources(${UNCUT} PUBLIC
   audio/panicuncut/superblocks_panicuncut.s
   audio/panicuncut/blocks_panicuncut.inc
 )
 
-# To compile the cut version uncomment this
-# target_sources(${PROJECT_NAME} PUBLIC
-#   audio/paniccut/superblocks_paniccut.s
-#   audio/paniccut/blocks_paniccut.inc
-# )
-
-target_include_directories(${PROJECT_NAME} PUBLIC audio/ inc/ gen/)
+target_include_directories(${CLEAN} PUBLIC audio/ inc/ gen/)
+target_include_directories(${UNCUT} PUBLIC audio/ inc/ gen/)
 
 include(GenerateLinkerScript)
 
-generate_ca65_linker_cmd(TARGET "${PROJECT_NAME}" CONFIG src/nes.cfg)
+generate_ca65_linker_cmd(TARGET ${CLEAN} CONFIG src/nes.cfg)
+generate_ca65_linker_cmd(TARGET ${UNCUT} CONFIG src/nes.cfg)

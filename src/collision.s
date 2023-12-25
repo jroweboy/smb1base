@@ -418,8 +418,8 @@ ForceInjury:
   ;     sta AreaMusicQueue
   ; :
     ;otherwise set player's status to no powerup
-    lda #0
-    sta PlayerStatus
+    ; lda #0
+    ; sta PlayerStatus
     lda #$08
     sta InjuryTimer           ;set injured invincibility timer
     asl
@@ -441,6 +441,12 @@ ExInjColRoutines:
 
 KillPlayer:
   ; stx Player_X_Speed   ;halt player's horizontal movement by initializing speed
+
+    ; check if we are in a castle area and shorten death sequence
+  lda AreaType
+  sec
+  sbc #3
+  sta DeathMusicLoaded
   lda #DeathMusic
   sta EventMusicQueue  ;set event music queue to death music
   lda #$0b             ;set subroutine to run on next frame
@@ -939,8 +945,7 @@ SetFor1Up:
   lda #1
   sta NumberofLives
   lda #$0b                 ;change 1000 points into 1-up instead
-  sta FloateyNum_Control,x ;and then leave
-  rts
+  jmp SetupFloateyNumber
 
 ;-------------------------------------------------------------------------------------
 

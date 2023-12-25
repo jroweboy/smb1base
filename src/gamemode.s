@@ -321,7 +321,8 @@ ChkSelect:
 ;   bcs ResetTitle              ;if carry flag set, demo over, thus branch
 ;   jmp RunDemo                 ;otherwise, run game engine for demo
 ; ChkWorldSel:
-  ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
+  ; ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
+  ldx #1 ; TODO remove this
   beq NullJoypad
   cmp #B_Button               ;if so, check to see if the B button was pressed
   bne NullJoypad

@@ -197,7 +197,7 @@ BackSceneryMetatiles:
   .byte $81, $84, $00 ;cloud middle
   .byte $82, $85, $00 ;cloud right
   .byte BUSH_TOPLEFT_METATILE, BUSH_LEFT_METATILE, $00 ;bush left
-  .byte BUSH_TOPMIDDLE_METATILE, $03, $00 ;bush middle
+  .byte BUSH_TOPMIDDLE_METATILE, BUSH_MIDDLE_METATILE, $00 ;bush middle
   .byte $00, BUSH_RIGHT_METATILE, $00 ;bush right
   .byte $00,                        MOUNTAIN_MIDLEFT_METATILE,  MOUNTAIN_MIDMID_METATILE ;mountain left
   .byte MOUNTAIN_MIDTOP_METATILE,   MOUNTAIN_MIDMID_METATILE,   MOUNTAIN_BOTMID_METATILE ;mountain middle

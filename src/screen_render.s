@@ -1062,7 +1062,15 @@ GiveOneCoin:
   sta NumberofLives
   lda #Sfx_ExtraLife
   sta Square2SoundQueue  ;play 1-up sound
-
+  lda #$0b
+  sta FloateyNum_Control ;set number of points control for floatey numbers
+  lda #$30
+  sta FloateyNum_Timer   ;set timer for floatey numbers
+  lda Player_Y_Position
+  sta FloateyNum_Y_Pos   ;set vertical coordinate
+  lda Player_Rel_YPos
+  sta FloateyNum_X_Pos   ;set horizontal coordinate and leave
+  
 ; CoinPoints:
 ;   lda #$02               ;set digit modifier to award
 ;   sta DigitModifier+4    ;200 points to the player
@@ -1527,11 +1535,8 @@ Palette0_MTiles:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
 
-BUSH_TOPLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
-  .byte $24, $24, $24, $d0 ;bush top left
-  .byte $e1, $f1, $e2, $f2 ;bush middle
-BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
-  .byte $24, $d1, $24, $d2 ;bush top middle
+; Old bush location
+  .res 12
 
 MOUNTAIN_MIDLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $fa, $ec, $fb, $ed ;mountain left
@@ -1633,6 +1638,14 @@ Palette2_MTiles:
   .byte $d7, $24, $d5, $24 ;cloud bottom right
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
+
+BUSH_TOPLEFT_METATILE = $80 + (* - Palette2_MTiles) / 4
+  .byte $24, $24, $24, $d0 ;bush top left
+BUSH_MIDDLE_METATILE = $80 + (* - Palette2_MTiles) / 4
+  .byte $e1, $f1, $e2, $f2 ;bush middle
+BUSH_TOPMIDDLE_METATILE = $80 + (* - Palette2_MTiles) / 4
+  .byte $24, $d1, $24, $d2 ;bush top middle
+
 BUSH_LEFT_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $ea, $e6, $e0, $f0 ;bush left
 BUSH_RIGHT_METATILE = $80 + (* - Palette2_MTiles) / 4

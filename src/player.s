@@ -260,37 +260,33 @@ HoleDie:
       iny
       sty EventMusicQueue         ;otherwise play death music
       sty DeathMusicLoaded        ;and set value here
-      ; check if we are in a castle area and shorten the death timer if we are
-      pha
-        lda AreaType
-        cmp #3
-        beq castletheme
-          ldy #$0f
-          .byte $2c
-        castletheme:
-          ldy #$01
-        sty DeathTimer
-      pla 
+      ldy PlayPanic
+      beq HoleBottom
+        dec EventMusicQueue
 HoleBottom:
   ; fast death for falling in castles as well
-  pha
-    lda AreaType
-    cmp #3
-    beq castletheme2
-      ldy #$06
-      .byte $2c
-    castletheme2:
-      ldy #$01
-    sty R7
-  pla
+  ; pha
+  ;   lda AreaType
+  ;   cmp #3
+  ;   beq castletheme2
+  ldy #$06
+    ;   .byte $2c
+    ; castletheme2:
+    ;   ldy #$01
+  sty R7
+  ; pla
 ChkHoleX:
   cmp R7                      ;compare vertical high byte with value set here
-  bmi CheckDeathTimerToo                ;if less, branch to leave
+  bmi CheckDeathTimer                ;if less, branch to leave
     dex                         ;otherwise decrement flag in X
     bmi CloudExit               ;if flag was clear, branch to set modes and other values
-CheckDeathTimerToo:
-  ldy DeathTimer        ;check to see if music is still playing
-  bne ExitCtrl                ;branch to leave if so
+CheckDeathTimer:
+  ldy DeathMusicLoaded        ;check to see if music is still playing
+  beq DeathMusicEnded         ;branch to leave if so
+  lda EventMusicBuffer
+  ora EventMusicQueue
+  bne ExitCtrl
+DeathMusicEnded:
     lda #$06                    ;otherwise set to run lose life routine
     sta GameEngineSubroutine    ;on next frame
 ExitCtrl:
@@ -382,8 +378,8 @@ RightPipe:
 
 ;page numbers are in order from -1 to -4
 HalfwayPageNybbles:
-      .byte $75, $00 ;1-2=5, 1-2=6, 1- ;nesdraug fix these
-      .byte $00, $00
+      .byte $70, $65 ; level 1: 7 2=5, 3=6
+      .byte $55, $55
       .byte $00, $00
       .byte $00, $00
       .byte $00, $00
