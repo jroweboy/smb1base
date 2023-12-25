@@ -50,17 +50,6 @@ F_StopPoint: .res 1
 
 .segment "PLAYER"
 
-; .export ReEnableFollower
-; .proc ReEnableFollower
-
-;   lda #0
-;   sta F_Frame
-;   sta F_Player_Hideflag
-;   sta F_Player_Switched
-;   lda #$ff
-;   sta F_StopPoint
-;   rts
-; .endproc
 
 .export InitFollower
 .proc InitFollower
@@ -177,8 +166,11 @@ F_StopPoint: .res 1
   ; start tracking the state again
   lda #$ff
   sta F_StopPoint
-  ; but hide the follower since they ded
-  sta F_Player_Hideflag
+  ldy PlayerSwitchingMode
+  bne :+
+    ; hide the follower if they are dead
+    sta F_Player_Hideflag
+  :
 
   lda CurrentLeader
   eor #1
@@ -191,6 +183,10 @@ F_StopPoint: .res 1
 
 .export CopyPlayerStateToFollower
 CopyPlayerStateToFollower:
+  ; if we are switching, then we still want to copy state to the follower
+  ldx PlayerSwitchingMode
+  bne DoCopyAnyway
+  ; If we took damage, then we are yeeting the main char and need to not copy that movement
   ldx F_StopPoint
   bmi @NoStopPoint
     ; follower is stopped so don't copy state for now

@@ -277,10 +277,10 @@ HoleBottom:
   ; pla
 ChkHoleX:
   cmp R7                      ;compare vertical high byte with value set here
-  bmi CheckDeathTimer                ;if less, branch to leave
+  bmi CheckMusicFinished                ;if less, branch to leave
     dex                         ;otherwise decrement flag in X
     bmi CloudExit               ;if flag was clear, branch to set modes and other values
-CheckDeathTimer:
+CheckMusicFinished:
   ldy DeathMusicLoaded        ;check to see if music is still playing
   beq DeathMusicEnded         ;branch to leave if so
   lda EventMusicBuffer
@@ -869,13 +869,14 @@ PlayerInjuryBlink:
   lda TimerControl       ;check master timer control
   cmp #$f0               ;for specific moment in time
   bcs ExitBlink          ;branch if before that point
+  ldy PlayerSwitchingMode ; if switching player manually with the select button
+  bne SwapPlayerAndFollower ; skip the part where the body of the player is yeeted
   cmp #$c8               ;check again for another specific point
   beq SwapPlayerAndFollower     ;branch if at that point, and not before or after
     jmp PlayerCtrlRoutine  ;otherwise run player control routine
 ExitBlink:
   rts
   ; bne ExitBoth           ;do unconditional branch to leave
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used in CyclePlayerPalette to store current palette to cycle
@@ -885,10 +886,15 @@ PlayerDeath:
   cmp #$f0               ;for specific moment in time
   bcs ExitTask           ;branch to leave if before that point
   jmp PlayerCtrlRoutine  ;otherwise run player control routine
+
 SwapPlayerAndFollower:
   ; Switch follower into player data
-  .import CopyFollowerStateToPlayer
+  .import CopyFollowerStateToPlayer, InitFollower
   jsr CopyFollowerStateToPlayer
+  lda PlayerSwitchingMode
+  beq DonePlayerTask
+    lda #0
+    sta PlayerSwitchingMode
 DonePlayerTask:
   lda #$00
   sta TimerControl          ;initialize master timer control to continue timers
@@ -992,6 +998,35 @@ ExitNA:
 ;-------------------------------------------------------------------------------------
 
 PlayerMovementSubs:
+  ; if we don't have two characters don't allow for switching
+  lda NumberofLives
+  beq SelectNotPressed
+  ; check first to see if we are trying to switch characters
+    lda PlayerSwitchingMode
+    bne EarlyExitMovement
+    lda SavedJoypad1Bits
+    and #Select_Button
+    beq SelectNotPressed
+      ; If its still on cooldown just pretend its not pressed
+      lda PlayerSwitchCooldownTimer
+      bne SelectNotPressed
+        ; Actually do the freeze part for switching
+        inc PlayerSwitchingMode
+        .import SetFollowerStopPoint
+        jsr SetFollowerStopPoint
+        lda #Sfx_SmallJump
+        sta Square1SoundQueue
+        lda #5
+        sta PlayerSwitchCooldownTimer
+        lda #$0a
+        sta GameEngineSubroutine
+        ldy #$ff
+        sty TimerControl          ;set master timer control flag to halt timers
+        iny
+        sty ScrollAmount          ;initialize scroll speed
+  EarlyExitMovement:
+      rts
+SelectNotPressed:
   lda #$00                  ;set A to init crouch flag by default
   ldy PlayerSize            ;is player small?
   bne SetCrouch             ;if so, branch

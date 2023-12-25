@@ -397,6 +397,7 @@ StackClear = DigitModifier
 .global BitMFilter
 .global ChangeAreaTimer
 
+.global PlayerSwitchingMode
 .global PlayerOAMOffset
 .global CurrentOAMOffset
 .global OriginalOAMOffset
@@ -579,8 +580,8 @@ FRAME_TIMER_COUNT = AirBubbleTimer - Timers
 .global LakituActionTimer
 .global LakituPowerupTimer
 .global LakituEnemyTimer
-.global DeathTimer
-ALL_TIMER_COUNT = DeathTimer - Timers
+.global PlayerSwitchCooldownTimer
+ALL_TIMER_COUNT = PlayerSwitchCooldownTimer - Timers
 
 .global PseudoRandomBitReg
 

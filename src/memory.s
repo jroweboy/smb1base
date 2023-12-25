@@ -420,6 +420,7 @@ MaxRangeFromOrigin:             .res  1
 BitMFilter:                     .res  1
 ChangeAreaTimer:                .res  2
 
+PlayerSwitchingMode:            .res  1
 PlayerOAMOffset:                .res  1
 CurrentOAMOffset:               .res  1
 OriginalOAMOffset:              .res  1
@@ -638,7 +639,7 @@ PlayerSwimmingTimer:            .res  1
 LakituActionTimer:              .res  1
 LakituPowerupTimer:             .res  2
 LakituEnemyTimer:               .res  1
-DeathTimer:                     .res  1
+PlayerSwitchCooldownTimer:      .res  1
 PseudoRandomBitReg:             .res  9 ; probably actually ~8~ 9 bytes (original 9) not sure...
 
 SoundMemory                   = MusicOffset_Noise
