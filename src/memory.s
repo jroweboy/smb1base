@@ -554,7 +554,7 @@ AreaAddrsLOffset:               .res  1
 AreaPointer:                    .res  1
 EntrancePage:                   .res  1
 AltEntranceControl:             .res  1
-CurrentPlayer:                  .res  1 ; 0 = mario, 1 = luigi
+; CurrentPlayer:                  .res  1 ; 0 = mario, 1 = luigi
 PlayerSize:                     .res  1 ; 1 = small, 0 = big
 Player_Pos_ForScroll:           .res  1
 PlayerStatus:                   .res  1 ; 0 = small, 1 = super, 2 = firey
@@ -591,6 +591,7 @@ DiscoCycleIdx:                  .res  1
 CurrentFloorTileBank:           .res  1
 CurrentDiscoColor:              .res  3
 PlayerTempInvuln:               .res  1
+PlayerHasFloated:               .res  1
 
 ; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
 
@@ -640,6 +641,7 @@ PlayerSwimmingTimer:            .res  1
 LakituActionTimer:              .res  1
 LakituPowerupTimer:             .res  2
 LakituEnemyTimer:               .res  1
+PeachFloatTimer:                .res  1
 PlayerSwitchCooldownTimer:      .res  1
 PseudoRandomBitReg:             .res  9 ; probably actually ~8~ 9 bytes (original 9) not sure...
 

@@ -1059,12 +1059,13 @@ NoMoveSub: rts
 ;$00 - used by ClimbingSub to store high vertical adder
 
 OnGroundStateSub:
+  lda #0
+  sta PlayerHasFloated
   jsr GetPlayerAnimSpeed     ;do a sub to set animation frame timing
   lda Left_Right_Buttons
   beq GndMove                ;if left/right controller bits not set, skip instruction
     sta PlayerFacingDir        ;otherwise set new facing direction
 GndMove:
-  ; lda #0
   jsr ImposeFriction         ;do a sub to impose friction on player's walk/run
   jsr MovePlayerHorizontally ;do another sub to move player horizontally
   sta Player_X_Scroll        ;set returned value as player's movement speed for scroll
@@ -1075,7 +1076,63 @@ GndMove:
 FallingSub:
   lda VerticalForceDown
   sta VerticalForce      ;dump vertical movement force for falling into main one
+  jsr CheckPeachFloat
   jmp LRAir              ;movement force, then skip ahead to process left/right movement
+
+
+.proc CheckPeachFloat
+  lda CurrentLeader
+  beq @NoFloat
+    ; If we've already floated or the timer expired then skip the float
+    lda PlayerHasFloated
+    beq @CheckIfStartingFloat
+    lda PeachFloatTimer
+    beq @NoFloat
+  @CheckIfContinuingFloat:
+      ; Check if the player released the a button to stop floating
+      lda A_B_Buttons
+      and #A_Button
+      bne @ContinueFloat ; holding a so continue floating
+  @StopFloating:
+        lda #0
+        sta PeachFloatTimer
+        rts
+  @CheckIfStartingFloat:
+      ; now check if the button is held to see if we start a float
+      lda A_B_Buttons
+      and #A_Button
+      beq @NoFloat
+  @StartFloat:
+      ; Set the Float timer here
+      lda #4
+      sta PeachFloatTimer
+      inc PlayerHasFloated
+      ; Keep floating while the jump button is held
+      ; lda A_B_Buttons
+      ; and #A_Button
+      ; and PreviousA_B_Buttons
+  @ContinueFloat:
+      lda #0
+      sta VerticalForce
+      sta Player_YMoveForceFractional
+      sta Player_Y_MoveForce
+      sta Player_Y_Speed
+
+      ; TODO: bob up and down
+      ; lda FrameCounter
+      ; lsr
+      ; lsr
+      ; lsr
+      ; lsr
+      ; ; bit 4 determines movement amount (+1 or -1 pixel)
+      ; lsr
+      
+      ; ; bit 5 determines which direction (positive or negative)
+      ; lda Player_Y_Position
+
+@NoFloat:
+  rts
+.endproc
 
 ;--------------------------------
 
@@ -1096,6 +1153,7 @@ DumpFall:
   sta PlayerTempInvuln
   lda VerticalForceDown      ;otherwise dump falling into main fractional
   sta VerticalForce
+  jsr CheckPeachFloat
 ProcSwim:
   lda SwimmingFlag           ;if swimming flag not set,
   beq LRAir                  ;branch ahead to last part

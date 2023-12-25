@@ -500,7 +500,7 @@ StackClear = DigitModifier
 .global AreaPointer
 .global EntrancePage
 .global AltEntranceControl
-.global CurrentPlayer
+; .global CurrentPlayer
 .global PlayerSize
 .global Player_Pos_ForScroll
 .global PlayerStatus
@@ -537,6 +537,7 @@ StackClear = DigitModifier
 .global CurrentFloorTileBank
 .global CurrentDiscoColor
 .global PlayerTempInvuln
+.global PlayerHasFloated
 
 ; $.global 0770
 
@@ -581,6 +582,7 @@ FRAME_TIMER_COUNT = AirBubbleTimer - Timers
 .global LakituActionTimer
 .global LakituPowerupTimer
 .global LakituEnemyTimer
+.global PeachFloatTimer
 .global PlayerSwitchCooldownTimer
 ALL_TIMER_COUNT = PlayerSwitchCooldownTimer - Timers
 
