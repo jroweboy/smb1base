@@ -1535,8 +1535,20 @@ Palette0_MTiles:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
 
-; Old bush location
+.if .defined(PRODUCE_CLEAN_VERSION)
+; Moved "bar" bushes to palette 2 for the clean version since its now a disco table 
   .res 12
+.else
+
+; uncut bar bushes are on palette 0
+BUSH_TOPLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $24, $24, $24, $d0 ;bush top left
+BUSH_MIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $e1, $f1, $e2, $f2 ;bush middle
+BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
+  .byte $24, $d1, $24, $d2 ;bush top middle
+
+.endif
 
 MOUNTAIN_MIDLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $fa, $ec, $fb, $ed ;mountain left
@@ -1639,12 +1651,14 @@ Palette2_MTiles:
   .byte $46, $26, $46, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
 
+.if .defined(PRODUCE_CLEAN_VERSION)
 BUSH_TOPLEFT_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $24, $24, $24, $d0 ;bush top left
 BUSH_MIDDLE_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $e1, $f1, $e2, $f2 ;bush middle
 BUSH_TOPMIDDLE_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $24, $d1, $24, $d2 ;bush top middle
+.endif
 
 BUSH_LEFT_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $ea, $e6, $e0, $f0 ;bush left
