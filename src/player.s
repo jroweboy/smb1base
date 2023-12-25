@@ -1092,6 +1092,8 @@ JumpSwimSub:
   cmp DiffToHaltJump         ;compare to value set here to see if player is in mid-jump
   bcc ProcSwim               ;or just starting to jump, if just starting, skip ahead
 DumpFall:
+  lda #0
+  sta PlayerTempInvuln
   lda VerticalForceDown      ;otherwise dump falling into main fractional
   sta VerticalForce
 ProcSwim:
@@ -1266,6 +1268,10 @@ InitJS:    lda #$20                   ;set jump/swim timer
            sta JumpOrigin_Y_Position
            lda #$01                   ;set player state to jumping/swimming
            sta Player_State
+           ; Set star power while jumping in air if you are playing mario
+           lda CurrentLeader
+           eor #1
+           sta PlayerTempInvuln
            lda Player_XSpeedAbsolute  ;check value related to walking/running speed
            cmp #$09
            bcc ChkWtr                 ;branch if below certain values, increment Y

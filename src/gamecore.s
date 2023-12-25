@@ -183,6 +183,7 @@ SkipEverythingElse:
   beq :+
     jsr DrawPipeOverlaySprite
   :
+
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music
   bpl NoChgMus
@@ -208,6 +209,16 @@ CycleTwo:
 ClrPlrPal:
   farcall ResetPalStar           ;do sub to clear player's palette bits in attributes
 SaveAB:
+
+  ; check if mario is jumping up and cycle palette like a star to indicate he's invuln
+  lda PlayerTempInvuln
+  beq NotMarioInvuln
+    lda FrameCounter
+    lsr
+    lsr
+    sta R0
+    farcall CyclePlayerPalettePreload     ;do sub to cycle the palette
+NotMarioInvuln:
 
   ; now check the acid timer to see if mario swimming lessons are over
   lda SwimmingFlag

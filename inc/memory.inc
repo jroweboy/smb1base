@@ -536,6 +536,7 @@ StackClear = DigitModifier
 .global DiscoCycleIdx
 .global CurrentFloorTileBank
 .global CurrentDiscoColor
+.global PlayerTempInvuln
 
 ; $.global 0770
 
@@ -610,7 +611,6 @@ ALL_TIMER_COUNT = PlayerSwitchCooldownTimer - Timers
 .global PauseModeFlag
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
-
 
 _WarmBootOffset = DisplayDigits
 

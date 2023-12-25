@@ -590,6 +590,7 @@ WorldSelectNumber:              .res  1 ; original (5)
 DiscoCycleIdx:                  .res  1
 CurrentFloorTileBank:           .res  1
 CurrentDiscoColor:              .res  3
+PlayerTempInvuln:               .res  1
 
 ; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
 

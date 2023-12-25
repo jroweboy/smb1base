@@ -302,6 +302,8 @@ CheckForPUpCollision:
   bne EColl                     ;if not found, branch to next part
     jmp HandlePowerUpCollision    ;otherwise, unconditional jump backwards
 EColl:
+  lda PlayerTempInvuln
+  jne ShellOrBlockDefeat 
   lda StarInvincibleTimer       ;if star mario invincibility timer expired,
   beq HandlePECollisions        ;perform task here, otherwise kill enemy like
     jmp ShellOrBlockDefeat        ;hit with a shell, or from beneath
