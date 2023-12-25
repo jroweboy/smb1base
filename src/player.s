@@ -1015,6 +1015,10 @@ PlayerMovementSubs:
         .import SetFollowerStopPoint
         jsr SetFollowerStopPoint
         lda #Sfx_SmallJump
+        ldy CurrentLeader
+        beq :+
+          lda #Sfx_BigJump
+        :
         sta Square1SoundQueue
         lda #5
         sta PlayerSwitchCooldownTimer
@@ -1083,6 +1087,11 @@ FallingSub:
 .proc CheckPeachFloat
   lda CurrentLeader
   beq @NoFloat
+    ; Check if peach is "dead" which is either current player is injured or dead
+    lda EventMusicBuffer
+    ora EventMusicQueue
+    and #DeathMusic
+    bne @StopFloating
     ; If we've already floated or the timer expired then skip the float
     lda PlayerHasFloated
     beq @CheckIfStartingFloat
@@ -1370,9 +1379,9 @@ GetYPhy:   lda JumpMForceData,y       ;store appropriate jump/swim
            sta Player_Y_Speed         ;and jump to something else to keep player
            jmp X_Physics              ;from swimming above water level
 PJumpSnd:  lda #Sfx_BigJump           ;load big mario's jump sound by default
-           ldy PlayerSize             ;is mario big?
+           ldy CurrentLeader    ; Big jump for mario Small jump for Peach
            beq SJumpSnd
-           lda #Sfx_SmallJump         ;if not, load small mario's jump sound
+             lda #Sfx_SmallJump         ;if not, load small mario's jump sound
 SJumpSnd:  sta Square1SoundQueue      ;store appropriate jump sound in square 1 sfx queue
 X_Physics: ldy #$00
            sty R0                    ;init value here
