@@ -380,7 +380,7 @@ RightPipe:
 HalfwayPageNybbles:
   .byte $70, $65 ; level 1=7, 2=5, 3=6
   .byte $57, $99 ; level 4=5, 5=7, 6=9
-  .byte $00, $00
+  .byte $00 ; shouldn't be needed? dunno doesn't hurt to have
 
 .proc PlayerLoseLife
   inc DisableScreenFlag    ;disable screen and sprite 0 check
@@ -1080,6 +1080,9 @@ FallingSub:
 
 
 .proc CheckPeachFloat
+
+  lda InjuryTimer
+  bne @NoFloat
   lda CurrentLeader
   beq @NoFloat
     ; Check if peach is "dead" which is either current player is injured or dead
