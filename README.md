@@ -27,6 +27,8 @@ This hack was made in 10 days during the SMB Jam 2023.
 
 ----
 
+Version 1.1.1 - Add text to the error screen to let users know that they need to use a modern emulator to play this hack.
+
 Version 1.1 is now live! Keeping with the spirit of this being a quickly thrown together hack, the new update was coded in a single day of crunch plus a second day of overtime ;)
 
 *NEW* 
