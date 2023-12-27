@@ -2,6 +2,8 @@
 .include "common.inc"
 .segment "FIXED"
 
+.export BAD_EMULATOR
+
 .export FIRST_SCANLINE_IRQ
 FIRST_SCANLINE_IRQ = (15 * 8 + 7) - 8
 SECOND_SCANLINE_IRQ = 95 - 16 ; subtract 16 to account for the latest
@@ -46,6 +48,116 @@ SECOND_SCANLINE_IRQ = 95 - 16 ; subtract 16 to account for the latest
 
 .segment "TITLE"
 .export DrawTitleScreenInternal
+
+.proc BAD_EMULATOR
+
+  lda PPUSTATUS
+  lda #0
+  sta PlayPanic
+  sta IRQCONTROL
+  sta PPUMASK
+  sta PPUCTRL
+
+  lda #$20
+  sta PPUADDR
+  lda #0
+  sta PPUADDR
+  lda #$24
+   ldx #0
+   ldy #4 ; 4x256
+clear_all:
+   sta PPUDATA
+   inx
+   bne clear_all
+   dey
+   bne clear_all
+  lda #$23
+  sta PPUADDR
+  ldx #$c0
+  stx PPUADDR
+  lda #0
+clear_all2:
+   sta PPUDATA
+   inx
+   bne clear_all2
+
+  lda #<ErrorScreenMessage
+  sta R0
+  lda #>ErrorScreenMessage
+  sta R1
+  ldy #0
+NextLine:
+    lda (R0),y
+    beq WaitForever
+    sta PPUADDR
+    iny
+    lda (R0),y
+    sta PPUADDR
+    iny
+    lda (R0),y
+    tax
+    iny
+  NextLetter:
+    lda (R0),y
+    iny
+    sta PPUDATA
+    dex
+    bne NextLetter
+    iny
+    tya
+    clc
+    adc R0
+    sta R0
+    lda R1
+    adc #0
+    sta R1
+    ldy #0
+    jmp NextLine
+WaitForever:
+  ; enable rendering and loop forever
+  lda #%00001000
+  sta PPUMASK
+  lda #0
+  sta PPUSCROLL
+  sta PPUSCROLL
+Loop:
+  jmp Loop
+  rts
+
+ErrorScreenMessage:
+  .byte $3f, $00, $04, $0f, $30, $0f, $0f, $00
+L1 = * - ErrorScreenMessage
+  .byte $20, $6c, L2 - L1 - 4, "E R R O R", $00
+L2 = * - ErrorScreenMessage
+  .byte $20, $a7, L3 - L2 - 4, "FAULTY IRQ DETECTED", $00
+L3 = * - ErrorScreenMessage
+  .byte $20, $e2, L4 - L3 - 4, "THIS HACK USES ADVANCED", $00
+L4 = * - ErrorScreenMessage
+  .byte $21, $02, L5 - L4 - 4, "NES FEATURES THAT THIS", $00
+L5 = * - ErrorScreenMessage
+  .byte $21, $22, L6 - L5 - 4, "EMULATOR DOES NOT SUPPORT", $00
+L6 = * - ErrorScreenMessage
+  .byte $21, $62, L7 - L6 - 4, "PLEASE SWITCH TO ONE OF THESE", $00
+L7 = * - ErrorScreenMessage
+  .byte $21, $85, L8 - L7 - 4, "MESEN 2", $00
+L8 = * - ErrorScreenMessage
+  .byte $21, $a5, L9 - L8 - 4, "EVERDRIVE N8 PRO", $00
+L9 = * - ErrorScreenMessage
+  .byte $21, $c5, La - L9 - 4, "FCEUX V2.2.6 OR NEWER", $00
+La = * - ErrorScreenMessage
+  .byte $22, $22, Lb - La - 4, "MAYBE OTHERS I DUNNO", $00
+Lb = * - ErrorScreenMessage
+  .byte $22, $42, Lc - Lb - 4, "BUT IF YOU GOT THIS SCREEN", $00
+Lc = * - ErrorScreenMessage
+  .byte $22, $62, Ld - Lc - 4, "THEN TRY A NEW EMULATOR", $00
+Ld = * - ErrorScreenMessage
+.byte $00
+; Offsets:
+; ; duplicate L6 so level 2 with the area transition functions properly
+;   .byte $0, L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, La, Lb, Lc, Ld
+
+.endproc
+
 .proc DrawTitleScreenInternal
 
   ; Clear out the vram buffer contents.

@@ -227,8 +227,7 @@ WRAM_ENABLE = (1 << 7)
   lda tmp_irq_a
   cmp #162
   bcs :+
-BAD_EMULATOR:
-    jmp BAD_EMULATOR
+    farcall BAD_EMULATOR
 :
 
 ; set up the banks before starting anything else 
