@@ -1,15 +1,3 @@
-## SMB1Base
-
-My personal SMB1 base code for making ROM hacks. Some of the features of this base are as follows:
-
-- CA65 with every last part of the code split into individual modules for compliation.
-- All of the code is split into banks of 8kb with only 16kb of fixed space required.
-  - This frees up the $c000 region to be used for banked DPCM
-- Minor optimizations for the original game, removing residual code and cleaning up some small wtfs 
-- CMake and VSCode integration
-  - Code is built using Ninja with a custom CMake Toolchain and errors are displayed inline in VSCode
-
-## Branch information
 
 Panic At The Mario Disco
 
@@ -29,7 +17,7 @@ This hack was made in 10 days during the SMB Jam 2023.
 
 Version 1.1.1 - Add text to the error screen to let users know that they need to use a modern emulator to play this hack.
 
-Version 1.1 is now live! Keeping with the spirit of this being a quickly thrown together hack, the new update was coded in a single day of crunch plus a second day of overtime ;)
+Version 1.1 is now live! Keeping with the spirit of a hack made in a game jam, the new update was coded in a single day of crunch plus a second day of overtime ;)
 
 *NEW* 
 
