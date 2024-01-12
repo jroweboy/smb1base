@@ -8,15 +8,13 @@
 .import InitScroll, UpdateScreen, SoundEngine, PauseRoutine
 .import FarCallInit
 
-.import DrawNeck
-
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
 
 .segment "VECTORS"
     .word (NonMaskableInterrupt)
     .word (Start)
-    .word (Local_fff0)  ;unused
+    .word ($fff0)  ;unused
 
 .segment "FIXED"
 
@@ -91,12 +89,20 @@ BankInitValues:
 .endproc
 
 .proc NonMaskableInterrupt
+  bit NmiDisable
+  bpl ContinueNMI
 
-  lda Mirror_PPUCTRL       ;disable NMIs in mirror reg
-  and #%01111111            ;save all other bits
-  sta Mirror_PPUCTRL
-  and #%01111110            ;alter name table address to be $2800
-  sta PPUCTRL         ;(essentially $2000) but save other bits
+ContinueNMI:
+  pha
+  phx
+  phy
+  ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
+  dec NmiDisable
+  
+  ; jroweboy switch the nametable back to nmt0 and force NMI to be enabled
+  lda Mirror_PPUCTRL
+  and #%11111110            ;alter name table address to be $2800
+  sta PPUCTRL              ;(essentially $2000) but save other bits
   lda Mirror_PPUMASK       ;disable OAM and background display by default
   and #%11100110
   ldy DisableScreenFlag     ;get screen disable flag
@@ -111,14 +117,15 @@ ScreenOff:
   lda #$00
   jsr InitScroll
   sta OAMADDR          ;reset spr-ram address register
-  lda #OAM                  ;perform spr-ram DMA access on $0200-$02ff
-  sta OAM_DMA
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
   lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
-  sta $00
+  sta NmiR0
   lda VRAM_AddrTable_High,x
-  sta $01
+  sta NmiR1
   jsr UpdateScreen          ;update screen with buffer contents
+
+  jsr OAMandReadJoypad
+  
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
   cpx #$06
@@ -132,31 +139,41 @@ InitBuffer:
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
+
+  lda Sprite0HitDetectFlag
+  beq @SkipSprite0
+    SetScanlineIRQ #$1f
+@SkipSprite0:
+  
+  lda HorizontalScroll
+  sta IrqScrollH
+  lda Mirror_PPUCTRL
+  sta IrqScrollBit
+
   farcall SoundEngine           ;play sound
-  jsr ReadJoypads           ;read joypads
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore
   lda GamePauseStatus       ;check for pause status
   lsr
   bcs PauseSkip
-  lda TimerControl          ;if master timer control not set, decrement
-  beq DecTimers             ;all frame and interval timers
-    dec TimerControl
-  bne NoDecTimers
-  DecTimers:
-    ldx #$14                  ;load end offset for end of frame timers
-    dec IntervalTimerControl  ;decrement interval timer control,
-    bpl DecTimersLoop         ;if not expired, only frame timers will decrement
-    lda #$14
-    sta IntervalTimerControl  ;if control for interval timers expired,
-    ldx #$23                  ;interval timers will decrement along with frame timers
-  DecTimersLoop:
-      lda Timers,x              ;check current timer
-      beq SkipExpTimer          ;if current timer expired, branch to skip,
-        dec Timers,x              ;otherwise decrement the current timer
-    SkipExpTimer:
-      dex                       ;move onto next timer
-      bpl DecTimersLoop         ;do this until all timers are dealt with
+    lda TimerControl          ;if master timer control not set, decrement
+    beq DecTimers             ;all frame and interval timers
+      dec TimerControl
+    bne NoDecTimers
+    DecTimers:
+      ldx #FRAME_TIMER_COUNT    ;load end offset for end of frame timers
+      dec IntervalTimerControl  ;decrement interval timer control,
+      bpl DecTimersLoop         ;if not expired, only frame timers will decrement
+      lda #$14
+      sta IntervalTimerControl  ;if control for interval timers expired,
+      ldx #ALL_TIMER_COUNT      ;interval timers will decrement along with frame timers
+    DecTimersLoop:
+        lda Timers,x              ;check current timer
+        beq SkipExpTimer          ;if current timer expired, branch to skip,
+          dec Timers,x              ;otherwise decrement the current timer
+      SkipExpTimer:
+        dex                       ;move onto next timer
+        bpl DecTimersLoop         ;do this until all timers are dealt with
 NoDecTimers:
   inc FrameCounter          ;increment frame counter
 PauseSkip:
@@ -164,10 +181,10 @@ PauseSkip:
   ldy #$07
   lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
   and #%00000010            ;mask out all but d1
-  sta $00                   ;save here
+  sta NmiR0                   ;save here
   lda PseudoRandomBitReg+1  ;get second memory location
   and #%00000010            ;mask out all but d1
-  eor $00                   ;perform exclusive-OR on d1 from first and second bytes
+  eor NmiR0                   ;perform exclusive-OR on d1 from first and second bytes
   clc                       ;if neither or both are set, carry will be clear
   beq RotPRandomBit
   sec                       ;if one or the other is set, carry will be set
@@ -176,42 +193,58 @@ RotPRandomBit:
     inx                       ;increment to next byte
     dey                       ;decrement for loop
     bne RotPRandomBit
+;   lda Sprite0HitDetectFlag  ;check for flag here
+;   beq SkipSprite0
+; Sprite0Clr:
+;     lda PPUSTATUS            ;wait for sprite 0 flag to clear, which will
+;     and #%01000000            ;not happen until vblank has ended
+;     bne Sprite0Clr
+;   lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
+;   lsr
+;   bcs Sprite0Hit
+;   jsr MoveSpritesOffscreen
+; Sprite0Hit:
+;     lda PPUSTATUS            ;do sprite #0 hit detection
+;     and #%01000000
+;     beq Sprite0Hit
+;   ldy #$14                  ;small delay, to wait until we hit horizontal blank time
+; HBlankDelay:
+;     dey
+;     bne HBlankDelay
+; SkipSprite0:
+;   lda HorizontalScroll      ;set scroll registers from variables
+;   sta PPUSCROLL
+;   lda VerticalScroll
+;   sta PPUSCROLL
+;   lda Mirror_PPUCTRL       ;load saved mirror of $2000
+;   pha
+;     sta PPUCTRL
+;     lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
+;     lsr
+;     bcs SkipMainOper
+;     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+; SkipMainOper:
+;     lda PPUSTATUS            ;reset flip-flop
+;   pla
+;   ora #%10000000            ;reactivate NMIs
+;   sta PPUCTRL
   lda Sprite0HitDetectFlag  ;check for flag here
   beq SkipSprite0
-Sprite0Clr:
-    lda PPUSTATUS            ;wait for sprite 0 flag to clear, which will
-    and #%01000000            ;not happen until vblank has ended
-    bne Sprite0Clr
-  lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
-  lsr
-  bcs Sprite0Hit
-  jsr MoveSpritesOffscreen
-  jsr SpriteShuffler
-Sprite0Hit:
-    lda PPUSTATUS            ;do sprite #0 hit detection
-    and #%01000000
-    beq Sprite0Hit
-  ldy #$14                  ;small delay, to wait until we hit horizontal blank time
-HBlankDelay:
-    dey
-    bne HBlankDelay
-SkipSprite0:
-  lda HorizontalScroll      ;set scroll registers from variables
-  sta PPUSCROLL
-  lda VerticalScroll
-  sta PPUSCROLL
-  lda Mirror_PPUCTRL       ;load saved mirror of $2000
-  pha
-    sta PPUCTRL
-    lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
+    lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
     lsr
-    bcs SkipMainOper
-    jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+    bcs SkipSprite0
+      lda OperMode
+      beq SkipSprite0
+        jsr MoveAllSpritesOffscreen
+        ; jsr SpriteShuffler
+SkipSprite0:
+  lda #0
+  sta NmiR0
+  sta NmiR1
 SkipMainOper:
-    lda PPUSTATUS            ;reset flip-flop
+  ply
+  plx
   pla
-  ora #%10000000            ;reactivate NMIs
-  sta PPUCTRL
   rti                       ;we are done until the next frame!
 
 ;-------------------------------------------------------------------------------------
@@ -359,7 +392,7 @@ InitPageLoop:
 InitByteLoop:
       cpx #$01          ;check to see if we're on the stack ($0100-$01ff)
       bne InitByte      ;if not, go ahead anyway
-      cpy #$60          ;otherwise, check to see if we're at $0160-$01ff
+      cpy #<StackClear  ;otherwise, check to see if we're at $0160-$01ff
       bcs SkipByte      ;if so, skip write
 InitByte:
       sta (InitializeMemoryRAMLo),y       ;otherwise, initialize byte with current low byte in Y
@@ -369,5 +402,27 @@ SkipByte:
       bne InitByteLoop
     dex               ;go onto the next page
     bpl InitPageLoop  ;do this until all pages of memory have been erased
+  rts
+.endproc
+
+.proc OAMandReadJoypad
+  lda #OAM
+  sta OAM_DMA          ; ------ OAM DMA ------
+  ldx #1             ; get put          <- strobe code must take an odd number of cycles total
+  stx SavedJoypad1Bits ; get put get
+  stx JOYPAD_PORT1   ; put get put get
+  dex                ; put get
+  stx JOYPAD_PORT1   ; put get put get
+read_loop:
+  lda JOYPAD_PORT2   ; put get put GET  <- loop code must take an even number of cycles total
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad2Bits, x ; put get put get put get (X = 0; waste 1 cycle and 0 bytes for alignment)
+  lda JOYPAD_PORT1   ; put get put GET
+  and #3             ; put get
+  cmp #1             ; put get
+  rol SavedJoypad1Bits ; put get put get put
+  bcc read_loop      ; get put [get]    <- this branch must not be allowed to cross a page
+ASSERT_PAGE read_loop
   rts
 .endproc

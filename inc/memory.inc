@@ -15,9 +15,9 @@ __MEMORY_INC = 1
 .globalzp R6
 .globalzp R7
 
-.globalzp IrqTemp
-.globalzp IrqR0
-.globalzp IrqR1
+.globalzp NmiTemp
+.globalzp NmiR0
+.globalzp NmiR1
 
 .globalzp MainTemp
 .globalzp M0
@@ -177,18 +177,15 @@ __MEMORY_INC = 1
 .global NmiSkipped
 
 
-.global IrqOldScroll
-.global IrqNewScroll
+.global IrqScrollH
+.global IrqScrollBit
 .global IrqPPUCTRL
 .global IrqNextScanline
-
-.global PlayerAngle
-.global GroundBounceChain
-.global BounceForce
-.global AngularMomentum
-.global AngularMomentumTimer
-.global InitialFireballYSpeed
+.global CurrentA
+.global NextBank
 .global SwitchToMainIRQ
+.global IrqPointerJmp
+.global IrqPointer
 
 
 .global NoteLenLookupTblOfs
@@ -378,6 +375,7 @@ StackClear = DigitModifier
 .global ChangeAreaTimer
 
 .global PlayerOAMOffset
+.global CurrentOAMOffset
 
 .global SpriteShuffleOffset
 .global SpriteShuffleTemp
@@ -456,7 +454,11 @@ StackClear = DigitModifier
 .global TimerControl
 .global CoinTallyFor1Ups
 .global SecondaryMsgCounter
-.global JoypadBitMask
+
+.global InPipeTransition
+.global PipeXPosition
+.global PipeYPosition
+.global PipeExitTimer
 
 .global AreaType
 
@@ -508,6 +510,13 @@ StackClear = DigitModifier
 .global Mirror_PPUCTRL
 .global Mirror_PPUMASK
 .global NumberOfPlayers
+
+
+.global CurrentBank
+.global BankShadow
+.global TargetAddrJmp
+.global TargetAddress
+
 .global IntervalTimerControl
 
 .global Timers

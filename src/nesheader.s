@@ -3,6 +3,7 @@
 nes2mapper 4
 nes2prg $10000
 nes2chr $2000
+nes2bram $2000
 nes2mirror 'V'
 nes2tv 'N'
 nes2end

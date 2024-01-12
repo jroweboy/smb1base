@@ -10,7 +10,7 @@
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, UpdateTopScore, RenderAttributeTables
 .export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
-.export RemBridge, GiveOneCoin, ReplaceBlockMetatile, DrawMushroomIcon
+.export RemBridge, GiveOneCoin, DrawMushroomIcon
 
 .segment "RENDER"
 
@@ -63,20 +63,18 @@ AreaPalette:
 
 
 ;-------------------------------------------------------------------------------------
-MoveAllSpritesOffscreen:
-
-  ldy #$00                ;this routine moves all sprites off the screen
-  .byte $2c                 ;BIT instruction opcode
 MoveSpritesOffscreen:
-  ldy #$04                ;this routine moves all but sprite 0
-  lda #$f8                ;off the screen
-@SprInitLoop:
-    sta Sprite_Y_Position,y ;write 248 into OAM data's Y coordinate
-    iny                     ;which will move it off the screen
-    iny
-    iny
-    iny
-    bne @SprInitLoop
+  lda #$f8
+  bne MoveSpriteOffscreenUnrolledWrites + 3
+MoveAllSpritesOffscreen:
+  lda #$f8
+MoveSpriteOffscreenUnrolledWrites:
+.repeat 64, I
+    sta Sprite_Y_Position + I*4 ;write 248 into OAM data's Y coordinate
+.endrepeat
+  ; original game uses y for looping, so keep it zero to be paranoid
+  ldy #0
+  sty CurrentOAMOffset
   rts
 
 ;-------------------------------------------------------------------------------------
@@ -85,20 +83,20 @@ InitializeNameTables:
   lda PPUSTATUS            ;reset flip-flop
   lda Mirror_PPUCTRL       ;load mirror of ppu reg $2000
   ora #%00010000            ;set sprites for first 4k and background for second 4k
-  and #%11110000            ;clear rest of lower nybble, leave higher alone
+  and #%11101000            ;make sure to keep sprites and bg switched
   jsr WritePPUReg1
   lda #$24                  ;set vram address to start of name table 1
   jsr WriteNTAddr
   lda #$20                  ;and then set it to name table 0
 WriteNTAddr:
-  sta PPU_ADDRESS
+  sta PPUADDR
   lda #$00
-  sta PPU_ADDRESS
+  sta PPUADDR
   ldx #$04                  ;clear name table with blank tile #24
   ldy #$c0
   lda #$24
 InitNTLoop:
-  sta PPU_DATA              ;count out exactly 768 tiles
+  sta PPUDATA              ;count out exactly 768 tiles
   dey
   bne InitNTLoop
   dex
@@ -108,7 +106,7 @@ InitNTLoop:
   sta VRAM_Buffer1_Offset   ;init vram buffer 1 offset
   sta VRAM_Buffer1          ;init vram buffer 1
 InitATLoop:
-  sta PPU_DATA
+  sta PPUDATA
   dey
   bne InitATLoop
   sta HorizontalScroll      ;reset scroll variables
@@ -336,16 +334,16 @@ DrawTitleScreen:
   lda OperMode                 ;are we in title screen mode?
   bne IncModeTask_B            ;if not, exit
   lda #>TitleScreenDataOffset  ;load address $1ec0 into
-  sta PPU_ADDRESS              ;the vram address register
+  sta PPUADDR              ;the vram address register
   lda #<TitleScreenDataOffset
-  sta PPU_ADDRESS
+  sta PPUADDR
   lda #$03                     ;put address $0300 into
   sta R1                       ;the indirect at $00
   ldy #$00
   sty R0 
-  lda PPU_DATA                 ;do one garbage read
+  lda PPUDATA                 ;do one garbage read
 OutputTScr:
-  lda PPU_DATA                 ;get title screen from chr-rom
+  lda PPUDATA                 ;get title screen from chr-rom
   sta (R0) ,y                  ;store 256 bytes into buffer
   iny
   bne ChkHiByte                ;if not past 256 bytes, do not increment
@@ -421,12 +419,12 @@ MushroomIconData:
 WriteBufferToScreen:
 .export UpdateScreen, InitScroll
 
-  sta PPU_ADDRESS           ;store high byte of vram address
+  sta PPUADDR           ;store high byte of vram address
   iny
-  lda (R0) ,y               ;load next byte (second)
-  sta PPU_ADDRESS           ;store low byte of vram address
+  lda (NmiR0),y               ;load next byte (second)
+  sta PPUADDR           ;store low byte of vram address
   iny
-  lda (R0) ,y               ;load next byte (third)
+  lda (NmiR0),y               ;load next byte (third)
   asl                       ;shift to left and save in stack
   pha
     lda Mirror_PPUCTRL     ;load mirror of $2000,
@@ -448,28 +446,27 @@ OutputToVRAM:
   bcs RepeatByte            ;if carry set, repeat loading the same byte
     iny                       ;otherwise increment Y to load next byte
 RepeatByte:
-  lda (R0) ,y               ;load more data from buffer and write to vram
-  sta PPU_DATA
+  lda (NmiR0), y               ;load more data from buffer and write to vram
+  sta PPUDATA
   dex                       ;done writing?
   bne OutputToVRAM
   sec          
   tya
-  adc R0                    ;add end length plus one to the indirect at $00
-  sta R0                    ;to allow this routine to read another set of updates
+  adc NmiR0                    ;add end length plus one to the indirect at $00
+  sta NmiR0                    ;to allow this routine to read another set of updates
   lda #$00
-  adc R1 
-  sta R1 
-  lda #$3f                  ;sets vram address to $3f00
-  sta PPU_ADDRESS
-  lda #$00
-  sta PPU_ADDRESS
-  sta PPU_ADDRESS           ;then reinitializes it for some reason
-  sta PPU_ADDRESS
-
+  adc NmiR1 
+  sta NmiR1 
+  ; lda #$3f                  ;sets vram address to $3f00
+  ; sta PPUADDR
+  ; lda #$00
+  ; sta PPUADDR
+  ; sta PPUADDR           ;then reinitializes it for some reason
+  ; sta PPUADDR
 UpdateScreen:
   ldx PPUSTATUS            ;reset flip-flop
   ldy #$00                  ;load first byte from indirect as a pointer
-  lda (R0) ,y  
+  lda (NmiR0),y  
   bne WriteBufferToScreen   ;if byte is zero we have no further updates to make here
 InitScroll:
   sta PPUSCROLL        ;store contents of A into scroll registers
@@ -624,55 +621,126 @@ GameTextOffsets:
   .byte TwoPlayerGameOver-GameText, OnePlayerGameOver-GameText
   .byte WarpZoneWelcome-GameText, WarpZoneWelcome-GameText
 
+.export SetupPipeTransitionOverlay
+.proc SetupPipeTransitionOverlay
+  sta InPipeTransition
+  beq ClearTransition
+  cmp #1
+  beq IsDownPipe
+  cmp #2
+  beq IsRightPipe
+  ; fallthrough
+RisingEntrance:
+  lda #$90 + 32
+  sta PipeYPosition
+  jmp IsDownPipe
+ClearTransition:
+  ; reset the color for the palette back to the original
+  lda #$27
+  jmp SetPaletteColor
+  ; rts
+IsRightPipe:
+  lda Player_X_Position   ;get player's horizontal coordinate
+  clc
+  adc #$08 + 16                ;add eight pixels
+  and #$f0                ;mask out low nybble to give 16-pixel correspondence
+  sta PipeXPosition
+  lda Player_Y_Position
+  sta PipeYPosition
+  jmp ChangeColorToBackground
+IsDownPipe:
+  lda RelativePlayerPosition
+  sta PipeXPosition
+  ; fallthrough
+ChangeColorToBackground:
+  ldy BackgroundColorCtrl
+  bne :+
+    ldy AreaType
+:
+  lda BackgroundColors,y   ;to background color instead
+  ; jmp SetPaletteColor
+  ; fallthrough
+SetPaletteColor:
+  ldx VRAM_Buffer1_Offset
+  sta VRAM_Buffer1+3,x
+  lda #$3f
+  sta VRAM_Buffer1+0,x
+  lda #$1b
+  sta VRAM_Buffer1+1,x
+  lda #1
+  sta VRAM_Buffer1+2,x
+  lda #0
+  sta VRAM_Buffer1+4,x
+  lda VRAM_Buffer1_Offset
+  clc 
+  adc #4
+  sta VRAM_Buffer1_Offset
+  rts
+.endproc
 
-HandlePipeEntry:
-         lda Up_Down_Buttons       ;check saved controller bits from earlier
-         and #%00000100            ;for pressing down
-         beq ExPipeE               ;if not pressing down, branch to leave
-         lda R0 
-         cmp #$11                  ;check right foot metatile for warp pipe right metatile
-         bne ExPipeE               ;branch to leave if not found
-         lda R1 
-         cmp #$10                  ;check left foot metatile for warp pipe left metatile
-         bne ExPipeE               ;branch to leave if not found
-         lda #$30
-         sta ChangeAreaTimer       ;set timer for change of area
-         lda #$03
-         sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
-         lda #Sfx_PipeDown_Injury
-         sta Square1SoundQueue     ;load pipedown/injury sound
-         lda #%00100000
-         sta Player_SprAttrib      ;set background priority bit in player's attributes
-         lda WarpZoneControl       ;check warp zone control
-         beq ExPipeE               ;branch to leave if none found
-         and #%00000011            ;mask out all but 2 LSB
-         asl
-         asl                       ;multiply by four
-         tax                       ;save as offset to warp zone numbers (starts at left pipe)
-         lda Player_X_Position     ;get player's horizontal position
-         cmp #$60      
-         bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
-         inx                       ;otherwise increment for middle pipe
-         cmp #$a0      
-         bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
-         inx                       ;otherwise increment for last pipe
-GetWNum: ldy WarpZoneNumbers,x     ;get warp zone numbers
-         dey                       ;decrement for use as world number
-         sty WorldNumber           ;store as world number and offset
-         ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
-         lda AreaAddrOffsets,x     ;get area offset based on world offset
-         sta AreaPointer           ;store area offset here to be used to change areas
-         lda #Silence
-         sta EventMusicQueue       ;silence music
-         lda #$00
-         sta EntrancePage          ;initialize starting page number
-         sta AreaNumber            ;initialize area number used for area address offset
-         sta LevelNumber           ;initialize level number used for world display
-         sta AltEntranceControl    ;initialize mode of entry
-         inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
-         inc FetchNewGameTimerFlag ;set flag to load new game timer
-ExPipeE: rts                       ;leave!!!
-
+.proc HandlePipeEntry
+  lda Up_Down_Buttons       ;check saved controller bits from earlier
+  and #%00000100            ;for pressing down
+  jeq ExPipeE               ;if not pressing down, branch to leave
+  lda R0
+  cmp #$11                  ;check right foot metatile for warp pipe right metatile
+  jne ExPipeE               ;branch to leave if not found
+  lda R1
+  cmp #$10                  ;check left foot metatile for warp pipe left metatile
+  bne ExPipeE               ;branch to leave if not found
+  lda #$30
+  sta ChangeAreaTimer       ;set timer for change of area
+  lda #$03
+  sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
+  lda #Sfx_PipeDown_Injury
+  sta Square1SoundQueue     ;load pipedown/injury sound
+  lda #1
+  jsr SetupPipeTransitionOverlay
+  lda Player_X_Position
+  sec
+  sbc ScreenLeft_X_Pos
+  sta PipeXPosition
+  lda Player_Y_Position
+  clc
+  adc #32
+  sta PipeYPosition
+;  lda #%00100000
+;  sta Player_SprAttrib      ;set background priority bit in player's attributes
+  lda WarpZoneControl       ;check warp zone control
+  beq ExPipeE               ;branch to leave if none found
+  and #%00000011            ;mask out all but 2 LSB
+  asl
+  asl                       ;multiply by four
+  tax                       ;save as offset to warp zone numbers (starts at left pipe)
+  lda Player_X_Position     ;get player's horizontal position
+  cmp #$60      
+  bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
+  inx                       ;otherwise increment for middle pipe
+  cmp #$a0      
+  bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
+  inx                       ;otherwise increment for last pipe
+GetWNum:
+  ldy WarpZoneNumbers,x     ;get warp zone numbers
+  dey                       ;decrement for use as world number
+  sty WorldNumber           ;store as world number and offset
+  ; TODO stop being bad
+  far LEVEL
+  ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
+  lda AreaAddrOffsets,x     ;get area offset based on world offset
+  sta AreaPointer           ;store area offset here to be used to change areas
+  endfar
+  lda #Silence
+  sta EventMusicQueue       ;silence music
+  lda #$00
+  sta EntrancePage          ;initialize starting page number
+  sta AreaNumber            ;initialize area number used for area address offset
+  sta LevelNumber           ;initialize level number used for world display
+  sta AltEntranceControl    ;initialize mode of entry
+  ; inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
+  ; inc FetchNewGameTimerFlag ;set flag to load new game timer
+ExPipeE:
+  rts                       ;leave!!!
+.endproc
 
 ;-------------------------------------------------------------------------------------
 GiveOneCoin:
@@ -872,7 +940,7 @@ NoTopSc:
 ;$06, $07 - block buffer address low/high
 
 .proc RemoveCoin_Axe
-  ldy #$41                 ;set low byte so offset points to $0341
+  ldy #<VRAM_Buffer2                 ;set low byte so offset points to $0341
   lda #$03                 ;load offset for default blank metatile
   ldx AreaType             ;check area type
   bne WriteBlankMT         ;if not water type, use offset
@@ -882,15 +950,6 @@ WriteBlankMT:
   lda #$06
   sta VRAM_Buffer_AddrCtrl ;set vram address controller to $0341 and leave
   rts
-.endproc
-
-.proc ReplaceBlockMetatile
-  ; jsr WriteBlockMetatile    ;write metatile to vram buffer to replace block object
-  ; inc Block_ResidualCounter ;increment unused counter (residual code)
-  ; dec Block_RepFlag,x       ;decrement flag (residual code)
-  ; rts
-  jmp WriteBlockMetatile    ;write metatile to vram buffer to replace block object
-  ; rts                       ;leave
 .endproc
 
 DestroyBlockMetatile:

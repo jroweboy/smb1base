@@ -107,3 +107,25 @@ IRQENABLE   = $e001
   sta BANK_DATA
 .endscope
 .endmacro
+
+
+.macro SetScanlineIRQ line
+  .if .match(line, x)
+    stx IRQLATCH
+    stx IRQRELOAD
+    stx IRQENABLE
+  .elseif .match(line, y)
+    sty IRQLATCH
+    sty IRQRELOAD
+    sty IRQENABLE
+  .else
+    .if (.match (.left (1, {arg}), #))
+      lda #line
+    .else
+      lda line
+    .endif
+    sta IRQLATCH
+    sta IRQRELOAD
+    sta IRQENABLE
+  .endif
+.endmacro

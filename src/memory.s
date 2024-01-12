@@ -3,13 +3,26 @@
 
 .segment "ZEROPAGE"
 
-temp_byte:                      .res  8 ; local  temp pointers and vars
+
+TempReg:                        .res  8 ; local  temp pointers and vars
+R0                             = TempReg
+R1                             = TempReg + 1
+R2                             = TempReg + 2
+R3                             = TempReg + 3
+R4                             = TempReg + 4
+R5                             = TempReg + 5
+R6                             = TempReg + 6
+R7                             = TempReg + 7
+
 ObjectOffset:                   .res  1
 FrameCounter:                   .res  1
-A_B_Buttons:                    .res  1
-Up_Down_Buttons:                .res  1
-Left_Right_Buttons:             .res  1
-PreviousA_B_Buttons:            .res  1
+
+; jroweboy - swapped SavedJoypadBits with the computed saved buttons 
+; since the new joypad reading code must write to zeropage
+SavedJoypadBits:                .res  2
+SavedJoypad1Bits              = SavedJoypadBits
+SavedJoypad2Bits              = SavedJoypadBits + 1
+
 GameEngineSubroutine:           .res  1
 Enemy_Flag:                     .res  7
 Enemy_ID:                       .res  7
@@ -30,10 +43,6 @@ Misc_State:                     .res  9
 ;--------------------------- 
 
 PlayerFacingDir:                .res  1 ; 1 = right, 2 = left
-DestinationPageLoc:             .res  1
-FirebarSpinDirection          = DestinationPageLoc
-VictoryWalkControl:             .res  4
-PowerUpType:                    .res  1 ; 0 = shroom, 1 = fireflower, 2 = star, 3 = 1up shroom
 FireballBouncingFlag:           .res  2
 HammerBroJumpTimer:             .res  9
 Player_MovingDir:               .res  1
@@ -132,7 +141,12 @@ EnemyData                     = EnemyDataLow
 EnemyDataLow:                   .res  1
 EnemyDataHigh:                  .res  1
 
-dummylabel:                     .res  5 ; = start at $EB, reserve 5 bytes for local use.
+SpriteLocalTemp:                .res  4
+Local_eb                      = SpriteLocalTemp
+Local_ec                      = SpriteLocalTemp + 1
+Local_ed                      = SpriteLocalTemp + 2
+; Local_ee                      = SpriteLocalTemp + 3 ; jroweboy: unused?
+Local_ef                      = SpriteLocalTemp + 3
 
 NoteLenLookupTblOfs:            .res  1
 Square1SoundBuffer:             .res  1
@@ -142,8 +156,8 @@ AreaMusicBuffer:                .res  1
 
 MusicData                     = MusicDataLow
 MusicDataLow:                   .res  1
-
 MusicDataHigh:                  .res  1
+
 MusicOffset_Square2:            .res  1
 MusicOffset_Square1:            .res  1
 MusicOffset_Triangle:           .res  1
@@ -154,7 +168,19 @@ NoiseSoundQueue:                .res  1
 Square2SoundQueue:              .res  1
 Square1SoundQueue:              .res  1
 
-.segment "STACK"
+
+IrqTemp:                        .res 2
+IrqR0 = IrqTemp + 0
+IrqR1 = IrqTemp + 1
+
+MainTemp:                       .res 5
+M0                             = MainTemp + 0
+M1                             = MainTemp + 1
+M2                             = MainTemp + 2
+M3                             = MainTemp + 3
+M4                             = MainTemp + 4
+
+.segment "SHORTRAM"
 ; start $0100
 PlayerNeckTemp:                 .res  1
 blank_stack:                    .res  8 ; not used
@@ -171,6 +197,20 @@ ShellChainCounter:              .res 7
 FloateyNum_Timer:               .res 8
 DigitModifier:                  .res 6
 
+
+; DON'T CLEAR PAST HERE
+
+NmiDisable:                     .res  1
+NmiSkipped:                     .res  1
+IrqScrollH:                     .res  1
+IrqScrollBit:                   .res  1
+IrqNextScanline:                .res  1
+CurrentA:                       .res  1
+NextBank:                       .res  1
+SwitchToMainIRQ:                .res  1
+IrqPointerJmp:                  .res  3
+IrqPointer                    = IrqPointerJmp + 1
+
 .segment "OAM"
 ; start $0200
 
@@ -183,8 +223,14 @@ Sprite_X_Position:              .res 1
 .segment "BSS"
 ; start $0300
 
+; this needs to be page aligned in the code for it to work. It could probably be reworked to not need that some day
+Block_Buffer_1:                 .res  208
+Block_Buffer_2:                 .res  208
+BlockBufferColumnPos:           .res  1
+MetatileBuffer:                 .res  13
+
 VRAM_Buffer1_Offset:            .res  1
-VRAM_Buffer1:                   .res  63
+VRAM_Buffer1: .res 84 ; was 63 increase this amount since i'm burning it too quick
 VRAM_Buffer2_Offset:            .res  1
 VRAM_Buffer2:                   .res  34 ; 26 for a column, 3 for address and size 
 
@@ -195,7 +241,7 @@ BowserOrigXPos:                 .res  1
 BowserFlameTimerCtrl:           .res  1
 BowserFront_Offset:             .res  1
 BridgeCollapseOffset:           .res  1
-BowserGfxFlag:                  .res  30
+BowserGfxFlag:                  .res  1
 
 FirebarSpinSpeed:               .res  16
 
@@ -273,8 +319,8 @@ PiranhaPlantDownYPos          = Enemy_Y_MoveForce
 Enemy_Y_MoveForce:              .res  8
 
 Block_Y_MoveForce:              .res  20
-MaximumLeftSpeed:               .res  6
-MaximumRightSpeed:              .res  20
+MaximumLeftSpeed:               .res  1 ; was 6 - can be 1
+MaximumRightSpeed:              .res  1 ; was 20 - can be 1
 
 Whirlpool_Offset              = Cannon_Offset
 Cannon_Offset:                  .res  1
@@ -313,10 +359,7 @@ BoundingBox_DR_XPos           = BoundingBox_LR_Corner
 
 BoundingBox_DR_YPos:            .res  1
 EnemyBoundingBoxCoord:          .res  80
-Block_Buffer_1:                 .res  208
-Block_Buffer_2:                 .res  208
-BlockBufferColumnPos:           .res  1
-MetatileBuffer:                 .res  13
+
 HammerEnemyOffset:              .res  9
 JumpCoinMiscOffset:             .res  5
 BrickCoinTimerFlag:             .res  2
@@ -338,26 +381,17 @@ JumpspringForce:                .res  1
 MaxRangeFromOrigin:             .res  1
 BitMFilter:                     .res  1
 ChangeAreaTimer:                .res  2
-SprShuffleAmtOffset:            .res  1
-SprShuffleAmt:                  .res  3
 
-SprDataOffset:                  .res  1
-Player_SprDataOffset          = SprDataOffset
+PlayerOAMOffset:                .res  1
+CurrentOAMOffset:               .res  1
+SpriteShuffleOffset:            .res  1
+SpriteShuffleTemp:              .res  1
 
-Enemy_SprDataOffset:            .res  7
+A_B_Buttons:                    .res  1
+Up_Down_Buttons:                .res  1
+Left_Right_Buttons:             .res  1
+PreviousA_B_Buttons:            .res  1
 
-Block_SprDataOffset:            .res  2
-Alt_SprDataOffset             = Block_SprDataOffset
-
-Bubble_SprDataOffset:           .res  3
-FBall_SprDataOffset:            .res  2
-
-Misc_SprDataOffset:             .res  9
-
-SavedJoypadBits:                .res  1
-SavedJoypad1Bits              = SavedJoypadBits
-
-SavedJoypad2Bits:               .res  2
 Player_X_Scroll:                .res  1
 Player_XSpeedAbsolute:          .res  1
 FrictionAdderHigh:              .res  1
@@ -421,7 +455,7 @@ EnemyObjectPageSel:             .res  1
 ScreenRoutineTask:              .res  1
 ScrollThirtyTwo:                .res  2
 HorizontalScroll:               .res  1
-VerticalScroll:                 .res  1
+VerticalScroll:                 .res  1 ; jroweboy unused?
 ForegroundScenery:              .res  1
 BackgroundScenery:              .res  1
 CloudTypeOverride:              .res  1
@@ -431,7 +465,19 @@ StarFlagTaskControl:            .res  1
 TimerControl:                   .res  1 ; 0747
 CoinTallyFor1Ups:               .res  1
 SecondaryMsgCounter:            .res  1
-JoypadBitMask:                  .res  4 ; .proc InitializeArea clears the 1st two bytes here and leaves below here alone
+
+; .proc InitializeArea clears the 1st two bytes here and leaves below here alone
+
+InPipeTransition:               .res  1
+PipeXPosition:                  .res  1
+PipeYPosition:                  .res  1
+PipeExitTimer:                  .res  1
+
+; moved from ZP
+DestinationPageLoc:             .res  1
+FirebarSpinDirection          = DestinationPageLoc
+VictoryWalkControl:             .res  5 ; (FirebarSpinDirection shares this)
+
 
 AreaType:                       .res  1 ; 074e
 
@@ -476,7 +522,7 @@ OffScr_AreaNumber:              .res  1
 ScrollFractional:               .res  1
 DisableIntermediate:            .res  1
 PrimaryHardMode:                .res  1
-WorldSelectNumber:              .res  5
+WorldSelectNumber:              .res  1 ; original (5)
 
 ; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
 
@@ -487,13 +533,14 @@ DisableScreenFlag:              .res  1
 ScrollAmount:                   .res  1
 GamePauseStatus:                .res  1
 GamePauseTimer:                 .res  1
-Mirror_PPUCTRL:                .res  1
-Mirror_PPUMASK:                .res  1
+Mirror_PPUCTRL:                 .res  1
+Mirror_PPUMASK:                 .res  1
 NumberOfPlayers:                .res  1 ; jroweboy( this is only 1 byte, was 5)
 
-CurrentBank:    .res 1
-TargetAddrJmp:  .res 1
-TargetAddress:  .res 2
+CurrentBank:                    .res  1
+BankShadow:                     .res  1
+TargetAddrJmp:                  .res  1
+TargetAddress:                  .res  2
 
 IntervalTimerControl:           .res  1
 
@@ -540,33 +587,28 @@ Squ2_SfxLenCounter:             .res  1
 Sfx_SecondaryCounter:           .res  1
 Noise_SfxLenCounter:            .res  1
 DAC_Counter:                    .res  1
-NoiseDataLoopbackOfs:           .res  3
+NoiseDataLoopbackOfs:           .res  1  ; this is only one byte (original 3)
 NoteLengthTblAdder:             .res  1
 AreaMusicBuffer_Alt:            .res  1
 
 PauseModeFlag:                  .res  1
-GroundMusicHeaderOfs:           .res  3
-AltRegContentFlag:              .res  7  ; jroweboy this is only one byte (original 12)
+GroundMusicHeaderOfs:           .res  1  ; this is only one byte (original 3)
+AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (original 12)
 
-ShouldDrawNeck:                 .res  1
-PlayerNeckXOffset:              .res  1
-PlayerNeckLength:               .res  1
-CurrentA:                       .res  1
-NextBank:                       .res  1
 
-    _WarmBootOffset:            .res  1   ; Warm boot offset
+    ; _WarmBootOffset:            .res  1   ; Warm boot offset
 
+; each display has to be 6 ram values because the math routine
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits
-
-ScoreAndCoinDisplay:            .res  27
+ScoreAndCoinDisplay:            .res  24
 PlayerScoreDisplay            = ScoreAndCoinDisplay
+GameTimerDisplay:               .res  6
 
-GameTimerDisplay:               .res  4
 WorldSelectEnableFlag:          .res  1
 
 ContinueWorld:                  .res  1
 
-    _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
+    ; _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
     
 WarmBootValidation:             .res  1
