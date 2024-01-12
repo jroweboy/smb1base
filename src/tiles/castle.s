@@ -22,26 +22,26 @@ CastleMetatiles:
 
 CastleObject:
             jsr GetLrgObjAttrib      ;save lower nybble as starting row
-            sty $07                  ;if starting row is above $0a, game will crash!!!
+            sty R7                   ;if starting row is above $0a, game will crash!!!
             ldy #$04
             jsr ChkLrgObjFixedLength ;load length of castle if not already loaded
             txa                  
             pha                      ;save obj buffer offset to stack
             ldy AreaObjectLength,x   ;use current length as offset for castle data
-            ldx $07                  ;begin at starting row
+            ldx R7                   ;begin at starting row
             lda #$0b
-            sta $06                  ;load upper limit of number of rows to print
+            sta R6                   ;load upper limit of number of rows to print
 CRendLoop:  lda CastleMetatiles,y    ;load current byte using offset
             sta MetatileBuffer,x
             inx                      ;store in buffer and increment buffer offset
-            lda $06
+            lda R6 
             beq ChkCFloor            ;have we reached upper limit yet?
             iny                      ;if not, increment column-wise
             iny                      ;to byte in next row
             iny
             iny
             iny
-            dec $06                  ;move closer to upper limit
+            dec R6                   ;move closer to upper limit
 ChkCFloor:  cpx #$0b                 ;have we reached the row just before floor?
             bne CRendLoop            ;if not, go back and do another row
             pla
@@ -51,7 +51,7 @@ ChkCFloor:  cpx #$0b                 ;have we reached the row just before floor?
             lda AreaObjectLength,x   ;check length
             cmp #$01                 ;if length almost about to expire, put brick at floor
             beq PlayerStop
-            ldy $07                  ;check starting row for tall castle ($00)
+            ldy R7                   ;check starting row for tall castle ($00)
             bne NotTall
             cmp #$03                 ;if found, then check to see if we're at the second column
             beq PlayerStop
@@ -94,14 +94,14 @@ AxeObj:
       sta VRAM_Buffer_AddrCtrl
 
 ChainObj:
-      ldy $00                   ;get value loaded earlier from decoder
+      ldy R0                    ;get value loaded earlier from decoder
       ldx C_ObjectRow-2,y       ;get appropriate row and metatile for object
       lda C_ObjectMetatile-2,y
       jmp ColObj
 
 EmptyBlock:
         jsr GetLrgObjAttrib  ;get row location
-        ldx $07
+        ldx R7 
         lda #$c4
 ColObj: ldy #$00             ;column length of 1
         jmp RenderUnderPart

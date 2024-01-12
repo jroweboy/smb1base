@@ -48,11 +48,11 @@ MoveRedPTroopaUp:
 MoveRedPTroopa:
       inx                 ;increment X for enemy offset
       lda #$03
-      sta $00             ;set downward movement amount here
+      sta R0              ;set downward movement amount here
       lda #$06
-      sta $01             ;set upward movement amount here
+      sta R1              ;set upward movement amount here
       lda #$02
-      sta $02             ;set maximum speed here
+      sta R2              ;set maximum speed here
       tya                 ;set movement direction in A, and
       jmp RedPTroopaGrav  ;jump to move this thing
 

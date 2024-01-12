@@ -77,7 +77,7 @@ NoChgMus:
   lsr
 CycleTwo:
   lsr                        ;if branched here, divide by 2 to cycle every other frame
-  sta $00
+  sta R0 
   farcall CyclePlayerPalettePreload     ;do sub to cycle the palette (note: shares fire flower code)
   jmp SaveAB                 ;then skip this sub to finish up the game engine
 ClrPlrPal:
@@ -120,14 +120,14 @@ UpdateLoop:
     lda Block_RepFlag,x       ;if flag for block object already clear,
     beq NextBUpd              ;branch to move onto next block object
       lda Block_BBuf_Low,x      ;get low byte of block buffer
-      sta $06                   ;store into block buffer address
+      sta R6                    ;store into block buffer address
       lda #$05
-      sta $07                   ;set high byte of block buffer address
+      sta R7                    ;set high byte of block buffer address
       lda Block_Orig_YPos,x     ;get original vertical coordinate of block object
-      sta $02                   ;store here and use as offset to block buffer
+      sta R2                    ;store here and use as offset to block buffer
       tay
       lda Block_Metatile,x      ;get metatile to be written
-      sta ($06),y               ;write it to the block buffer
+      sta (R6) ,y               ;write it to the block buffer
       jsr ReplaceBlockMetatile  ;do sub to replace metatile where block object is
       lda #$00
       sta Block_RepFlag,x       ;clear block object flag
@@ -261,21 +261,21 @@ ProcessWhirlpools:
 WhLoop: lda Whirlpool_LeftExtent,y  ;get left extent of whirlpool
         clc
         adc Whirlpool_Length,y      ;add length of whirlpool
-        sta $02                     ;store result as right extent here
+        sta R2                      ;store result as right extent here
         lda Whirlpool_PageLoc,y     ;get page location
         beq NextWh                  ;if none or page 0, branch to get next data
         adc #$00                    ;add carry
-        sta $01                     ;store result as page location of right extent here
+        sta R1                      ;store result as page location of right extent here
         lda Player_X_Position       ;get player's horizontal position
         sec
         sbc Whirlpool_LeftExtent,y  ;subtract left extent
         lda Player_PageLoc          ;get player's page location
         sbc Whirlpool_PageLoc,y     ;subtract borrow
         bmi NextWh                  ;if player too far left, branch to get next data
-        lda $02                     ;otherwise get right extent
+        lda R2                      ;otherwise get right extent
         sec
         sbc Player_X_Position       ;subtract player's horizontal coordinate
-        lda $01                     ;get right extent's page location
+        lda R1                      ;get right extent's page location
         sbc Player_PageLoc          ;subtract borrow
         bpl WhirlpoolActivate       ;if player within right extent, branch to whirlpool code
 NextWh: dey                         ;move onto next whirlpool data
@@ -285,21 +285,21 @@ ExitWh: rts                         ;leave
 WhirlpoolActivate:
         lda Whirlpool_Length,y      ;get length of whirlpool
         lsr                         ;divide by 2
-        sta $00                     ;save here
+        sta R0                      ;save here
         lda Whirlpool_LeftExtent,y  ;get left extent of whirlpool
         clc
-        adc $00                     ;add length divided by 2
-        sta $01                     ;save as center of whirlpool
+        adc R0                      ;add length divided by 2
+        sta R1                      ;save as center of whirlpool
         lda Whirlpool_PageLoc,y     ;get page location
         adc #$00                    ;add carry
-        sta $00                     ;save as page location of whirlpool center
+        sta R0                      ;save as page location of whirlpool center
         lda FrameCounter            ;get frame counter
         lsr                         ;shift d0 into carry (to run on every other frame)
         bcc WhPull                  ;if d0 not set, branch to last part of code
-        lda $01                     ;get center
+        lda R1                      ;get center
         sec
         sbc Player_X_Position       ;subtract player's horizontal coordinate
-        lda $00                     ;get page location of center
+        lda R0                      ;get page location of center
         sbc Player_PageLoc          ;subtract borrow
         bpl LeftWh                  ;if player to the left of center, branch
         lda Player_X_Position       ;otherwise slowly pull player left, towards the center
@@ -320,10 +320,10 @@ LeftWh: lda Player_CollisionBits    ;get player's collision bits
         adc #$00                    ;add carry
 SetPWh: sta Player_PageLoc          ;set player's new page location
 WhPull: lda #$10
-        sta $00                     ;set vertical movement force
+        sta R0                      ;set vertical movement force
         lda #$01
         sta Whirlpool_Flag          ;set whirlpool flag to be used later
-        sta $02                     ;also set maximum vertical speed
+        sta R2                      ;also set maximum vertical speed
         lsr
         tax                         ;set X for player offset
         jmp ImposeGravity           ;jump to put whirlpool effect on player vertically, do not return
@@ -413,7 +413,7 @@ GetBlankPal:  lda BlankPalette,y       ;get blank palette for palette 3
               bcc GetBlankPal          ;do this until all bytes are copied
               ldx VRAM_Buffer1_Offset  ;get current vram buffer offset
               lda #$03
-              sta $00                  ;set counter here
+              sta R0                   ;set counter here
               lda AreaType             ;get area type
               asl                      ;multiply by 4 to get proper offset
               asl
@@ -422,7 +422,7 @@ GetAreaPal:   lda Palette3Data,y       ;fetch palette to be written based on are
               sta VRAM_Buffer1+3,x     ;store it to overwrite blank palette in vram buffer
               iny
               inx
-              dec $00                  ;decrement counter
+              dec R0                   ;decrement counter
               bpl GetAreaPal           ;do this until the palette is all copied
               ldx VRAM_Buffer1_Offset  ;get current vram buffer offset
               ldy ColorRotateOffset    ;get color cycling offset

@@ -244,11 +244,11 @@ JCoinRun:  txa
            adc #$0d
            tax
            lda #$50                  ;set downward movement amount
-           sta $00
+           sta R0 
            lda #$06                  ;set maximum vertical speed
-           sta $02
+           sta R2 
            lsr                       ;divide by 2 and set
-           sta $01                   ;as upward movement amount (apparently residual)
+           sta R1                    ;as upward movement amount (apparently residual)
            lda #$00                  ;set A to impose gravity on jumping coin
            jsr ImposeGravity         ;do sub to move coin vertically and impose gravity on it
            ldx ObjectOffset          ;get original misc object offset
@@ -286,11 +286,11 @@ ProcHammerObj:
           adc #$0d                   ;proper misc object
           tax                        ;return offset to X
           lda #$10
-          sta $00                    ;set downward movement force
+          sta R0                     ;set downward movement force
           lda #$0f
-          sta $01                    ;set upward movement force (not used)
+          sta R1                     ;set upward movement force (not used)
           lda #$04
-          sta $02                    ;set maximum vertical speed
+          sta R2                     ;set maximum vertical speed
           lda #$00                   ;set A to impose gravity on hammer
           jsr ImposeGravity          ;do sub to impose gravity on hammer and move vertically
           jsr MoveObjectHorizontally ;do sub to move it horizontally
@@ -467,25 +467,25 @@ OffscreenBoundsCheck:
           bne ExtendLB            ;these two will be erased sooner than others if too far left
 LimitB:   adc #$38                ;add 56 pixels to coordinate if hammer bro or piranha plant
 ExtendLB: sbc #$48                ;subtract 72 pixels regardless of enemy object
-          sta $01                 ;store result here
+          sta R1                  ;store result here
           lda ScreenLeft_PageLoc
           sbc #$00                ;subtract borrow from page location of left side
-          sta $00                 ;store result here
+          sta R0                  ;store result here
           lda ScreenRight_X_Pos   ;add 72 pixels to the right side horizontal coordinate
           adc #$48
-          sta $03                 ;store result here
+          sta R3                  ;store result here
           lda ScreenRight_PageLoc     
           adc #$00                ;then add the carry to the page location
-          sta $02                 ;and store result here
+          sta R2                  ;and store result here
           lda Enemy_X_Position,x  ;compare horizontal coordinate of the enemy object
-          cmp $01                 ;to modified horizontal left edge coordinate to get carry
+          cmp R1                  ;to modified horizontal left edge coordinate to get carry
           lda Enemy_PageLoc,x
-          sbc $00                 ;then subtract it from the page coordinate of the enemy object
+          sbc R0                  ;then subtract it from the page coordinate of the enemy object
           bmi TooFar              ;if enemy object is too far left, branch to erase it
           lda Enemy_X_Position,x  ;compare horizontal coordinate of the enemy object
-          cmp $03                 ;to modified horizontal right edge coordinate to get carry
+          cmp R3                  ;to modified horizontal right edge coordinate to get carry
           lda Enemy_PageLoc,x
-          sbc $02                 ;then subtract it from the page coordinate of the enemy object
+          sbc R2                  ;then subtract it from the page coordinate of the enemy object
           bmi ExScrnBd            ;if enemy object is on the screen, leave, do not erase enemy
           lda Enemy_State,x       ;if at this point, enemy is offscreen to the right, so check
           cmp #HammerBro          ;if in state used by spiny's egg, do not erase
@@ -573,10 +573,10 @@ MoveFlyGreenPTroopa:
         and #%01000000             ;check frame counter for d6 set
         bne YSway                  ;branch to move green paratroopa down if set
         ldy #$ff                   ;otherwise set Y to move green paratroopa up
-YSway:  sty $00                    ;store adder here
+YSway:  sty R0                     ;store adder here
         lda Enemy_Y_Position,x
         clc                        ;add or subtract from vertical position
-        adc $00                    ;to give green paratroopa a wavy flight
+        adc R0                     ;to give green paratroopa a wavy flight
         sta Enemy_Y_Position,x
 NoMGPT: rts                        ;leave!
 
@@ -584,7 +584,7 @@ XMoveCntr_GreenPTroopa:
          lda #$13                    ;load preset maximum value for secondary counter
 
 XMoveCntr_Platform:
-         sta $01                     ;store value here
+         sta R1                      ;store value here
          lda FrameCounter
          and #%00000011              ;branch to leave if not on
          bne NoIncXM                 ;every fourth frame
@@ -592,7 +592,7 @@ XMoveCntr_Platform:
          lda XMovePrimaryCounter,x   ;get primary counter
          lsr
          bcs DecSeXM                 ;if d0 of primary counter set, branch elsewhere
-         cpy $01                     ;compare secondary counter to preset maximum value
+         cpy R1                      ;compare secondary counter to preset maximum value
          beq IncPXM                  ;if equal, branch ahead of this part
          inc XMoveSecondaryCounter,x ;increment secondary counter and leave
 NoIncXM: rts
@@ -618,7 +618,7 @@ MoveWithXMCntrs:
          ldy #$02                     ;load alternate value here
 XMRight: sty Enemy_MovingDir,x        ;store as moving direction
          jsr MoveEnemyHorizontally
-         sta $00                      ;save value obtained from sub here
+         sta R0                       ;save value obtained from sub here
          pla                          ;get secondary counter from stack
          sta XMoveSecondaryCounter,x  ;and return to original place
          rts
@@ -691,26 +691,26 @@ FBallB: jsr BoundingBoxCore       ;get bounding box coordinates
 
 GetEnemyBoundBox:
       ldy #$48                 ;store bitmask here for now
-      sty $00
+      sty R0 
       ldy #$44                 ;store another bitmask here for now and jump
       jmp GetMaskedOffScrBits
 
 SmallPlatformBoundBox:
       ldy #$08                 ;store bitmask here for now
-      sty $00
+      sty R0 
       ldy #$04                 ;store another bitmask here for now
 
 GetMaskedOffScrBits:
         lda Enemy_X_Position,x      ;get enemy object position relative
         sec                         ;to the left side of the screen
         sbc ScreenLeft_X_Pos
-        sta $01                     ;store here
+        sta R1                      ;store here
         lda Enemy_PageLoc,x         ;subtract borrow from current page location
         sbc ScreenLeft_PageLoc      ;of left side
         bmi CMBits                  ;if enemy object is beyond left edge, branch
-        ora $01
+        ora R1 
         beq CMBits                  ;if precisely at the left edge, branch
-        ldy $00                     ;if to the right of left edge, use value in $00 for A
+        ldy R0                      ;if to the right of left edge, use value in $00 for A
 CMBits: tya                         ;otherwise use contents of Y
         and Enemy_OffscreenBits     ;preserve bitwise whatever's in here
         sta EnemyOffscrBitsMasked,x ;save masked offscreen bits here
@@ -746,11 +746,11 @@ MoveBoundBoxOffscreen:
       rts
 
 BoundingBoxCore:
-  stx $00                     ;save offset here
+  stx R0                      ;save offset here
   lda SprObject_Rel_YPos,y    ;store object coordinates relative to screen
-  sta $02                     ;vertically and horizontally, respectively
+  sta R2                      ;vertically and horizontally, respectively
   lda SprObject_Rel_XPos,y
-  sta $01
+  sta R1 
   txa                         ;multiply offset by four and save to stack
   asl
   asl
@@ -760,41 +760,41 @@ BoundingBoxCore:
     asl                         ;multiply that by four and use as X
     asl
     tax
-    lda $01                     ;add the first number in the bounding box data to the
+    lda R1                      ;add the first number in the bounding box data to the
     clc                         ;relative horizontal coordinate using enemy object offset
     adc BoundBoxCtrlData,x      ;and store somewhere using same offset * 4
     sta BoundingBox_UL_Corner,y ;store here
-    lda $01
+    lda R1 
     clc
     adc BoundBoxCtrlData+2,x    ;add the third number in the bounding box data to the
     sta BoundingBox_LR_Corner,y ;relative horizontal coordinate and store
     inx                         ;increment both offsets
     iny
-    lda $02                     ;add the second number to the relative vertical coordinate
+    lda R2                      ;add the second number to the relative vertical coordinate
     clc                         ;using incremented offset and store using the other
     adc BoundBoxCtrlData,x      ;incremented offset
     sta BoundingBox_UL_Corner,y
-    lda $02
+    lda R2 
     clc
     adc BoundBoxCtrlData+2,x    ;add the fourth number to the relative vertical coordinate
     sta BoundingBox_LR_Corner,y ;and store
   pla                         ;get original offset loaded into $00 * y from stack
   tay                         ;use as Y
-  ldx $00                     ;get original offset and use as X again
+  ldx R0                      ;get original offset and use as X again
   rts
 
 CheckRightScreenBBox:
        lda ScreenLeft_X_Pos       ;add 128 pixels to left side of screen
        clc                        ;and store as horizontal coordinate of middle
        adc #$80
-       sta $02
+       sta R2 
        lda ScreenLeft_PageLoc     ;add carry to page location of left side of screen
        adc #$00                   ;and store as page location of middle
-       sta $01
+       sta R1 
        lda SprObject_X_Position,x ;get horizontal coordinate
-       cmp $02                    ;compare against middle horizontal coordinate
+       cmp R2                     ;compare against middle horizontal coordinate
        lda SprObject_PageLoc,x    ;get page location
-       sbc $01                    ;subtract from middle page location
+       sbc R1                     ;subtract from middle page location
        bcc CheckLeftScreenBBox    ;if object is on the left side of the screen, branch
        lda BoundingBox_DR_XPos,y  ;check right-side edge of bounding box for offscreen
        bmi NoOfs                  ;coordinates, branch if still on the screen

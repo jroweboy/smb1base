@@ -34,14 +34,14 @@ MovePiranhaPlant:
       bmi ReversePlantSpeed       ;to move enemy upwards out of pipe
       jsr PlayerEnemyDiff         ;get horizontal difference between player and
       bpl ChkPlayerNearPipe       ;piranha plant, and branch if enemy to right of player
-      lda $00                     ;otherwise get saved horizontal difference
+      lda R0                      ;otherwise get saved horizontal difference
       eor #$ff
       clc                         ;and change to two's compliment
       adc #$01
-      sta $00                     ;save as new horizontal difference
+      sta R0                      ;save as new horizontal difference
 
 ChkPlayerNearPipe:
-      lda $00                     ;get saved horizontal difference
+      lda R0                      ;get saved horizontal difference
       cmp #$21
       bcc PutinPipe               ;if player within a certain distance, branch to leave
 
@@ -60,7 +60,7 @@ SetupToMovePPlant:
       lda PiranhaPlantUpYPos,x    ;otherwise get other vertical coordinate (highest point)
 
 RiseFallPiranhaPlant:
-      sta $00                     ;save vertical coordinate here
+      sta R0                      ;save vertical coordinate here
       lda FrameCounter            ;get frame counter
       lsr
       bcc PutinPipe               ;branch to leave if d0 set (execute code every other frame)
@@ -70,7 +70,7 @@ RiseFallPiranhaPlant:
       clc
       adc PiranhaPlant_Y_Speed,x  ;add vertical speed to move up or down
       sta Enemy_Y_Position,x      ;save as new vertical coordinate
-      cmp $00                     ;compare against low or high coordinate
+      cmp R0                      ;compare against low or high coordinate
       bne PutinPipe               ;branch to leave if not yet reached
       lda #$00
       sta PiranhaPlant_MoveFlag,x ;otherwise clear movement flag

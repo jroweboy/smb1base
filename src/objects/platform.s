@@ -190,7 +190,7 @@ ChkForPlayerC_LargeP:
        txa
        jsr GetEnemyBoundBoxOfsArg   ;get bounding box offset in Y
        lda Enemy_Y_Position,x       ;store vertical coordinate in
-       sta $00                      ;temp variable for now
+       sta R0                       ;temp variable for now
        txa                          ;send offset we're on to the stack
        pha
        jsr PlayerCollisionCore      ;do player-to-platform collision detection
@@ -235,7 +235,7 @@ DoBPl: lda Enemy_State,x           ;get object's state (set to $ff or other plat
 CheckBalPlatform:
        tay                         ;save offset from state as Y
        lda PlatformCollisionFlag,x ;get collision flag of platform
-       sta $00                     ;store here
+       sta R0                      ;store here
        lda Enemy_MovingDir,x       ;get moving direction
        beq ChkForFall
        jmp PlatformFall            ;if set, jump here
@@ -244,7 +244,7 @@ ChkForFall:
        lda #$2d                    ;check if platform is above a certain point
        cmp Enemy_Y_Position,x
        bcc ChkOtherForFall         ;if not, branch elsewhere
-       cpy $00                     ;if collision flag is set to same value as
+       cpy R0                      ;if collision flag is set to same value as
        beq MakePlatformFall        ;enemy state, branch to make platforms fall
        clc
        adc #$02                    ;otherwise add 2 pixels to vertical position
@@ -257,7 +257,7 @@ MakePlatformFall:
 ChkOtherForFall:
        cmp Enemy_Y_Position,y      ;check if other platform is above a certain point
        bcc ChkToMoveBalPlat        ;if not, branch elsewhere
-       cpx $00                     ;if collision flag is set to same value as
+       cpx R0                      ;if collision flag is set to same value as
        beq MakePlatformFall        ;enemy state, branch to make platforms fall
        clc
        adc #$02                    ;otherwise add 2 pixels to vertical position
@@ -272,12 +272,12 @@ ChkToMoveBalPlat:
         lda Enemy_Y_MoveForce,x
         clc                         ;add $05 to contents of moveforce, whatever they be
         adc #$05
-        sta $00                     ;store here
+        sta R0                      ;store here
         lda Enemy_Y_Speed,x
         adc #$00                    ;add carry to vertical speed
         bmi PlatDn                  ;branch if moving downwards
         bne PlatUp                  ;branch elsewhere if moving upwards
-        lda $00
+        lda R0 
         cmp #$0b                    ;check if there's still a little force left
         bcc PlatSt                  ;if not enough, branch to stop movement
         bcs PlatUp                  ;otherwise keep branch to move upwards
@@ -314,9 +314,9 @@ DrawEraseRope:
          pha                         ;save two copies of vertical speed to stack
          pha
          jsr SetupPlatformRope       ;do a sub to figure out where to put new bg tiles
-         lda $01                     ;write name table address to vram buffer
+         lda R1                      ;write name table address to vram buffer
          sta VRAM_Buffer1,x          ;first the high byte, then the low
-         lda $00
+         lda R0 
          sta VRAM_Buffer1+1,x
          lda #$02                    ;set length for 2 bytes
          sta VRAM_Buffer1+2,x
@@ -337,9 +337,9 @@ OtherRope:
          pla                         ;pull second copy of vertical speed from stack
          eor #$ff                    ;invert bits to reverse speed
          jsr SetupPlatformRope       ;do sub again to figure out where to put bg tiles  
-         lda $01                     ;write name table address to vram buffer
+         lda R1                      ;write name table address to vram buffer
          sta VRAM_Buffer1+5,x        ;this time we're doing putting tiles for
-         lda $00                     ;the other platform
+         lda R0                      ;the other platform
          sta VRAM_Buffer1+6,x
          lda #$02
          sta VRAM_Buffer1+7,x        ;set length again for 2 bytes
@@ -374,13 +374,13 @@ SetupPlatformRope:
 GetLRp: pha                     ;save modified horizontal coordinate to stack
         lda Enemy_PageLoc,y
         adc #$00                ;add carry to page location
-        sta $02                 ;and save here
+        sta R2                  ;and save here
         pla                     ;pull modified horizontal coordinate
         and #%11110000          ;from the stack, mask out low nybble
         lsr                     ;and shift three bits to the right
         lsr
         lsr
-        sta $00                 ;store result here as part of name table low byte
+        sta R0                  ;store result here as part of name table low byte
         ldx Enemy_Y_Position,y  ;get vertical coordinate
         pla                     ;get second/third copy of vertical speed from stack
         bpl GetHRp              ;skip this part if moving downwards or not at all
@@ -396,24 +396,24 @@ GetHRp: txa                     ;move vertical coordinate to A
         rol                     ;rotate carry to d0, thus d7 and d6 are at 2 LSB
         and #%00000011          ;mask out all bits but d7 and d6, then set
         ora #%00100000          ;d5 to get appropriate high byte of name table
-        sta $01                 ;address, then store
-        lda $02                 ;get saved page location from earlier
+        sta R1                  ;address, then store
+        lda R2                  ;get saved page location from earlier
         and #$01                ;mask out all but LSB
         asl
         asl                     ;shift twice to the left and save with the
-        ora $01                 ;rest of the bits of the high byte, to get
-        sta $01                 ;the proper name table and the right place on it
+        ora R1                  ;rest of the bits of the high byte, to get
+        sta R1                  ;the proper name table and the right place on it
         pla                     ;get modified vertical coordinate from stack
         and #%11100000          ;mask out low nybble and LSB of high nybble
         clc
-        adc $00                 ;add to horizontal part saved here
-        sta $00                 ;save as name table low byte
+        adc R0                  ;add to horizontal part saved here
+        sta R0                  ;save as name table low byte
         lda Enemy_Y_Position,y
         cmp #$e8                ;if vertical position not below the
         bcc ExPRp               ;bottom of the screen, we're done, branch to leave
-        lda $00
+        lda R0 
         and #%10111111          ;mask out d6 of low byte of name table address
-        sta $00
+        sta R0 
 ExPRp:  rts                     ;leave!
 
 InitPlatformFall:
@@ -495,10 +495,10 @@ XMovingPlatform:
 PositionPlayerOnHPlat:
          lda Player_X_Position
          clc                       ;add saved value from second subroutine to
-         adc $00                   ;current player's position to position
+         adc R0                    ;current player's position to position
          sta Player_X_Position     ;player accordingly in horizontal position
          lda Player_PageLoc        ;get player's page location
-         ldy $00                   ;check to see if saved value here is positive or negative
+         ldy R0                    ;check to see if saved value here is positive or negative
          bmi PPHSubt               ;if negative, branch to subtract
          adc #$00                  ;otherwise add carry to page location
          jmp SetPVar               ;jump to skip subtraction
@@ -522,7 +522,7 @@ ExDPl: rts ; TODO check this RTS can be removed                          ;leave
 
 RightPlatform:
        jsr MoveEnemyHorizontally     ;move platform with current horizontal speed, if any
-       sta $00                       ;store saved value here (residual code)
+       sta R0                        ;store saved value here (residual code)
        lda PlatformCollisionFlag,x   ;check collision flag, if no collision between player
        bmi ExRPl                     ;and platform, branch ahead, leave speed unaltered
        lda #$10

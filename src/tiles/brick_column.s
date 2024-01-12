@@ -27,7 +27,7 @@ RowOfSolidBlocks:
          lda SolidBlockMetatiles,y  ;get metatile
 GetRow:  pha                        ;store metatile here
          jsr ChkLrgObjLength        ;get row number, load length
-DrawRow: ldx $07
+DrawRow: ldx R7 
          ldy #$00                   ;set vertical height of 1
          pla
          jmp RenderUnderPart        ;render object
@@ -43,5 +43,5 @@ ColumnOfSolidBlocks:
 GetRow2: pha                        ;save metatile to stack for now
          jsr GetLrgObjAttrib        ;get length and row
          pla                        ;restore metatile
-         ldx $07                    ;get starting row
+         ldx R7                     ;get starting row
          jmp RenderUnderPart        ;now render the column

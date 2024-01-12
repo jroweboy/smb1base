@@ -182,7 +182,7 @@ CreateSpiny:
           tay
           ldx #$02
 DifLoop:  lda PRDiffAdjustData,y     ;get three values and save them
-          sta $01,x                  ;to $01-$03
+          sta R1 ,x                  ;to $01-$03
           iny
           iny                        ;increment Y four bytes for each value
           iny
@@ -249,13 +249,13 @@ InitFlyingCheepCheep:
          lda SecondaryHardMode
          beq MaxCC                  ;if secondary hard mode flag not set, do not increment Y
          iny                        ;otherwise, increment Y to allow as many as four onscreen
-MaxCC:   sty $00                    ;store whatever pseudorandom bits are in Y
-         cpx $00                    ;compare enemy object buffer offset with Y
+MaxCC:   sty R0                     ;store whatever pseudorandom bits are in Y
+         cpx R0                     ;compare enemy object buffer offset with Y
          bcs ChpChpEx               ;if X => Y, branch to leave
          lda PseudoRandomBitReg,x
          and #%00000011             ;get last two bits of LSFR, first part
-         sta $00                    ;and store in two places
-         sta $01
+         sta R0                     ;and store in two places
+         sta R1 
          lda #$fb                   ;set vertical speed for cheep-cheep
          sta Enemy_Y_Speed,x
          lda #$00                   ;load default value
@@ -267,17 +267,17 @@ MaxCC:   sty $00                    ;store whatever pseudorandom bits are in Y
          asl                        ;otherwise, multiply A by 2
 GSeed:   pha                        ;save to stack
          clc
-         adc $00                    ;add to last two bits of LSFR we saved earlier
-         sta $00                    ;save it there
+         adc R0                     ;add to last two bits of LSFR we saved earlier
+         sta R0                     ;save it there
          lda PseudoRandomBitReg+1,x
          and #%00000011             ;if neither of the last two bits of second LSFR set,
          beq RSeed                  ;skip this part and save contents of $00
          lda PseudoRandomBitReg+2,x
          and #%00001111             ;otherwise overwrite with lower nybble of
-         sta $00                    ;third LSFR part
+         sta R0                     ;third LSFR part
 RSeed:   pla                        ;get value from stack we saved earlier
          clc
-         adc $01                    ;add to last two bits of LSFR we saved in other place
+         adc R1                     ;add to last two bits of LSFR we saved in other place
          tay                        ;use as pseudorandom offset here
          lda FlyCCXSpeedData,y      ;get horizontal speed using pseudorandom offset
          sta Enemy_X_Speed,x
@@ -285,7 +285,7 @@ RSeed:   pla                        ;get value from stack we saved earlier
          sta Enemy_MovingDir,x
          lda Player_X_Speed         ;if player moving left or right, branch ahead of this part
          bne D2XPos1
-         ldy $00                    ;get first LSFR or third LSFR lower nybble
+         ldy R0                     ;get first LSFR or third LSFR lower nybble
          tya                        ;and check for d1 set
          and #%00000010
          beq D2XPos1                ;if d1 not set, branch
@@ -356,7 +356,7 @@ StarFChk: dey
           pha                          ;the stack
           lda Enemy_PageLoc,y
           sbc #$00                     ;subtract the carry from the page location
-          sta $00                      ;of the star flag object
+          sta R0                       ;of the star flag object
           lda FireworksCounter         ;get fireworks counter
           clc
           adc Enemy_State,y            ;add state of star flag object (possibly not necessary)
@@ -365,7 +365,7 @@ StarFChk: dey
           clc
           adc FireworksXPosData,y      ;add number based on offset of fireworks counter
           sta Enemy_X_Position,x       ;store as the fireworks object horizontal coordinate
-          lda $00
+          lda R0 
           adc #$00                     ;add carry and store as page location for
           sta Enemy_PageLoc,x          ;the fireworks object
           lda FireworksYPosData,y      ;get vertical position using same offset
@@ -419,7 +419,7 @@ Fr12S:   lda #Spiny
          sta EnemyFrenzyBuffer      ;set spiny identifier in frenzy buffer
          ldy #$02
 LdLDa:   lda LakituDiffAdj,y        ;load values
-         sta $0001,y                ;store in zero page
+         sta a:R0,y                ;store in zero page
          dey
          bpl LdLDa                  ;do this until all values are stired
          jsr PlayerLakituDiff       ;execute sub to set speed and create spinys
@@ -442,16 +442,16 @@ PlayerLakituDiff:
            jsr PlayerEnemyDiff        ;get horizontal difference between enemy and player
            bpl ChkLakDif              ;branch if enemy is to the right of the player
            iny                        ;increment Y for left of player
-           lda $00
+           lda R0 
            eor #$ff                   ;get two's compliment of low byte of horizontal difference
            clc
            adc #$01                   ;store two's compliment as horizontal difference
-           sta $00
-ChkLakDif: lda $00                    ;get low byte of horizontal difference
+           sta R0 
+ChkLakDif: lda R0                     ;get low byte of horizontal difference
            cmp #$3c                   ;if within a certain distance of player, branch
            bcc ChkPSpeed
            lda #$3c                   ;otherwise set maximum distance
-           sta $00
+           sta R0 
            lda Enemy_ID,x             ;check if lakitu is in our current enemy slot
            cmp #Lakitu
            bne ChkPSpeed              ;if not, branch elsewhere
@@ -465,11 +465,11 @@ ChkLakDif: lda $00                    ;get low byte of horizontal difference
            bne ExMoveLak
 SetLMovD:  tya                        ;set horizontal direction depending on horizontal
            sta LakituMoveDirection,x  ;difference between enemy and player if necessary
-ChkPSpeed: lda $00
+ChkPSpeed: lda R0 
            and #%00111100             ;mask out all but four bits in the middle
            lsr                        ;divide masked difference by four
            lsr
-           sta $00                    ;store as new value
+           sta R0                     ;store as new value
            ldy #$00                   ;init offset
            lda Player_X_Speed
            beq SubDifAdj              ;if player not moving horizontally, branch
@@ -491,8 +491,8 @@ ChkSpinyO: lda Enemy_ID,x             ;check for spiny object
 ChkEmySpd: lda Enemy_Y_Speed,x        ;check vertical speed
            bne SubDifAdj              ;branch if nonzero
            ldy #$00                   ;otherwise reinit offset
-SubDifAdj: lda $0001,y                ;get one of three saved values from earlier
-           ldy $00                    ;get saved horizontal difference
+SubDifAdj: lda a:R0,y                 ;get one of three saved values from earlier
+           ldy R0                     ;get saved horizontal difference
 SPixelLak: sec                        ;subtract one for each pixel of horizontal difference
            sbc #$01                   ;from one of three saved values
            dey

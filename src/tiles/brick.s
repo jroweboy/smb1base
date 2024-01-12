@@ -36,14 +36,14 @@ BrickWithCoins:
 
 BrickWithItem:
           jsr GetAreaObjectID         ;save area object ID
-          sty $07              
+          sty R7               
           lda #$00                    ;load default adder for bricks with lines
           ldy AreaType                ;check level type for ground level
           dey
           beq BWithL                  ;if ground type, do not start with 5
           lda #$05                    ;otherwise use adder for bricks without lines
 BWithL:   clc                         ;add object ID to adder
-          adc $07
+          adc R7 
           tay                         ;use as offset for metatile
 DrawQBlk: lda BrickQBlockMetatiles,y  ;get appropriate metatile for brick (question block
           pha                         ;if branched to here from question block routine)
@@ -55,7 +55,7 @@ GetAreaObjectID:
   ;   sec
   ;   sbc #$00   ;possibly residual code
   ;   tay        ;save to Y
-  ldy $00
+  ldy R0 
 ExitDecBlock:
   rts
 
@@ -89,7 +89,7 @@ BumpBlock:
            sta Player_Y_Speed      ;init player's vertical speed
            lda #$fe
            sta Block_Y_Speed,x     ;set vertical speed for block object
-           lda $05                 ;get original metatile from stack
+           lda R5                  ;get original metatile from stack
            jsr BlockBumpedChk      ;do a sub to check which block player bumped head on
            bcc ExitBlockChk        ;if no match was found, branch to leave
            tya                     ;move block number to A
@@ -166,18 +166,18 @@ BrickShatter:
 
 CheckTopOfBlock:
        ldx SprDataOffset_Ctrl  ;load control bit
-       ldy $02                 ;get vertical high nybble offset used in block buffer
+       ldy R2                  ;get vertical high nybble offset used in block buffer
        beq TopEx               ;branch to leave if set to zero, because we're at the top
        tya                     ;otherwise set to A
        sec
        sbc #$10                ;subtract $10 to move up one row in the block buffer
-       sta $02                 ;store as new vertical high nybble offset
+       sta R2                  ;store as new vertical high nybble offset
        tay 
-       lda ($06),y             ;get contents of block buffer in same column, one row up
+       lda (R6) ,y             ;get contents of block buffer in same column, one row up
        cmp #$c2                ;is it a coin? (not underwater)
        bne TopEx               ;if not, branch to leave
        lda #$00
-       sta ($06),y             ;otherwise put blank metatile where coin was
+       sta (R6) ,y             ;otherwise put blank metatile where coin was
        jsr RemoveCoin_Axe      ;write blank metatile to vram buffer
        ldx SprDataOffset_Ctrl  ;get control bit
        jmp SetupJumpCoin       ;create jumping coin object and update coin variables
@@ -231,14 +231,14 @@ SetupJumpCoin:
         jsr FindEmptyMiscSlot  ;set offset for empty or last misc object buffer slot
         lda Block_PageLoc2,x   ;get page location saved earlier
         sta Misc_PageLoc,y     ;and save as page location for misc object
-        lda $06                ;get low byte of block buffer offset
+        lda R6                 ;get low byte of block buffer offset
         asl
         asl                    ;multiply by 16 to use lower nybble
         asl
         asl
         ora #$05               ;add five pixels
         sta Misc_X_Position,y  ;save as horizontal coordinate for misc object
-        lda $02                ;get vertical high nybble offset from earlier
+        lda R2                 ;get vertical high nybble offset from earlier
         adc #$20               ;add 32 pixels for the status bar
         sta Misc_Y_Position,y  ;store as vertical coordinate
 JCoinC: lda #$fb

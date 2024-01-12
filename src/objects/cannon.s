@@ -111,7 +111,7 @@ SetupBB:   sty Enemy_MovingDir,x     ;set bullet bill's moving direction
            dey                       ;decrement to use as offset
            lda BulletBillXSpdData,y  ;get horizontal speed based on moving direction
            sta Enemy_X_Speed,x       ;and store it
-           lda $00                   ;get horizontal difference
+           lda R0                    ;get horizontal difference
            adc #$28                  ;add 40 pixels
            cmp #$50                  ;if less than a certain amount, player is too close
            bcc KillBB                ;to cannon either on left or right side, thus branch
