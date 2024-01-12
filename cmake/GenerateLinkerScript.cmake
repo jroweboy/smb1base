@@ -205,8 +205,9 @@ function(generate_ca65_linker_cmd)
   cmake_path(ABSOLUTE_PATH CFG_CONFIG OUTPUT_VARIABLE ABS_CFG_CONFIG)
   target_sources(${CFG_TARGET} PRIVATE ${ABS_CFG_CONFIG})
 
-  include(DeduplicateDebugSymbols)
-  deduplicate_debug_symbols(TARGET ${CFG_TARGET} FILE $<TARGET_FILE_DIR:${CFG_TARGET}>/${CFG_TARGET}.dbg)
+  # no longer needed with mesen 2
+  # include(DeduplicateDebugSymbols)
+  # deduplicate_debug_symbols(TARGET ${CFG_TARGET} FILE $<TARGET_FILE_DIR:${CFG_TARGET}>/${CFG_TARGET}.dbg)
 
   target_link_options(${CFG_TARGET} PRIVATE
     -C ${ABS_CFG_CONFIG}

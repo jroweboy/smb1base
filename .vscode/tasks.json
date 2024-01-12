@@ -9,10 +9,10 @@
             "args": ["--build", "${config:cmake.buildDirectory}", "--target", "${input:fileAsTarget}^"],
             "presentation": {
                 "echo": true,
-                "reveal": "never",
+                //"reveal": "never",
                 "focus": false,
                 "panel": "shared",
-                "close": true,
+                //"close": true,
                 "showReuseMessage": false,
                 "clear": true
             },
@@ -116,6 +116,21 @@
                             "message": 4
                         }
                     ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
+                    "source": "ca65",
+                    "pattern": [
+                        {
+                            "regexp": "^/(.+):([\\d]+): ?(\\w*): ?(.*)$",
+                            "file": 1,
+                            "line": 2,
+                            "severity": 3,
+                            "message": 4
+                        }
+                    ]
                 }
             ],
             "group": {
@@ -125,7 +140,7 @@
         },
         {
             "label": "compile",
-            "runOptions": {"instanceLimit": 10},
+            "runOptions": {"instanceLimit": 4},
             // "type": "cmake",
             // "command": "build",
             "type": "process",
@@ -203,6 +218,7 @@
                 {
                     "owner": "ca65",
                     "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
                     "source": "ca65",
                     "pattern": [
                         {
@@ -255,7 +271,7 @@
             "id": "inputId",
             "type": "command",
             "command": "watch-run.getFilename",
-            "args" : "compile_one"
+            "args" : "compile"
         },
         {
             "id": "fileAsTarget",
@@ -263,7 +279,7 @@
             "command": "extension.commandvariable.transform",
             "args": {
                 "text": "${command:extension.commandvariable.file.filePosix}",
-                "find": "/c",
+                "find": "^/c",
                 "replace": "C:",
                 "flags": ""
             }

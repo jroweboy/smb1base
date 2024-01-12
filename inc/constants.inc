@@ -7,14 +7,14 @@ __CONSTANTS_INC = 1
 
 ;NES specific hardware defines
 
-PPU_CTRL         = $2000
-PPU_MASK         = $2001
-PPU_STATUS            = $2002
-PPU_SPR_ADDR          = $2003
-PPU_SPR_DATA          = $2004
-PPU_SCROLL_REG        = $2005
-PPU_ADDRESS           = $2006
-PPU_DATA              = $2007
+PPUCTRL               = $2000
+PPUMASK               = $2001
+PPUSTATUS             = $2002
+OAMADDR               = $2003
+OAMDATA               = $2004
+PPUSCROLL             = $2005
+PPUADDR               = $2006
+PPUDATA               = $2007
 
 SND_REGISTER          = $4000
 SND_SQUARE1_REG       = $4000
@@ -24,10 +24,12 @@ SND_NOISE_REG         = $400c
 SND_DELTA_REG         = $4010
 SND_MASTERCTRL_REG    = $4015
 
-SPR_DMA               = $4014
+OAM                   = $02
+OAM_DMA               = $4014
 JOYPAD_PORT           = $4016
 JOYPAD_PORT1          = $4016
 JOYPAD_PORT2          = $4017
+APU_FRAMECOUNTER      = $4017
 
 ;-------------------------------------------------------------------------------------
 ;CONSTANTS
@@ -105,6 +107,107 @@ JumpspringObject      = $32
 BulletBill_CannonVar  = $33
 RetainerObject        = $35
 TallEnemy             = $09
+; powerup constants
+PowerMushroom = $00
+FireFlower    = $01
+PowerStar     = $02
+OneupMushroom = $03
+
+; CHR rom tile constants. PPU address to be specific
+
+BRICK_CHUNK_TILE = $b6
+
+FIREBALL_FIREWORK_EXPLOSION_TILE_1 = $b0
+FIREBALL_FIREWORK_EXPLOSION_TILE_2 = $b1
+FIREBALL_FIREWORK_EXPLOSION_TILE_3 = $b2
+
+; JUMPING_COIN_TILE_1 = $b0
+; JUMPING_COIN_TILE_2 = $b1
+; JUMPING_COIN_TILE_3 = $b2
+; JUMPING_COIN_TILE_4 = $b3
+
+FLOATEY_NUM_00 = $a0
+FLOATEY_NUM_10 = $a1
+FLOATEY_NUM_20 = $a2
+FLOATEY_NUM_40 = $a3
+FLOATEY_NUM_50 = $a4
+FLOATEY_NUM_80 = $a5
+FLOATEY_NUM_0  = $a6
+; FLOATEY_NUM_40 = $ff
+; FLOATEY_NUM_50 = $ff
+; FLOATEY_NUM_80 = $ff
+; FLOATEY_NUM_0  = $ff
+FLOATEY_NUM_1  = $a7
+FLOATEY_NUM_UP = $a8
+
+MUSHROOM_TOP_LEFT  = $86
+MUSHROOM_TOP_RIGHT = $87
+MUSHROOM_BOT_LEFT  = $96
+MUSHROOM_BOT_RIGHT = $97
+
+ONEUP_TOP_LEFT  = $a3
+ONEUP_TOP_RIGHT = $a5
+ONEUP_BOT_LEFT  = $a4
+ONEUP_BOT_RIGHT = $a6
+
+FIREFLOWER_TOP_LEFT = $85
+FIREFLOWER_BOT_LEFT = $95
+
+STAR_TOP_LEFT = $88
+STAR_BOT_LEFT = $98
+
+PLATFORM_GIRDER = $bc
+PLATFORM_CLOUD = $c2
+
+HAMMER_HEAD_1 = $fa
+HAMMER_HEAD_2 = $fc
+HAMMER_TAIL_1 = $fb
+HAMMER_TAIL_2 = $fd
+
+VINE_TILE_1 = $d2
+VINE_TILE_2 = $d3
+
+BRICK_BUMP_TILE_1 = $b7
+BRICK_BUMP_TILE_2 = $b8
+BLOCK_USED_TILE = $b9
+
+FIREBALL_TILE1 = $b4 ; must be consecutive!
+; fireball tile 2 must be b5
+
+GOAL_FLAG_TRIANGLE = $d8
+GOAL_FLAG_SKULL = $d9
+
+BUBBLE_TILE = $92
+
+STAR_FLAG_TOP_LEFT  = $e6
+STAR_FLAG_TOP_RIGHT = $f6
+STAR_FLAG_BOT_LEFT  = $f4
+STAR_FLAG_BOT_RIGHT = $f5
+
+; Metatile constants
+.global BUSH_LEFT_METATILE
+.global BUSH_MIDDLE_METATILE
+.global BUSH_RIGHT_METATILE
+.global BUSH_TOPLEFT_METATILE
+.global BUSH_TOPMIDDLE_METATILE
+
+.global MOUNTAIN_MIDLEFT_METATILE
+.global MOUNTAIN_MIDMID_METATILE
+.global MOUNTAIN_MIDTOP_METATILE
+.global MOUNTAIN_MIDRIGHT_METATILE
+.global MOUNTAIN_BOTRIGHT_METATILE
+.global MOUNTAIN_BOTMID_METATILE
+.global MOUNTAIN_TOPRIGHT_METATILE
+
+.global CRACKED_BRICK_NONSOLID
+.global CLOUD_METATILE
+.global CRACKED_BRICK_METATILE
+.global CRACKED_BRICK_METATILE2
+.global BRIDGE_METATILE
+
+MUSHROOM_BOX_METATILE   = $c0
+FIREFLOWER_BOX_METATILE = $c1
+
 
 .enum
   World1
@@ -132,10 +235,11 @@ TallEnemy             = $09
 .endenum
 
 
-WarmBootOffset        = <_WarmBootOffset
-ColdBootOffset        = <_ColdBootOffset
+WarmBootOffset        = <DisplayDigits
+ColdBootOffset        = <WarmBootValidation
 
-TitleScreenDataOffset = $1ec0                     ; address in CHR ROM for titlescreen nametable layout
+TitleScreenDataOffset = $0ec0                     ; swapped sprites and bg
+
 
 A_Button              = %10000000
 B_Button              = %01000000

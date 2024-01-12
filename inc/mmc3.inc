@@ -50,20 +50,29 @@ IRQENABLE   = $e001
 .macro _BANK_INNER bank, select
 .scope
   ; set fixed $8000 bank bit
-	lda #select | PRG_FIXED_8
+  lda #select | PRG_FIXED_8
   sta BANK_SELECT
-  .if (.match (.left (1, {arg}), #))
-    lda #bank
+  .if .match(bank, x)
+    stx BANK_DATA
+  .elseif .match(bank, y)
+    sty BANK_DATA
   .else
-    lda bank
+    .if (.match (.left (1, {arg}), #))
+      lda #bank
+    .else
+      lda bank
+    .endif
+    sta BANK_DATA
   .endif
-  sta BANK_DATA
 .endscope
 .endmacro
 
 .macro farcall loc, usejmp
 .scope
 .import loc
+.assert .bank(loc) <> .bank(*), error, "Attempting to farcall to the same bank!"
+.assert .bank(loc) <> .bank(LOWCODE), error, "Attempting to farcall to the low bank!"
+.assert .bank(loc) <> .bank(FIXED), error, "Attempting to farcall to the fixed bank!"
   lda #<loc
   sta TargetAddress
   lda #>loc
@@ -75,5 +84,26 @@ IRQENABLE   = $e001
 .else
   jmp FarCallCommon
 .endif
+.endscope
+.endmacro
+
+.macro far function
+.scope
+.ident(.concat("farblock_", .string(function))):
+  lda CurrentBank
+  pha
+    lda #7 | PRG_FIXED_8
+    sta BankShadow
+    sta BANK_SELECT
+    lda #.bank(function)
+    sta BANK_DATA
+.endmacro
+
+.macro endfar
+    lda #7 | PRG_FIXED_8
+    sta BankShadow
+    sta BANK_SELECT
+  pla
+  sta BANK_DATA
 .endscope
 .endmacro

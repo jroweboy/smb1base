@@ -5,14 +5,40 @@ __MEMORY_INC = 1
 ; -------------------------------------------------------------------------------------------------------
 ; ------------------------------R -------A --------M ----------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------
+.globalzp TempReg
+.globalzp R0
+.globalzp R1
+.globalzp R2
+.globalzp R3
+.globalzp R4
+.globalzp R5
+.globalzp R6
+.globalzp R7
 
-.globalzp temp_byte
+.globalzp IrqTemp
+.globalzp IrqR0
+.globalzp IrqR1
+
+.globalzp MainTemp
+.globalzp M0
+.globalzp M1
+.globalzp M2
+.globalzp M3
+
 .globalzp ObjectOffset
 .globalzp FrameCounter
-.globalzp A_B_Buttons
-.globalzp Up_Down_Buttons
-.globalzp Left_Right_Buttons
-.globalzp PreviousA_B_Buttons
+
+; jroweboy moved to zp
+.globalzp SavedJoypadBits
+.globalzp SavedJoypad1Bits
+.globalzp SavedJoypad2Bits
+
+; moved to abs 
+.global A_B_Buttons
+.global Up_Down_Buttons
+.global Left_Right_Buttons
+.global PreviousA_B_Buttons
+
 .globalzp GameEngineSubroutine
 .globalzp Enemy_Flag
 .globalzp Enemy_ID
@@ -27,9 +53,9 @@ __MEMORY_INC = 1
 
 
 .globalzp PlayerFacingDir
-.globalzp FirebarSpinDirection
-.globalzp DestinationPageLoc
-.globalzp VictoryWalkControl
+; .globalzp FirebarSpinDirection
+; .globalzp DestinationPageLoc
+; .globalzp VictoryWalkControl
 .globalzp PowerUpType
 .globalzp FireballBouncingFlag
 .globalzp HammerBroJumpTimer
@@ -116,27 +142,17 @@ __MEMORY_INC = 1
 .globalzp EnemyDataLow
 .globalzp EnemyDataHigh
 
-.globalzp dummylabel
 
-.globalzp NoteLenLookupTblOfs
-.globalzp Square1SoundBuffer
-.globalzp Square2SoundBuffer
-.globalzp NoiseSoundBuffer
-.globalzp AreaMusicBuffer
+.globalzp SpriteLocalTemp
+.globalzp Local_eb
+.globalzp Local_ec
+.globalzp Local_ed
+; .globalzp Local_ee ; jroweboy: unused?
+.globalzp Local_ef
 
 .globalzp MusicData
 .globalzp MusicDataLow
-
 .globalzp MusicDataHigh
-.globalzp MusicOffset_Square2
-.globalzp MusicOffset_Square1
-.globalzp MusicOffset_Triangle
-.globalzp PauseSoundQueue
-.globalzp AreaMusicQueue
-.globalzp EventMusicQueue
-.globalzp NoiseSoundQueue
-.globalzp Square2SoundQueue
-.globalzp Square1SoundQueue
 
 ; .segment "STACK"
 
@@ -146,6 +162,7 @@ __MEMORY_INC = 1
 .global FlagpoleFNum_YMFDummy
 .global FlagpoleScore
 
+.global TempRam
 
 .global FloateyNum_Control
 .global FloateyNum_X_Pos
@@ -154,6 +171,50 @@ __MEMORY_INC = 1
 .global ShellChainCounter
 .global FloateyNum_Timer
 .global DigitModifier
+
+
+.global NmiDisable
+.global NmiSkipped
+
+
+.global IrqOldScroll
+.global IrqNewScroll
+.global IrqPPUCTRL
+.global IrqNextScanline
+
+.global PlayerAngle
+.global GroundBounceChain
+.global BounceForce
+.global AngularMomentum
+.global AngularMomentumTimer
+.global InitialFireballYSpeed
+.global SwitchToMainIRQ
+
+
+.global NoteLenLookupTblOfs
+.global Square1SoundBuffer
+.global Square2SoundBuffer
+.global NoiseSoundBuffer
+.global AreaMusicBuffer
+
+.global MusicOffset_Square2
+.global MusicOffset_Square1
+.global MusicOffset_Triangle
+
+.global PauseSoundQueue
+.global AreaMusicQueue
+.global EventMusicQueue
+.global NoiseSoundQueue
+.global Square2SoundQueue
+.global Square1SoundQueue
+
+StackClear = DigitModifier
+
+.global IrqPointerJmp
+.global IrqPointer
+
+
+; segment "BSS"
 
 .global Sprite_Y_Position
 .global Sprite_Data
@@ -315,26 +376,13 @@ __MEMORY_INC = 1
 .global MaxRangeFromOrigin
 .global BitMFilter
 .global ChangeAreaTimer
-.global SprShuffleAmtOffset
-.global SprShuffleAmt
 
-.global SprDataOffset
-.global Player_SprDataOffset
+.global PlayerOAMOffset
 
-.global Enemy_SprDataOffset
+.global SpriteShuffleOffset
+.global SpriteShuffleTemp
 
-.global Alt_SprDataOffset
-.global Block_SprDataOffset
 
-.global Bubble_SprDataOffset
-.global FBall_SprDataOffset
-
-.global Misc_SprDataOffset
-
-.global SavedJoypad1Bits
-.global SavedJoypadBits
-
-.global SavedJoypad2Bits
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute
 .global FrictionAdderHigh
@@ -457,8 +505,8 @@ __MEMORY_INC = 1
 .global ScrollAmount
 .global GamePauseStatus
 .global GamePauseTimer
-.global Mirror_PPU_CTRL
-.global Mirror_PPU_MASK
+.global Mirror_PPUCTRL
+.global Mirror_PPUMASK
 .global NumberOfPlayers
 .global IntervalTimerControl
 
@@ -478,6 +526,8 @@ __MEMORY_INC = 1
 .global StompTimer
 .global AirBubbleTimer
 
+FRAME_TIMER_COUNT = AirBubbleTimer - Timers
+
 .global ScrollIntervalTimer
 .global EnemyIntervalTimer
 .global BrickCoinTimer
@@ -486,6 +536,9 @@ __MEMORY_INC = 1
 .global ScreenTimer
 .global WorldEndTimer
 .global DemoTimer
+
+ALL_TIMER_COUNT = DemoTimer - Timers
+
 .global PseudoRandomBitReg
 
 .global SoundMemory
@@ -513,11 +566,7 @@ __MEMORY_INC = 1
 .global GroundMusicHeaderOfs
 .global AltRegContentFlag
 
-.global ShouldDrawNeck
-.global PlayerNeckXOffset
-; .global PlayerNeckYOffset
-
-.global _WarmBootOffset
+_WarmBootOffset = DisplayDigits
 
 .global DisplayDigits
 .global TopScoreDisplay
@@ -530,7 +579,7 @@ __MEMORY_INC = 1
 
 .global ContinueWorld
 
-.global _ColdBootOffset
+_ColdBootOffset = WarmBootValidation
 
 .global WarmBootValidation
 

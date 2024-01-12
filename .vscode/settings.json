@@ -3,16 +3,17 @@
     "watch-run.targetList": [
         {
             "target": "/inc/*.inc",
-            "task": "compile_one"
+            "task": "compile"
         },
         {
             "target": "/**/*.s",
-            "task": "compile_one"
+            "task": "compile"
         },
     ],
     "files.autoSave": "afterDelay",
     "cmake.parseBuildDiagnostics": false,
     "cmake.enabledOutputParsers": [],
     "editor.tabSize": 2,
-    "terminal.integrated.showExitAlert": false
+    "terminal.integrated.showExitAlert": false,
+    "cmake.configureOnOpen": true
 }
