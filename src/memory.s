@@ -384,6 +384,8 @@ ChangeAreaTimer:                .res  2
 
 PlayerOAMOffset:                .res  1
 CurrentOAMOffset:               .res  1
+OriginalOAMOffset:              .res  1
+PlatformLastOAMOrder:           .res  1
 SpriteShuffleOffset:            .res  1
 SpriteShuffleTemp:              .res  1
 

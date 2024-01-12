@@ -81,7 +81,6 @@ skipflip:
     rts
   :
   tay
-  clc
   adc #(spr * 4)
   sta CurrentOAMOffset
 .endscope

@@ -376,6 +376,8 @@ StackClear = DigitModifier
 
 .global PlayerOAMOffset
 .global CurrentOAMOffset
+.global OriginalOAMOffset
+.global PlatformLastOAMOrder
 
 .global SpriteShuffleOffset
 .global SpriteShuffleTemp

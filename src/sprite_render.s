@@ -27,9 +27,10 @@ DrawVine:
          clc
          adc VineYPosAdder,y        ;add value using offset in Y to get value
          ldx Vine_ObjOffset,y        ;get offset to vine
-         ldy Enemy_SprDataOffset,x  ;get sprite data offset
-         sty R2                     ;store sprite data offset here
-         jsr SixSpriteStacker       ;stack six sprites on top of each other vertically
+      ;    ldy Enemy_SprDataOffset,x  ;get sprite data offset
+      ReserveSpr 6
+         sty R2                    ;store sprite data offset here
+         jsr SixSpriteStackerVanilla ;stack six sprites on top of each other vertically
          lda Enemy_Rel_XPos         ;get relative horizontal coordinate
          sta Sprite_X_Position,y    ;store in first, third and fifth sprites
          sta Sprite_X_Position+8,y
@@ -48,7 +49,7 @@ DrawVine:
          sta Sprite_Attributes+12,y
          sta Sprite_Attributes+20,y
          ldx #$05                   ;set tiles for six sprites
-VineTL:  lda #$e1                   ;set tile number for sprite
+VineTL:  lda #VINE_TILE_2           ;set tile number for sprite
          sta Sprite_Tilenumber,y
          iny                        ;move offset to next sprite data
          iny
@@ -56,10 +57,11 @@ VineTL:  lda #$e1                   ;set tile number for sprite
          iny
          dex                        ;move onto next sprite
          bpl VineTL                 ;loop until all sprites are done
+      UpdateOAMPosition
          ldy R2                     ;get original offset
          lda R0                     ;get offset to vine adding data
          bne SkpVTop                ;if offset not zero, skip this part
-         lda #$e0
+         lda #VINE_TILE_1
          sta Sprite_Tilenumber,y    ;set other tile number for top of vine
 SkpVTop: ldx #$00                   ;start with the first sprite again
 ChkFTop: lda Vine_Start_Y_Position   ;get original starting vertical coordinate
@@ -79,20 +81,105 @@ NextVSp: iny                        ;move offset to next OAM data
          ldy R0                     ;return offset set earlier
          rts
 
-SixSpriteStacker:
-       ldx #$06           ;do six sprites
-StkLp: sta Sprite_Data,y ;store X or Y coordinate into OAM data
-       clc
-       adc #$08           ;add eight pixels
-       iny
-       iny                ;move offset four bytes forward
-       iny
-       iny
-       dex                ;do another sprite
-       bne StkLp          ;do this until all sprites are done
-       ldy R2             ;get saved OAM data offset and leave
-       rts
 
+FourSpriteStacker:
+  sta R1
+  sty R3
+
+  ; Change the start index for the shuffle each time
+  lda PlatformLastOAMOrder
+  clc
+  adc #3
+  cmp #4
+  bcc @SkipSubtract
+    ; implicit carry set
+    sbc #4
+@SkipSubtract:
+  sta PlatformLastOAMOrder
+
+  ldx #4           ;do six sprites
+@StkLp:
+    ; keep platforms from disappearing with too many on screen
+    lda PlatformLastOAMOrder
+    clc
+    adc #3
+    cmp #4
+    bcc @SkipSubtract1
+      ; implicit carry set
+      sbc #4
+  @SkipSubtract1:
+    sta PlatformLastOAMOrder
+    asl
+    asl
+    clc
+    adc R3
+    tay
+    lda R1
+    sta Sprite_Data,y ;store X or Y coordinate into OAM data
+    clc
+    adc #$08           ;add eight pixels
+    sta R1
+    dex                ;do another sprite
+    bne @StkLp          ;do this until all sprites are done
+  ldy R2            ;get saved OAM data offset and leave
+  rts
+
+SixSpriteStackerVanilla:
+  ldx #$06           ;do six sprites
+@StkLp:
+    sta Sprite_Data,y ;store X or Y coordinate into OAM data
+    clc
+    adc #$08           ;add eight pixels
+    iny
+    iny                ;move offset four bytes forward
+    iny
+    iny
+    dex                ;do another sprite
+    bne @StkLp          ;do this until all sprites are done
+  ldy R2             ;get saved OAM data offset and leave
+  rts
+
+SixSpriteStacker:
+  sta R1
+  sty R3
+
+  ; Change the start index for the shuffle each time
+  lda PlatformLastOAMOrder
+  clc
+  adc #1
+  cmp #6
+  bcc @SkipSubtract
+    ; implicit carry set
+    sbc #6
+@SkipSubtract:
+  sta PlatformLastOAMOrder
+
+  ldx #$06           ;do six sprites
+@loop:
+    ; keep platforms from disappearing with too many on screen
+    lda PlatformLastOAMOrder
+    clc
+    adc #5
+    cmp #6
+    bcc @SkipSubtract1
+      ; implicit carry set
+      sbc #6
+  @SkipSubtract1:
+    sta PlatformLastOAMOrder
+    asl
+    asl
+    clc
+    adc R3
+    tay
+    lda R1
+    sta Sprite_Data,y ;store X or Y coordinate into OAM data
+    clc
+    adc #$08           ;add eight pixels
+    sta R1
+    dex                ;do another sprite
+    bne @loop          ;do this until all sprites are done
+  ldy R2            ;get saved OAM data offset and leave
+  rts
 ;-------------------------------------------------------------------------------------
 
 FirstSprXPos:
@@ -108,16 +195,17 @@ SecondSprYPos:
       .byte $08, $00, $08, $00
 
 FirstSprTilenum:
-      .byte $80, $82, $81, $83
+      .byte HAMMER_HEAD_1, HAMMER_HEAD_2, HAMMER_TAIL_1, HAMMER_TAIL_2
 
 SecondSprTilenum:
-      .byte $81, $83, $80, $82
+      .byte HAMMER_TAIL_1, HAMMER_TAIL_2, HAMMER_HEAD_1, HAMMER_HEAD_2
 
 HammerSprAttrib:
       .byte $03, $03, $c3, $c3
 
 DrawHammer:
-            ldy Misc_SprDataOffset,x    ;get misc object OAM data offset
+            ; ldy Misc_SprDataOffset,x    ;get misc object OAM data offset
+          AllocSpr 2
             lda TimerControl
             bne ForceHPose              ;if master timer control set, skip this part
             lda Misc_State,x            ;otherwise get hammer's state
@@ -165,137 +253,157 @@ NoHOffscr:  rts ; TODO check this RTS can be removed                         ;le
 ;-------------------------------------------------------------------------------------
 
 DrawLargePlatform:
-      ldy Enemy_SprDataOffset,x   ;get OAM data offset
+  ldy AreaType
+  cpy #$03                    ;check for castle-type level
+  beq ShrinkPlatform
+    ldy SecondaryHardMode       ;check for secondary hard mode flag set
+    bne ShrinkPlatform          ;branch if its hardmode
+      AllocSpr 6
       sty R2                      ;store here
       iny                         ;add 3 to it for offset
       iny                         ;to X coordinate
       iny
       lda Enemy_Rel_XPos          ;get horizontal relative coordinate
       jsr SixSpriteStacker        ;store X coordinates using A as base, stack horizontally
+      ldy R2
       ldx ObjectOffset
       lda Enemy_Y_Position,x      ;get vertical coordinate
-      jsr DumpFourSpr             ;dump into first four sprites as Y coordinate
-      ldy AreaType
-      cpy #$03                    ;check for castle-type level
-      beq ShrinkPlatform
-      ldy SecondaryHardMode       ;check for secondary hard mode flag set
-      beq SetLast2Platform        ;branch if not set elsewhere
+      jsr DumpSixSpr             ;dump into first four sprites as Y coordinate
+      jmp ProcessTiles
 
 ShrinkPlatform:
-      lda #$f8                    ;load offscreen coordinate if flag set or castle-type level
+  AllocSpr 4
+  sty R2                     ;store here
+  iny                         ;add 3 to it for offset
+  iny                         ;to X coordinate
+  iny
+  lda Enemy_Rel_XPos          ;get horizontal relative coordinate
+  jsr FourSpriteStacker        ;store X coordinates using A as base, stack horizontally
+  ldx ObjectOffset
+  ldy R2
+  lda Enemy_Y_Position,x      ;get vertical coordinate
+  jsr DumpFourSpr             ;dump into first four sprites as Y coordinate
 
-SetLast2Platform:
-      ldy Enemy_SprDataOffset,x   ;get OAM data offset
-      sta Sprite_Y_Position+16,y  ;store vertical coordinate or offscreen
-      sta Sprite_Y_Position+20,y  ;coordinate into last two sprites as Y coordinate
-      lda #$5b                    ;load default tile for platform (girder)
-      ldx CloudTypeOverride
-      beq SetPlatformTilenum      ;if cloud level override flag not set, use
-      lda #$75                    ;otherwise load other tile for platform (puff)
+ProcessTiles:
+  lda #PLATFORM_GIRDER ; $bc                    ;load default tile for platform (girder)
+  ldx CloudTypeOverride
+  beq SetPlatformTilenum      ;if cloud level override flag not set, use
+  lda #PLATFORM_CLOUD ; $fe                    ;otherwise load other tile for platform (puff)
 
 SetPlatformTilenum:
-        ldx ObjectOffset            ;get enemy object buffer offset
-        iny                         ;increment Y for tile offset
-        jsr DumpSixSpr              ;dump tile number into all six sprites
-        lda #$02                    ;set palette controls
-        iny                         ;increment Y for sprite attributes
-        jsr DumpSixSpr              ;dump attributes into all six sprites
-        inx                         ;increment X for enemy objects
-        jsr GetXOffscreenBits       ;get offscreen bits again
-        dex
-        ldy Enemy_SprDataOffset,x   ;get OAM data offset
-        asl                         ;rotate d7 into carry, save remaining
-        pha                         ;bits to the stack
-        bcc SChk2
-        lda #$f8                    ;if d7 was set, move first sprite offscreen
-        sta Sprite_Y_Position,y
-SChk2:  pla                         ;get bits from stack
-        asl                         ;rotate d6 into carry
-        pha                         ;save to stack
-        bcc SChk3
-        lda #$f8                    ;if d6 was set, move second sprite offscreen
-        sta Sprite_Y_Position+4,y
-SChk3:  pla                         ;get bits from stack
-        asl                         ;rotate d5 into carry
-        pha                         ;save to stack
-        bcc SChk4
-        lda #$f8                    ;if d5 was set, move third sprite offscreen
-        sta Sprite_Y_Position+8,y
-SChk4:  pla                         ;get bits from stack
-        asl                         ;rotate d4 into carry
-        pha                         ;save to stack
-        bcc SChk5
-        lda #$f8                    ;if d4 was set, move fourth sprite offscreen
-        sta Sprite_Y_Position+12,y
-SChk5:  pla                         ;get bits from stack
-        asl                         ;rotate d3 into carry
-        pha                         ;save to stack
-        bcc SChk6
-        lda #$f8                    ;if d3 was set, move fifth sprite offscreen
-        sta Sprite_Y_Position+16,y
-SChk6:  pla                         ;get bits from stack
-        asl                         ;rotate d2 into carry
-        bcc SLChk                   ;save to stack
-        lda #$f8
-        sta Sprite_Y_Position+20,y  ;if d2 was set, move sixth sprite offscreen
-SLChk:  lda Enemy_OffscreenBits     ;check d7 of offscreen bits
-        asl                         ;and if d7 is not set, skip sub
-        bcc ExDLPl
-        jmp MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
-ExDLPl: rts ; TODO check this RTS can be removed
+  ldx ObjectOffset            ;get enemy object buffer offset
+  iny                         ;increment Y for tile offset
+  jsr DumpSixSpr              ;dump tile number into all six sprites
+  lda #$02                    ;set palette controls
+  iny                         ;increment Y for sprite attributes
+  jsr DumpSixSpr              ;dump attributes into all six sprites
+  inx                         ;increment X for enemy objects
+  jsr GetXOffscreenBits       ;get offscreen bits again
+  sta R1                      ;check d7 of offscreen bits
+  ; can't use processor flags because of loop earlier, so we need to cmp #ff
+  ; which indicates that all rows are offscreen
+  cmp #$ff
+  bne :+
+    ldy R2
+    jmp MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
+: 
+  ; at least one sprite is on screen
+  ldx #0
+  ; New offscreen check using the same shuffle constant from earlier
+  ; lda PlatformLastOAMOrder
+  @loop:
+    lda PlatformLastOAMOrder
+    clc
+    adc #5
+    cmp #6
+    bcc @SkipSubtract1
+      ; implicit carry set
+      sbc #6
+  @SkipSubtract1:
+    sta PlatformLastOAMOrder
+
+    lda R1
+    and InversePowerOfTwo,x
+    beq :+
+      ; sprite is offscreen so move it offscreen
+      lda PlatformLastOAMOrder
+      asl
+      asl
+      clc
+      adc R2
+      tay
+      lda #$f8
+      sta Sprite_Y_Position,y
+    :
+
+    inx
+    cpx #6
+    bne @loop
+
+
+  ldx ObjectOffset
+  rts
+
+InversePowerOfTwo:
+.repeat 8, I
+  .byte (1 << (7-I))
+.endrepeat
 
 ;-------------------------------------------------------------------------------------
 
 DrawFloateyNumber_Coin:
-          lda FrameCounter          ;get frame counter
-          lsr                       ;divide by 2
-          bcs NotRsNum              ;branch if d0 not set to raise number every other frame
-          dec Misc_Y_Position,x     ;otherwise, decrement vertical coordinate
-NotRsNum: lda Misc_Y_Position,x     ;get vertical coordinate
-          jsr DumpTwoSpr            ;dump into both sprites
-          lda Misc_Rel_XPos         ;get relative horizontal coordinate
-          sta Sprite_X_Position,y   ;store as X coordinate for first sprite
-          clc
-          adc #$08                  ;add eight pixels
-          sta Sprite_X_Position+4,y ;store as X coordinate for second sprite
-          lda #$02
-          sta Sprite_Attributes,y   ;store attribute byte in both sprites
-          sta Sprite_Attributes+4,y
-          lda #$f7
-          sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
-          lda #$fb                  ;that resemble "200"
-          sta Sprite_Tilenumber+4,y
-          jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
+  lda FrameCounter          ;get frame counter
+  lsr                       ;divide by 2
+  bcs @NotRsNum             ;branch if d0 not set to raise number every other frame
+    dec Misc_Y_Position,x     ;otherwise, decrement vertical coordinate
+@NotRsNum:
+  lda Misc_Y_Position,x     ;get vertical coordinate
+  jsr DumpTwoSpr            ;dump into both sprites
+  lda Misc_Rel_XPos         ;get relative horizontal coordinate
+  sta Sprite_X_Position,y   ;store as X coordinate for first sprite
+  clc
+  adc #$08                  ;add eight pixels
+  sta Sprite_X_Position+4,y ;store as X coordinate for second sprite
+  lda #$02
+  sta Sprite_Attributes,y   ;store attribute byte in both sprites
+  sta Sprite_Attributes+4,y
+  lda #FLOATEY_NUM_20
+  sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
+  lda #FLOATEY_NUM_0                  ;that resemble "200"
+  sta Sprite_Tilenumber+4,y
+  jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
 
 JumpingCoinTiles:
-      .byte $60, $61, $62, $63
+  .byte JUMPING_COIN_TILE_1, JUMPING_COIN_TILE_2
+  .byte JUMPING_COIN_TILE_3, JUMPING_COIN_TILE_4
 
 JCoinGfxHandler:
-         ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
-         lda Misc_State,x            ;get state of misc object
-         cmp #$02                    ;if 2 or greater, 
-         bcs DrawFloateyNumber_Coin  ;branch to draw floatey number
-         lda Misc_Y_Position,x       ;store vertical coordinate as
-         sta Sprite_Y_Position,y     ;Y coordinate for first sprite
-         clc
-         adc #$08                    ;add eight pixels
-         sta Sprite_Y_Position+4,y   ;store as Y coordinate for second sprite
-         lda Misc_Rel_XPos           ;get relative horizontal coordinate
-         sta Sprite_X_Position,y
-         sta Sprite_X_Position+4,y   ;store as X coordinate for first and second sprites
-         lda FrameCounter            ;get frame counter
-         lsr                         ;divide by 2 to alter every other frame
-         and #%00000011              ;mask out d2-d1
-         tax                         ;use as graphical offset
-         lda JumpingCoinTiles,x      ;load tile number
-         iny                         ;increment OAM data offset to write tile numbers
-         jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
-         dey                         ;decrement to get old offset
-         lda #$02
-         sta Sprite_Attributes,y     ;set attribute byte in first sprite
-         lda #$82
-         sta Sprite_Attributes+4,y   ;set attribute byte with vertical flip in second sprite
-         ldx ObjectOffset            ;get misc object offset
+  ;  ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
+  AllocSpr 2
+  lda Misc_State,x            ;get state of misc object
+  cmp #$02                    ;if 2 or greater, 
+  bcs DrawFloateyNumber_Coin  ;branch to draw floatey number
+    lda Misc_Y_Position,x       ;store vertical coordinate as
+    sta Sprite_Y_Position,y     ;Y coordinate for first sprite
+    clc
+    adc #$08                    ;add eight pixels
+    sta Sprite_Y_Position+4,y   ;store as Y coordinate for second sprite
+    lda Misc_Rel_XPos           ;get relative horizontal coordinate
+    sta Sprite_X_Position,y
+    sta Sprite_X_Position+4,y   ;store as X coordinate for first and second sprites
+    lda FrameCounter            ;get frame counter
+    lsr                         ;divide by 2 to alter every other frame
+    and #%00000011              ;mask out d2-d1
+    tax                         ;use as graphical offset
+    lda JumpingCoinTiles,x      ;load tile number
+    iny                         ;increment OAM data offset to write tile numbers
+    jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
+    dey                         ;decrement to get old offset
+    lda #$02
+    sta Sprite_Attributes,y     ;set attribute byte in first sprite
+    lda #$82
+    sta Sprite_Attributes+4,y   ;set attribute byte with vertical flip in second sprite
+    ldx ObjectOffset            ;get misc object offset
 ExJCGfx: rts                         ;leave
 
 ;-------------------------------------------------------------------------------------
@@ -308,69 +416,70 @@ ExJCGfx: rts                         ;leave
 
 ;tiles arranged in top left, right, bottom left, right order
 PowerUpGfxTable:
-      .byte $76, $77, $78, $79 ;regular mushroom
-      .byte $d6, $d6, $d9, $d9 ;fire flower
-      .byte $8d, $8d, $e4, $e4 ;star
-      .byte $76, $77, $78, $79 ;1-up mushroom
+  .byte MUSHROOM_TOP_LEFT, MUSHROOM_TOP_RIGHT, MUSHROOM_BOT_LEFT, MUSHROOM_BOT_RIGHT ;regular mushroom
+  .byte FIREFLOWER_TOP_LEFT, FIREFLOWER_TOP_LEFT, FIREFLOWER_BOT_LEFT, FIREFLOWER_BOT_LEFT ;fire flower
+  .byte STAR_TOP_LEFT, STAR_TOP_LEFT, STAR_BOT_LEFT, STAR_BOT_LEFT ;star
+  .byte ONEUP_TOP_LEFT, ONEUP_TOP_RIGHT, ONEUP_BOT_LEFT, ONEUP_BOT_RIGHT ;1-up mushroom
 
 PowerUpAttributes:
-      .byte $02, $01, $02, $01
+    .byte $02, $01, $02, $01
 
-DrawPowerUp:
-      ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
-      lda Enemy_Rel_YPos         ;get relative vertical coordinate
-      clc
-      adc #$08                   ;add eight pixels
-      sta R2                     ;store result here
-      lda Enemy_Rel_XPos         ;get relative horizontal coordinate
-      sta R5                     ;store here
-      ldx PowerUpType            ;get power-up type
-      lda PowerUpAttributes,x    ;get attribute data for power-up type
-      ora Enemy_SprAttrib+5      ;add background priority bit if set
-      sta R4                     ;store attributes here
-      txa
-      pha                        ;save power-up type to the stack
-      asl
-      asl                        ;multiply by four to get proper offset
-      tax                        ;use as X
-      lda #$01
-      sta R7                     ;set counter here to draw two rows of sprite object
-      sta R3                     ;init d1 of flip control
+.proc DrawPowerUp
+      ; ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
+  AllocSpr 4
+  lda Enemy_Rel_YPos         ;get relative vertical coordinate
+  clc
+  adc #$08                   ;add eight pixels
+  sta R2                     ;store result here
+  lda Enemy_Rel_XPos         ;get relative horizontal coordinate
+  sta R5                     ;store here
+  ldx PowerUpType            ;get power-up type
+  lda PowerUpAttributes,x    ;get attribute data for power-up type
+  ora Enemy_SprAttrib+5      ;add background priority bit if set
+  sta R4                     ;store attributes here
+  txa
+  pha                        ;save power-up type to the stack
+    asl
+    asl                        ;multiply by four to get proper offset
+    tax                        ;use as X
+    lda #$01
+    sta R7                     ;set counter here to draw two rows of sprite object
+    sta R3                     ;init d1 of flip control
 
 PUpDrawLoop:
-        lda PowerUpGfxTable,x      ;load left tile of power-up object
-        sta R0 
-        lda PowerUpGfxTable+1,x    ;load right tile
-        jsr DrawOneSpriteRow       ;branch to draw one row of our power-up object
-        dec R7                     ;decrement counter
-        bpl PUpDrawLoop            ;branch until two rows are drawn
-        ldy Enemy_SprDataOffset+5  ;get sprite data offset again
-        pla                        ;pull saved power-up type from the stack
-        beq PUpOfs                 ;if regular mushroom, branch, do not change colors or flip
-        cmp #$03
-        beq PUpOfs                 ;if 1-up mushroom, branch, do not change colors or flip
-        sta R0                     ;store power-up type here now
-        lda FrameCounter           ;get frame counter
-        lsr                        ;divide by 2 to change colors every two frames
-        and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
-        ora Enemy_SprAttrib+5      ;add background priority bit if any set
-        sta Sprite_Attributes,y    ;set as new palette bits for top left and
-        sta Sprite_Attributes+4,y  ;top right sprites for fire flower and star
-        ldx R0 
-        dex                        ;check power-up type for fire flower
-        beq FlipPUpRightSide       ;if found, skip this part
-        sta Sprite_Attributes+8,y  ;otherwise set new palette bits  for bottom left
-        sta Sprite_Attributes+12,y ;and bottom right sprites as well for star only
-
+      lda PowerUpGfxTable,x      ;load left tile of power-up object
+      sta R0 
+      lda PowerUpGfxTable+1,x    ;load right tile
+      jsr DrawOneSpriteRow       ;branch to draw one row of our power-up object
+      dec R7                     ;decrement counter
+      bpl PUpDrawLoop           ;branch until two rows are drawn
+    ldy Enemy_SprDataOffset+5  ;get sprite data offset again
+  pla                        ;pull saved power-up type from the stack
+  beq PUpOfs                 ;if regular mushroom, branch, do not change colors or flip
+  cmp #$03
+  beq PUpOfs                 ;if 1-up mushroom, branch, do not change colors or flip
+    sta R0                     ;store power-up type here now
+    lda FrameCounter           ;get frame counter
+    lsr                        ;divide by 2 to change colors every two frames
+    and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
+    ora Enemy_SprAttrib+5      ;add background priority bit if any set
+    sta Sprite_Attributes,y    ;set as new palette bits for top left and
+    sta Sprite_Attributes+4,y  ;top right sprites for fire flower and star
+    ldx R0 
+    dex                        ;check power-up type for fire flower
+    beq FlipPUpRightSide       ;if found, skip this part
+      sta Sprite_Attributes+8,y  ;otherwise set new palette bits  for bottom left
+      sta Sprite_Attributes+12,y ;and bottom right sprites as well for star only
 FlipPUpRightSide:
-        lda Sprite_Attributes+4,y
-        ora #%01000000             ;set horizontal flip bit for top right sprite
-        sta Sprite_Attributes+4,y
-        lda Sprite_Attributes+12,y
-        ora #%01000000             ;set horizontal flip bit for bottom right sprite
-        sta Sprite_Attributes+12,y ;note these are only done for fire flower and star power-ups
-PUpOfs: jmp SprObjectOffscrChk     ;jump to check to see if power-up is offscreen at all, then leave
-
+  lda Sprite_Attributes+4,y
+  ora #%01000000             ;set horizontal flip bit for top right sprite
+  sta Sprite_Attributes+4,y
+  lda Sprite_Attributes+12,y
+  ora #%01000000             ;set horizontal flip bit for bottom right sprite
+  sta Sprite_Attributes+12,y ;note these are only done for fire flower and star power-ups
+PUpOfs:
+  jmp SprObjectOffscrChk     ;jump to check to see if power-up is offscreen at all, then leave
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - used in DrawEnemyObjRow to hold sprite tile numbers
@@ -452,7 +561,9 @@ EnemyGfxHandler:
       sta R2 
       lda Enemy_Rel_XPos          ;get enemy object horizontal position
       sta R5                      ;relative to screen
-      ldy Enemy_SprDataOffset,x
+      ; ldy Enemy_SprDataOffset,x
+    AllocSpr 6
+      sty OriginalOAMOffset
       sty Local_eb                     ;get sprite data offset
       lda #$00
       sta VerticalFlipFlag        ;initialize vertical flip flag by default
@@ -719,7 +830,8 @@ DrawEnemyObject:
   jsr DrawEnemyObjRow        ;into sprite data
   jsr DrawEnemyObjRow
   ldx ObjectOffset           ;get enemy object offset
-  ldy Enemy_SprDataOffset,x  ;get sprite data offset
+  ; ldy Enemy_SprDataOffset,x  ;get sprite data offset
+  ldy Local_eb
   lda Local_ef
   cmp #$08                   ;get saved enemy object and check
   bne CheckForVerticalFlip   ;for bullet bill, branch if not found
@@ -926,14 +1038,14 @@ DrawOneSpriteRow:
 
 MoveESprRowOffscreen:
       clc                         ;add A to enemy object OAM data offset
-      adc Enemy_SprDataOffset,x
+      adc OriginalOAMOffset
       tay                         ;use as offset
       lda #$f8
       jmp DumpTwoSpr              ;move first row of sprites offscreen
 
 MoveESprColOffscreen:
       clc                         ;add A to enemy object OAM data offset
-      adc Enemy_SprDataOffset,x
+      adc OriginalOAMOffset
       tay                         ;use as offset
       jsr MoveColOffscreen        ;move first and second row sprites in column offscreen
       sta Sprite_Data+16,y       ;move third row sprite in column offscreen
@@ -947,7 +1059,7 @@ MoveESprColOffscreen:
 ;$05 - relative X position
 
 DefaultBlockObjTiles:
-      .byte $85, $85, $86, $86             ;brick w/ line (these are sprite tiles, not BG!)
+  .byte BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_2, BRICK_BUMP_TILE_2
 
 DrawBlock:
            lda Block_Rel_YPos            ;get relative vertical coordinate of block object
@@ -958,7 +1070,10 @@ DrawBlock:
            sta R4                        ;set attribute byte here
            lsr
            sta R3                        ;set horizontal flip bit here (will not be used)
-           ldy Block_SprDataOffset,x     ;get sprite data offset
+          ;  ldy Block_SprDataOffset,x     ;get sprite data offset
+
+        AllocSpr 4
+           sty OriginalOAMOffset
            ldx #$00                      ;reset X for use as offset to tile data
 DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
            sta R0                        ;set here
@@ -967,17 +1082,18 @@ DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
            cpx #$04                      ;check incremented offset
            bne DBlkLoop                  ;and loop back until all four sprites are done
            ldx ObjectOffset              ;get block object offset
-           ldy Block_SprDataOffset,x     ;get sprite data offset
+          ;  ldy Block_SprDataOffset,x     ;get sprite data offset
+           ldy OriginalOAMOffset
            lda AreaType
            cmp #$01                      ;check for ground level type area
            beq ChkRep                    ;if found, branch to next part
-           lda #$86
+           lda #BRICK_BUMP_TILE_2
            sta Sprite_Tilenumber,y       ;otherwise remove brick tiles with lines
            sta Sprite_Tilenumber+4,y     ;and replace then with lineless brick tiles
 ChkRep:    lda Block_Metatile,x          ;check replacement metatile
            cmp #$c4                      ;if not used block metatile, then
            bne BlkOffscr                 ;branch ahead to use current graphics
-           lda #$87                      ;set A for used block tile
+           lda #BLOCK_USED_TILE          ;set A for used block tile
            iny                           ;increment Y to write to tile bytes
            jsr DumpFourSpr               ;do sub to dump into all four sprites
            dey                           ;return Y to original offset
@@ -1024,7 +1140,8 @@ DrawBrickChunks:
          lda #$03                   ;otherwise set different palette bits
          sta R0 
          lda #$84                   ;and set tile number for brick chunks
-DChunks: ldy Block_SprDataOffset,x  ;get OAM data offset
+DChunks: 
+        AllocSpr 4
          iny                        ;increment to start with tile bytes in OAM
          jsr DumpFourSpr            ;do sub to dump tile number into all four sprites
          lda FrameCounter           ;get frame counter
@@ -1082,7 +1199,7 @@ ExBCDr:  rts                        ;leave
 ;-------------------------------------------------------------------------------------
 
 DrawFireball:
-      ldy FBall_SprDataOffset,x  ;get fireball's sprite data offset
+  AllocSpr 1
       lda Fireball_Rel_YPos      ;get relative vertical coordinate
       sta Sprite_Y_Position,y    ;store as sprite Y coordinate
       lda Fireball_Rel_XPos      ;get relative horizontal coordinate
@@ -1094,7 +1211,7 @@ DrawFirebar:
        lsr
        pha                      ;save result to stack
        and #$01                 ;mask out all but last bit
-       eor #$64                 ;set either tile $64 or $65 as fireball tile
+       eor #FIREBALL_TILE1                 ;set either tile $64 or $65 as fireball tile
        sta Sprite_Tilenumber,y  ;thus tile changes every four frames
        pla                      ;get from stack
        lsr                      ;divide by four again
@@ -1111,7 +1228,8 @@ ExplosionTiles:
       .byte $68, $67, $66
 
 DrawExplosion_Fireball:
-      ldy Alt_SprDataOffset,x  ;get OAM data offset of alternate sort for fireball's explosion
+  AllocSpr 4
+      ; ldy Alt_SprDataOffset,x  ;get OAM data offset of alternate sort for fireball's explosion
       lda Fireball_State,x     ;load fireball state
       inc Fireball_State,x     ;increment state for next frame
       lsr                      ;divide by 2
@@ -1162,8 +1280,9 @@ KillFireBall:
 ;-------------------------------------------------------------------------------------
 
 DrawSmallPlatform:
-       ldy Enemy_SprDataOffset,x   ;get OAM data offset
-       lda #$5b                    ;load tile number for small platforms
+      ;  ldy Enemy_SprDataOffset,x   ;get OAM data offset
+    AllocSpr 6
+       lda #PLATFORM_GIRDER        ;load tile number for small platforms
        iny                         ;increment offset for tile numbers
        jsr DumpSixSpr              ;dump tile number into all six sprites
        iny                         ;increment offset for attributes
@@ -1308,7 +1427,8 @@ LoadNumTiles:
   sta DigitModifier,x          ;store as amount to add to the digit
   jsr AddToScore               ;update the score accordingly
 ChkTallEnemy:
-  ldy Enemy_SprDataOffset,x    ;get OAM data offset for enemy object
+AllocSpr 2
+  ; ldy Enemy_SprDataOffset,x    ;get OAM data offset for enemy object
   lda Enemy_ID,x               ;get enemy object identifier
   cmp #Spiny
   beq FloateyPart              ;branch if spiny
@@ -1326,8 +1446,8 @@ ChkTallEnemy:
   cmp #$02                     ;if enemy state defeated or otherwise
   bcs FloateyPart              ;$02 or greater, branch beyond this part
 GetAltOffset:
-  ldx SprDataOffset_Ctrl       ;load some kind of control bit
-  ldy Alt_SprDataOffset,x      ;get alternate OAM data offset
+  ; ldx SprDataOffset_Ctrl       ;load some kind of control bit
+  ; ldy Alt_SprDataOffset,x      ;get alternate OAM data offset
   ldx ObjectOffset             ;get enemy object offset again
 FloateyPart:
   lda FloateyNum_Y_Pos,x       ;get vertical coordinate for
@@ -1360,25 +1480,25 @@ SetupNumSpr:
 ;data is used as tiles for numbers
 ;that appear when you defeat enemies
 FloateyNumTileData:
-      .byte $ff, $ff ;dummy
-      .byte $f6, $fb ; "100"
-      .byte $f7, $fb ; "200"
-      .byte $f8, $fb ; "400"
-      .byte $f9, $fb ; "500"
-      .byte $fa, $fb ; "800"
-      .byte $f6, $50 ; "1000"
-      .byte $f7, $50 ; "2000"
-      .byte $f8, $50 ; "4000"
-      .byte $f9, $50 ; "5000"
-      .byte $fa, $50 ; "8000"
-      .byte $fd, $fe ; "1-UP"
+  .byte $ff, $ff ;dummy
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_0 ; "100"
+  .byte FLOATEY_NUM_20, FLOATEY_NUM_0 ; "200"
+  .byte FLOATEY_NUM_40, FLOATEY_NUM_0 ; "400"
+  .byte FLOATEY_NUM_50, FLOATEY_NUM_0 ; "500"
+  .byte FLOATEY_NUM_80, FLOATEY_NUM_0 ; "800"
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_00 ; "1000"
+  .byte FLOATEY_NUM_20, FLOATEY_NUM_00 ; "2000"
+  .byte FLOATEY_NUM_40, FLOATEY_NUM_00 ; "4000"
+  .byte FLOATEY_NUM_50, FLOATEY_NUM_00 ; "5000"
+  .byte FLOATEY_NUM_80, FLOATEY_NUM_00 ; "8000"
+  .byte FLOATEY_NUM_1, FLOATEY_NUM_UP ; "1-UP"
 
 ;high nybble is digit number, low nybble is number to
 ;add to the digit of the player's score
 ScoreUpdateData:
-      .byte $ff ;dummy
-      .byte $41, $42, $44, $45, $48
-      .byte $31, $32, $34, $35, $38, $00
+  .byte $ff ;dummy
+  .byte $41, $42, $44, $45, $48
+  .byte $31, $32, $34, $35, $38, $00
 
 .endproc
 
@@ -1391,7 +1511,8 @@ ScoreUpdateData:
 
 
 FlagpoleGfxHandler:
-      ldy Enemy_SprDataOffset,x      ;get sprite data offset for flagpole flag
+    AllocSpr 6
+    sty OriginalOAMOffset
       lda Enemy_Rel_XPos             ;get relative horizontal coordinate
       sta Sprite_X_Position,y        ;store as X coordinate for first sprite
       clc
@@ -1413,10 +1534,10 @@ FlagpoleGfxHandler:
       sta Sprite_Attributes,y        ;set attribute bytes for all three sprites
       sta Sprite_Attributes+4,y
       sta Sprite_Attributes+8,y
-      lda #$7e
+      lda #GOAL_FLAG_TRIANGLE
       sta Sprite_Tilenumber,y        ;put triangle shaped tile
       sta Sprite_Tilenumber+8,y      ;into first and third sprites
-      lda #$7f
+      lda #GOAL_FLAG_SKULL
       sta Sprite_Tilenumber+4,y      ;put skull tile into second sprite
       lda FlagpoleCollisionYPos      ;get vertical coordinate at time of collision
       beq ChkFlagOffscreen           ;if zero, branch ahead
@@ -1434,7 +1555,7 @@ FlagpoleGfxHandler:
 
 ChkFlagOffscreen:
       ldx ObjectOffset               ;get object offset for flag
-      ldy Enemy_SprDataOffset,x      ;get OAM data offset
+      ldy OriginalOAMOffset
       lda Enemy_OffscreenBits        ;get offscreen bits
       and #%00001110                 ;mask out all but d3-d1
       beq ExitDumpSpr                ;if none of these bits set, branch to leave
@@ -1442,29 +1563,29 @@ ChkFlagOffscreen:
 ;-------------------------------------------------------------------------------------
 
 MoveSixSpritesOffscreen:
-      lda #$f8                  ;set offscreen coordinate if jumping here
+  lda #$f8                  ;set offscreen coordinate if jumping here
 
 DumpSixSpr:
-      sta Sprite_Data+20,y      ;dump A contents
-      sta Sprite_Data+16,y      ;into third row sprites
+  sta Sprite_Data+20,y      ;dump A contents
+  sta Sprite_Data+16,y      ;into third row sprites
 
 DumpFourSpr:
-      sta Sprite_Data+12,y      ;into second row sprites
+  sta Sprite_Data+12,y      ;into second row sprites
 
 DumpThreeSpr:
-      sta Sprite_Data+8,y
+  sta Sprite_Data+8,y
 
 DumpTwoSpr:
-      sta Sprite_Data+4,y       ;and into first row sprites
-      sta Sprite_Data,y
+  sta Sprite_Data+4,y       ;and into first row sprites
+  sta Sprite_Data,y
 
 ExitDumpSpr:
-      rts
+  rts
 
 FlagpoleScoreNumTiles:
-      .byte $f9, $50
-      .byte $f7, $50
-      .byte $fa, $fb
-      .byte $f8, $fb
-      .byte $f6, $fb
+  .byte FLOATEY_NUM_50, FLOATEY_NUM_00
+  .byte FLOATEY_NUM_20, FLOATEY_NUM_00
+  .byte FLOATEY_NUM_80, FLOATEY_NUM_0
+  .byte FLOATEY_NUM_40, FLOATEY_NUM_0
+  .byte FLOATEY_NUM_10, FLOATEY_NUM_0
 
