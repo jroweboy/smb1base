@@ -53,9 +53,6 @@ __MEMORY_INC = 1
 
 
 .globalzp PlayerFacingDir
-; .globalzp FirebarSpinDirection
-; .globalzp DestinationPageLoc
-; .globalzp VictoryWalkControl
 .globalzp PowerUpType
 .globalzp FireballBouncingFlag
 .globalzp HammerBroJumpTimer
@@ -461,6 +458,10 @@ StackClear = DigitModifier
 .global PipeXPosition
 .global PipeYPosition
 .global PipeExitTimer
+
+.global FirebarSpinDirection
+.global DestinationPageLoc
+.global VictoryWalkControl
 
 .global AreaType
 

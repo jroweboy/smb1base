@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
   src/objects/cannon.s
   src/objects/cheepcheep.s
   src/objects/fire_bubble.s
+  src/objects/fireball_bubble.s
   src/objects/firebar.s
   src/objects/fireworks.s
   src/objects/frenzy.s

@@ -61,72 +61,10 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   and #$01                  ;mask out all but LSB of page location
   ror                       ;rotate LSB of page location into carry then onto mirror
   rol Mirror_PPUCTRL       ;this is to set the proper PPU name table
-  farcall GetAreaMusic          ;load proper music into queue
-  lda #$38                  ;load sprite shuffle amounts to be used later
-  sta SprShuffleAmt+2
-  lda #$48
-  sta SprShuffleAmt+1
-  lda #$58
-  sta SprShuffleAmt
-  ldx #$0e                  ;load default OAM offsets into $06e4-$06f2
-ShufAmtLoop:
-    lda DefaultSprOffsets,x
-    sta SprDataOffset,x
-    dex                       ;do this until they're all set
-    bpl ShufAmtLoop
-  ldy #$03                  ;set up sprite #0
-ISpr0Loop:
-    lda Sprite0Data,y
-    sta Sprite_Data,y
-    dey
-    bpl ISpr0Loop
-  ; jsr DoNothing2            ;these jsrs doesn't do anything useful
-  ; jsr DoNothing1
+  jsr GetAreaMusic          ;load proper music into queue
   inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
   rts
-
-DefaultSprOffsets:
-      .byte $04, $30, $48, $60, $78, $90, $a8, $c0
-      .byte $d8, $e8, $24, $f8, $fc, $28, $2c
-
-Sprite0Data:
-      .byte $18, $ff, $23, $58
-
-;-------------------------------------------------------------------------------------
-.export PauseRoutine
-PauseRoutine:
-               lda OperMode           ;are we in victory mode?
-               cmp #MODE_VICTORY  ;if so, go ahead
-               beq ChkPauseTimer
-               cmp #MODE_GAMEPLAY     ;are we in game mode?
-               bne ExitPause          ;if not, leave
-               lda OperMode_Task      ;if we are in game mode, are we running game engine?
-               cmp #$03
-               bne ExitPause          ;if not, leave
-ChkPauseTimer: lda GamePauseTimer     ;check if pause timer is still counting down
-               beq ChkStart
-               dec GamePauseTimer     ;if so, decrement and leave
-               rts
-ChkStart:      lda SavedJoypad1Bits   ;check to see if start is pressed
-               and #Start_Button      ;on controller 1
-               beq ClrPauseTimer
-               lda GamePauseStatus    ;check to see if timer flag is set
-               and #%10000000         ;and if so, do not reset timer
-               bne ExitPause
-               lda #$2b               ;set pause timer
-               sta GamePauseTimer
-               lda GamePauseStatus
-               tay
-               iny                    ;set pause sfx queue for next pause mode
-               sty PauseSoundQueue
-               eor #%00000001         ;invert d0 and set d7
-               ora #%10000000
-               bne SetPause           ;unconditional branch
-ClrPauseTimer: lda GamePauseStatus    ;clear timer flag if timer is at zero and start button
-               and #%01111111         ;is not pressed
-SetPause:      sta GamePauseStatus
-ExitPause:     rts
 
 ;-------------------------------------------------------------------------------------
 .proc OperModeExecutionTree

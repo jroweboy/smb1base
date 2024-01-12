@@ -6,7 +6,7 @@
 .import InjurePlayer
 
 ; sprite_render.s
-.import DrawFirebar
+.import DrawSingleFireball
 
 .segment "OBJECT"
 
@@ -119,7 +119,7 @@ ProcFirebar:
           jsr GetEnemyOffscreenBits   ;get offscreen information
           lda Enemy_OffscreenBits     ;check for d3 set
           and #%00001000              ;if so, branch to leave
-          bne SkipFBar
+          jne SkipFBar
           lda TimerControl            ;if master timer control set, branch
           bne SusFbar                 ;ahead of this part
           lda FirebarSpinSpeed,x      ;load spinning speed of firebar
@@ -139,8 +139,9 @@ SkpFSte:  clc
           sta FirebarSpinState_High,x
 SetupGFB: sta Local_ef                     ;save high byte of spinning thing, modified or otherwise
           jsr RelativeEnemyPosition   ;get relative coordinates to screen
-          jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
-          ldy Enemy_SprDataOffset,x   ;get OAM data offset
+          AllocSpr 6
+      ;     jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
+      ;     ldy Enemy_SprDataOffset,x   ;get OAM data offset
           lda Enemy_Rel_YPos          ;get relative vertical coordinate
           sta Sprite_Y_Position,y     ;store as Y in OAM data
           sta R7                      ;also save here
@@ -164,9 +165,9 @@ DrawFbar: lda Local_ef                     ;load high byte of spinstate
           lda R0                      ;check which firebar part
           cmp #$04
           bne NextFbar
-          ldy DuplicateObj_Offset     ;if we arrive at fifth firebar part,
-          lda Enemy_SprDataOffset,y   ;get offset from long firebar and load OAM data offset
-          sta R6                      ;using long firebar offset, then store as new one here
+          lda OriginalOAMOffset
+          AllocSpr 6
+          sty R6
 NextFbar: inc R0                      ;move onto the next firebar part
           lda R0 
           cmp Local_ed                     ;if we end up at the maximum part, go on and leave
@@ -212,7 +213,7 @@ SetVFbr: sta Sprite_Y_Position,y  ;store as Y coordinate here
          sta R7                   ;also store here for now
 
 FirebarCollision:
-         jsr DrawFirebar          ;run sub here to draw current tile of firebar
+         jsr DrawSingleFireball   ;run sub here to draw current tile of firebar
          tya                      ;return OAM data offset and save
          pha                      ;to the stack for now
          lda StarInvincibleTimer  ;if star mario invincibility timer
