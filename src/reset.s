@@ -16,7 +16,7 @@
 .segment "VECTORS"
     .word (NonMaskableInterrupt)
     .word (Start)
-    .word ($fff0)  ;unused
+    .word (Local_fff0)  ;unused
 
 .segment "FIXED"
 
@@ -26,12 +26,12 @@
   sei                          ;pretty standard 6502 type init here
   cld
   lda #%00010000               ;init PPU control register 1 
-  sta PPU_CTRL
+  sta PPUCTRL
   ldx #$ff                     ;reset stack pointer
   txs
-: lda PPU_STATUS               ;wait two frames
+: lda PPUSTATUS               ;wait two frames
   bpl :-
-: lda PPU_STATUS
+: lda PPUSTATUS
   bpl :-
   ldy #ColdBootOffset          ;load default cold boot pointer
   ldx #$05                     ;this is where we check for a warm boot
@@ -76,11 +76,11 @@ FinializeMarioInit:
   lda #%00001111
   sta SND_MASTERCTRL_REG       ;enable all sound channels except dmc
   lda #%00000110
-  sta PPU_MASK            ;turn off clipping for OAM and background
+  sta PPUMASK            ;turn off clipping for OAM and background
   jsr MoveAllSpritesOffscreen
   jsr InitializeNameTables     ;initialize both name tables
   inc DisableScreenFlag        ;set flag to disable screen output
-  lda Mirror_PPU_CTRL
+  lda Mirror_PPUCTRL
   ora #%10000000               ;enable NMIs
   jsr WritePPUReg1
 EndlessLoop:
@@ -92,27 +92,27 @@ BankInitValues:
 
 .proc NonMaskableInterrupt
 
-  lda Mirror_PPU_CTRL       ;disable NMIs in mirror reg
+  lda Mirror_PPUCTRL       ;disable NMIs in mirror reg
   and #%01111111            ;save all other bits
-  sta Mirror_PPU_CTRL
+  sta Mirror_PPUCTRL
   and #%01111110            ;alter name table address to be $2800
-  sta PPU_CTRL         ;(essentially $2000) but save other bits
-  lda Mirror_PPU_MASK       ;disable OAM and background display by default
+  sta PPUCTRL         ;(essentially $2000) but save other bits
+  lda Mirror_PPUMASK       ;disable OAM and background display by default
   and #%11100110
   ldy DisableScreenFlag     ;get screen disable flag
   bne ScreenOff             ;if set, used bits as-is
-    lda Mirror_PPU_MASK     ;otherwise reenable bits and save them
+    lda Mirror_PPUMASK     ;otherwise reenable bits and save them
     ora #%00011110
 ScreenOff:
-  sta Mirror_PPU_MASK       ;save bits for later but not in register at the moment
+  sta Mirror_PPUMASK       ;save bits for later but not in register at the moment
   and #%11100111            ;disable screen for now
-  sta PPU_MASK
-  ldx PPU_STATUS            ;reset flip-flop and reset scroll registers to zero
+  sta PPUMASK
+  ldx PPUSTATUS            ;reset flip-flop and reset scroll registers to zero
   lda #$00
   jsr InitScroll
-  sta PPU_SPR_ADDR          ;reset spr-ram address register
-  lda #$02                  ;perform spr-ram DMA access on $0200-$02ff
-  sta SPR_DMA
+  sta OAMADDR          ;reset spr-ram address register
+  lda #OAM                  ;perform spr-ram DMA access on $0200-$02ff
+  sta OAM_DMA
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
   lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
   sta $00
@@ -130,8 +130,8 @@ InitBuffer:
   sta VRAM_Buffer1_Offset,x        
   sta VRAM_Buffer1,x
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
-  lda Mirror_PPU_MASK       ;copy mirror of $2001 to register
-  sta PPU_MASK
+  lda Mirror_PPUMASK       ;copy mirror of $2001 to register
+  sta PPUMASK
   farcall SoundEngine           ;play sound
   jsr ReadJoypads           ;read joypads
   jsr PauseRoutine          ;handle pause
@@ -179,7 +179,7 @@ RotPRandomBit:
   lda Sprite0HitDetectFlag  ;check for flag here
   beq SkipSprite0
 Sprite0Clr:
-    lda PPU_STATUS            ;wait for sprite 0 flag to clear, which will
+    lda PPUSTATUS            ;wait for sprite 0 flag to clear, which will
     and #%01000000            ;not happen until vblank has ended
     bne Sprite0Clr
   lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
@@ -188,7 +188,7 @@ Sprite0Clr:
   jsr MoveSpritesOffscreen
   jsr SpriteShuffler
 Sprite0Hit:
-    lda PPU_STATUS            ;do sprite #0 hit detection
+    lda PPUSTATUS            ;do sprite #0 hit detection
     and #%01000000
     beq Sprite0Hit
   ldy #$14                  ;small delay, to wait until we hit horizontal blank time
@@ -197,156 +197,22 @@ HBlankDelay:
     bne HBlankDelay
 SkipSprite0:
   lda HorizontalScroll      ;set scroll registers from variables
-  sta PPU_SCROLL_REG
+  sta PPUSCROLL
   lda VerticalScroll
-  sta PPU_SCROLL_REG
-  lda Mirror_PPU_CTRL       ;load saved mirror of $2000
+  sta PPUSCROLL
+  lda Mirror_PPUCTRL       ;load saved mirror of $2000
   pha
-    sta PPU_CTRL
+    sta PPUCTRL
     lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
     lsr
     bcs SkipMainOper
     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
-    ; before the frame ends, lets check to see if the neck should be drawn and update it
-    lda ShouldDrawNeck
-    beq SkipMainOper
-      jsr DrawNeck
-      dec ShouldDrawNeck
 SkipMainOper:
-    lda PPU_STATUS            ;reset flip-flop
+    lda PPUSTATUS            ;reset flip-flop
   pla
   ora #%10000000            ;reactivate NMIs
-  sta PPU_CTRL
+  sta PPUCTRL
   rti                       ;we are done until the next frame!
-
-.proc DrawNeck
-.setcpu "6502X"
-
-  lda PlayerGfxOffset
-  lsr
-  lsr
-  lsr
-  tay
-  ; move the head based on the adjustment
-  lda HeadAdjusmentOffset,y
-  tax
-  lda Sprite_Y_Position+4,x
-  sta $00
-  sec
-  sbc PlayerNeckLength
-  bcs :+
-    ; we are offscreen now so make the head offscreen
-    lda #$f8 
-:
-  sta Sprite_Y_Position+4,x
-  sta Sprite_Y_Position+8,x
-  
-  ; offset the neck Y position by one so its below the head bobs
-  inc $00
-  ; if the player is facing left then we want to offset moving sprites
-  ; that arent centered
-  lda #4
-  cpy #4 ; special case the off center sprites
-  bcs SetXOffset
-    lda PlayerFacingDir
-    lsr
-    asl
-    asl
-    sta $01
-    tya
-    adc $01
-    tax
-    lda PlayerNeckXOffsetTable, x
-SetXOffset:
-  clc
-  adc Sprite_X_Position+4
-  sta $01
-  ; divide the neck length by 8 to determine the number of neck sprites
-  lda PlayerNeckLength
-  lsr
-  lsr
-  lsr
-  clc
-  adc #1
-  sta $02
-
-  ldx #$24
-DrawingNeckLoop:
-    lda Sprite_Y_Position, x
-    cmp #$f8
-    bcc NextSprite
-      ; Time to draw a neck sprite here
-      lda #$10
-      sta Sprite_Tilenumber, x
-      lda $01
-      sta Sprite_X_Position, x
-      lda Sprite_Attributes+4
-      sta Sprite_Attributes, x
-      lda $00
-      sta Sprite_Y_Position, x
-      sec
-      sbc #8
-      ; if this current neck sprite has gone off the screen we are done
-      bcc Exit
-      sta $00
-      ; decrement the loop counter and go again
-      dec $02
-      beq Exit
-      ; fallthrough
-NextSprite:
-    ; add 4 to x
-    txa
-    axs #$fc
-    bne DrawingNeckLoop
-Exit:
-  rts
-
-PlayerNeckXOffsetTable:
-; ;big player table facing right
-  .byte $03 ;walking frame 1
-  .byte $04 ;        frame 2
-  .byte $03 ;        frame 3
-  .byte $06 ;skidding
-; facing left
-  .byte $05 ;walking frame 1
-  .byte $04 ;        frame 2
-  .byte $05 ;        frame 3
-  .byte $02 ;skidding
-
-HeadAdjusmentOffset:
-;big player table
-  .byte $00 ;walking frame 1
-  .byte $00 ;        frame 2
-  .byte $00 ;        frame 3
-  .byte $00 ;skidding
-  .byte $00 ;jumping
-  .byte $00 ;swimming frame 1
-  .byte $00 ;         frame 2
-  .byte $00 ;         frame 3
-  .byte $00 ;climbing frame 1
-  .byte $00 ;         frame 2
-  .byte $08 ;crouching
-  .byte $00 ;fireball throwing
-
-;small player table
-  .byte $10 ;walking frame 1
-  .byte $10 ;        frame 2
-  .byte $10 ;        frame 3
-  .byte $10 ;skidding
-  .byte $10 ;jumping
-  .byte $10 ;swimming frame 1
-  .byte $10 ;         frame 2
-  .byte $10 ;         frame 3
-  .byte $10 ;climbing frame 1
-  .byte $10 ;         frame 2
-  .byte $10 ;killed
-
-;used by both player sizes
-  .byte $10 ;small player standing
-  .byte $08 ;intermediate grow frame
-  .byte $00 ;big player standing
-
-.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - vram buffer address table low, also used for pseudorandom bit
@@ -503,90 +369,5 @@ SkipByte:
       bne InitByteLoop
     dex               ;go onto the next page
     bpl InitPageLoop  ;do this until all pages of memory have been erased
-  rts
-.endproc
-
-;-------------------------------------------------------------------------------------
-;$00 - temp joypad bit
-ReadJoypads: 
-  lda #$01               ;reset and clear strobe of joypad ports
-  sta JOYPAD_PORT
-  lsr
-  tax                    ;start with joypad 1's port
-  sta JOYPAD_PORT
-  jsr ReadPortBits
-  inx                    ;increment for joypad 2's port
-ReadPortBits:
-  ldy #$08
-PortLoop:
-  pha                    ;push previous bit onto stack
-    lda JOYPAD_PORT,x      ;read current bit on joypad port
-    sta $00                ;check d1 and d0 of port output
-    lsr                    ;this is necessary on the old
-    ora $00                ;famicom systems in japan
-    lsr
-    pla                    ;read bits from stack
-    rol                    ;rotate bit from carry flag
-    dey
-    bne PortLoop           ;count down bits left
-    sta SavedJoypadBits,x  ;save controller status here always
-    pha
-      and #%00110000         ;check for select or start
-      and JoypadBitMask,x    ;if neither saved state nor current state
-      beq Save8Bits          ;have any of these two set, branch
-    pla
-    and #%11001111         ;otherwise store without select
-    sta SavedJoypadBits,x  ;or start bits and leave
-    rts
-Save8Bits:
-  pla
-  sta JoypadBitMask,x    ;save with all bits in another place and leave
-  rts
-
-;-------------------------------------------------------------------------------------
-;$00 - used for preset value
-.proc SpriteShuffler
-  ; ldy AreaType                ;load level type, likely residual code
-  lda #$28                    ;load preset value which will put it at
-  sta $00                     ;sprite #10
-  ldx #$0e                    ;start at the end of OAM data offsets
-ShuffleLoop:
-    lda SprDataOffset,x         ;check for offset value against
-    cmp $00                     ;the preset value
-    bcc NextSprOffset           ;if less, skip this part
-    ldy SprShuffleAmtOffset     ;get current offset to preset value we want to add
-    clc
-    adc SprShuffleAmt,y         ;get shuffle amount, add to current sprite offset
-    bcc StrSprOffset            ;if not exceeded $ff, skip second add
-    clc
-    adc $00                     ;otherwise add preset value $28 to offset
-StrSprOffset:
-    sta SprDataOffset,x         ;store new offset here or old one if branched to here
-NextSprOffset: 
-    dex                         ;move backwards to next one
-    bpl ShuffleLoop
-  ldx SprShuffleAmtOffset     ;load offset
-  inx
-  cpx #$03                    ;check if offset + 1 goes to 3
-  bne SetAmtOffset            ;if offset + 1 not 3, store
-    ldx #$00                  ;otherwise, init to 0
-SetAmtOffset:
-  stx SprShuffleAmtOffset
-  ldx #$08                    ;load offsets for values and storage
-  ldy #$02
-SetMiscOffset:
-    lda SprDataOffset+5,y       ;load one of three OAM data offsets
-    sta Misc_SprDataOffset-2,x  ;store first one unmodified, but
-    clc                         ;add eight to the second and eight
-    adc #$08                    ;more to the third one
-    sta Misc_SprDataOffset-1,x  ;note that due to the way X is set up,
-    clc                         ;this code loads into the misc sprite offsets
-    adc #$08
-    sta Misc_SprDataOffset,x        
-    dex
-    dex
-    dex
-    dey
-    bpl SetMiscOffset           ;do this until all misc spr offsets are loaded
   rts
 .endproc

@@ -82,8 +82,8 @@ MoveSpritesOffscreen:
 ;-------------------------------------------------------------------------------------
 InitializeNameTables:
 
-  lda PPU_STATUS            ;reset flip-flop
-  lda Mirror_PPU_CTRL       ;load mirror of ppu reg $2000
+  lda PPUSTATUS            ;reset flip-flop
+  lda Mirror_PPUCTRL       ;load mirror of ppu reg $2000
   ora #%00010000            ;set sprites for first 4k and background for second 4k
   and #%11110000            ;clear rest of lower nybble, leave higher alone
   jsr WritePPUReg1
@@ -408,8 +408,8 @@ MushroomIconData:
 ;-------------------------------------------------------------------------------------
 .proc WritePPUReg1
 
-  sta PPU_CTRL         ;write contents of A to PPU register 1
-  sta Mirror_PPU_CTRL       ;and its mirror
+  sta PPUCTRL         ;write contents of A to PPU register 1
+  sta Mirror_PPUCTRL       ;and its mirror
   rts
 .endproc
 
@@ -429,7 +429,7 @@ WriteBufferToScreen:
   lda (R0) ,y               ;load next byte (third)
   asl                       ;shift to left and save in stack
   pha
-    lda Mirror_PPU_CTRL     ;load mirror of $2000,
+    lda Mirror_PPUCTRL     ;load mirror of $2000,
     ora #%00000100            ;set ppu to increment by 32 by default
     bcs SetupWrites           ;if d7 of third byte was clear, ppu will
       and #%11111011            ;only increment by 1
@@ -467,13 +467,13 @@ RepeatByte:
   sta PPU_ADDRESS
 
 UpdateScreen:
-  ldx PPU_STATUS            ;reset flip-flop
+  ldx PPUSTATUS            ;reset flip-flop
   ldy #$00                  ;load first byte from indirect as a pointer
   lda (R0) ,y  
   bne WriteBufferToScreen   ;if byte is zero we have no further updates to make here
 InitScroll:
-  sta PPU_SCROLL_REG        ;store contents of A into scroll registers
-  sta PPU_SCROLL_REG        ;and end whatever subroutine led us here
+  sta PPUSCROLL        ;store contents of A into scroll registers
+  sta PPUSCROLL        ;and end whatever subroutine led us here
   rts
 
 

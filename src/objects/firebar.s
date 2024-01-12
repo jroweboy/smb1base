@@ -137,7 +137,7 @@ SusFbar:  lda FirebarSpinState_High,x ;get high byte of spinstate
 SkpFSte:  clc
           adc #$01                    ;add one to spinning thing to avoid horizontal state
           sta FirebarSpinState_High,x
-SetupGFB: sta $ef                     ;save high byte of spinning thing, modified or otherwise
+SetupGFB: sta Local_ef                     ;save high byte of spinning thing, modified or otherwise
           jsr RelativeEnemyPosition   ;get relative coordinates to screen
           jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
           ldy Enemy_SprDataOffset,x   ;get OAM data offset
@@ -155,10 +155,10 @@ SetupGFB: sta $ef                     ;save high byte of spinning thing, modifie
           cmp #$1f                    ;are we doing a long firebar?
           bcc SetMFbar                ;no, branch then
           ldy #$0b                    ;otherwise load value for long firebars
-SetMFbar: sty $ed                     ;store maximum value for length of firebars
+SetMFbar: sty Local_ed                     ;store maximum value for length of firebars
           lda #$00
           sta R0                      ;initialize counter here
-DrawFbar: lda $ef                     ;load high byte of spinstate
+DrawFbar: lda Local_ef                     ;load high byte of spinstate
           jsr GetFirebarPosition      ;get fireball position data depending on firebar part
           jsr DrawFirebar_Collision   ;position it properly, draw it and do collision detection
           lda R0                      ;check which firebar part
@@ -169,7 +169,7 @@ DrawFbar: lda $ef                     ;load high byte of spinstate
           sta R6                      ;using long firebar offset, then store as new one here
 NextFbar: inc R0                      ;move onto the next firebar part
           lda R0 
-          cmp $ed                     ;if we end up at the maximum part, go on and leave
+          cmp Local_ed                     ;if we end up at the maximum part, go on and leave
           bcc DrawFbar                ;otherwise go back and do another
 SkipFBar: rts
 

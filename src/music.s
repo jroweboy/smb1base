@@ -308,7 +308,7 @@ DecrementSfx1Length:
 
 StopSquare1Sfx:
         ldx #$00                ;if end of sfx reached, clear buffer
-        stx $f1                 ;and stop making the sfx
+        stx Square1SoundBuffer  ;and stop making the sfx
         ldx #$0e
         stx SND_MASTERCTRL_REG
         ldx #$0f

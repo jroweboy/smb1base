@@ -1072,7 +1072,7 @@ ChkCollSize:
         dey                         ;otherwise decrement offset
 GBBAdr:
   lda BlockBufferAdderData,y  ;get value using offset
-  sta $eb                     ;store value here
+  sta Local_eb                     ;store value here
   tay                         ;put value into Y, as offset for block buffer routine
   ldx PlayerSize              ;get player's size as offset
   lda CrouchingFlag
@@ -1110,7 +1110,7 @@ NYSpd:
   sta Player_Y_Speed     ;jump or swim
 
 DoFootCheck:
-  ldy $eb                    ;get block buffer adder offset
+  ldy Local_eb                    ;get block buffer adder offset
   lda Player_Y_Position
   cmp #$cf                   ;check to see how low player is
   bcs DoPlayerSideCheck      ;if player is too far down on screen, skip all of this
@@ -1227,14 +1227,14 @@ CheckNeckCollison:
 BasePlayerSideCheck:
   lda #0
   sta PlayerNeckTemp
-  ldy $eb       ;get block buffer adder offset
+  ldy Local_eb       ;get block buffer adder offset
   iny
   iny           ;increment offset 2 bytes to use adders for side collisions
   lda #2
   sta R0 
 SideCheckLoop:
   iny                       ;move onto the next one
-  sty $eb                   ;store it
+  sty Local_eb                   ;store it
   lda Player_Y_Position
   cmp #$20                  ;check player's vertical position
   bcc BHalf                 ;if player is in status bar area, branch ahead to skip this part
@@ -1249,7 +1249,7 @@ SideCheckLoop:
     jsr CheckForClimbMTiles   ;do sub to see if player bumped into anything climbable
     bcc CheckSideMTiles       ;if not, branch to alternate section of code
 BHalf:
-  ldy $eb                   ;load block adder offset
+  ldy Local_eb                   ;load block adder offset
   iny                       ;increment it
   lda Player_Y_Position     ;get player's vertical position
   cmp #$08
@@ -1595,8 +1595,8 @@ DoEnemySideCheck:
           bcc ExESdeC
           ldy #$16                   ;start by finding block to the left of enemy ($00,$14)
           lda #$02                   ;set value here in what is also used as
-          sta $eb                    ;OAM data offset
-SdeCLoop: lda $eb                    ;check value
+          sta Local_eb                    ;OAM data offset
+SdeCLoop: lda Local_eb                    ;check value
           cmp Enemy_MovingDir,x      ;compare value against moving direction
           bne NextSdeC               ;branch if different and do not seek block there
           lda #$01                   ;set flag in A for save horizontal coordinate 
@@ -1606,7 +1606,7 @@ SdeCLoop: lda $eb                    ;check value
           beq NextSdeC               ;if nothing found, branch
           jsr ChkForNonSolids        ;check for non-solid blocks
           bne ChkForBump_HammerBroJ  ;branch if not found
-NextSdeC: dec $eb                    ;move to the next direction
+NextSdeC: dec Local_eb                    ;move to the next direction
           iny
           cpy #$18                   ;increment Y, loop only if Y < $18, thus we check
           bcc SdeCLoop               ;enemy ($00, $14) and ($10, $14) pixel coordinates

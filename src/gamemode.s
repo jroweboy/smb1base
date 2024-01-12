@@ -57,10 +57,10 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   lda #$ff
   sta BalPlatformAlignment  ;initialize balance platform assignment flag
   lda ScreenLeft_PageLoc    ;get left side page location
-  lsr Mirror_PPU_CTRL       ;shift LSB of ppu register #1 mirror out
+  lsr Mirror_PPUCTRL       ;shift LSB of ppu register #1 mirror out
   and #$01                  ;mask out all but LSB of page location
   ror                       ;rotate LSB of page location into carry then onto mirror
-  rol Mirror_PPU_CTRL       ;this is to set the proper PPU name table
+  rol Mirror_PPUCTRL       ;this is to set the proper PPU name table
   farcall GetAreaMusic          ;load proper music into queue
   lda #$38                  ;load sprite shuffle amounts to be used later
   sta SprShuffleAmt+2
