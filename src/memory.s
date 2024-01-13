@@ -149,26 +149,9 @@ Local_ed                      = SpriteLocalTemp + 2
 ; Local_ee                      = SpriteLocalTemp + 3 ; jroweboy: unused?
 Local_ef                      = SpriteLocalTemp + 3
 
-NoteLenLookupTblOfs:            .res  1
-Square1SoundBuffer:             .res  1
-Square2SoundBuffer:             .res  1
-NoiseSoundBuffer:               .res  1
-AreaMusicBuffer:                .res  1
-
 MusicData                     = MusicDataLow
 MusicDataLow:                   .res  1
 MusicDataHigh:                  .res  1
-
-MusicOffset_Square2:            .res  1
-MusicOffset_Square1:            .res  1
-MusicOffset_Triangle:           .res  1
-PauseSoundQueue:                .res  1
-AreaMusicQueue:                 .res  1
-EventMusicQueue:                .res  1
-NoiseSoundQueue:                .res  1
-Square2SoundQueue:              .res  1
-Square1SoundQueue:              .res  1
-
 
 NmiTemp:                        .res 2
 NmiR0 = NmiTemp + 0
@@ -182,8 +165,24 @@ M3                             = MainTemp + 3
 M4                             = MainTemp + 4
 
 .segment "SHORTRAM"
+NoteLenLookupTblOfs:            .res  1
+Square1SoundBuffer:             .res  1
+Square2SoundBuffer:             .res  1
+NoiseSoundBuffer:               .res  1
+AreaMusicBuffer:                .res  1
+
+
+MusicOffset_Square2:            .res  1
+MusicOffset_Square1:            .res  1
+MusicOffset_Triangle:           .res  1
+PauseSoundQueue:                .res  1
+AreaMusicQueue:                 .res  1
+EventMusicQueue:                .res  1
+NoiseSoundQueue:                .res  1
+Square2SoundQueue:              .res  1
+Square1SoundQueue:              .res  1
+
 ; start $0100
-PlayerNeckTemp:                 .res  1
 blank_stack:                    .res  8 ; not used
 VerticalFlipFlag:               .res  4 ; jroweboy: this is acutally only one byte?
 FlagpoleFNum_Y_Pos:             .res  1

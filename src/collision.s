@@ -176,8 +176,6 @@ BlockBufferCollision:
     lda SprObject_Y_Position,x  ;get vertical coordinate of object
     clc
     adc BlockBuffer_Y_Adder,y   ;add it to value obtained using Y as offset
-    sec
-    sbc PlayerNeckTemp
     bcc HeadWrapped
     and #%11110000              ;mask out low nybble
     sec
@@ -201,8 +199,6 @@ RetXC:
 RetYC:
   and #%00001111              ;and mask out high nybble
   sta R4                      ;store masked out result here
-  lda #0
-  sta PlayerNeckTemp
   lda R3                      ;get saved content of block buffer
   rts                         ;and leave
 

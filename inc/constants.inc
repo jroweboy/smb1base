@@ -240,8 +240,6 @@ FIREFLOWER_BOX_METATILE = $c1
 WarmBootOffset        = <DisplayDigits
 ColdBootOffset        = <WarmBootValidation
 
-TitleScreenDataOffset = $0ec0                     ; swapped sprites and bg
-
 
 A_Button              = %10000000
 B_Button              = %01000000

@@ -333,30 +333,39 @@ NoAltPal:
 DrawTitleScreen:
   lda OperMode                 ;are we in title screen mode?
   bne IncModeTask_B            ;if not, exit
-  lda #>TitleScreenDataOffset  ;load address $1ec0 into
-  sta PPUADDR              ;the vram address register
-  lda #<TitleScreenDataOffset
-  sta PPUADDR
-  lda #$03                     ;put address $0300 into
-  sta R1                       ;the indirect at $00
-  ldy #$00
-  sty R0 
-  lda PPUDATA                 ;do one garbage read
+far TITLE
+  lda #<TitleScreenData  ;load address $1ec0 into
+  sta R2
+  lda #>TitleScreenData
+  sta R3
+  lda #<VRAM_Buffer1_Offset                     ;put address $0300 into
+  sta R0                       ;the indirect at $00
+  lda #>VRAM_Buffer1_Offset
+  sta R1
+  ldy #0
 OutputTScr:
-  lda PPUDATA                 ;get title screen from chr-rom
-  sta (R0) ,y                  ;store 256 bytes into buffer
+  lda (R2),y
+  sta (R0),y                  ;store 256 bytes into buffer
   iny
   bne ChkHiByte                ;if not past 256 bytes, do not increment
   inc R1                       ;otherwise increment high byte of indirect
+  inc R3
 ChkHiByte:
-  lda R1                       ;check high byte?
-  cmp #$04                     ;at $0400?
+  lda R3                       ;check high byte?
+  cmp #(>TitleScreenData) + 1  ;at $0400?
   bne OutputTScr               ;if not, loop back and do another
-  cpy #$3a                     ;check if offset points past end of data
+  cpy #$10                     ;check if offset points past end of data
   bcc OutputTScr               ;if not, loop back and do another
+endfar
   lda #$05                     ;set buffer transfer control to $0300,
   jmp SetVRAMAddr_B            ;increment task and exit
 
+
+.pushseg
+.segment "TITLE"
+TitleScreenData:
+.incbin "../chr/titlescreen.bin"
+.popseg
 ;-------------------------------------------------------------------------------------
 
 WriteTopScore:
