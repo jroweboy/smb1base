@@ -13,21 +13,16 @@
 .export EnemiesAndLoopsCore
 
 ; gamecore.s
-.export MiscObjectsCore, ProcessAllEnemies
+.export MiscObjectsCore, ProcessSingleEnemy
 
 .segment "OBJECT"
 
 ;-------------------------------------------------------------------------------------
-ProcessAllEnemies:
-  ldx #$00
-ProcELoop:
-    stx ObjectOffset           ;put incremented offset in X as enemy object offset
-    jsr EnemiesAndLoopsCore    ;process enemy objects
-    jsr FloateyNumbersRoutine  ;process floatey numbers
-    inx
-    cpx #$06                   ;do these two subroutines until the whole buffer is done
-    bne ProcELoop
-  rts
+.proc ProcessSingleEnemy
+  stx ObjectOffset
+  jsr EnemiesAndLoopsCore
+  jmp FloateyNumbersRoutine
+.endproc
 
 .proc EnemiesAndLoopsCore
   lda Enemy_Flag,x         ;check data here for MSB set
@@ -207,14 +202,15 @@ SetBBox:
 ;-------------------------------------------------------------------------------------
 
 MiscObjectsCore:
-          ldx #$08          ;set at end of misc object buffer
-MiscLoop: stx ObjectOffset  ;store misc object offset here
-          lda Misc_State,x  ;check misc object state
-          beq MiscLoopBack  ;branch to check next slot
-          asl               ;otherwise shift d7 into carry
-          bcc ProcJumpCoin  ;if d7 not set, jumping coin, thus skip to rest of code here
-          jsr ProcHammerObj ;otherwise go to process hammer,
-          jmp MiscLoopBack  ;then check next slot
+  ldx #$08          ;set at end of misc object buffer
+MiscLoop:
+    stx ObjectOffset  ;store misc object offset here
+    lda Misc_State,x  ;check misc object state
+    beq MiscLoopBack  ;branch to check next slot
+    asl               ;otherwise shift d7 into carry
+    bcc ProcJumpCoin  ;if d7 not set, jumping coin, thus skip to rest of code here
+    jsr ProcHammerObj ;otherwise go to process hammer,
+    jmp MiscLoopBack  ;then check next slot
 
 ;--------------------------------
 ;$00 - used to set downward force
@@ -659,18 +655,18 @@ SetBBox2:  sta Enemy_BoundBoxCtrl,x  ;set bounding box control then leave
 ;this data added to relative coordinates of sprite objects
 ;stored in order: left edge, top edge, right edge, bottom edge
 BoundBoxCtrlData:
-      .byte $02, $08, $0e, $20 
-      .byte $03, $14, $0d, $20
-      .byte $02, $14, $0e, $20
-      .byte $02, $09, $0e, $15
-      .byte $00, $00, $18, $06
-      .byte $00, $00, $20, $0d
-      .byte $00, $00, $30, $0d
-      .byte $00, $00, $08, $08
-      .byte $06, $04, $0a, $08
-      .byte $03, $0e, $0d, $14
-      .byte $00, $02, $10, $15
-      .byte $04, $04, $0c, $1c
+  .byte $02, $08, $0e, $20  ; big mario
+  .byte $03, $14, $0d, $20  ; small mario
+  .byte $02, $14, $0e, $20  ; big mario crouching
+  .byte $02, $09, $0e, $15
+  .byte $00, $00, $18, $06
+  .byte $00, $00, $20, $0d
+  .byte $00, $00, $30, $0d
+  .byte $00, $00, $08, $08
+  .byte $06, $04, $0a, $08
+  .byte $03, $0e, $0d, $14
+  .byte $00, $02, $10, $15
+  .byte $04, $04, $0c, $1c
 
 GetFireballBoundBox:
       txa         ;add seven bytes to offset

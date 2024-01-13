@@ -3,7 +3,7 @@
 .include "player.inc"
 
 ; objects/object.s
-.import FloateyNumbersRoutine, MiscObjectsCore
+.import FloateyNumbersRoutine, MiscObjectsCore, ProcessSingleEnemy
 ; objects/cannon.s
 .import ProcessCannons
 ; music.s
@@ -27,54 +27,183 @@
 
 .segment "CODE"
 
-;-------------------------------------------------------------------------------------
-GameCoreRoutine:
-  ldx CurrentPlayer          ;get which player is on the screen
-  lda SavedJoypadBits,x      ;use appropriate player's controller bits
-  sta SavedJoypadBits        ;as the master controller bits
-  farcall GameRoutines           ;execute one of many possible subs
-  lda OperMode_Task          ;check major task of operating mode
-  cmp #$03                   ;if we are supposed to be here,
-  bcs GameEngine             ;branch to the game engine itself
-    rts
-GameEngine:
-  ; TODO consolidate farcalls
-  farcall ProcFireball_Bubble    ;process fireballs and air bubbles
-  farcall ProcessAllEnemies
+GameCoreSubRoutine:
+  tax
+  jsr JumpEngine
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcessSingleEnemy
+  .word ProcFireball_Bubble
+  .word DONOTHING
+  .word HandleBlocks
+  .word MiscObjectsCore
+  .word ProcessCannons
+  .word ProcessWhirlpools
+  .word FlagpoleRoutine
+
+DONOTHING:
+  rts
+
+.export HandlePlayer
+HandlePlayer:
   jsr GetPlayerOffscreenBits ;get offscreen bits for player object
   jsr RelativePlayerPosition ;get relative coordinates for player object
-  farcall PlayerGfxHandler       ;draw the player
+  farcall PlayerGfxHandler, jmp       ;draw the player
+
+;-------------------------------------------------------------------------------------
+; GameCoreRoutine:
+;   ldx CurrentPlayer          ;get which player is on the screen
+;   lda SavedJoypadBits,x      ;use appropriate player's controller bits
+;   sta SavedJoypadBits        ;as the master controller bits
+;   farcall GameRoutines           ;execute one of many possible subs
+;   lda OperMode_Task          ;check major task of operating mode
+;   cmp #$03                   ;if we are supposed to be here,
+;   bcs GameEngine             ;branch to the game engine itself
+;     rts
+; GameEngine:
+;   ; TODO consolidate farcalls
+;   farcall ProcFireball_Bubble    ;process fireballs and air bubbles
+;   farcall ProcessAllEnemies
+;   jsr GetPlayerOffscreenBits ;get offscreen bits for player object
+;   jsr RelativePlayerPosition ;get relative coordinates for player object
+;   farcall PlayerGfxHandler       ;draw the player
+HandleBlocks:
   jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
   ldx #$01
   stx ObjectOffset           ;set offset for second
   jsr BlockObjectsCore       ;process second block object
   dex
   stx ObjectOffset           ;set offset for first
-  jsr BlockObjectsCore       ;process first block object
+  jmp BlockObjectsCore       ;process first block object
   ; TODO consolidate these farcalls
-  farcall MiscObjectsCore        ;process misc objects (hammer, jumping coins)
-  farcall ProcessCannons         ;process bullet bill cannons
-  jsr ProcessWhirlpools      ;process whirlpools
-  jsr FlagpoleRoutine        ;process the flagpole
-  jsr RunGameTimer           ;count down the game timer
+  ; farcall MiscObjectsCore        ;process misc objects (hammer, jumping coins)
+  ; farcall ProcessCannons         ;process bullet bill cannons
+  ; jsr ProcessWhirlpools      ;process whirlpools
+  ; jsr FlagpoleRoutine        ;process the flagpole
+  ; jsr RunGameTimer           ;count down the game timer
+
+;-------------------------------------------------------------------------------------
+GameCoreRoutine:
+  ; Only use one controller for now.
+  ; ldx CurrentPlayer          ;get which player is on the screen
+  ; lda SavedJoypadBits,x      ;use appropriate player's controller bits
+  ; sta SavedJoypadBits        ;as the master controller bits
+  farcall GameRoutines           ;execute one of many possible subs
+
+  lda GameEngineSubroutine
+  cmp #$0d ;; in bowser cutscene
+  jeq SkipEverythingElse
+
+  lda OperMode_Task          ;check major task of operating mode
+  cmp #$03                   ;if we are supposed to be here,
+  bcs GameEngine             ;branch to the game engine itself
+    rts
+GameEngine:
+  far OBJECT
+    ; If we are going through a pipe, we need to reserve
+    ; 16 sprites (8 for each player overlay)
+
+    ; Check to see if the leader is behind something.
+    ; If they are we want to draw them second
+    lda Player_SprAttrib
+    and #(1 << 5)
+    beq :+ ; not behind the door
+      lda #32
+:
+    ; if we are in a pipe transition, reserve enough for the sprite overlay
+    ldy InPipeTransition
+    beq :+
+      clc 
+      adc #8 * 4
+:
+    sta PlayerOAMOffset
+    sta CurrentOAMOffset
+
+    ; force player to happen first because this is stupid.
+    jsr HandlePlayer
+
+    lda #13 - 1 ; size of the different object update list
+    sta SpriteShuffleTemp
+    lda SpriteShuffleOffset
+    clc
+    adc #7
+    cmp #13
+    bcc @SkipSubtract
+      ; implicit carry set
+      sbc #13
+  @SkipSubtract:
+    sta SpriteShuffleOffset
+  @ObjectLoop:
+      lda SpriteShuffleOffset
+      clc
+      adc #9
+      cmp #13
+      bcc @SkipSubtract1
+        ; implicit carry set
+        sbc #13
+    @SkipSubtract1:
+      sta SpriteShuffleOffset
+      jsr GameCoreSubRoutine
+      dec SpriteShuffleTemp
+      bpl @ObjectLoop
+
+    ; jsr ProcFireball_Bubble    ;process fireballs and air bubbles
+    ; jsr ProcessAllEnemies
+    ; jsr GetPlayerOffscreenBits ;get offscreen bits for player object
+    ; jsr RelativePlayerPosition ;get relative coordinates for player object
+    ; farcall PlayerGfxHandler       ;draw the player
+    ; jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
+    ; ldx #$01
+    ; stx ObjectOffset           ;set offset for second
+    ; jsr BlockObjectsCore       ;process second block object
+    ; dex
+    ; stx ObjectOffset           ;set offset for first
+    ; jsr BlockObjectsCore       ;process first block object
+    ; jsr MiscObjectsCore        ;process misc objects (hammer, jumping coins)
+    ; jsr ProcessCannons         ;process bullet bill cannons
+    ; jsr ProcessWhirlpools      ;process whirlpools
+    ; jsr FlagpoleRoutine        ;process the flagpole
+    ; jsr RunGameTimer           ;count down the game timer
+  endfar
+
+SkipEverythingElse:
   jsr ColorRotation          ;cycle one of the background colors
+    ; Check to see if its time to disable the overlay to give extra time for
+  ; the follower to exit the pipe
+  lda PipeExitTimer
+  beq :+
+    dec PipeExitTimer
+    bne :+
+      ; a == 0 means to disable the pipe transition overlay
+      .import SetupPipeTransitionOverlay
+      lda #0
+      jsr SetupPipeTransitionOverlay
+  :
+  lda InPipeTransition
+  beq :+
+    jsr DrawPipeOverlaySprite
+  :
+
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music
   bpl NoChgMus
-  lda StarInvincibleTimer    ;if star mario invincibility timer at zero,
-  beq ClrPlrPal              ;skip this part
-  cmp #$04
-  bne NoChgMus               ;if not yet at a certain point, continue
-  lda IntervalTimerControl   ;if interval timer not yet expired,
-  bne NoChgMus               ;branch ahead, don't bother with the music
-  jsr GetAreaMusic       ;to re-attain appropriate level music
+    lda StarInvincibleTimer    ;if star mario invincibility timer at zero,
+    beq ClrPlrPal              ;skip this part
+      cmp #$04
+      bne NoChgMus               ;if not yet at a certain point, continue
+        lda IntervalTimerControl   ;if interval timer not yet expired,
+        bne NoChgMus               ;branch ahead, don't bother with the music
+          jsr GetAreaMusic       ;to re-attain appropriate level music
 NoChgMus:
   ldy StarInvincibleTimer    ;get invincibility timer
   lda FrameCounter           ;get frame counter
   cpy #$08                   ;if timer still above certain point,
   bcs CycleTwo               ;branch to cycle player's palette quickly
-  lsr                        ;otherwise, divide by 8 to cycle every eighth frame
-  lsr
+    lsr                      ;otherwise, divide by 8 to cycle every eighth frame
+    lsr
 CycleTwo:
   lsr                        ;if branched here, divide by 2 to cycle every other frame
   sta R0 
@@ -106,6 +235,63 @@ RunParser:
 ExitEng:
   rts                        ;and after all that, we're finally done!
 
+
+.proc DrawPipeOverlaySprite
+  ; if the player is fully in the pipe, move the overlay down with the sprite
+  lda #$fe
+  ; ldx #(0 << 5) | 0 ; debug show the overlay box
+  ldx #(1 << 5) | 2 ; put the overlay sprite in the BACKGROUND with palette 1
+.repeat 8 * 2, I
+  sta Sprite_Tilenumber + (I*4)
+  stx Sprite_Attributes + (I*4)
+.endrepeat
+  lda InPipeTransition
+  cmp #2
+  beq :+
+    lda Player_Rel_XPos
+    jmp SetX
+  :
+  lda PipeXPosition
+  sec
+  sbc ScreenLeft_X_Pos
+SetX:
+.repeat 4 * 2, I
+  sta Sprite_X_Position + (I*4)
+.endrepeat
+  clc
+  adc #8
+.repeat 4 * 2, I
+  sta Sprite_X_Position + (4 * 4 * 2) + (I*4)
+.endrepeat
+  ; and finally pick the lower of the two positions, the player or the pipe
+  lda Player_Y_HighPos
+  cmp #1
+  bne SetToBottomOfScreen
+
+  lda PipeYPosition
+  clc
+  adc #32
+  cmp Player_Y_Position
+  bcs UsePipePosition
+    lda Player_Y_Position
+    jmp DumpYPosition
+SetToBottomOfScreen:
+    lda #255-32
+    .byte $2c
+UsePipePosition:
+  lda PipeYPosition
+DumpYPosition:
+.repeat 4 * 2, I
+    sta Sprite_Y_Position + (I * 4)
+    sta Sprite_Y_Position + (I * 4) + (4 * 4 * 2)
+.if I <> (4 * 2 - 1)
+    clc
+    adc #8
+.endif
+.endrepeat
+  rts
+
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer

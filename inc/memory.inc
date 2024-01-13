@@ -220,6 +220,8 @@ StackClear = DigitModifier
 .global VRAM_Buffer1
 .global VRAM_Buffer2_Offset
 .global VRAM_Buffer2
+VRAM_Buffer1_PtrOffset = 0
+VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 
 .global BowserBodyControls
 .global BowserFeetCounter

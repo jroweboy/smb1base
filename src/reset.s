@@ -141,6 +141,7 @@ ScreenOff:
   lda #$00
   jsr InitScroll
   sta OAMADDR          ;reset spr-ram address register
+
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
   lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
   sta NmiR0
@@ -288,7 +289,7 @@ VRAM_AddrTable_Low: .lobytes VRAM_AddrTable
 VRAM_AddrTable_High: .hibytes VRAM_AddrTable
 
 VRAM_Buffer_Offset:
-      .byte <VRAM_Buffer1_Offset, <VRAM_Buffer2_Offset
+  .byte VRAM_Buffer1_PtrOffset, VRAM_Buffer2_PtrOffset
 
 ;-------------------------------------------------------------------------------------
 ;VRAM BUFFER DATA FOR LOCATIONS IN PRG-ROM
