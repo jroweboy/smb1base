@@ -392,7 +392,7 @@ DemoTimingData:
   ; TODO Consolidate farcall 
   farcall EnemiesAndLoopsCore     ;and run enemy code
 AutoPlayer:
-  farcall RelativePlayerPosition  ;get player's relative coordinates
+  jsr RelativePlayerPosition  ;get player's relative coordinates
   farcall PlayerGfxHandler, jmp   ;draw the player, then leave
 .endproc
 

@@ -110,7 +110,7 @@ ExitEng:
 ;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer
 ;$06-$07 - used to store block buffer address
-.import ReplaceBlockMetatile
+.import WriteBlockMetatile
 BlockObjMT_Updater:
   ldx #$01                  ;set offset to start with second block object
 UpdateLoop:
@@ -128,7 +128,7 @@ UpdateLoop:
       tay
       lda Block_Metatile,x      ;get metatile to be written
       sta (R6) ,y               ;write it to the block buffer
-      jsr ReplaceBlockMetatile  ;do sub to replace metatile where block object is
+      jsr WriteBlockMetatile  ;do sub to replace metatile where block object is
       lda #$00
       sta Block_RepFlag,x       ;clear block object flag
 NextBUpd:

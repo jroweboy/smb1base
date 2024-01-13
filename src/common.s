@@ -1,6 +1,23 @@
 
 .include "common.inc"
 
+; Define Global Labels named after the segment that they appear in
+.macro labelled_segment_def s1,s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
+.ifblank s1
+  ; First parameter is empty
+  .exitmacro
+.endif
+.pushseg
+.segment .string(s1)
+.ident(.string(s1)):
+.export .ident(.string(s1))
+.popseg
+labelled_segment_def s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
+.endmacro
+
+labelled_segment_def OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE, TITLE_MUSIC
+labelled_segment_def TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE
+
 .segment "LOWCODE"
 
 ;-------------------------------------------------------------------------------------

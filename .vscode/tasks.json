@@ -233,6 +233,7 @@
                 {
                     "owner": "ca65",
                     "applyTo": "allDocuments",
+                    "fileLocation": "absolute",
                     "source": "ca65",
                     "pattern": [
                         {

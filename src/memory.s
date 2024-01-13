@@ -169,9 +169,9 @@ Square2SoundQueue:              .res  1
 Square1SoundQueue:              .res  1
 
 
-IrqTemp:                        .res 2
-IrqR0 = IrqTemp + 0
-IrqR1 = IrqTemp + 1
+NmiTemp:                        .res 2
+NmiR0 = NmiTemp + 0
+NmiR1 = NmiTemp + 1
 
 MainTemp:                       .res 5
 M0                             = MainTemp + 0

@@ -10,7 +10,7 @@
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, UpdateTopScore, RenderAttributeTables
 .export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
-.export RemBridge, GiveOneCoin, DrawMushroomIcon
+.export RemBridge, GiveOneCoin, DrawMushroomIcon, WriteBlockMetatile
 
 .segment "RENDER"
 
