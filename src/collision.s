@@ -176,18 +176,12 @@ BlockBufferCollision:
     lda SprObject_Y_Position,x  ;get vertical coordinate of object
     clc
     adc BlockBuffer_Y_Adder,y   ;add it to value obtained using Y as offset
-    bcc HeadWrapped
     and #%11110000              ;mask out low nybble
     sec
     sbc #$20                    ;subtract 32 pixels for the status bar
-    bcc HeadWrapped
     sta R2                      ;store result here
     tay                         ;use as offset for block buffer
-    lda (R6) ,y                 ;check current content of block buffer
-    jmp NoHeadWrap
-HeadWrapped:
-    lda #0
-NoHeadWrap:
+    lda (R6), y                 ;check current content of block buffer
     sta R3                      ;and store here
     ldy R4                      ;get old contents of Y again
   pla                         ;pull A from stack
