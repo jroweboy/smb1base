@@ -14,7 +14,7 @@
 .import BlockBumpedChk, InitBlock_XY_Pos, BrickShatter, BumpBlock
 
 .export PlayerBGCollision, FireballBGCollision, PlayerEnemyCollision
-.export FireballEnemyCollision, EnemyToBGCollisionDet
+.export EnemyToBGCollisionDet, SprObjectCollisionCore, HandleEnemyFBallCol
 .export EnemyJump, SetupFloateyNumber, EnemiesCollision, InjurePlayer
 
 ; platform.s
@@ -26,6 +26,8 @@
 
 ; gamecore.s
 .export ForceInjury
+
+.export BBChk_E
 
 .segment "COLLISION"
 
@@ -114,8 +116,8 @@ BBChk_E:
   rts
 
 BlockBufferAdderData:
-  .byte (BlockBuffer_Swimming_X_Adder - BlockBuffer_X_Adder)
   .byte (BlockBuffer_Big_X_Adder      - BlockBuffer_X_Adder)
+  .byte (BlockBuffer_Swimming_X_Adder - BlockBuffer_X_Adder)
   .byte (BlockBuffer_Small_X_Adder    - BlockBuffer_X_Adder)
 
 ; misc objects use hardcoded offsets
@@ -125,33 +127,28 @@ BLOCK_BUFFER_ADDER_NECK_OFFSET = BlockBufferNeck_X_Adder - BlockBuffer_X_Adder
 
 BlockBuffer_X_Adder:
 ; Added to the sprite position to get the location to check for tile collision
-;     head, foot l, r, side 1 2    3,   4, neck
-BlockBuffer_Swimming_X_Adder:
-  .byte $08, $03, $0c, $02, $02, $0d, $0d ; swimming
+;     head, foot l, r, side 1 2    3,   4
 BlockBuffer_Big_X_Adder:
   .byte $08, $03, $0c, $02, $02, $0d, $0d ; big
+BlockBuffer_Swimming_X_Adder:
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; swimming
 BlockBuffer_Small_X_Adder:
-  .byte $08, $03, $0c, $02, $02, $0d, $0d ; small
+  .byte $08, $03, $0c, $02, $02, $0d, $0d ; small/crouching
 BlockBuffer_Misc_X_Adder:
   .byte $08, $00, $10, $04, $14, $04, $04 ; misc
 BlockBufferNeck_X_Adder:
   .byte $06, $09 
 
 BlockBuffer_Y_Adder:
-  .byte $04, $20, $20, $08, $18, $08, $18 ; swimming
-  .byte $02, $20, $20, $08, $18, $08, $18 ; big
-  .byte $12, $20, $20, $18, $18, $18, $18 ; small
+  .byte $04, $20, $20, $08, $18, $08, $18 ; big
+  .byte $02, $20, $20, $08, $18, $08, $18 ; swimming
+  .byte $12, $20, $20, $18, $18, $18, $18 ; small/crouching
   .byte $18, $14, $14, $06, $06, $08, $10 ; misc
-BlockBufferNeck_Y_Adder:
-  .byte $00, $00
+  
 
 BlockBufferColli_Feet:
   iny            ;if branched here, increment to next set of adders
-  bne SkipNeckLength ; unconditional
 BlockBufferColli_Head:
-  lda PlayerNeckLength
-  sta PlayerNeckTemp
-SkipNeckLength:
   lda #$00       ;set flag to return vertical coordinate
   beq BlockBufferPlayerCollision ; Unconditional
 BlockBufferColli_Side:
@@ -497,8 +494,6 @@ RevivalRateData:
       .byte $10, $0b
 
 HandleStompedShellE:
-       ; when an enemy is stomped cut neck length in half
-       lsr PlayerNeckLength
        lda #$04                   ;set defeated state for enemy
        sta Enemy_State,x
        inc StompChainCounter      ;increment the stomp counter
@@ -1149,7 +1144,7 @@ ContChk:
       bcc LandPlyr               ;if lower nybble < 5, branch
         lda Player_MovingDir
         sta R0                     ;use player's moving direction as temp variable
-        jmp ImpedePlayerMove       ;jump to impede player's movement in that direction
+        jmp StopPlayerMove         ;jump to impede player's movement in that direction
 LandPlyr:
   jsr ChkForLandJumpSpring   ;do sub to check for jumpspring metatiles and deal with it
   lda #$f0
@@ -1166,67 +1161,6 @@ InitSteP:
   ; fallthrough
 
 DoPlayerSideCheck:
-
-; Split the side check into two parts, the first is the neck which can't be used to grab poles
-; or anything like that. its just checking for left right solid block collision
-PlayerSideNeckCheck:
-  lda PlayerNeckLength
-  clc
-  adc #8 ; we want to start doing collision after 8px of neck
-  lsr
-  lsr
-  lsr
-  lsr
-  beq BasePlayerSideCheck ; if theres not enough neck to check skip it
-  sta R0 
-  lda PlayerNeckLength
-  and #$0f
-  sta R1 
-PlayerNeckSideCollisionLoop:
-    eor #$ff ; negate it to subtract from player y position
-    clc
-    adc Player_Y_Position
-    cmp #$20                  ;check player's neck vertical position
-    bcc BasePlayerSideCheck   ;if the neck is now out of bounds, skip to body check
-    
-    ldy #BLOCK_BUFFER_ADDER_NECK_OFFSET
-    jsr BlockBufferColli_Side ;do player-to-bg collision detection on one half of the neck
-    beq @OtherSideOfNeck
-      jsr CheckNeckCollison
-@OtherSideOfNeck:
-    ldy #BLOCK_BUFFER_ADDER_NECK_OFFSET+1
-    lda R1 
-    sta PlayerNeckTemp
-    jsr BlockBufferColli_Side ;do player-to-bg collision detection on the other side
-    beq @LoopToNextNeckPart
-      jsr CheckNeckCollison
-@LoopToNextNeckPart:
-    lda R1 
-    clc
-    adc #16 ; collision is every 16 blocks, so add it here every loop
-    sta R1  ; since the collision check removes the player neck temp, we just reload it from $1
-    sta PlayerNeckTemp
-    dec R0 
-    bne PlayerNeckSideCollisionLoop
-    beq BasePlayerSideCheck
-CheckNeckCollison:
-  ; Trimmed down collision routine for the neck involving only things we care to check
-  jsr CheckForCoinMTiles     ;check to see if player touched coin
-  bcc @SkipAddingCoin
-    jmp HandleCoinMetatile     ;if so, execute code to erase coin and award to player 1 coin
-  @SkipAddingCoin:
-
-;   ldy Player_State           ;get player's state
-;   cpy #$00                   ;check for player's state set to normal
-;   beq @DontStopMovement
-;     jmp ImpedePlayerMove         ;if not, branch to impede player's movement
-; @DontStopMovement:
-  rts
-
-; After we run the loop for the player neck, we check the base for the main collision.
-BasePlayerSideCheck:
-  lda #0
-  sta PlayerNeckTemp
   ldy Local_eb       ;get block buffer adder offset
   iny
   iny           ;increment offset 2 bytes to use adders for side collisions
@@ -1289,13 +1223,23 @@ ChkPBtm:
     cmp #$1f                   ;if collided with water pipe (bottom), continue
     bne StopPlayerMove         ;otherwise branch to impede player's movement
 PipeDwnS:
-  lda Player_SprAttrib       ;check player's attributes
-  bne PlyrPipe               ;if already set, branch, do not play sound again
+  ; lda Player_SprAttrib       ;check player's attributes
+  ; bne PlyrPipe               ;if already set, branch, do not play sound again
+  lda InPipeTransition
+  bne :+
     ldy #Sfx_PipeDown_Injury
     sty Square1SoundQueue      ;otherwise load pipedown/injury sound
-PlyrPipe:
-  ora #%00100000
-  sta Player_SprAttrib       ;set background priority bit in player attributes
+    lda PlayerEntranceCtrl  ;;; check if we are entering the pipe in auto mode
+    cmp #7
+    bne :+
+      ;; if we are then start a pipe transition
+      .import SetupPipeTransitionOverlay
+      lda #2
+      jsr SetupPipeTransitionOverlay
+  :
+; PlyrPipe:
+  ; ora #%00100000
+  ; sta Player_SprAttrib       ;set background priority bit in player attributes
   lda Player_X_Position
   and #%00001111             ;get lower nybble of player's horizontal coordinate
   beq ChkGERtn               ;if at zero, branch ahead to skip this part
@@ -1350,7 +1294,7 @@ ErACM:
 ;--------------------------------
 
 SolidMTileUpperExt:
-  .byte $10, $61, $88, $c4
+  .byte $10, $61, CLOUD_METATILE, $c4
 
 CheckForSolidMTiles:
   jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
@@ -1358,7 +1302,7 @@ CheckForSolidMTiles:
   rts
 
 ClimbMTileUpperExt:
-  .byte $24, $6d, $8a, $c6
+  .byte $24, $6d, BRIDGE_METATILE + 1, $c6
 
 CheckForClimbMTiles:
   jsr GetMTileAttrib        ;find appropriate offset based on metatile's 2 MSB
@@ -1642,31 +1586,35 @@ ImpedePlayerMove:
   inx                       ;return value to X
   cpy #$00                  ;if player moving to the left,
   bmi ExIPM                 ;branch to invert bit and leave
-  lda #$ff                  ;otherwise load A with value to be used later
-  jmp NXSpd                 ;and jump to affect movement
-RImpd: ldx #$02                  ;return $02 to X
-       cpy #$01                  ;if player moving to the right,
-       bpl ExIPM                 ;branch to invert bit and leave
-       lda #$01                  ;otherwise load A with value to be used here
-NXSpd: ldy #$10
-       sty SideCollisionTimer    ;set timer of some sort
-       ldy #$00
-       sty Player_X_Speed        ;nullify player's horizontal speed
-       cmp #$00                  ;if value set in A not set to $ff,
-       bpl PlatF                 ;branch ahead, do not decrement Y
-       dey                       ;otherwise decrement Y now
-PlatF: sty R0                    ;store Y as high bits of horizontal adder
-       clc
-       adc Player_X_Position     ;add contents of A to player's horizontal
-       sta Player_X_Position     ;position to move player left or right
-       lda Player_PageLoc
-       adc R0                    ;add high bits and carry to
-       sta Player_PageLoc        ;page location if necessary
-ExIPM: txa                       ;invert contents of X
-       eor #$ff
-       and Player_CollisionBits  ;mask out bit that was set here
-       sta Player_CollisionBits  ;store to clear bit
-       rts
+      lda #$ff                  ;otherwise load A with value to be used later
+    bne NXSpd                 ;and jump to affect movement
+RImpd:
+    ldx #$02                  ;return $02 to X
+    cpy #$01                  ;if player moving to the right,
+    bpl ExIPM                 ;branch to invert bit and leave
+    lda #$01                  ;otherwise load A with value to be used here
+NXSpd:
+    ldy #$10
+    sty SideCollisionTimer    ;set timer of some sort
+    ldy #$00
+    sty Player_X_Speed        ;nullify player's horizontal speed
+    cmp #$00                  ;if value set in A not set to $ff,
+    bpl PlatF                 ;branch ahead, do not decrement Y
+      dey                       ;otherwise decrement Y now
+PlatF: 
+    sty R0                   ;store Y as high bits of horizontal adder
+    clc
+    adc Player_X_Position     ;add contents of A to player's horizontal
+    sta Player_X_Position     ;position to move player left or right
+    lda Player_PageLoc
+    adc R0                   ;add high bits and carry to
+    sta Player_PageLoc        ;page location if necessary
+ExIPM:
+  txa                       ;invert contents of X
+  eor #$ff
+  and Player_CollisionBits  ;mask out bit that was set here
+  sta Player_CollisionBits  ;store to clear bit
+  rts
 
 ;--------------------------------
 ;$02 - high nybble of vertical coordinate from block buffer
@@ -1807,7 +1755,8 @@ NoJSFnd: rts           ;leave
 ;$06-$07 - used as block buffer address indirect
 
 BlockYPosAdderData:
-      .byte $04, $12
+;     Swimming, Big, Small
+  .byte $00, $04, $12
 
 PlayerHeadCollision:
            pha                      ;store metatile number to stack
@@ -1864,8 +1813,6 @@ PutMTileB: sta Block_Metatile,x     ;store whatever metatile be appropriate here
            beq BigBP                ;if so, branch to use default offset
 SmallBP:   iny                      ;increment for small or big and crouching
 BigBP:     lda Player_Y_Position    ;get player's vertical coordinate
-           sec
-           sbc PlayerNeckLength
            clc
            adc BlockYPosAdderData,y ;add value determined by size
            and #$f0                 ;mask out low nybble to get 16-pixel correspondence

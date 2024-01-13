@@ -1208,15 +1208,26 @@ MetatileGraphics_High: .hibytes MetatileGraphics
 Palette0_MTiles:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
+  BUSH_TOPLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $24, $24, $24, $35 ;bush left
+  BUSH_MIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $36, $25, $37, $25 ;bush middle
+  BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $24, $38, $24, $24 ;bush right
+  MOUNTAIN_MIDLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $24, $30, $30, $26 ;mountain left
+  MOUNTAIN_MIDMID_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $26, $26, $34, $26 ;mountain left bottom/middle center
+  MOUNTAIN_MIDTOP_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $24, $31, $24, $32 ;mountain middle top
+  MOUNTAIN_MIDRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $33, $26, $24, $33 ;mountain right
+  MOUNTAIN_BOTRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $34, $26, $26, $26 ;mountain right bottom
+  MOUNTAIN_TOPRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
   .byte $26, $26, $26, $26 ;mountain middle bottom
+
   .byte $24, $c0, $24, $c0 ;bridge guardrail
   .byte $24, $7f, $7f, $24 ;chain
   .byte $b8, $ba, $b9, $bb ;tall tree top, top half
@@ -1267,6 +1278,7 @@ Palette1_MTiles:
   .byte $45, $47, $45, $47 ;breakable brick w/ line 
   .byte $47, $47, $47, $47 ;breakable brick 
   .byte $45, $47, $45, $47 ;breakable brick (not used)
+CRACKED_BRICK_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $b4, $b6, $b5, $b7 ;cracked rock terrain
   .byte $45, $47, $45, $47 ;brick with line (power-up)
   .byte $45, $47, $45, $47 ;brick with line (vine)
@@ -1303,7 +1315,9 @@ Palette2_MTiles:
   .byte $3c, $24, $24, $24 ;cloud bottom right
   .byte $41, $26, $41, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
+CLOUD_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $b0, $b1, $b2, $b3 ;cloud level terrain
+BRIDGE_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $77, $79, $77, $79 ;bowser's bridge
       
 Palette3_MTiles:

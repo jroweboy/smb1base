@@ -359,7 +359,6 @@ HalfwayPageNybbles:
 .proc PlayerLoseLife
   inc DisableScreenFlag    ;disable screen and sprite 0 check
   lda #$00
-  sta PlayerNeckLength      ; reset the player neck length
   sta Sprite0HitDetectFlag
   lda #Silence             ;silence music
   sta EventMusicQueue
