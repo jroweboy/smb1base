@@ -354,7 +354,7 @@ ChkHiByte:
   lda R3                       ;check high byte?
   cmp #(>TitleScreenData) + 1  ;at $0400?
   bne OutputTScr               ;if not, loop back and do another
-  cpy #$10                     ;check if offset points past end of data
+  cpy #$32                     ;check if offset points past end of data
   bcc OutputTScr               ;if not, loop back and do another
 endfar
   lda #$05                     ;set buffer transfer control to $0300,

@@ -14,9 +14,22 @@
 .segment "VECTORS"
     .word (NonMaskableInterrupt)
     .word (Start)
-    .word ($fff0)  ;unused
+    .word (IrqScrollSplit)  ;unused
 
 .segment "FIXED"
+
+.proc IrqScrollSplit
+  sta IRQDISABLE
+  pha
+    bit PPUSTATUS
+    lda IrqScrollH
+    sta PPUSCROLL
+    sta PPUSCROLL
+    lda IrqScrollBit
+    sta PPUCTRL
+  pla
+  rti
+.endproc
 
 ;-------------------------------------------------------------------------------------
 
@@ -26,6 +39,7 @@
   lda #%00010000               ;init PPU control register 1 
   sta PPUCTRL
   ldx #$ff                     ;reset stack pointer
+  stx APU_FRAMECOUNTER         ; disable APU framecounter IRQ
   txs
 : lda PPUSTATUS               ;wait two frames
   bpl :-
@@ -68,6 +82,7 @@ MMC3Init:
   sta RAM_PROTECT
   sta IRQDISABLE
 FinializeMarioInit:
+  cli
   lda #$a5                     ;set warm boot flag
   sta WarmBootValidation     
   sta PseudoRandomBitReg       ;set seed for pseudorandom register
@@ -261,7 +276,11 @@ RotPRandomBit:
       lda OperMode
       beq SkipSprite0
         jsr MoveAllSpritesOffscreen
-        ; jsr SpriteShuffler
+        ; enable scroll split
+        lda #32 - 1
+        sta IRQENABLE
+        sta IRQLATCH
+        sta IRQRELOAD
 SkipSprite0:
   lda #0
   sta NmiR0
