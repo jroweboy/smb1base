@@ -1,0 +1,225 @@
+This file is a raw excerpt from my work-in-progress manual.
+It's pretty raw, but is provided as-is if you need to read up on the file formats
+NEXXT uses on the spot. 
+
+
+
+
+Session file (.nss)
+===================
+Session files are a complete snapshot of everything important in your current session, including your assets, undo history, several button and menu item states, etc. 
+They're ideal as your work file for each asset in your project for a more fluid workflow. 
+Session files have gone through a couple of revisions. Early NESST versions saved sessions as binaries, before moving on to a text format for convenience. 
+The text format ensures that as long as you're using either NEXXT or NESST v2.x or later, that tool will be able to open your file regardless what extra content future versions might bring, and future versions will always be able to access old version sessions. 
+
+Warning: A file made in a more recent version of NEXXT, opened and then overwritten in an older version of NEXXT or NESST may leave out some data used by more recent features added to the tool. 
+So far, additions have been incremental and mostly related to program state rather than file state, but there are little things like a unique PPUMASK set per palette set that may get lost. 
+Big additions to file state will get implicated by the increase of the big version number. 
+
+Programmers' reference
+
+Format: 
+version 1: binary 
+version 2: binary
+version 3: text
+
+
+
+
+Character file (.chr)
+=====================
+
+A character file stores the characters (or patterns or tiles, depending on what we like to call them. The finer semantic points don't matter here). 
+The file can be of any size but preferably a multiple of 16 bytes, since one tile = 16 bytes. 
+
+NEXXT also has an upper limit of being able to read 8KiB CHR:s at a time. This may change at a later point, but for now this stands. 
+The reason is the original NESST version was closely modeled after what the PPU can see, and there's typically only enough facilities for the PPU to browse 256 tiles for backgrounds and 256 tiles for sprites (4KiB + 4KiB) at any fixed point of time.
+Somewhere around 4KiB is also a practical size to work with most times. 
+
+
+Programmers' reference
+
+Format: binary
+Size: variable, but often 1,2,4 or 8KiB, or else any multiple of 16 bytes. 
+Data order
+Data is stored in chunks of per tile. Each tile consists of 2 bitplanes, 8 bytes each.
+Each byte in each bitplane represents a horizontal 8px strip of pixel data. 
+
+If you imagine the two planes as layers ordered above each other, the bits in parallel with each other make a pixel in the tile. 
+
+Constant factors
+You can use these to address and manipulate tile in your own tools, or your NES program (if using CHR RAM).
+
+TILE_Y = 1;		//size of a pixel strip within a tile. useful for navigating px y offset in a tile.
+TILE_BP = 8;		//size of a bitplane.useful to shift operations on a specific bitplane.
+TILE_COL = 16;	//size of a tile. useful for navigating tiles by columns.
+TILE_ROW = 256;	//size of a row of tiles; as tiles are traditionally represented 16 in a row.
+
+For addressing individual pixels when developing PC tools, i recommend the << and >> operators, since bitwise adressing wasn't added to C++ until relatively recently.  
+
+For addressing them in 6502 assembly, you can define constants for each bit. 
+
+Further reading
+https://simple.wikipedia.org/wiki/Chr
+
+
+
+
+Nametable (screen) file (.nam)
+==============================
+
+A nametable is a screen canvas that is sized exactly the size of an NES screen, or put differently, the size of a nametable. However, the file actually contains two tables:
+the de-facto nametable itself 
+the attribute table
+
+
+The nametable tells what each position in screen memory is populated by which tile from CHR memory. Each such cell in the table is termed a name, hence nametable.
+This terminology is quivalent to an index in more general terms. 
+The attribute table tells what subpalette to use when displaying a square group of tiles 
+
+It is commonly accepted to refer to both tables as "nametable" as a single entity when grouped together. 
+Unlike .map files, this file format is a 1:1 replica of what the data order looks like for a single nametable slot. That means you can load it directly into NES nametable memory and have it displayed as is.   
+
+
+Programmers' reference
+
+Format: binary
+Size: fixed: 1024 bytes
+Data order
+tile names: 	960 chars,	stored serially
+attributes: 	64 chars,	stored serially
+
+
+
+
+Map file (.map)
+===============
+
+A map is a screen canvas that is sized larger or smaller than one NES screen. NEXXT requires a map to be a multiple of 4 tiles high and wide. 
+Map files are used in NEXXT to (mainly) be able to depict and edit larger continous scenes, such as a stage or scrolling cutscene; typically sharing the same tileset. 
+
+Because the size is variable, the format isn't 1:1 laid out like in NES nametable memory.First comes all the names, then all the attributes, and lastly, the dimensions.
+While the format is NES native, because of the serial ordering, you need a 6502 routine for unpacking the right data into nametable/attribute RAM.
+
+It is often common to compress map files into some other format for use in an NES project though, especially out of limited storage concerns.
+This often involves metatile compression or RLE. 
+
+Programmers' reference
+
+Format: binary
+Data order
+tile names: 	x*y chars,	stored serially
+attributes: 	(x*y)/4 chars,	stored serially
+footer: 		2 words (16bit),	little endian:
+
+Footer words
+X width in tiles
+Y width in tiles
+
+For example, a standard nametable size (32x30) would be expressed like so: 20 00 1E 00.
+
+
+
+Subpalette file (.pal)
+======================
+
+A subpalette file containts a subpalette set. That means, a set of 4 subpalettes, each 4 colours. 
+Typically, the first colour in each subpalette is the same.
+ 
+NEXXT saves from and loads into the currently active set slot (A,B,C,D). 
+
+Programmers' reference
+
+format: binary
+size: 12 bytes
+data order: serial
+
+values: 
+00-3F - standard direct nes palette indexes.
+40-7F - unused mirror
+80-BF - reserved NEXXT escape characters for animated colour slots.
+C0-FF - unused mirror
+
+
+
+System CLUT (also .pal)
+=======================
+Short for System Colour Look-Up Table.
+This file provides the necessary (24bit) RGB values to represent the NES system palette. NEXXT can either use one such standard, internally stored file, or an external file
+
+The internal, default lookup file (called "classic NESST" for software historic reasons) is a fair representation of what NES colours look like on the real NES, but there are elements of both technical circumstance and personal subjectiveness to this, which could be the basis of a whole other article. 
+
+From a user perspective, it can pay off to sometimes swap between a few different lookup tables just to be prepared that your artwork may be represented differently in different emulators or on different tv/monitor screens.
+
+The typical format is an 192 bytes long file with each triple representing one colour in the master palette swatchbox; allowing for up to 64 colours to be definied; although the original NES do leave some colours unused/undefined. 
+
+In actuality, the NES produces 8 sets of "system" palettes through its emphasis bits.
+
+While most emulators (NEXXT included) derive the other 7 variants of the different emphasis bits combinations algorithmically (with varied success, and all imperfect to this date), a less common option is to instead provide an absolute 1536 byte long colour lookup table.
+
+Supporting this is planned for, but not yet implemented. 
+
+"colour table", "colour LUT" and "system palette" can be used somewhat interchangably,
+although "system palette" has closer implication to the actual system palette of the NES,
+while "colour table" strictly means a digital table used on a PC to represent it. No such table
+exists on the original hardware, since it's the result of a function in the analog signal domain.
+
+Programmers' reference
+
+Format: binary
+Size: 192 bytes or 1536 bytes (not yet supported).
+Structs of 3 bytes per RGB entry. 
+
+
+
+Metasprite bank (.msb)
+======================
+
+Holds 256 slots of 64 possible sprite entries; each 4 bytes in size.
+.msb files are not suitable for direct import into a NES project because of their size;
+instead you should export as text, or extract with a script from the session file, or extract the parts you need from the .msb file.
+
+Setting all 4 bytes to $FF implies "sprite not in use" in nexxt:s gui. You can use the same to extract relevant data from the binary in your own tooling.
+
+Follows the "natural" PPUOAM format of the NES; that is, y, tile_id, attributes, x. 
+
+
+Tile collision properties (.tprop)
+==================================
+Format: Binary. 
+Stores 1 byte of collision property per tile. Usually written as a 256-tile or 512-tile entry. 
+NEXXT actually works with uint32 internally, for potential future expandability, but this is not a useful export format for the NES, so instead we save as uint8.
+
+
+Preferences file (.cfg)
+=======================
+This file type was introduced in NEXXT 0.9.0b. It stores settings for NEXXT across different sessions. If one isn't present in the home folder of NEXXT, it will generate one based on "factory settings".  
+
+Programmers' reference
+
+Format: text
+
+
+
+Bitmap file (.bmp)
+==================
+
+in NEXXT:s context a clean bitmap refers to a bmp, png, gif or other image file format that can be converted to a set of NES-native screen- and CHR data without interpretation, guesswork, supporting translation files, destructive conversion or manual labour.
+
+a dirty bitmap refers to bitmaps that do need either interpretation, guesswork, supporting translation files, destructive conversion, or manual labour.
+
+Bitmaps NEXXT produces, are always clean. 
+
+It is recommended to let NEXXT manage and export palettes to other art editors such as Aseprite.
+
+Clean bitmap requirements
+Image mode: Indexed
+The palette should be divided into groups of 4 colours where the first colour (col0) is the same across all groups
+For chr data only: a colour table of 4 colours
+For screen data: a colour table of 16 colours, no more than one group of 4 colours per attribute
+For sprite data: a colour table of 16 colours; no background; 
+	either no overlap of sprites, or each sprite in its own layer.
+	Note: NEXXT does not currently have import routines for a bitmap to sprite data; even if clean.
+
+
+Since general image editors are geared towards app-, web- or print publication, especially in the case of PNG; they may destructively edit the colour table of a clean file so it becomes dirty at export. An example of this is how photoshop is able to save clean BMP:s, but will produce dirty PNG:s unless you perform a specific series of actions everytime you export the asset as png. 

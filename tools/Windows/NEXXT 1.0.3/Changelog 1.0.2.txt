@@ -1,0 +1,1896 @@
+======
+1.0.3
+======
+
+"Late night last bug fix"
+
+The reported bug with inconsistend collision tables loaded with sessions is now fixed. 
+Thanks to Jett, ReaperSMS and Jroweboy on the nesdev discord for figuring it out with me. 
+
+
+
+======
+1.0.2
+======
+
+Quick fix two bugs that was discovered immediately on release of 1.0.1
+
+-tprop files of size 512 bytes (two tables) should now load as intended.
+-Collision labels are again stored in the session file.
+
+New known bugs not yet resolved
+
+-I haven't been able to reproduce this yet, but there might be an issue with loading collision properties stored in the session file. 
+If you experience trouble, saving and loading external .tprop files will work. Any reports on similar issue are most welcome.
+
+
+Thanks to Jett for the expedient reports. 
+
+
+======
+1.0.1
+======
+
+New features:
+-------------
+
+CHR collision - select all affected
+	-Right click on a bit button to select all tiles on the active tileset that has this button set.
+	-Right click on the hex editor to select all tiles of this particular bit button combination.
+
+
+
+Improvements:
+-------------
+
+CHR Editor, pixel grid:
+	-More subtle; reducing eye strain and perceptual brightness error.
+
+
+Metasprites, labels:
+	-Now assigns a unique number to the label of copied metasprites instead of "_copy". 
+	This avoids undesired label duplicates in text exports.
+
+
+CHR collision, hex editor:
+	-Backspace deletes the entry in one press
+	-Bugfix: Selecting to overwrite now works as expected
+	-Committing a value with [Enter] now lets you keep editing by keyboard without having to re-enter the control by mouse.
+	
+Shortcut changes:
+-----------------
+
+To resolve some shortcut conflicts, the following actions have new shortcuts:
+
+	-Import bitmap... 			Ctrl+Alt+B
+	-Import bitmap as tileset...		Shift+Alt+B
+	-Swap subpalette order...		Ctrl+Shift+W
+
+
+Bugfixes:
+---------
+
+Load Tprop table:
+	-Didn't work for the standard 256 and 512 byte sizes; mistakenly overwrote the chr table instead. Fixed.
+
+Load session; including tproperty table:
+	-Would sometimes mistake a post- 1.0 session file for a pre 1.0 file, which would clear the tprop table against the users' wishes. 
+	Now fixed. 
+
+View Selected only:
+	-Only worked in Normal tileview mode. Now works correctly regardless which tileview mode is active.
+	
+Rare session loading bug:
+	-A nametable selection could sometimes cause unauthorized memory access when opening a session file by association. Cause yet unknown.
+	Doing so now preemtively resets any nametable selection during loading, which protects the program from throwing the error. Not exactly a permanent fix, but it works. 
+
+======
+1.00
+======
+
+At this point i don't consider NEXXT in general beta development anymore. 
+This version adds a lot. 
+
+Smudge mode to pen/brush/line/bucket:
+
+	Hold the hotkey [G], and draw as you normally would with the left mouse button.
+	You'll automatically draw in the colour of the pixel you started on.
+	Good for fine defining borders between fields of colour without having to think about colour choice. 
+
+	Hotkey [G] is exclusive to the CHR Editor and Tileset Tab.
+	To access Smudge while free-drawing on the screen canvas; open chr editor and toggle the smudge button there. 
+
+New tileset actions:
+	-Mirror (horizontal)	Ctrl+Shift+M
+	-Mirror (vertical)	Ctrl+Alt+M
+	-Mirror (biaxial)	Ctrl+Shift+Alt+M
+
+	Works on tileset selection. 
+	These take the left/top half (or quadrant, in the case of biaxial mirror) and mirrors it to the rest of the selection.
+	This is very useful for completing shapes and silhouettes without having to repeat yourself or using the older method of copying and flipping/rotating. 
+	Tip: Particular fun can be had when the selection is of an odd size in one or both directions, since this makes a mid-tile mirror pattern. 
+
+Line tool:
+	This is a big one. 
+
+	When in Line mode [N, in CHR editor or the tileset tab],
+	the pen is replaced by the line tool. Bucket, inks, and eyedropper retain their bindings; only the pen is changed. 
+	
+	Beginner usage:
+		click and drag to make a line. Release to commit it to your asset. 
+	
+	Simple usage:
+		-While dragging, scroll up or down to change line algorithm. The options are line, curve, knee curve, right angle. 
+		-Scrolling up makes a positive bend, scrolling down makes a negative bend.
+		-[Shift+F5] or [right-click] on the line button to open the line toolbox. Here's a plethora of style and behaviour options.
+	
+	Intermediate usage: 
+		Holding Ctrl while scrolling changes the Y coordinate of the origin point.
+		Holding Ctrl+Alt while scrolling changes the X coordinate of the origin point.
+		Holding Alt while scrolling changes a property special to the current line type:
+			-Right angle: 		modify completion rate. Great for adding corner decorations in a second stroke. 
+			-Knee/curve/line:	offsets midpoint position outward/inward. The exact behaviour may change later. 	
+
+	Advanced usage:	
+		Some of the line toolbox options have special hotkeys. Some of them are available only while plotting; others more broadly. 
+
+		-QuicK multiline.....[K] Changes mode from drag-to-complete to click-to-complete (a bit similar to photoshop or aseprite). 
+					 Less flexible, but can be quicker for polygonal shapes. You can still hold to modify the line with scroll wheel and modifier keys.
+		
+		-MoVe mode on/off....[V] Only avaliable while plotting. Toggling it on makes you move both ends of the line. Once you release, the line is committed to CHR.
+					  While holding, you can toggle between move and plot as many times as you'd like until satisfied. 	 
+
+		-CoaT mode on/off....[T or Tab] turns the line into something like a paint roller. Works great both alone or with the other two modes below, 
+			     		also useful combined with x0y0 nudging. With a bit of practice, you can get the coverage of a wide brush but with 
+			     		precision more approximate to a small brush or pen.
+		
+		-Nudge y0x0..........[WASD] while plotting. Regretting the position you started the line at and don't want to redo the line? 
+					Nondestructively nudge it to where you want it while still holding the drag.
+		
+		-Center y0x0.........[C] If the x0y0 position was nudged, you can recenter it to its original position.
+	
+
+	
+Swap pattern colours:
+	-A simplified offshoot from "swap subpalette colour order" for when you just want to swap around the colours in a selection of tiles or a tileset.
+	-Can be found in the patterns menu. 
+	-Defaults to work on current selection.
+	-Removes all the non-applicable controls for this use case
+	-Adds the +/- cap/wrap controls from the CHR editor.
+
+
+Bucket, noncontigous:
+	-Ctrl+Alt-clicking on a drawing canvas uses the Bucket in noncontigous mode
+	-If there is a box selection or a multi selection, it works on the entire selection.
+	-If a single tile or no tile is selected, or you're working directly on the nametable, it works tile-for tile.
+	
+
+Tile associated collision toolbox:
+	An effective collision authoring tool i think covers about 35-40% of practical usecases in NES projects. More to come in the future.	
+
+	-Press [Shift+F7] to open.
+	-Pressing bit buttons toggles those bits on/off for the current tile selection.
+	-You can also use the hex edit box. Press enter to confirm after typing.
+	-Click on a label to change its name to something that suits your game design.
+	-Hovering over a bit button highlights all tiles that have that bit set.
+	-Hovering over the hex edit box highlights all tiles with that unique number. 
+	
+	Highlights:
+		-Hover over a crontrol to highlight a property.
+		-If "hold" is set, the highlight will remain until another property is hovered or until this tool is closed down.
+		-If show on "tileset" is set, it does just that. 
+		-If show on "map" is set, the map highlights derived based on what tiles from the tileset it is using.
+
+	Tile collision conditions:
+		-Clicking one of the conditions buttons changes condition between no, yes, and all.
+		-It also opens the conditions toolbox.
+		-If "yes" is set, the 4 checkboxes in this toolbox are unique to the corresponding collision bit on the row you clicked
+		-If "all" is set, the 4 checkboxes in this toolbox applies to all tiles that happen to have this particular bit set.
+		-If "no" (typical), the associated conditions are ignored.
+
+	Saving/loading collision properties:
+		-Tile Collision properties are automatically stored/retrieved when you save/open a session.
+		-If you wish to save or load a binary, you can do so via Menu>File>Tile properties. 
+		-The .tprop file contains a byte for each tile in your set(s). It doesn't care about labels or conditions.
+ 
+		 
+
+Improvements of existing features:
+----------------------------------
+	Fill (map or nametable)
+	-You can now fill with a rectangular selection of tiles; rather than just a single chosen tile.
+	This makes putting repeating patterns on the map more convenient; especially for "blocky" types of games. 
+	
+	BMP import: 
+	-improved accuracy in mapping bmp palette to NES palette.
+	
+	Make metasprite (ctrl+m):
+	-If in 8x16 mode, "make metasprite" it appropriately skips every second row of selection.
+	-it also assigns the bank bit according to which bank is currently active. 	
+
+	Tile matching: 
+	-(used in lossy tile import and for "find 3 most similar tiles"): improved accuracy.
+	
+	Main editor:
+	-Layout & Draw buttons now act as a dual toggle. You can click either to switch which is down.	
+
+	Tileset tab: 
+	--A variant of the toolbar from the CHR Editor also appears in the main editor; below the canvas.
+	--Hotkeys corresponding to this toolbars' controls take precedence while on this tab.  
+
+	Protect colours:
+	Now hotkeyed: [5...8] toggles "protect colour 0...3" on/off.
+
+	Palettes>Recall preset:
+	-the action now records an undo event.
+	-it no longer asks for confirmation.
+	 
+
+
+Shortcut changes:
+-----------------
+	-Rename metasprite is now [Shift+R]
+	-Rename all metasprites is now [Shift+Alt+R]
+
+
+Hotkey changes:
+	-Various hotkeys from the CHR editor take precedence in the main editor while the tiles tab is active. 
+
+	-Increment ink moved to [9]
+	-Decrement ink moved to [0]
+	-Removed "normal ink" hotkey; instead just press a colour hotkey directly [1...4]. 
+
+	-In CHR editor; 
+	--Quantized mode changed from [N] to [U].
+	
+
+Other changes:
+	-the patterns menu was made easier to navigate. 
+	-As a side result, the "hard sort" and "8x16 interleave" actions have gotten their discoverability demoted, since the "view sorts" and "8x16 view modes" usually have more utility.
+
+
+Bugfixes:
+
+	Load nametables:
+	-Would erroneously misinterpret some file format options and deny their validity. Now fixed.	
+
+	Status readout:
+	-Attribute byte ($xx) now reads correctly on maps of non-screen width
+	-AttOff reads with an offset of $03C0 when a single screen (nametable) is the format used. This was bugged for maps.Now, maps it use an offset of 0 for clarity and delineation.
+	
+	Cosmetics:
+	-The "enforce using $0F as black" rule in the palette menu had its checkmark mean reverse of the intended behaviour. Fixed in a previous version, but forgotten about.	
+
+	Performance: 
+	-On huge maps, clicking on the tileset should no longer cause a heavy Navigator refresh while Navigator is hidden or "Selected Only" button is up.
+
+	Metasprite tab:
+	-The "<o> 8x16 force view" button that was introduced some version earlier disappeared at higher UI scales 3 and 4. Now fixed. 
+
+	Swap subpalette colour order:
+	-The tool didn't refresh canvases on cancel or revisiting. Fixed.
+
+	Open associated files:
+	-NEXXT would crash opening certain files this way. Now fixed.
+
+
+======
+0.22
+======
+
+New features:
+-------------
+
+Proper 8x16 sprite mode 
+	It's now possible to work on 8x16 metasprites and their tiles simultaneously & more conveniently, thanks to a 8x16 "view mode".
+	A button just below the "8x16" button on the metasprite tab forces this view mode over other view modes (more on them below). 
+	This means you see and edit the tile assets as they will be seen on-screen, rather than how they happen to be represented in memory. NEXXT keeps track of which tile goes where in physical memory. 
+
+
+
+Tileset viewmodes:
+	
+	It is now possible to view & edit tiles in other visual arrangements than how they're stored in physical memory.
+
+	-Normal			- Your regular mode, reflecting tile placement in physical memory.
+	-8x16 sprite mode	- For editing 8x16 sprite tiles. Automatically turned on when working in 8x16 mode. This auto behaviour can be turned off from the metasprites tab.
+
+	-by frequency*		- Sorted by most to least usage in screen/map/metasprite assets.
+	-by density*		- Sorted by most to least usage of "solid" pixels (colours 1-3).
+	-by detail*		- Sorted by most to least internal tile detail.
+	-by edge content	- Sorted by a combined, weighted score of density and detail on edge pixels of tiles. The algorithm is subject to more quality testing, and it's possible it may change. 
+	-by selected colour	- Puts tiles with pixel content matching your currently selected colour ordered first. The more matched pixels, the higher the score. 
+					Trick: "selected by colour" while colour is 0 the opposite of "by density", since density measures "solid" colour indexes (1-3). 
+	-4x1 -> 2x2		- Organizes horizontal strips as 2x2 blocks, and puts those blocks ordered left to right.
+	-4x1 -> 2x2, topdown	- Organizes horizontal strips as 2x2 blocks, and puts those blocks ordered top-down.
+	-16x1 -> 4x4		- Organizes horizontal strips as 4x4 blocks, and puts those blocks ordered left to right. 
+
+	*These view modes are parallels to the Sort actions found in the pattern menu, but work nondestructively.
+
+Set empty spaces to subpalette:
+
+	This new action detects a common cause for "rogue attributes", that is, attribute cells that make no visual difference and may be hard to notice, 
+	but which causes excessive data to be generated when compressing; for example when generating metatiles, or RLE compressed level data. 
+	The most typical case is when tiles placed on the nametable/map are empty, and therefore use the shared colour (0) common to all subpalettes.
+	It then proceeds to set all found rogue attributes to the currently active subpalette. 
+
+	Note that there may be other, more rare cases of rogue attributes in your map. This may happen when tiles, despite "solid content",
+	still look the same across different subpalettes. You'd usually find that happening if more than the common colour is shared between
+	two or more subpalettes. 
+
+	Found in Menu > Canvas > ...
+
+
+Swap attributes:
+
+	-Dialogue tool. Lets you swap:
+	  -the subpalettes in the desired set(s).
+	  -subpalette attributes on screen/map.
+	  -subpalette attributes in sprites.
+
+	Found in Menu > Palettes > ...
+
+
+Additional new shortcuts:
+	-Ctrl+Alt+Shift+F = Fill tileset with numbers. Warning: replaces your tiles. Save important work before using. 
+
+Bugfixes:
+	-BMP Importer - "match to existing tiles" method forgot setting canvas display width/height; garbling the visuals (though the data was intact). Now fixed.
+	-BMP Importer - Navigator window didn't update proportions to the dimensions of the new canvas in the preview. Now fixed. 	
+
+	-Draw mode; on tileset canvas: did not work on tileset B; instead always drew on tileset A. Now fixed. 
+
+	-Swap colours / Swap attributes / Import BMP: If no screen/map selection is made; the radio option "selection" is now correctly disabled.
+
+======
+0.21.0
+======
+
+New features: 
+-------------
+
+Interactive BMP importer [Ctrl+Shift+B]
+
+	-This replaces the old trial-and-error importer. 
+	A modal dialogue is brought up where you can modify import parameters and see the resulting live preview before committing. 
+	This speeds up conversion work considerably.
+	The import algorithm itself has improved in subtle ways, too. Should now be more intuitive, and with slightly better results on average.
+
+	An advanced "lossy import" breakout pannel is slated for a later release, where you can modify tile picking criteria. 
+
+
+
+Sort by detail [Ctrl+Alt+E]
+
+	-Sorts tiles by detail, that is, the tile that contains the most bitwise difference in its data to those with the least.
+	Highly scored tiles are likely noisy, highly detailed, or checkerboard-like in structure. 
+	Low score tiles are typically fill-colour tiles, tiles with high continuity, and tiles with simple lines.
+	
+
+
+Find 3 closest Active Tile matches [Ctrl+Shift+F]
+
+	-A modest but helpful analysis tool. 
+	Attempts to find the 3 tiles that has the most matching value to the current Active Tile*.
+	
+	This can be useful for suggesting alternative but similiar patterns to use as variants on screen, 
+	or to identify tiles you may want to merge or delete when on a tile budget. 
+
+	*(Active Tile: the tile that's currently active for editing in the CHR Editor, or in 2x2 mode, the top left tile of the CHR Editor)	
+
+
+
+Remove multi-selections:
+
+	-If ctrl-clicking on a previously multi-selected tile, you now deselect that tile from the multi-selection.
+	Having deselected a first tile from the selection this way, you can also keep holding and move the cursor to deselect several tiles.
+
+
+
+Bugfixes:
+------------
+	-The full potential 64 entry palette now displays correctly on the system palette swatch; not just the canonical composite colours. 
+	This means you can load up "fantasy console" palettes making use of all of the 64 entries, as well as some RGBPPU variants that do. 
+	PPUMASK 0x01 (that is, "grayscale mode") now displays correctly in those places, too. 
+	
+	-"Force NESlib RLE" option for saving maps/nametables as text didn't auto-check. Now fixed.
+
+	-BMP:s with variable metadata length no longer causes trouble for importing palettes (this was potentially a problem with GIMP generated BMP:s). 
+
+
+======
+0.20.0
+======
+
+New features:
+-------------
+
+Flex-paste CHR:
+	-If making a box selection larger than 1 tile (or 2 tiles if in 2x2 edit mode), 
+	pasting tiles will place those tiles inside the boundaries of the new selection. 
+	This can for example be useful to put disorganized tiles into a section, change orientation of order,
+	convert a strip of tiles to a box of tiles, or vice versa. 
+
+	Tip: Don't worry about making the selection larger for pasting: the paste won't replace more 
+	tiles than what is queued up by your previous copy action.
+	
+	Tip: Be aware that a selection box smaller than the # of tiles copied will ignore the excess.
+	The best way to proceed if dissatisfied with your first paste in this case is to make a larger selection
+	and paste again - especially if you copied with cut and don't want to lose content.
+
+	Tip: A single tile selection behaves as normal/before (representing the origin to paste to).
+
+
+Screen aligned 4x4 grid option:
+	-If both "x4" and "Scr" buttons are down, then the 4x4 grid aligns to the start och each screen.
+	This is often useful when laying out level content or the like, 
+	since an NES nametable/screen is an "imperfect" 32x30 tiles
+
+
+
+Improvements:
+-------------
+
+Multi select + copypaste + masks:
+	-Bitplane masks and colour protection masks now work for serial 
+	(usually multi-selected, then copied) clipboard contents.
+
+
+
+Putting subpalettes to clipboard:
+	-If either as C or ASM data, session name and set ID is now included in the header/label by default.
+	-If as ASM data, the clip is now more readable; putting each subpalette on its own .byte row.
+	-From preferences (ctrl+p), you can set whether or not 
+	to include session name and and subpalette set in the label/c header.
+
+
+Bugfixes:
+--------
+
+Display bug:
+	-Navigator, making a new selection after a paste or cut: 
+	the canvas wouldn't fetch a fresh buffer, leaving traces of the old selection rectangle behind. Now fixed.
+
+Navigator window sizing:
+	-Now behaves better when you have canvas sizes larger than what fits the screen height of your main screen.
+
+Pasting serial CHR:
+	-Pasting from serial CHR clipboard contents (usually from a multiselected cut or copy) didn't set up
+	and undo event. Now corrected.
+
+Copying undo bug:
+	-CHR copying set undo regardless if a cut or not was made. Now fixed.
+
+======
+0.19
+======
+
+New, improved "swap colours..." dialogue.
+-----------------------------------------
+
+	The new dialogue lets you do the following, in order of importance:
+	-Preview the result while working/before committing
+	-Turn preview on/off for quick a/b comparisons
+	-Rotate colour indexes left/right
+	-Flip the order of the 3 "free" colour indexes
+	-Flip the order of all 4 colour indexes
+	-Ability to opt out of modifying the patterns to match the new colour index
+	-Ability to modify just not the current subpalette set, but also: 
+		-All sets (A...D)
+		-Just 1 subpalette in the active set (+ ability choose which)
+		-None (in case you just want to modify patterns, not palettes)
+	-Right-clicking or Shift-clicking on any of the 6 "increment" buttons will instead decrement their values. 
+	-Choose which of the 4 subpalettes will decide "colour 0"/ the "common colour" when making colour index changes
+
+	The dialogue has been moved from the somewhat overcrowded "patterns" menu to the "palette" menu.
+	
+
+
+Bugfixes
+--------
+
+	-Swap colours: the old dialogues' action only worked as intended so long as all 4 index values were unique.
+	Now working regardless which case.
+	
+	-TypeIn mode: Using the hotkey T to enter TypeIn mode no longer triggers typing a letter by mistake.
+	
+	-When selecting or deselecting tiles on the tileset, the menu actions "find duplicates" and "find unused" now reset to un-checked state, like they should.  
+	
+	-Incomplete .nss files could potentially crash NEXXT if opened (if an element was hand edited in text and left incomplete). 
+	Now fixed through the contribution of NESdev discord user jroweboy.
+
+
+Misc
+-------
+
+	Additional public domain resources are included in this versions' package:
+	-25 uppercase NES fonts (designed and made available as part of a patreon milestone).
+	-A set of template circles and curves.
+
+	Find them in the "NES graphics assets" folder.
+
+
+======
+0.18.3
+======
+
+Action: Fill with numbers:
+--------------------------
+
+	Improvements:
+	-If a selection (box- or multi-) has been made on the tileset, this action will only fill those.
+	-The action will only fill the active table.
+	-The action no longer asks permission, since everything it edits is immediately visible.
+
+	Tip: This action can now conveniently be used together with the "Find" actions
+	to replace unused or duplicate tiles with a pattern representing their tile ID. 
+
+	Menu path: Patterns > Generate > Fill with numbers.
+
+
+Misc Bugfixes:
+---------------------------
+
+	-Fixed: Opening by file association (double clicking on them) started throwing errors again as of 0.18.  	
+	-Fixed: Capital O and S erroneously triggered shortcuts in contexts they shouldn't.
+	-Fixed: Minor longstanding memory leak.
+	
+
+
+======
+0.18.2
+======
+
+Bugfix:
+------
+	-Nexxt would "forget" to make further cued updates the screen canvas and navigator, if a frequent 
+	condition was met. This would often lead to display issues when designing tiles already in place
+	on these canvases.	Now fixed. 
+
+
+======
+0.18.1
+======
+
+Bugfix:
+------
+	-Saving nametables could sometimes force RLE by mistake because of an unitialized boolean
+	where there was a possibility for an open ended outcome as well. Now fixed.
+
+
+======
+0.18
+======
+
+Overall CPU performance:
+--------------------------
+
+	-Selections, drags, scrolling and some other actions are now generally a lot smoother/quicker. 
+	
+	-The navigator had (and may still have some) performance problems when the canvas was/is large enough.
+	In most cases, this should be more agreeable now.
+
+	-Bugfix: holding down keys no longer cause cpu problems. This affected V-click and TypeIn mode.
+
+
+Non-NES nametable support:
+--------------------------
+	Added support for opening non-NES nametable binaries of these precise sizes: 
+	-768 bytes (32x24; TMS9918 mode 2 table, ie MSX, ColecoVision and more) 
+	-896 bytes (32x28; PCE table)
+	These are interpreted as maps of respective sizes. Note that no colour/attribute data is included. 
+
+Set canvas size:
+--------------------------
+	-New buttons: Add or detract 32 to width, Add or detract 30 to height. This corresponds to the sizes of a standard NES screen.
+	-Entering dimensions by keyboard no longer snaps to nearest attribute byte multiple (4x4). NOTE that this is largely UNTESTED.
+	-bug fix: When extending the canvas, and the "use null tile" checkbox is checked, it also set attributes to this value. Now fixed.
+
+
+Sort tiles:
+--------------------------
+	-Metasprites are now repaired when sorting by Density or Frequency. 
+	-"Sort by Frequency" now takes filter search criteria into account. 
+
+
+Type In mode:
+--------------------------
+	-While in this mode; triggering a double-click event on the tileset when trying to 
+	place glyphs in rapid succession no longer opens CHR editor by mistake.
+	-bugfix: No more traces from previous cursor when typing.
+
+Navigator:
+-------------------------
+
+	-Added maximize/minimize/restore buttons to this window. 
+	Maximize in particular is helpful when a map canvas is larger than your screen can show at one time,
+	to be able to grab the lower right window corner. 
+	-Pressing F6 while minimized restores it to normal.
+	-Zooming to a smaller size now snaps the form window just like zooming to a larger size.
+
+Scrolling:
+--------------------------
+	
+	-Bugfix: 
+	 Odd scroll offsets no longer cause "scanline out of range" error when trying to place
+	 tiles along the edges of the viewport.
+ 
+	-Performance fix:
+	When scrolling by mouse {scroll wheel for y, shift+scrollwheel for x}, 
+	there were redundant real time updates to the navigator. Now removed.
+	
+
+Misc:
+--------------------------
+	-Changed inconsistent language. Any loose mentions of finding or removing "doubles" is now clarified as "duplicates".
+
+======
+0.17.5
+======
+
+Bugfix: Wine on Linux users should now be able to view the Main Editor correctly. Bug introduced in 0.17.2.
+
+
+======
+0.17.4
+======
+
+Import PPU memory dump:
+-----------------------
+
+-Found under Menu > File > Import
+-Accepts any binary that is 8KiB-16KiB (nominally 16KiB) as a raw PPU memory dump 
+ (which you can save from FCEUX, copy from MESEN or any other emulator with a hex editor)
+-Accepts Nintendulator-style .ppumem files too. In this case, PPUOAM is ignored since NEXXT doesn't have a PPUOAM representation just yet.
+-An accepted file will set the screen canvas to a map size of 64x60 (2 by 2 screens) in the process.
+
+
+Invert tile selection
+---------------------
+
+-Shortcut: Ctrl+I
+-Inverts a selection. 
+-Side effects: Also converts a box selection to multi selection, as well as deselects any screen selection in the process. 
+
+
+Find, Remove & Sort tile action fixes & improvements:
+-----------------------------------------------------
+
+-Like it was possible use Remove actions & sort action shorcuts repeatedly to undo/redo them, 
+ Find actions now toggle selections on and off with repeated presses. 
+
+-A bug where remove actions got labled "undo remove" falsely has been removed. 
+
+-A bug where Find Unused would not be able to detect tile $ff as unused has been removed (same fix was applied to "remove unused" in an earlier version).
+
+-All 3 sets of actions now clearly rename themselves depending on toggle state. Previously, only "remove" did that. 
+
+-New behaviour: previously, Remove actions would *skip* a box or multi selection of tiles. 
+ Now it skips anything *not* selected while there's a box- or multi selection.
+ If you wish for the classic behaviour, the new "invert tile selection" action (Ctrl+I) will help. 
+
+
+Minor improvements:
+------------------
+-Brush mask editor {Shift+F4} now allows drawing on the mask continuously (as opposed to clicking mask elements one after another). 
+
+
+Misc. Bugfixes:
+---------------
+
+-[Make Metasprite from Selection] now sets Undo. 
+-[Clear] under the Metasprites tab now sets Undo. 
+-Changing the anchor/origin of all metasprites [ctrl+left click & drag on metapsrite canvas] is now undoable state.
+
+======
+0.17.3
+======
+
+New features:
+-------------
+
+New NEXXT instance:
+	-Opens another instance of NEXXT. 
+	-Can be found in the File menu. 
+	-Hotkey: { Shift+Ctrl+N }.
+	
+	-Tip: Working in 2 instances simultaneously unlocks a lot of NEXXT:s utility. 
+	 You can for example use one canvas as clipbook for reusable structures, 
+	 which you then can copy to clonestamp (v+left click) in your main instance.
+
+
+Improvements:
+-------------
+
+Save screen (32x30):
+	-Instead of being disabled when working on a map, the action now saves the currently viewed screen portion of the map.
+
+
+More events are undoable / revertable:
+	-Canvas size is now a part of the undo- and checkpoint buffers.
+	As a result, it's now possible to undo (ctrl+z) or revert (shift+z) this action:
+	-Set canvas size { Ctrl+Alt+N }
+	
+	In addition, you may revert (shift+z) any other "open" action; if you set a checkpoint (shift+ctrl+z) before. 
+
+
+
+Bug fixes:
+----------
+
+Open CHR from File:
+	Now links to the correct open dialogue (it didn't while open binary actions are organized in the file menu).
+
+Save screen (32x30):
+	In 0.17.2, "save screen" allowed to save any size by mistake.
+
+Change canvas size - rare garbage tiles:
+	-If you changed a canvas so that it would be taller, but at the same time narrower, 
+	a remainder "garbage tiles" may show up on the first new extra row.
+	Garbage tiles are now cleaned up before ending the action. 
+
+Open by file association bug 1:
+	-Would crash while attempting to draw the Navigator canvas. Now fixed.
+
+Undo/Redo bug:
+	Undo/Redo properly swaps metasprite labels now.
+
+Set/Revert checkpoint:
+	Set/Revert now swaps metasprite labels (they didn't). 
+
+
+
+
+
+Known bugs:
+-----------
+Open by file association bug 2:
+	-After closing NEXXT with a file opened through file association, windows seems to retain the handle. 
+	Practically, windows won't allow deleting NEXXT because "a file is open in the software", 
+	until reboot. Nothing obvious to me in the source seems to reflect this. Needs to be studied.
+
+
+======
+0.17.2
+======
+
+UI changes:
+-----------
+
+Shortcuts reform:
+	-To solve a previous shortcut conflict, this had to be done. 
+	While doing it, i also took the opportunity to group shortcuts more intuivily with their subject theme.
+
+	Shortcut:	Action:
+	Shift+Alt+O	Open CHR...
+	Shift+Alt+S	Save CHR Latest...
+	Shift+Alt+1	Save 1K from cursor...
+	Shift+Alt+2	Save 2K from cursor...
+	Shift+Alt+4	Save 4K (current table)...
+	Shift+Alt+8	Save 8K (both tables)...
+	Shift+Alt+E	Save Selection...
+
+	Shift+O		Open Subpalette set...
+	Shift+S		Save Subpalette set...
+
+
+
+Binary open/save actions in file menu:
+	-The various open/save actions for the individual binary components are now also reachable via the File menu.
+	
+	-Via the preferences, it's now possible to toggle which you prefer:
+		-The new style (in file menu)
+		-The old style (in each individual menu)
+		-Both (this can be nice for deciding which you prefer).
+
+
+New methods:
+------------
+
+
+Set 'null tile' to active tile:
+	-By double clicking on the null tile bevel, you set it to the currently active tile.
+	This is in addition to clicking the bevel and dragging up/down, or draging the actual null tile.
+
+
+Navigator 200% zoom:
+	-Hold shift and double click to toggle to 200% zoom.
+
+Small improvements:
+-------------------
+
+Smarter "Select All":
+	-now catches the context if the screen/map was last clicked on, in addition to if there's a selection box on it.
+	-this is also true for the navigator.
+	-When Selecting all on the screen/map, 
+	 repeated presses toggles between selecting all of 1 screen and all of the full map.
+
+Navigator - screen selection box vs camera box visuals
+	-When they overlap perfectly, the camera box lights up at the edges to signify that they occupy the same coordinates.
+
+
+Caps Lock message:
+	-When the status readout is frozen, a tip is shown how to unfreeze it
+
+
+Selection box on screen canvas:
+	-Is now retained when simply changing tile on tileset. 
+	-You may force deselection by shift or ctrl while clicking on the tileset.
+	 (this signals the start of a new selection; shift=box, ctrl=multi)
+	-Or, you may use Ctrl+Shift+A manually.
+
+
+Bug fixes:
+----------
+
+Sprite nudge up/down by arrow keys:
+	-didn't work when "snap" was set. Now fixed.
+
+Drag tile to new place on tileset:
+	-didn't work for single tiles if there wasn't also a box selection somewhere present. Now fixed.
+	-didn't work if a selection had been made from the metasprite tab. Now fixed.
+
+Nudge sprite with arrow keys:
+	-didn't work for up/down if "Snap" button was down. Now fixed.
+
+Move tile on second tileset:
+	-Replaced the null tile from the first set regardless. Is now aware of which tileset is in use.
+
+
+Errata:
+-------
+
+A "known bug" was listed in 0.7.1 but it was resolved in the very same version. 
+
+
+======
+0.17.1
+======
+
+Bugfix:
+-Navigator [F6] erroneously opened the wrong window. Now fixed.
+
+======
+0.17
+======
+
+UI Changes:
+----------
+	Double hotkeys for toggling grid visibilty has been removed:
+	[H] and [Ctrl+Shift+H] are now reserved for a new grid setting. 
+	This leaves toggling grid visibility on/off with [D] or [Ctrl+Shift+D]
+
+New features:
+-------------
+
+Navigator window [F6]:
+	-Finally, there's a navigator window in the style of photoshop. This makes managing maps 
+	larger than 1 screen much easier. 
+	-Beyond its minimap, you can drag the screen rectangle around to scroll over your map. 
+	-Additionally, many of the box selection-associated actions are available to peroform 
+	directly in this window:
+		-Select, change size & move selection
+		-Move, swap and clone contents of selection
+		-Quickpaste (V-click) from clipboard.
+		-Delete, cut, copy and paste.
+	-Selections can be made as large as the whole map when done on the navigator canvas. 
+	This freedom also means new opportunities for moving map/stage content around easily.	
+
+
+	A double click anywhere on its minimap canvas toggles between 1:1 (100%) pixels and 1:2 (50%) zoom.
+	in 50% zoom mode, the tile grid (1x) is automatically disabled for decluttering reasons. 
+	The other grids display normally. 
+
+
+Grid autotoggle when dragging:
+	When dragging contents on the screen canvas, the grid gets toggled on while drag is still accepted.
+	This helps place contents easier when swapping, cloning or moving. 
+
+	
+Screen Grid (32x30) [H in main editor, or Ctrl+Shift+H]:
+	A new grid toggle is introduced to further help with working with assets larger than one screen.
+	This grid is sized exactly 32x30, which will tell you the boundaries of each screen. 
+	
+
+Grid visibility rules:
+	In the View menu, find the submenu grid visibility rules.
+	To change them permanently, you may also find them, and other settings, in the new 
+	"Grids and guides" tab in the Preferences [Ctrl+P].
+
+
+Misc other new preferences [Ctrl+P]:
+	-It's now possible to change the alpha value of lightbox mode. 
+	The range is -- Minimum: 140 (55%) Default: 180 (70%) Maximum: 220 (85%)
+	-It's also possible to turn screen edge snapping on/off.
+	These options are found on the "workspace" tab in preferences. 
+	-Lastly, it's possible to turn the 3 levels of warnings on/off for metasprite scanline limits. 
+	Find it under the "grids & guides" tab.
+
+
+Metasprite label editing in Metasprite Manager [F5]:
+	- Metasprite lables are now editable directly in the metasprite manager. Escape cancels the edit, enter confirms it.
+	- Metasprite names now move with "move up" and "move down". They're also transferred with "paste", "duplicate" and "insert".
+	- A checkbox allows you to bypass this new behaviour for "move up/down", "paste", "duplicate" and "insert".
+
+
+Improvements:
+-------------
+
+Nudge box selection position with arrow keys on main canvas:
+	-While this has been a possibility for some time, it was implemented badly. Now the experience should feel smoother.
+	-pro memoria, while a selection box is in place, hold [alt] and press arrow keys.
+
+
+Menu actions: Rename current metasprite (Shift+Ctrl+M) and Rename all metasprites (Shift+Ctrl+AltM)
+	-It's now possible to press escape to cancel these actions.
+
+
+Make Metasprite from tileset (ctrl+m):
+	-Is now aware of the currently active subpalette and uses that.
+
+
+Metasprite Manager:
+	-Double clicking on an entry in the list opens the metasprite editor tab, set to that metasprite.
+
+Bug fixes:
+----------
+
+
+
+Unresponsive / Hotkey triggering keys when in TypeIn mode.
+	With new hotkeys and shift-only based shortcuts having been introduced, TypeIn mode has not quite worked as intended in a while. 
+	This was discovered when i added a text edit control to the Metasprite Mananger. The list of temporarily disabled shortcuts has been updated.
+	I also took the opportunity to refactor this check into its own routine so it would be easier to remember to manage in future versions.
+
+	
+Scroll bug
+	At some map canvas sizes, previous versions of NESST & NEXXT weren't able to scroll down to the last 2 rows. This has been fixed.
+
+
+Config "factory reset" bug
+	Some items would not set/clear properly. Now fixed. 
+
+
+Known bugs:
+-----------
+
+False warning sound:
+	-When confirming or escaping out of editing a metasprite label in the metasprite manager, NEXXT makes a warning sound. 
+	This is likely because the IDE managed control is set to warn that "invalid" keystrokes (escape and enter) have been ignored by the input field. 
+	I have not yet found a way to bypass this annoying property of the object.  
+
+
+======
+0.16
+======
+
+
+New features:
+-------------
+
+New Drag Selection actions: 
+	These 4 actions work equally on the tileset and screen canvas:
+	
+	-Move selection box: 	within selection; shift + right mouse, then begin drag.
+	-Swap tiles:		within selection; right mouse, begin drag.
+	-Move tiles:		within selection; right mouse, begin drag, hold ctrl. 
+	-clone tiles:		within selection; right mouse, begin drag, hold ctrl+shift.
+	
+	These three are signified by the white selection box staying in place; while a gray "destination box" gets dragged around.
+	Dropping the destination box above the selection box cancels the action. 
+	
+
+"Scan" with active tile cursor:
+	-With a simple left-click on the tileset, if you begin dragging, you'll "scan" the tileset; dragging the "Active tile cursor" along.
+	-This is a useful alternative method for navigating the CHR Editor quickly. 
+	-Combined with the toggle button "Selected only", it's also an effective method to get a better understanding of how tiles are 
+	used and in what quantity on the screen canvas. 
+
+
+Show/Hide pixel grid (CHR Editor): 
+	-Toggles the grid on/off in the CHR Editor.
+	-Shortcut: [Ctrl+G]
+
+
+Improvements & fixes:
+---------------------
+
+Box selections stay positive:
+	-Expanding a box selection north or west would invert the selection coordinates which was slightly iffy and had many workarounds under the hood 
+	to prevent further weirdness.
+	-Now, selections remain "positive" no matter which direction you drag it; keeping the origin coordinate stable.  
+
+
+CHR Editor pixel grid now easier on the eyes: 
+	In the environment where NEXXT is made, the canvas which the CHR editor is painted on relied on a MS Windows-controlled theme.
+	This worked well enough up until windows 7 in classic mode, but in later OSes like win 10 (i haven't tested win 11),
+	this background & grid  colour was too sharp. It's now set to an absolute colour of #CFCFCF which is easier to look at when its grid is on. 
+
+
+Find/Remove unused bug:
+	-Discovered and resolved a NESST-old bug where the tool would not detect if tile 0xFF was unused,
+	because that's the initial tile value of all 64 entries to all 256 metasprite lists.
+	Now fixed by ignoring sprite list items of unused status (this is signified by a relative Y position value of 0xFF as well).
+
+Ctrl+X/Ctrl+V bug:
+	-In the context of the metasprite editor, These actions would often delete and forget CHR tiles in addition to working on metasprites. 
+	This is now fixed and each works respectively on the context of what was last clicked on, as was the intention. 
+
+View Selected Only bug:
+	-Now correctly displays selection while the CHR editor is in 2x2 edit mode.
+
+Swap Pattern tables in selection [Ctrl+Alt+X]:
+
+	
+	-Now accepts multi-selected tiles (ctrl+click)
+	-Now properly sets Undo.
+
+
+Tileset tab:
+	-Double clicking on the big tileset now correctly opens the CHR editor.
+
+
+Swap tiles - now in plural:
+	-It's now possible to swap a box selection of tiles.
+	-In 2x2 edit mode, you automatically swap a 2x2 constellation of tiles by this action. 
+	-The destination of the tile swap is now clearly displayed with a gray "destination box" around the cursor. 
+	-(right mouse button + begin drag)
+
+
+Status readout:
+	-The readout now updates smoother while moving the cursor over the screen canvas. 
+
+CPU overuse bug:
+	-the cpu ran needless routines continuously when holding alt or ctrl+alt, which contributed to lag when working on the screen canvas. Now fixed. 
+
+Errata:
+-------
+
+As of 0.15, window forms now snap to the edges of your screen. I forgot to include this in the changelog.
+
+======
+0.15
+======
+
+
+New main features:
+------------------
+
+Introducing Brushes:
+	-In CHR Editor, press [B] to toggle between Pen and Brush. Elsewhere, [Shift+B]. Also discoverable via (Menu>Draw>Pen>...)
+	-The brush is fixed to 2x2 pixel size, and its shape can be modified with the Brush Mask [M].
+
+Introducing Brush Mask Editor:
+	-In CHR Editor, press [M] to open the Brush Mask editor. Elsewhere, [Shift-F4].
+	-Click a cell to toggle its state.
+	-This is useful for creating chisel-tip brush shapes for dynamic strokes. The default is a square 2x2 block.
+	-Brush Mask Editor inherits most CHR Editor hotkeys.
+
+Introducing Quantized mode drawing:
+	-In CHR Editor, press [N] to toggle Quantized mode. Elsewhere, [Shift-N]. 
+	-In this mode, paint only applies when the pen/brush is at an even pixel position, counting from 0. 
+
+	-This enables using the Brush as a pattern brush for
+		-drawing coarse shapes to chisel at fine resolution later (this can often be easier)
+		-drawing in a "chunky pixels" half-resolution style on purpose.
+		-creating aligned lines easier
+		-creating checkerboard dither easier (note that the NES has difficulty displaying checkerboard dither "as intended", so use with some amount of care/research).
+
+	-For the pen, this means creating stylized even dot patterns.
+	-Combined with the Nudge (wasd) actions, the pen can be used to create straight or diagonal lines more steadily.
+
+
+Introducing "Recall Colour"
+	-New action: Recall colour [Z]. 
+	-New option: + autostore last used (Menu>Draw>...)
+
+	If the option is checked, if you press [Z], the last used colour before the currently active one will get recalled. 
+	Pressing [Z] again will revert back to the first colour.
+	
+	If the option isn't checked, pressing [Z] will act as a simple toggle between 2 sets of active colour that you pick yourself. 
+	You're welcome to try out which you like the best. 	
+	
+	Tips:
+	-----
+	-While intended as a speed toggle, don't forget the colour hotkeys [1,2,3,4] and the eye dropper [right click on a pixel] which often may be as or more speedy/convenient.
+	-It's even possible to toggle in the middle of a pen stroke (so long as you don't hold any modifier keys like ctrl, shift, alt, which would invoke commands).
+
+
+Swap Pattern tables in selection [Ctrl+Alt+X]:
+	-Just like "Swap pattern tables", it moves patterns from A to B and vise versa, except only within a box selection or the current active tile.
+	-Discoverable in (Menu>Patterns>...)
+
+Drag-swap tile improvements:
+	-Metasprites are now auto-repairing when swapping two tiles by the tileset drag action (right click and drag). 
+	-Options to toggle auto-repair of nametables/maps and metasprites on/off, respectively
+	-Option to only repair objects on the Active Tab (ie. Metasprites tab OR Screen tab). 
+	-Discoverable in (Menu>Patterns>...)
+
+
+
+Lesser updates
+--------------
+  
+Colour protect mask now works for Draw modes (tileset and screen canvas).
+
+Menu>Window>Check for new version (web):
+	Opens the NEXXT storefront on itch.
+
+Menu>Window>About...
+	Opens a brief info dialog; with contact links.
+
+
+Minor quality fixes:
+	-More context and content to the statusbar readout. 
+	-A few shift-based commands that bothered while in type-in mode are now properly ignored. 
+	-A minor, rare bug removed from the find/remove/sort actions.
+	-Double clicking on the tileset to open the CHR Editor is now properly ignored while in Draw Mode.
+	-Windows may now snap to the edge of your screen
+
+Source included:
+	-Though i've felt i needed to treat this project as my personal playground for teaching myself c++,
+	i've figured it doesn't hurt to provide the source at this point.
+
+
+======
+0.14.1
+======
+
+
+
+Important bugfixes!
+	-Introduced in 0.14: Erroneously switched extention of .nam and .nrle formats when saving due to a logic miss. Also forced both to be RLE:d. Fixed.
+	-Introduced in 0.14: Erroneously assumed rle formats were nam formats when loading for similar reasons. Fixed.
+
+Less critical, but fixed nevertheless:
+	-Introduced somewhere around 0.7: Metasprite priority up/down buttons always manipulated the first metasprite only. Fixed. Now manipulates the current metasprite.
+	-Introduced unknown: Hotkey for toggling grid on/off didn't automatically update the tilesheet visuals. Fixed. 
+
+Lightbox mode:
+	-Previously "secretly" available via the [pause] key on full keyboards, Lightbox mode is now exposed and available under the Window menu.
+
+
+======
+0.14
+======
+New CHR editor mode - 2x2 tile edit mode.
+	-[Shift+E] enters and exits this mode. If the CHR Editor is the Active window, just [E] suffices. There's also a button in the CHR toolbar.
+	
+	-While in 2x2 edit mode, the editors' center canvas represents a field of 16x16 pixels, or 2 by 2 tiles.
+	This covers the previous "convenience gap" between single tile editing and free draw, and fills a particular role in NES tile editing since 2x2 tiles is often a "natural"
+	structure/block when paired with the typical attribute cell size of most NES graphics. 
+	
+	-Rotating or flipping tiles will also rotate or flip the positions of the 4 tiles to match. 
+	Outside this mode, this assumption is not made out of safety concerns on the screen/map canvas. 
+	This special rule is also disabled if the active tile cursor has been placed on the right or bottom edge of the tilesheet.
+ 	
+Protect colours feature
+	-4 new buttons in the CHR editor can protect individual colours in the pattern from being drawn over. 
+	This is very handy for drawing or pasting "behind" graphics.
+	
+	Interface:
+	[Click] abutton to toggle protection on/off. 
+	In addition, you may:
+
+	[Ctrl+Click] a button to "mute" that colour and enable the 3 others.
+	[Alt-Click] a button to "solo" a color as editable; "muting" the others. 
+	[Shift+Click] a button to clear all 4 buttons.
+
+	Colour protection currently has 2 application filters: 
+	-Apply to pen (this includes bucket) 	[Alt +D,P,P] 
+	-Apply to paste				[Alt +D,P,A]
+	You can turn these filters on/off via the menu (Draw>Protect Colours>)
+
+	2 more menu actions are currently available:
+	[Shift+Alt+P] Clear protection
+	[Ctrl+Alt+P] Invert protection
+	
+
+New workspace configuration:
+	-The toolbar in the CHR editor can move to top or remain at bottom. Your preference is stored in config.txt.
+
+"Bitmask options" menu item moved from the Edit menu:
+	-Can now be found in the Draw menu. 
+
+CPU improvements:
+	-Cued heavy update tasks are now clocked to fibonacci numbers so the rate of coinciding heavy updates is reduced; allowing certain unscheduled/event updates free room to perform.
+	-CHR editor drawing has had its editing canvas wrapped in more conditions to lower cpu cost.
+
+Ink mode bugfixes and tweaks:
+	-Setting the ink flow rate would force the pen to apply ink "continously over distance" even if "per click" was set, until restart. This has been fixed.
+	-flow rate options now have more meaningfully distanced factors: fastest: x1 slowest: x9 (previously x1 to x5).
+
+======
+0.13
+======
+
+New Palette tools:
+	Placed to the right of the subpalettes; 
+	-The new buttons [<] and [>] shift the colour indices of the Active Subpalette left and right on the system palette. Grayscale colours are ignored.
+	-The new buttons [/] and [\] tilt colour #1 + colour #3 of the Activie Subpalette in opposite directions. Again, grayscale colours are ignored.
+	One of the buttons does the same but in reverse. 
+ 	
+	
+	Tip: 	These buttons are neat for helping building "hue ramps" more quickly. using these controls, 
+	it's often more useful/natural to tilt the bright colour towards the warm/yellow and the dark colour towards the cold/blue, though there may be artistic exceptions. 
+
+	-The new buttons [-] and [+] increase or decrease the value (brightness) of a subpalette. Note that this, unlike the hue buttons, 
+	can be quite destructive edits as colours are pushed into white or black and the "hue nybble" of the original colour gets lost. 
+
+	Tip:	These 6 new buttons work best when you've put into regular practice to set checkpoints [shift+ctrl+z] and revert to checkpoints.
+	Since this button set essentially make what corresponds to many manual edits in just a few clicks, it's nice to set a point which is easy to go back to.
+	This both enables creative experimentation and reduces risk.
+
+Emphasis bits/PPUMASK improvements:
+	-PPUMASK (R,G,B, and monochrome mode bits) are now stored per palette set. 
+	-2 new actions are available through the menu or hotkeys to complement this expansion:
+		- Clear emphasis [ctrl-E]
+		- Clone emphasis to all sets [Shift+Ctrl-E]
+
+"Type in" mode improvements:
+
+	-[Escape] now exits "Type in" mode (Ctrl+T still works too). 
+	-[Shift+Enter] performs a "reverse" carriage return - back and 1 step up.
+	-Minor fix: When entering Type In mode with the hotkey T, if an origin was already selected the cursor would jump 1 step to the right. This is now fixed.
+
+Floating window improvements:
+	-[Escape] now closes the currently active floating window (CHR editor & metasprite manager).
+	-[period] and [comma] keys for prev/next metasprite now from active floating windows too.
+	-All main editor tabs are now switchable even while a floating window is active.
+
+
+New tooltips in the status readout:
+	-All buttons in the right hand side panel of the main window now have useful descriptions and hints in the status bar when hovered over. 
+
+Misc:
+	-Bug report fixed: Switching to and from the Tileset tab with the Function keys now correctly swaps the screen view to the small canvas and back.
+
+
+=======
+0.12
+=======
+Colour picking improvements:
+	New, speedy methods for picking subpalette colours have been added:
+	
+	-[Ctrl click] on a system colour to "ripple pick" a subpalette, that is, pick a colour for the currently active subpalette colour and automatically select the next one. 
+	This is useful for picking a trio of colours for a subpalette much quicker. Ripple picking skips the backdrop colour when cycling through the subpalette. 
+	-[Ctrl right-click] will skip a "ripple" without picking.
+	
+	-[Ctrl+Shift click] on a system colour to "ripple pick" up to a whole set of 4 subpalettes. Again, ripple picking skips "backdrop" entries.
+	-[Ctrl+Shift right-click] will skip a "ripple" without picking; spanning all 4 subpalettes.
+
+	-[Shift click] ripple-pick stepping a whole subpalette at a time. Useful for setting new colours in the same "tier", provided you've ordered your subpalette contents in tiers. 
+ 	-[Shift right-click] skip to the same position in the next subpalette.
+
+	-[Alt click] on a system colour to quickly pick it as the backdrop colour (aka "common colour" or "colour 0"). Using this method, you don't need to preselect colour 0. 
+
+	Tip: 
+	----
+	These new actions can be particularly powerful when used together with the quick-pick hotkeys: 1-4 for colours, and occasionally Shift + 1-4 for subpalettes.
+	When you want to replace a whole subpalette quickly, you'd press [2] to set active colour to the first non-backdrop colour, 
+	then ripple pick using ctrl-click or ctrl+shift-click on the system palette.
+ 
+
+	A guide to these actions is shown in the status bar, when hovering the mouse over the system palette. 
+	Excluded from the guide is the old & somewhat obsolete method of right-click-dragging a system colour to a subpalette, 
+	which is still valid, but mostly not favourable compared to the simple click.
+	The slim usecase for the drag method is that you can edit subpalette colours without changing active colour. 
+
+Misc:
+	The button state for last used palette set (A-D) is now stored in the session file, and retrieved. 
+
+
+=======
+0.11
+=======
+
+New session file version
+Session files from this version and forward saves the following:
+-Checkpoint data 
+-Individual Metasprite Names
+
+If opening a session created in v0.11 in any earlier version of NEXXT (or NESST), this extra data will be lost if saved again from that version of the program
+
+New features:
+-Autocreate tiles
+	While in draw mode, if autocreate tiles button is down, "NEXXT" will appoint new tiles as you draw on the nametable/screen canvas. 
+	PLEASE be aware that this feature sometimes make cleanup mistakes, so use "remove duplicates / unused" often and be sure to save or use the checkpoint once in a while. 
+	Future versions will see improvements eventually. 
+
+-Sprites are given editable names, which are also exported as clipboard data. 
+--Method 1: double click on the name of the metasprite to bring up the name dialogue
+--Method 2: There are 2 new menu actions to support this functionality: "rename metasprite" & "rename all metasprites"
+	"rename all" assumes the session name as the sprite base name, however you can edit it. After entering, all used sprites will be named and numbered.
+--Method 3: The old "ask for name" prompts will override given metasprite names and assume the session name as default, however again, you can edit it. 
+ 
+A few minor bugfixes:
+-The "remove unused / doubles" actions now correctly lose their checkmark if you change the conditions in-between repeated actions
+-hotfix: The metasprite canvas doesn't get pushed off the form in 4x zoom mode. You only get 7 tile columns of canvas rather than 8 in this mode; this will eventually be fixed.
+-Naming dialogues are now have context aware window titles (previously it would say "name metasprite" although the prompt was naming the bank, and so on).
+
+
+
+=======
+0.10.1
+======= 
+
+New feature:
+-You can now make metasprites from both tileset selections and nametable selections; 
+	whichever was selected by the user most recently. 
+	The menu action changed name to "Make metasprite from selection (ctrl+m)" to reflect this. 
+
+Bug fixes:
+-A bug made it impossible to turn the "ask for name" option off 
+	when putting metasprites on the clipboard. Now fixed.
+-When not entering a custom name to metasprites put to clipboard, 
+	it would erroneously put the whole path of the file as a label. 
+	Now it correctly defaults to just the filename. 
+
+Minor improvements:
+-More and better tooltips
+-More and better status readouts
+-A few typo corrections
+
+
+
+=======
+0.10.0
+======= 
+
+The important stuff
+-------------------
+
+
+Swap subpalette colours:
+	*dragging a colour (using right click to drag) from one subpalette entry to another now swaps the colours. This can be done inside a subpalette or across subpalettes.  
+
+
+New Tileset editor tab:
+	*This new tab mode lets you edit the tileset as a whole in 8x, 12x or 16x zoom (depending on your UI scale).
+	While in this mode, the tileset and the screen canvas switch places. 
+	
+	Double-clicking on the tileset to open the chr editor is disabled in this mode. 
+
+New edit mode: draw
+	*In layout mode (default), NEXXT behaves as normal
+	*In draw mode, you can draw freely on the tileset or (semi-freely) on the nametable.
+	*Switch quickly between the modes with [shift+D]
+	*Tip: Draw mode works best in 3x or 4x zoom, or with the windows magnifier turned on.
+	*Most things work exactly like in the CHR editor, with some additions and exceptions
+		
+		-Selecting an area on the tileset limits drawing to this area. this can be useful for drawing or filling within boundaries. 
+		 This does not yet work for the screen canvas, but might in the future. 
+		
+		-Ink mode modifier keys are disabled while drawing on the tileset or screen canvas. 
+		 Instead, the marquee tool is accessible on shift. To reach the inks, use hotkeys 5,6,7.
+		
+		-Paint bucket behaves slightly different from the CHR editor in ink modes 6 and 7.
+		 You can drag it across several fields to make them 1 step brighter/darker, 
+		 rather than dragging to see which field you want to change.
+
+Major bugfixes:
+	-Clonestamping/V-pasting (Holding V and clicking on the screen) now correctly registers an undoable event. 
+
+Minor things
+------------
+
+UI clarification:
+	*When copy/cutpasting several disconnected tiles, nexxt puts them in a list. This list is then pasted in a long string of tiles. 
+	This behaviour was not immediately obvious, so now the "origin tile" of the paste is highlighted as a selection, if one wasn't made manually.
+
+Bugfixes:
+	*F1, F2 (and F3) now works even if CHR editor is active.
+	*Some text exports for C metasprite banks had syntax errors. Should be fixed now. 	
+	
+
+
+Misc
+--------
+
+You might find some GUI elements that are new and greyed out. These are still being worked on and not ready to be enabled, including:
+	-A mode that creates new tiles automatically when drawing free hand on the screen canvas
+	-A simple animation tool for meta-sprites.
+
+=======
+0.9.1
+=======
+File support:
+	* Import now support 1bpp BMP:s; in addition to previous 4bpp and 8bpp BMP:s. 
+
+Bugfixes:
+	* performance issues, including some severe ones, were squashed when: 
+		-dragging sprites around on the metasprite canvas
+		-editing metasprites in general while the metasprite manager is open.
+	* nudge/rotate/mirror would 'remember' a selection on the CHR table if auto-deselected by selecting something on the screen canvas instead.
+		With the selection still being on the screen canvas, it was possible to access performing these actions across the old selection. 
+		This has bin fixed (even if remembering has a certain feature potential if UX:d better). 
+	* Swapping tiles correctly sets UNDO points now. 
+	* The meaning of Low and High bitplanes got mixed up when nudging tiles horizontally. This has been fixed now.
+	* fixed some conflicting Alt shortcuts
+	* Preferences: aligning sprite list left or center is now applied when saving/loading the preferences.
+
+Naming conventions:
+	*Several menu items and other elements have had their captions changed to improve clarity of what they're doing or representing. 
+	The most noticable change is one of the menu groups as well as the first tab. The "nametable" menu group was changed to "canvas" to reflect
+	that the canvas may display and edit a screen (nametable + attribute table), or a map (not a nametable, technically speaking). 
+	The first tab, as well as the titlebar caption, changes depending on if you're editing a screen or a map. 
+	This part of ongoing work to make NEXXT work with new educational material being developed. 
+ 
+
+0.9.0
+==============================================
+-Preferences [Ctrl+P]
+	This new dialogue is for applying and saving config files. When opening the dialogue, it comes preloaded with certain changes you might have done
+	through the "options" menu items, such as if you've selected to save nametables with RLE compression, for example. 
+	A quick way to canonize new preferences is therefore to press ctrl+p and then directly enter. 
+	Browsing through the tabs gives you a better overlook though, as well as an idea of what options are preference-able. 
+
+	In case you want to reset preferences, you can either press the "Reload install settings" button and then press enter.  
+	Another way to do it is to simply delete the preferences.cfg file. If no preference file is present, NEXXT will generate
+	a fresh one next time NEXXT is started. 
+
+	The most useful feature of the preference dialogue is probably the Startup settings tab. This contains some settings you would otherwise not find
+	in the menu system, but that may speed up your workflow or otherwise at least make the user experience a bit more tailormade. 
+
+0.8.1
+==============================================
+Quick update to fix some things. 
+
+CHR editor: vertical and horizontal flip hotkeys are functional again.
+
+Fill [F] is now itemized as a menu action.
+	It happened on several occasions that users have wondered how to perform the fill action now that Ctrl+F means "Find tiles from selection".
+	The answer that you simply press F had to be looked up in the hotkey readme. The action can now be found under the Edit menu; grouped with
+	select all, deselect, and delete, along with its hotkey description.
+
+	As a side effect, F is now a global hotkey. That means you can access it even if the CHR editor or Metasprite Manager is the active window.
+	However, Fill is disabled if the Metasprites tab is active in the main window as a precaution. 
+	In Type In mode, the hotkey itself is temporarily disabled, but you can still access the action through the menu. 
+
+A new preferences dialogue is in the works, 
+	but it plus any file writing/reading related to it has been disabled in this version until everything works as it is supposed to.
+
+0.8
+==============================================
+First, 2 general notes. 
+1) The growth rate has been explosive lately. To not bother the community with too frequent updates, i've rolled minor releases into
+   one large update.
+2) The new "preferences" menu doesn't yet store its settings between sessions. That's for another update. Apologies for the inconvenience. 
+
+
+Work safety
+----------------------------------------------
+More secure close procedure:
+	-if there is unsaved work, clicking on the close button on the main window (or if the OnClose event is otherwise called)
+	 now produces the same confirmation dialog as the ctrl+q action.
+
+	-ctrl+q now calls OnClose() instead of conditionally calling exit(0).
+
+
+Metasprites:
+----------------------------------------------
+Better sprites per scanline warning system:
+	- if 5 or more sprites are present on a scanline, 
+	  a 1px wide yellow warning dot will appear on each valid scanline; on each side of the canvas.
+	  (5 means 2 objects of the same type/width can't populate the same vertical estate without cancellation or flicker.)
+	- if 9 or more sprites are present on a scanline, 
+	  a 2px wide bright red warning dot will appear (overwriting the yellow warning); on each side of the canvas. 
+ 	  (9 means the object can't get drawn without cancellation or flicker.)
+
+More "make metasprite" (Ctrl+M) options:
+	When using Ctrl-M to make a metasprite from a nametable/map selection, the original behaviour was to 
+	center-align the result on both axes. 
+	-Now, there are options to align the sprite left, right, bottom and top relative to the "make" origin.
+	-The "make" origin can now be set either to center of canvas (default) or the anchor cross.
+
+Full editability of the sprite attributes byte:
+	-Priority bit and unimplemented bits 4,3 and 2 of a sprite object are now editable. 
+	-Previously, the text export would forget any of these 4 bits if they were set in a sprite object. That has been fixed. 
+
+	Please note: NEXXT currently has no way of displaying the masking effect/quirk. 
+	(occurs an NES when a sprite of higher sprite drawing priority has the bg priority bit set and eclipses a sprite of 
+	lower drawing priority with the bg priority bit clear.) 
+
+New hotkey: P for Priority
+	While one or more sprites are selected in the list, P will toggle the priority bit for those objects. 
+
+Export metasprites/bank as BMP file(s):
+	-F11 will export the active metasprite as BMP.
+	-Ctrl-F11 will export all existing metasprites as a BMP sequence.
+	You can optionally find both actions under File>Export
+
+Export metasprites/bank as BMP clipboard objects:
+	Under the Metasprites menu, you'll find both corresponding actions. 
+	
+	A note on putting multiple metasprites on the clipboard stack:
+	-Because windows requires a period of 200ms to pass between clipboard entries in order to not overwrite the last one, 
+	this process may take a while. If you're putting more than 10 metasprites on the clipboard simultaneously, 
+	NEXXT will ask you to confirm the choice. 
+
+	To retrieve your sequence of clipboard objects, press Win-V.
+
+Options for exporting metasprite(s) as text:
+	-NEXXT now has a range of different options for adding metadata to each metasprite.
+	 
+	 There are 6 different ways lay down bytes to tell your engine when a metasprite ends:
+		A) None (implied size by your engine, or separate table)
+		B) -Count header (tell the engine how many sprites to work before data)
+		C) N flag ($80) (tell the engine N flag has been set. Standard NESST/NESlib behaviour). 
+		D) -$FF	
+		E) -$00
+		F) -Double $00
+
+
+Metasprite & Metasprite bank names:
+	Previously, the software would always ask for a name if exporting a bank, and never if exporting a single metasprite.
+	The names were defaulted to "metasprite". 
+
+	Now, either action has its own option to ask for a name, with the filename being the default value. 
+	The option is checked for banks and not for metasprites, per default. 	
+
+
+Patterns/tilesets:
+----------------------------------------------
+New stat - Entries in selection:
+	When hovering the mouse over the tileset, you can now also tell how many entries of the tiles there are on the nametable/map within a selection. 
+	The selection may be a single tile, several single tiles [ctrl+click], or a selection rectangle of tiles. 
+
+
+Nametable:
+----------------------------------------------
+Improved [Nametable > Copy as text >] actions:
+	-Previously, these actions would just ignore if no selection on the nametable/map was made. 
+	Now, no selection defaults to all of the nametable/map. Stat messages have been added to let the user know the difference when carrying out the action.
+	Tip: If the nametable canvas was last clicked on, Ctrl+A will select all of the viewport; but no more (a map may be larger than the viewport). 
+	This can be useful for exporting screen wide chunks as text. 
+
+
+Colour & palettes:
+----------------------------------------------
+Master palette choice now visible to user:
+	On startup, NESST & the current version of NEXXT looks for an external palette file. If one can't be found, 
+	it uses an internal table instead. 
+	-The state of this process is now visible through the menu item Palettes > Master Palette.
+	-The user can reevaluate the master palette by either choosing 
+		A) Palettes > Master palette > External 192 byte palette (nes.pal)
+		B) Palettes > Master palette > NESST classic
+
+	On choosing (A), if no external file is found, it will default to (B) as a safety backup. 
+	
+	This feature set was done for potential future things to come. For now, it mostly improves 
+	visibility and removes the need to restart NEXXT to reevaluate the master palette.
+
+
+General & UI:
+----------------------------------------------
+
+CHR Editor screen placement:
+	Previously, the CHR editor would open in the middle of the work area, 
+	which was generally in the way and required a drag interaction by the user before getting to work. 
+	Since this is often one of the first things you do each session, i wanted to do something about that.
+	
+	-Now, the first time you open the CHR Editor in a session, it will (attempt to) place itself by the right 
+	hand side of the tileset canvas of the main window.
+	
+Preferences menu:
+	This new main menu item contains the following features:
+	
+	A) Asm syntax style (New. When exporting or copying to text, you can set NEXXT to export directives in the .byte/.word 
+	or the .db/.dw style. This should reduce the need for editing the text post-fact for some users. 
+	
+	B) Editor bitmask options (moved from the edit menu)
+	
+	C) Type In ASCII Base offset (moved from the edit menu)
+	
+	D) Workspace arrangement (new)
+	
+	E) Advanced (moved from the palette menu)	
+
+	These, and some other options, are slated to be stored in an external configuration file in a future version. 
+
+
+Other menu items moved:
+	-The menu folders "emphasis bits" and "palette set" have been moved from "view" to "palettes" to better correspond to the 
+	form's categorization of said items.
+
+
+Metasprite editor rearranged:
+	The canvas/editor is now center of the workspace, which improves workspeed and makes it easier for beginners to learn 
+	how to drag and drop sprites on the canvas. If the old style is preferred, go to: 
+	Preferences > metasprite editor arrangement > List right of canvas.
+
+
+Groupbox alignment and x3 / x4 scales:
+	While it still looks sort of wonky, the layout and view groupboxes now align to the left of their parent groupbox 
+	when the workspace is scaled, making them a bit more convenient to access while working in these scale modes. 
+
+Changed keybindings:
+	Export > Tileset as BMP is now Ctrl+F12
+	Export > Palette as BMP is now Ctrl+Shift+F12
+
+Changed menu item didactics:
+	A few menu items had their names changed to improve clarity. 
+	Most notably, Preferences > Advanced > Enforce NES safe palette entries was changed to the more accurate description:
+	"Enforce using $0F as black"
+
+
+Minor bug fixes & misc:
+----------------------------------------------
+	-Type In ASCII Base offset erroneously checked the -$30 option when the default behaviour actually 
+	is -$20, just like it does behind the curtains in NESST.
+
+	-you can no longer drag the anchor beyond the bottom or right edge of the metasprite canvas.
+
+	-Made reselecting while dragging (keep holding left button & right click) stable on the nametable canvas (previous version 
+	 could sometimes/often forget a selection rectangle should be drawn in case the mouse moved a single point).  
+
+	-Replaced some more direct calls to some update routines with a timed update cue for better performance. 
+
+	-It was formerly possible to make a metasprite with an ypos value of 255. This is unfortunately the value the tool uses to interpret the item as non-			
+	existing and elegible for overwrites and skips. To safeguard against this, the stopgap solution is that the tool reassigns it to have a value of 254. 
+	In the extreme off chance that a user actually wants the y position to be 255, they have to edit that post-export. 
+	This also applies to moving a sprite into the ypos value 255, in which case the action isn't taken.
+	A stat message is shown if a move failed.   
+
+	-Change of grammar in 5 message boxes.
+
+
+Newly discovered bugs:
+----------------------------------------------
+	-All "put on cliboard as BMP" actions work as intended when copied and pasted on the same system. 
+	However, using logitech flow to copy from one test system (win7) to another (win10) offset the data
+	by 3 pixels. The bug likely resides within the arguments i pass to the VCL function, or within the VCL
+	function itself. I haven't found a convenient solution as of yet. It's unlikely users will encounter this problem.
+		 
+
+0.7.2
+==============================================
+In general:
+-----------
+Remove unused [Ctrl+Shift+U] & Remove duplicates [Ctrl+Shift+U] improvement:
+	-It's now an option if you want the remaining tiles autosorted or not. 
+	 For now, the default mode is *not* sorting on removal since that was suggested to be better. It's on trial. 
+
+Nametable editor:
+-----------------
+Fill [F] improvement:
+	-Is now aware of the currently active subpalette and will fill attributes if the "apply attributes" 
+	 button is down
+
+Type In bugfixes:
+	-hotkeys on the top row of numbers as well as the shortcut shift+s are now disabled while in 
+	 "type in" mode as well. 
+
+Metasprite editor:
+------------------
+Metasprite editor general improvements:
+	-Ctrl c/v/x will operate on the metasprite field or the tileset depending on what was clicked on last. 
+	 (Sprite list acting the same is on the todo list)
+
+Sprite list priority up/down improvements:
+	-Will now work on not just 1 sprite at a time, but also a selection of sprites. 
+
+Improved sprite list controls:
+	-When the sprite list is the active object (in general terms last clicked on), usually arrow key inputs 
+	operate on the position of currently selected sprite(s). 
+	
+	However, with this version,
+	-If holding [ctrl], key input from [up], [down], [home] and [end] will navigate the sprite list. 
+	-[ctrl+shift] plus [up/down/home/end] will select multiple items. 
+
+Improved Selected sprites display:
+	-When you select more than 1 sprites on the sprite list, all selected tiles will 
+	display a white selection box. They'll also show when the "box" filter option is set to sel (selected only).
+	This is both more informative and makes the selection display filters more useful.
+
+Improved didactics:
+	-Cleaned up and elaborated on the Metasprite editor tips; which should be helpful getting started. 
+ 
+
+
+Minor bugfixes:
+-----------------
+	-Deselect now correctly sets the tile cursor to the first tile (off by one error). 
+	-Hide "Selected: n" if no individual tiles are selected in series. 
+	-forgot to cast an int as AnsiString for the stat readout when copypasting metasprites. Now fixed. 
+	-found & removed two cases where undo would be set despite no action is taking place 
+	attempting to move a sprite up or down the list but the home or end of the list has already been reached).
+ 	-the Anchor for the Metasprites can now be 0,0 (previously the minimum was 8,8)
+
+
+Newly known bugs:
+-----------------
+	-While snap is turned on, moving multiple sprites at once with the arrows doesn't yield the desired result.
+ 
+0.7.1
+==============================================
+General improvements:	
+	-Fixed some cosmetic blemishes in certain situations with the status bar. 
+
+Bug fixes:
+	-The memory leak was reintroudiced in 0.7.0, although less severe this time. Now fixed, hopefully for good. 
+
+Documentation:
+	-Took the opportunity to include more hotkeys and mouse actions i forgot about in the last distribution.
+	Should make it easier for newcomers to get started, until proper documentation is in place. 
+
+General new findings:
+	-The first time you start a new version of NEXXT on a 64 bit system, windows 10 will pad it
+	with redundant RAM allocation (about 103-104mb) for some reason. 
+	If this is a problem, simply close and restart NEXXT. 
+	Subsequent times, it should allocate about 21mb. 
+
+
+0.7.0
+==============================================
+New Nudge features: 
+	Nudge now works on any rectangular selection of tiles. The patterns will wrap at the edge of the selection,
+	instead of around each tile. "Nudge into" has become redundant and has been removed from the interface.
+
+
+More CHR editor actions have become selection rectangle aware:
+	The following actions can now act on a rectangular selection of chr tiles:
+	- Increase/Decrease Value (with cap or wrap-around)
+	- Mirror H/V*
+	- Rotate L/R*
+
+	These actions operate on the contents of each tile; not the each tiles' position in the table. 
+	If you wish to rearrange their ID:s, you still have to do that part manually. 
+
+	This is a safety measure as to not make references in nametables/maps not in the current project lose their references.
+	An option might become available at some later point, pending a potential feature to link and work on multiple maps, down the road.    
+
+
+Quicksave:
+	A simple session save [Ctrl+S] without a file dialog is finally in. And largely untested, but should work. Let me know if there are any problems. 
+
+
+Lock Stats readout:
+	Press [CAPS LOCK] to lock the stats readout at the bottom of the nametable view. Press again to unlock. 
+	
+	This can be useful for examining values or taking notes or working with another tool such as a text editor;
+	without the cursor disturbing the values.  
+
+	Once unlocked again, the stats will refresh if stat changes (such as the cursor position) were made. 
+
+	"Lock stats" mode is not available while in "Type In" mode [CTRL+T]. 
+ 
+
+Selection tool - big performance improvement:
+	The selection tool is now instantaneously responsive, even on aged netbooks. 
+	An old issue with nesst were the sluggish drag-to-select actions on the NT, and tileset especially. 
+	The old fix i did reduced # of updates to a grid collision system instead of cursor points basis, 
+	which made it better but not perfect. A timer throttle improved that slightly. 
+	The new fix, which on its own is enough to make selection rectangles respond snappy to the cursor movement, 
+	was done by suppressing superfluous updates to the nametable while a selection was being drawn.  
+
+
+Improved "Find Doubles" [Ctrl+D]
+	This action now finds any and all doubles in tiles with content. Originally the behaviour only looked for doubles on a single active tile, which was a bit needle in a haystack.
+
+
+Better control over "Find Unused" [Ctrl+U] and "Delete Unused" [Ctrl+Shift+U]
+	You can now set options to look at tile usage on the active tab (Nametable or Metasprites), just the nametable/map, just the sprites, or both. 
+	If you uncheck "force: only on active tab", the checks on the two other options take priority. 
+
+	Originally finding unused would only look at nametable, but deleting would skip both nt and metasprite-used tiles. The problem was part you couldn't decide, and also that it's more rare than common to share the same table for both background and sprites. 
+
+
+New hotkeys:
+	-T: Turns on Type In mode. In order turn off Type In mode with [T] as well, the nametable needs to be deselected [CTRL+SHIFT+A]. 
+	Alternately, press [CTRL+T].
+
+	-D: Grid on/off. Double for Hotkey [H]. The ideal resting hand position for layout work is over the WASD keys, and the grid is something that is useful to turn on/off frequently. The old hotkey [H] is preserved because of the HJKL strip that toggles all the four options for the grid as laid out on the form.
+
+
+Hotkey mnemonics:
+	-While ergonomy and speed of use were always the main goal for direct hotkeys, some mnemonics worked their way in. 
+	In the order the buttons appear top to bottom, their corresponding hotkeys spell out words.
+
+	Layout buttons - WET
+	W - Apply Patterns
+	E - Apply Attributs
+	T - Type In Mode
+
+	View buttons - SAD
+	S - Selected only
+	A - Attribute checker
+	D - Grids on/off 
+
+
+Gloves off: 
+	NEXXT no longer asks for confirmation when:
+	-clearing A+B tilesets (ctrl+del, or patterns>generare>clear)
+	-clearing one or several sprite(s) in a metasprite (selection + delete button or del while on the metasprite tab)
+	-clearing a metasprite 
+
+	...in order to remove workflow bumps. 
+
+
+Action announcement:
+	For now, the following actions are announced on the status bar:
+	-clearing A+B tilesets
+	-clearing one or several sprite(s) in a metasprite
+	-clearing metasprite
+	-deleting doubles
+	-deleting unused*
+
+	-copy selection as BMP (can be nametable or character data depending on context)
+
+	Action announcements will hold for a second if another status update is pending (moving, clicking or holding the cursor over a canvas)
+
+	The working design principle for now is that if something is:
+	-deleted without confirmation dialog
+	-destructively altered without confirmation dialog
+	-unclear what has been operated on
+	-a tip tied directly to the situation following the action could be helpful, 
+
+	then an action confirmation should show, unless it is too bulky for the workflow. 
+
+	I've probably missed several cases. Will add more as i realize them. 
+
+
+Minor bug fixes:
+	-The nametable hotkey "H" (toggle grid on/off) was mislinked to 1x1 grid set/clear. Now corrected. 
+	-The menu action and corresponding shortcut for type in mode [Ctrl+T] now works.
+	-Removed a situation where the cpu would overwork if shift was held in some conditions; also freezing stat updates after a second or two.
+	-Shortcuts that simply use shift as modifier are disabled while Type In Mode is active. 
+	-A failed session load would still clear the "unsaved changes" asterisk. Should work as expected now. 
+
+
+Known bugs:
+	-While dragging a rectangular selection on the chr table, # of tiles selected only shows up in the stats text on rare occasions.
+	-If selecting multiple individual patterns with ctrl-click, the deselect action [Ctrl+Shift+A] will misjudge a bit and select the 2nd tile 
+	(a tile must always selected on the chr table even if you deselect. The current norm is tile #$00.)
+
+Big todos:
+	-Improve control over what action affects what thing under the metasprite tab. 
+
+0.6.5:
+==============================================
+
+New general hotkeys: 
+--------------
+
+- .< (on US keyboards): Previous metasprite
+- ,> (on US keyboards): Next metasprite
+
+This reflects conventions of other tools (such as Aseprite, unless that was something i configured).
+
+-num 1,2,3,4,6,7,8,9: navigate between tiles
+-num 5: open/close chr editor
+
+  
+New hotkeys while in CHR Editor is active:
+--------------
+
+-N "Nudge into" toggle. this is a beta function that will eventually get self implied if more than one tile are selected)
+-I "hI bit" bitmask toggle. To set what the bitmask affects, go to edit>bitmask options
+-O "lO bit" bitmask toggle. To set what the bitmask affects, go to edit>bitmask options
+
+Misc:
+--------------
+
+-re-enabled some hotkeys that had been temporarily disabled in the CHR Editors. They include:
+
+-Arrow keys for nudging
+-If nametable is the active tab: ctrl + num 4 & num 6 for stepping between a series of nametable "frames" as specified in vanilla NESST readme. Warning: you should save a chr before stepping through.
+
+-changed import warning message to reflect a previous change: Tiles in the excess of 256 will now be placed on the 2nd pattern table instead of being ignored.
+A normal NES nametable doesn't support displaying more than 256 tiles at once, though, and currently NEXXT doesn't support mappers
+with extended nametable attributes (such as VRC5, MMC5, MXM-0).
+
+-replaced checkboxes with speed buttons in the CHR editor because of a problem where Winforms take control over part of the keyboard if checkboxes are present in an active window. 
+
+
+0.6.4b:
+==============================================
+-a memory leak was miraculously removed by restarting the IDE PC and rebuilding this tool.
+-tamed some troublesome CPU hotspots that may have caused older laptops to start their fans if moving the mouse over the canvases too much.
+
+0.6.3b:
+==============================================
+-fixed so that the ASCII offset default is -32, just like in the original NESST. this will remain until charmap support is added. 
+-fixed a Type In bug where ASCII offsets were double negated. 
+-fixed omission of updating the status bar when a session saves as a new name. 
+-fixed a few typos, whereof one used to mess up an alt shortcut. 

@@ -1,0 +1,30 @@
+NESST_CF_NAM
+	Header: 8 bytes
+		byte 0x00 	= width in tiles
+		byte 0x04	= height in tiles
+	Body start at: 0x08
+	Body length: size of (char tilenames to copy)
+
+NESST_CF_CHR
+	Header: 12 bytes
+		byte 0x00	= width in tiles
+		byte 0x04	= height in tiles
+		byte 0x08	= Rect selection (true/false)
+
+	"Tiles" Body start at: 0x0C
+	"Tiles" Body length: size of (char tiles to copy * 16)
+	"Properties" body start at 0x0C+size of(char tiles to copy * 16)
+	"Properties" length: size of(uint32 properties to copy)
+
+Note that the properties is an add-on exclusive to NEXXT - NESST doesn't read this. 
+
+
+NESST_CF_PAL
+	Header: none
+	Body length: 12 bytes
+
+NESST_CF_META
+	Header: none
+	Body length 256 bytes
+	Data format: (array of structs: char y, char tile, char attr, char x)
+
