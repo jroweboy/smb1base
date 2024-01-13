@@ -91,9 +91,9 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
 
 InitializeGame:
 .import InitializeMemory, LoadAreaPointer
-  ldy #$6f              ;clear all memory as in initialization procedure,
-  jsr InitializeMemory  ;but this time, clear only as far as $076f
-  ldy #$1f
+  ldy #<WorldSelectNumber  ;clear all memory as in initialization procedure,
+  jsr InitializeMemory     ;but this time, clear only as far as $076f
+  ldy #AreaMusicBuffer_Alt - SoundMemory
 ClrSndLoop:
   sta SoundMemory,y     ;clear out memory used
   dey                   ;by the sound engines
@@ -104,9 +104,9 @@ ClrSndLoop:
 
 InitializeArea:
 
-  ldy #$4b                 ;clear all memory again, only as far as $074b
+  ldy #<SecondaryMsgCounter                 ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
-  ldx #$21
+  ldx #FRAME_TIMER_COUNT
   lda #$00
 ClrTimersLoop:
   sta Timers,x             ;clear out memory between

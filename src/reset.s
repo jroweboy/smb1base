@@ -81,11 +81,35 @@ FinializeMarioInit:
   lda Mirror_PPUCTRL
   ora #%10000000               ;enable NMIs
   jsr WritePPUReg1
-EndlessLoop:
-  jmp EndlessLoop              ;endless loop, need I say more?
+  ; do a jsr to the main loop so we can profile it separately
+  jsr IdleLoop
 
 BankInitValues:
   .byte $00, $02, $04, $05, $06, $07
+.endproc
+
+.proc IdleLoop
+  lda NmiDisable
+  beq IdleLoop
+  jsr GameLoop
+  jmp IdleLoop
+.endproc
+
+.proc GameLoop
+  lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
+  lsr
+  bcs :+
+    ; lda Mirror_PPUMASK
+    ; ora #%00100000
+    ; sta PPUMASK
+    jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+:
+  ; lda Mirror_PPUMASK
+  ; and #%11011111
+  ; sta PPUMASK
+  lda #0
+  sta NmiDisable
+  rts
 .endproc
 
 .proc NonMaskableInterrupt

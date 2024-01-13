@@ -67,7 +67,7 @@ GameEngine:
   bne NoChgMus               ;if not yet at a certain point, continue
   lda IntervalTimerControl   ;if interval timer not yet expired,
   bne NoChgMus               ;branch ahead, don't bother with the music
-  farcall GetAreaMusic       ;to re-attain appropriate level music
+  jsr GetAreaMusic       ;to re-attain appropriate level music
 NoChgMus:
   ldy StarInvincibleTimer    ;get invincibility timer
   lda FrameCounter           ;get frame counter

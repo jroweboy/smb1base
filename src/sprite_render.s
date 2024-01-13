@@ -5,7 +5,7 @@
 ; screen_render.s
 .import AddToScore
 
-.export DrawFirebar, DrawSmallPlatform, DrawFireball
+.export DrawSingleFireball, DrawSmallPlatform, DrawFireball
 .export DrawVine, DrawLargePlatform, DrawPowerUp
 .export DrawOneSpriteRow, JCoinGfxHandler, DrawHammer, DrawBrickChunks, DrawBlock
 .export FlagpoleGfxHandler
@@ -1207,7 +1207,7 @@ DrawFireball:
       lda Fireball_Rel_XPos      ;get relative horizontal coordinate
       sta Sprite_X_Position,y    ;store as sprite X coordinate, then do shared code
 
-DrawFirebar:
+DrawSingleFireball:
        lda FrameCounter         ;get frame counter
        lsr                      ;divide by four
        lsr
@@ -1516,6 +1516,7 @@ DumpSixSpr:
   sta Sprite_Data+20,y      ;dump A contents
   sta Sprite_Data+16,y      ;into third row sprites
 
+.export DumpFourSpr
 DumpFourSpr:
   sta Sprite_Data+12,y      ;into second row sprites
 

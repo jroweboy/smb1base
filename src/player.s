@@ -93,7 +93,8 @@ EntrMode2:
     cmp #$91                  ;if player risen to a certain point (this requires pipes
     bcs @ContinuePipeEntry    ;to be at specific height to look/function right) branch
     .import FRAME_LAG_COUNT
-      lda #FRAME_LAG_COUNT
+      ; lda #FRAME_LAG_COUNT
+      lda #0
       sta PipeExitTimer
       ; jsr SetupPipeTransitionOverlay
       jmp PlayerRdy
