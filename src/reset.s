@@ -19,14 +19,47 @@
 .segment "FIXED"
 
 .proc IrqScrollSplit
-  sta IRQDISABLE
   pha
-    bit PPUSTATUS
-    lda IrqScrollH
+  phx
+    sta IRQDISABLE
+    ; 
+    lda IrqPPUCTRL
+    and #%00000001
+    asl
+    asl
+    sta PPUADDR
+
+    ; Y position to $2005.
+    lda #32 - 1
     sta PPUSCROLL
-    sta PPUSCROLL
-    lda IrqScrollBit
-    sta PPUCTRL
+
+    ; Prepare for the 2 later writes:
+    ; We reuse new_x to hold (Y & $F8) << 2.
+    and #%11111000
+    asl
+    asl
+    ldx IrqNewScroll
+    sta IrqNewScroll
+
+    ; stall for 39 cpu cycles
+    lda #$4a ;hides 'LSR A'
+    bne *-1
+
+    ; ((Y & $F8) << 2) | (X >> 3) in A for $2006 later.
+    txa
+    lsr
+    lsr
+    lsr
+    ora IrqNewScroll
+
+
+    ; The last two PPU writes must happen during hblank:
+    stx PPUSCROLL
+    sta PPUADDR
+
+    ; Restore new_x.
+    stx IrqNewScroll
+  plx
   pla
   rti
 .endproc
@@ -95,7 +128,8 @@ FinializeMarioInit:
   inc DisableScreenFlag        ;set flag to disable screen output
   lda Mirror_PPUCTRL
   ora #%10000000               ;enable NMIs
-  jsr WritePPUReg1
+  sta PPUCTRL              ;write contents of A to PPU register 1
+  sta Mirror_PPUCTRL       ;and its mirror
   ; do a jsr to the main loop so we can profile it separately
   jsr IdleLoop
 
@@ -179,16 +213,29 @@ InitBuffer:
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
-
-  lda Sprite0HitDetectFlag
-  beq @SkipSprite0
-    SetScanlineIRQ #$1f
-@SkipSprite0:
   
   lda HorizontalScroll
-  sta IrqScrollH
+  sta IrqNewScroll
+  ; lda Mirror_PPUCTRL
+  ; sta IrqScrollBit
+  lda Sprite0HitDetectFlag  ;check for flag here
+  beq SkipSprite0
+  
+    SetScanlineIRQ #$1f
+    cli
+    
+    lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
+    lsr
+    bcs SkipSprite0
+      lda OperMode
+      beq SkipSprite0
+        jsr MoveAllSpritesOffscreen
+SkipSprite0:
   lda Mirror_PPUCTRL
-  sta IrqScrollBit
+  sta IrqPPUCTRL
+  ; and also reset the flags for the HUD
+  and #%11111100
+  sta PPUCTRL
 
   farcall SoundEngine           ;play sound
   jsr PauseRoutine          ;handle pause
@@ -233,58 +280,6 @@ RotPRandomBit:
     inx                       ;increment to next byte
     dey                       ;decrement for loop
     bne RotPRandomBit
-;   lda Sprite0HitDetectFlag  ;check for flag here
-;   beq SkipSprite0
-; Sprite0Clr:
-;     lda PPUSTATUS            ;wait for sprite 0 flag to clear, which will
-;     and #%01000000            ;not happen until vblank has ended
-;     bne Sprite0Clr
-;   lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
-;   lsr
-;   bcs Sprite0Hit
-;   jsr MoveSpritesOffscreen
-; Sprite0Hit:
-;     lda PPUSTATUS            ;do sprite #0 hit detection
-;     and #%01000000
-;     beq Sprite0Hit
-;   ldy #$14                  ;small delay, to wait until we hit horizontal blank time
-; HBlankDelay:
-;     dey
-;     bne HBlankDelay
-; SkipSprite0:
-;   lda HorizontalScroll      ;set scroll registers from variables
-;   sta PPUSCROLL
-;   lda VerticalScroll
-;   sta PPUSCROLL
-;   lda Mirror_PPUCTRL       ;load saved mirror of $2000
-;   pha
-;     sta PPUCTRL
-;     lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
-;     lsr
-;     bcs SkipMainOper
-;     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
-; SkipMainOper:
-;     lda PPUSTATUS            ;reset flip-flop
-;   pla
-;   ora #%10000000            ;reactivate NMIs
-;   sta PPUCTRL
-  lda Sprite0HitDetectFlag  ;check for flag here
-  beq SkipSprite0
-    lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
-    lsr
-    bcs SkipSprite0
-      lda OperMode
-      beq SkipSprite0
-        jsr MoveAllSpritesOffscreen
-        ; enable scroll split
-        lda #32 - 1
-        sta IRQENABLE
-        sta IRQLATCH
-        sta IRQRELOAD
-SkipSprite0:
-  lda #0
-  sta NmiR0
-  sta NmiR1
 SkipMainOper:
   ply
   plx

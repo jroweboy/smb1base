@@ -164,6 +164,9 @@ M2                             = MainTemp + 2
 M3                             = MainTemp + 3
 M4                             = MainTemp + 4
 
+.globalzp IrqScrollH
+.globalzp IrqScrollBit
+
 .segment "SHORTRAM"
 NoteLenLookupTblOfs:            .res  1
 Square1SoundBuffer:             .res  1
@@ -202,8 +205,9 @@ DigitModifier:                  .res 6
 
 NmiDisable:                     .res  1
 NmiSkipped:                     .res  1
-IrqScrollH:                     .res  1
-IrqScrollBit:                   .res  1
+IrqPPUCTRL:                     .res  1
+IrqNewScroll:                   .res  1
+IrqOldScroll:                   .res  1
 IrqNextScanline:                .res  1
 CurrentA:                       .res  1
 NextBank:                       .res  1

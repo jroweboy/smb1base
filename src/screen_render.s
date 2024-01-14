@@ -9,7 +9,7 @@
 .export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, AddToScore
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, UpdateTopScore, RenderAttributeTables
-.export WritePPUReg1, WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
+.export WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
 .export RemBridge, GiveOneCoin, DrawMushroomIcon, WriteBlockMetatile
 
 .segment "RENDER"
@@ -82,9 +82,10 @@ InitializeNameTables:
 
   lda PPUSTATUS            ;reset flip-flop
   lda Mirror_PPUCTRL       ;load mirror of ppu reg $2000
-  ora #%00010000            ;set sprites for first 4k and background for second 4k
+  ora #%00001000            ;set sprites for first 4k and background for second 4k
   and #%11101000            ;make sure to keep sprites and bg switched
-  jsr WritePPUReg1
+  sta PPUCTRL         ;write contents of A to PPU register 1
+  sta Mirror_PPUCTRL       ;and its mirror
   lda #$24                  ;set vram address to start of name table 1
   jsr WriteNTAddr
   lda #$20                  ;and then set it to name table 0
@@ -412,14 +413,6 @@ MushroomIconData:
 .endproc
 
 
-;-------------------------------------------------------------------------------------
-.proc WritePPUReg1
-
-  sta PPUCTRL         ;write contents of A to PPU register 1
-  sta Mirror_PPUCTRL       ;and its mirror
-  rts
-.endproc
-
 
 ;-------------------------------------------------------------------------------------
 ;$00 - vram buffer address table low
@@ -441,7 +434,8 @@ WriteBufferToScreen:
     bcs SetupWrites           ;if d7 of third byte was clear, ppu will
       and #%11111011            ;only increment by 1
 SetupWrites:
-    jsr WritePPUReg1          ;write to register
+    sta PPUCTRL         ;write contents of A to PPU register 1
+    sta Mirror_PPUCTRL       ;and its mirror
   pla                       ;pull from stack and shift to left again
   asl
   bcc GetLength             ;if d6 of third byte was clear, do not repeat byte

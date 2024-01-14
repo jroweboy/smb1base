@@ -277,7 +277,7 @@ SetX:
     jmp DumpYPosition
 SetToBottomOfScreen:
     lda #255-32
-    .byte $2c
+    bne DumpYPosition ; unconditional
 UsePipePosition:
   lda PipeYPosition
 DumpYPosition:

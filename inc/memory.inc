@@ -151,6 +151,9 @@ __MEMORY_INC = 1
 .globalzp MusicDataLow
 .globalzp MusicDataHigh
 
+.global IrqNewScroll
+.global IrqPPUCTRL
+
 ; .segment "STACK"
 
 .global PlayerNeckLength, PlayerNeckTemp
@@ -174,8 +177,6 @@ __MEMORY_INC = 1
 .global NmiSkipped
 
 
-.global IrqScrollH
-.global IrqScrollBit
 .global IrqPPUCTRL
 .global IrqNextScanline
 .global CurrentA
