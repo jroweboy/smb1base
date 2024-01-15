@@ -281,6 +281,7 @@ Player_SprAttrib              = SprObject_SprAttrib
 SprObject_SprAttrib:            .res  1
 
 Enemy_SprAttrib:                .res  11
+Misc_SprAttrib:                 .res  13
 
 Player_OffscreenBits          = SprObject_OffscrBits
 SprObject_OffscrBits:           .res  1
@@ -392,6 +393,14 @@ OriginalOAMOffset:              .res  1
 PlatformLastOAMOrder:           .res  1
 SpriteShuffleOffset:            .res  1
 SpriteShuffleTemp:              .res  1
+
+ObjectMetasprite:               .res  1
+PlayerMetasprite     = ObjectMetasprite
+EnemyMetasprite:                .res  6
+FireballMetaSprite:             .res  2
+BlockMetaSprite:                .res  4
+MiscMetaSprite:                 .res  9
+BubbleMetaSprite:               .res  3
 
 A_B_Buttons:                    .res  1
 Up_Down_Buttons:                .res  1

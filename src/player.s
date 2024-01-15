@@ -2,6 +2,8 @@
 .include "common.inc"
 .include "player.inc"
 
+.include "metasprite.inc"
+
 ; objects/object
 .import BoundingBoxCore
 
@@ -541,48 +543,48 @@ PlayerGraphicsTable:
 ;; big player table
 BigPlayerTable:
 PlayerAnimWalking1 = * - BigPlayerTable
-.byte $00, $01, $10, $11, $20, $21, $30, $31 ;walking frame 1
+.byte $00, $01, $10, $11, $20, $21, $30, $31 ;walking frame 1   $00
 PlayerAnimWalking2 = * - BigPlayerTable
 .byte $02, $03, $12, $13, $22, $23, $32, $33 ;        frame 2
 PlayerAnimWalking3 = * - BigPlayerTable
-.byte $04, $05, $14, $15, $24, $25, $34, $35 ;        frame 3
+.byte $04, $05, $14, $15, $24, $25, $34, $35 ;        frame 3   $10
 PlayerAnimSkidding = * - BigPlayerTable
 .byte $08, $09, $18, $19, $28, $29, $38, $39;skidding
 PlayerAnimJumping = * - BigPlayerTable
-.byte $08, $09, $18, $19, $28, $29, $38, $39 ;jumping
+.byte $08, $09, $18, $19, $28, $29, $38, $39 ;jumping           $20
 PlayerAnimSwimming1 = * - BigPlayerTable
 .byte $02, $03, $0A, $0B, $1A, $1B, $2A, $2B ;swimming frame 1
 PlayerAnimSwimming2 = * - BigPlayerTable
-.byte $02, $03, $12, $13, $22, $1D, $2A, $2B ;         frame 2
+.byte $02, $03, $12, $13, $22, $1D, $2A, $2B ;         frame 2  $30
 PlayerAnimSwimming3 = * - BigPlayerTable
 .byte $02, $03, $12, $13, $0C, $0D, $2A, $2B ;         frame 3
 PlayerAnimClimbing1 = * - BigPlayerTable
-.byte $02, $03, $0A, $0B, $1A, $1B, $2C, $2D ;climbing frame 1
+.byte $02, $03, $0A, $0B, $1A, $1B, $2C, $2D ;climbing frame 1  $40
 PlayerAnimClimbing2 = * - BigPlayerTable
 .byte $02, $03, $12, $13, $22, $23, $3C, $3D ;         frame 2
 PlayerAnimCrouching = * - BigPlayerTable
-.byte $FF, $FF, $02, $03, $3A, $3B, $06, $07 ;crouching
+.byte $FF, $FF, $02, $03, $3A, $3B, $06, $07 ;crouching         $50
 PlayerAnimFireball = * - BigPlayerTable
 .byte $02, $03, $0A, $0B, $1A, $1B, $32, $33 ;fireball throwing
 
 ;; small player table
-.byte $FF, $FF, $FF, $FF, $0E, $0F, $1E, $1F ;walking frame 1
+.byte $FF, $FF, $FF, $FF, $0E, $0F, $1E, $1F ;walking frame 1   $60
 .byte $FF, $FF, $FF, $FF, $2E, $2F, $3E, $3F ;        frame 2
-.byte $FF, $FF, $FF, $FF, $41, $2F, $44, $45 ;        frame 3
+.byte $FF, $FF, $FF, $FF, $41, $2F, $44, $45 ;        frame 3   $70
 .byte $FF, $FF, $FF, $FF, $3C, $3D, $4C, $4D ;skidding
-.byte $FF, $FF, $FF, $FF, $0E, $40, $42, $43 ;jumping
+.byte $FF, $FF, $FF, $FF, $0E, $40, $42, $43 ;jumping           $80
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $3A, $3B ;swimming frame 1
-.byte $FF, $FF, $FF, $FF, $0E, $0F, $3A, $4B ;         frame 2
+.byte $FF, $FF, $FF, $FF, $0E, $0F, $3A, $4B ;         frame 2  $90
 .byte $FF, $FF, $FF, $FF, $0E, $0F, $2C, $2D ;         frame 3
-.byte $FF, $FF, $FF, $FF, $0E, $0F, $58, $59 ;climbing frame 1
+.byte $FF, $FF, $FF, $FF, $0E, $0F, $58, $59 ;climbing frame 1  $a0
 .byte $FF, $FF, $FF, $FF, $41, $2F, $5A, $5B ;         frame 2
 .export PlayerAnimKilled
 PlayerAnimKilled = * - BigPlayerTable
-.byte $0E, $0F, $1E, $1F, $2E, $2F, $3E, $3F ;killed
+.byte $0E, $0F, $1E, $1F, $2E, $2F, $3E, $3F ;killed            $b0
 
 ;; used by both player sizes
 .byte $FF, $FF, $FF, $FF, $41, $2F, $49, $49 ;small player standing
-.byte $FF, $FF, $00, $01, $46, $47, $48, $48 ;intermediate grow frame
+.byte $FF, $FF, $00, $01, $46, $47, $48, $48 ;intermediate grow frame   $c0
 PlayerAnimStanding = * - BigPlayerTable
 .byte $00, $01, $16, $17, $26, $27, $36, $37 ;big player standing
 .export PlayerAnimStanding
@@ -609,28 +611,28 @@ CntPl:
   ; cmp #$00                    ;if player status normal,
   beq FindPlayerAction        ;branch and do not return
   jsr FindPlayerAction        ;otherwise jump and return
-  lda FrameCounter
-  and #%00000100              ;check frame counter for d2 set (8 frames every
-  bne ExPGH                   ;eighth frame), and branch if set to leave
-    tax                         ;initialize X to zero
-    ldy PlayerOAMOffset
-    lda PlayerFacingDir         ;get player's facing direction
-    lsr
-    bcs SwimKT                  ;if player facing to the right, use current offset
-      iny
-      iny                         ;otherwise move to next OAM data
-      iny
-      iny
-SwimKT:
-    lda PlayerSize              ;check player's size
-    beq BigKTS                  ;if big, use first tile
-      lda Sprite_Tilenumber+24,y  ;check tile number of seventh/eighth sprite
-      cmp SwimTileRepOffset       ;against tile number in player graphics table
-      beq ExPGH                   ;if spr7/spr8 tile number = value, branch to leave
-        inx                         ;otherwise increment X for second tile
-BigKTS:
-    lda SwimKickTileNum,x       ;overwrite tile number in sprite 7/8
-    sta Sprite_Tilenumber+24,y  ;to animate player's feet when swimming
+  ; lda FrameCounter
+  ; and #%00000100              ;check frame counter for d2 set (8 frames every
+  ; bne ExPGH                   ;eighth frame), and branch if set to leave
+  ;   tax                         ;initialize X to zero
+    ; ldy PlayerOAMOffset
+;     lda PlayerFacingDir         ;get player's facing direction
+;     lsr
+;     bcs SwimKT                  ;if player facing to the right, use current offset
+;       iny
+;       iny                         ;otherwise move to next OAM data
+;       iny
+;       iny
+; SwimKT:
+;     lda PlayerSize              ;check player's size
+;     beq BigKTS                  ;if big, use first tile
+;       lda Sprite_Tilenumber+24,y  ;check tile number of seventh/eighth sprite
+;       cmp SwimTileRepOffset       ;against tile number in player graphics table
+;       beq ExPGH                   ;if spr7/spr8 tile number = value, branch to leave
+;         inx                         ;otherwise increment X for second tile
+; BigKTS:
+;     lda SwimKickTileNum,x       ;overwrite tile number in sprite 7/8
+;     sta Sprite_Tilenumber+24,y  ;to animate player's feet when swimming
 ExPGH:
   rts                         ;then leave
 
@@ -648,10 +650,11 @@ PlayerKilled:
   lda #PlayerKilledGraphicsOffset
 
 PlayerGfxProcessing:
-  sta PlayerGfxOffset           ;store offset to graphics table here
+  ; sta PlayerGfxOffset           ;store offset to graphics table here
+  sta ObjectMetasprite
   lda #$04
-  jsr RenderPlayerSub           ;draw player based on offset loaded
-  jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
+  ; jsr RenderPlayerSub           ;draw player based on offset loaded
+  ; jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
   lda FireballThrowingTimer
   beq PlayerOffscreenChk        ;if fireball throw timer not set, skip to the end
   ldy #$00                      ;set value to initialize by default
@@ -662,44 +665,61 @@ PlayerGfxProcessing:
   sta FireballThrowingTimer     ;otherwise store animation timer into fireball throw timer
   ldy #$07                      ;load offset for throwing
   lda PlayerGfxTblOffsets,y     ;get offset to graphics table
-  sta PlayerGfxOffset           ;store it for use later
+  sta ObjectMetasprite
+  ; sta PlayerGfxOffset           ;store it for use later
   ldy #$04                      ;set to update four sprite rows by default
   lda Player_X_Speed
   ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
   beq SUpdR                     ;if no speed or button press, branch using set value in Y
     dey                         ;otherwise set to update only three sprite rows
 SUpdR:
-  tya                           ;save in A for use
-  jsr RenderPlayerSub           ;in sub, draw player object again
+  ; tya                           ;save in A for use
+  ; jsr RenderPlayerSub           ;in sub, draw player object again
 PlayerOffscreenChk:
-  lda Player_OffscreenBits      ;get player's offscreen bits
-  lsr
-  lsr                           ;move vertical bits to low nybble
-  lsr
-  lsr
-  sta R0                        ;store here
-  ldx #$03                      ;check all four rows of player sprites
-  lda PlayerOAMOffset           ;get player's sprite data offset
-  clc
-  adc #$18                      ;add 24 bytes to start at bottom row
-  tay                           ;set as offset here
-PROfsLoop:
-    lda #$f8                      ;load offscreen Y coordinate just in case
-    lsr R0                        ;shift bit into carry
-    bcc NPROffscr                 ;if bit not set, skip, do not move sprites
-    jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
-NPROffscr:
-    tya
-    sec                           ;subtract eight bytes to do
-    sbc #$08                      ;next row up
-    tay
-    dex                           ;decrement row counter
-    bpl PROfsLoop                 ;do this until all sprite rows are checked
+;   lda Player_OffscreenBits      ;get player's offscreen bits
+;   lsr
+;   lsr                           ;move vertical bits to low nybble
+;   lsr
+;   lsr
+;   sta R0                        ;store here
+;   ldx #$03                      ;check all four rows of player sprites
+;   lda PlayerOAMOffset           ;get player's sprite data offset
+;   clc
+;   adc #$18                      ;add 24 bytes to start at bottom row
+;   tay                           ;set as offset here
+; PROfsLoop:
+;     lda #$f8                      ;load offscreen Y coordinate just in case
+;     lsr R0                        ;shift bit into carry
+;     bcc NPROffscr                 ;if bit not set, skip, do not move sprites
+;     jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
+; NPROffscr:
+;     tya
+;     sec                           ;subtract eight bytes to do
+;     sbc #$08                      ;next row up
+;     tay
+;     dex                           ;decrement row counter
+;     bpl PROfsLoop                 ;do this until all sprite rows are checked
   rts                           ;then we are done!
 
 PlayerGfxTblOffsets:
-  .byte $20, $28, $c8, $18, $00, $40, $50, $58
-  .byte $80, $88, $b8, $78, $60, $a0, $b0, $b8
+  ; .byte $20, $28, $c8, $18, $00, $40, $50, $58
+  .byte METASPRITE_BIG_MARIO_JUMPING
+  .byte METASPRITE_BIG_MARIO_SWIMMING_1_KICK
+  .byte METASPRITE_BIG_MARIO_STANDING
+  .byte METASPRITE_BIG_MARIO_SKIDDING
+  .byte METASPRITE_BIG_MARIO_WALKING_1
+  .byte METASPRITE_BIG_MARIO_CLIMBING_1
+  .byte METASPRITE_BIG_MARIO_CROUCHING
+  .byte METASPRITE_BIG_MARIO_FIRE_STANDING
+  ; .byte $80, $88, $b8, $78, $60, $a0, $b0, $b8
+  .byte METASPRITE_SMALL_MARIO_JUMPING
+  .byte METASPRITE_SMALL_MARIO_SWIMMING_1_KICK
+  .byte METASPRITE_SMALL_MARIO_STANDING
+  .byte METASPRITE_SMALL_MARIO_SKIDDING
+  .byte METASPRITE_SMALL_MARIO_WALKING_1
+  .byte METASPRITE_SMALL_MARIO_CLIMBING_1
+  .byte METASPRITE_SMALL_MARIO_DEATH
+  .byte METASPRITE_SMALL_MARIO_STANDING
 
 HandleChangeSize:
   ldy PlayerAnimCtrl           ;get animation frame control
@@ -720,9 +740,9 @@ GorSLog:
     ldy #$0f                     ;load offset for player growing
 
 GetOffsetFromAnimCtrl:
-    asl                        ;multiply animation frame control
-    asl                        ;by eight to get proper amount
-    asl                        ;to add to our offset
+    ; asl                        ;multiply animation frame control
+    ; asl                        ;by eight to get proper amount
+    ; asl                        ;to add to our offset
     adc PlayerGfxTblOffsets,y  ;add to offset to graphics table
     rts                        ;and return with result in A
 ChangeSizeOffsetAdder:

@@ -5,6 +5,13 @@ set(PROJECT_NAME smb1base)
 project(${PROJECT_NAME} ASM C)
 
 add_executable(${PROJECT_NAME}
+
+  chr/rearranged_background.chr
+  chr/sprites_castle.chr
+  chr/sprites_mario.chr
+  chr/sprites_overworld.chr
+  chr/sprites_underground.chr
+
   inc/charmap.inc
   inc/common.inc
   inc/constants.inc
@@ -23,6 +30,7 @@ add_executable(${PROJECT_NAME}
   src/player.s
   src/mmc3.s
   src/memory.s
+  src/metasprite.s
   src/music.s
   src/nesheader.s
   src/reset.s
@@ -67,7 +75,6 @@ add_executable(${PROJECT_NAME}
   src/tiles/staircase.s
 
   src/nes.cfg
-  chr/lanky_mario.chr
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC inc/)

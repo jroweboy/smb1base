@@ -3,7 +3,7 @@
 .include "player.inc"
 
 ; objects/object.s
-.import FloateyNumbersRoutine, MiscObjectsCore, ProcessSingleEnemy
+.import FloateyNumbersRoutine, MiscObjectsCore, ProcessSingleEnemy, EnemiesAndLoopsCore
 ; objects/cannon.s
 .import ProcessCannons
 ; music.s
@@ -27,31 +27,31 @@
 
 .segment "CODE"
 
-GameCoreSubRoutine:
-  tax
-  jsr JumpEngine
-  .word ProcessSingleEnemy
-  .word ProcessSingleEnemy
-  .word ProcessSingleEnemy
-  .word ProcessSingleEnemy
-  .word ProcessSingleEnemy
-  .word ProcessSingleEnemy
-  .word ProcFireball_Bubble
-  .word DONOTHING
-  .word HandleBlocks
-  .word MiscObjectsCore
-  .word ProcessCannons
-  .word ProcessWhirlpools
-  .word FlagpoleRoutine
+; GameCoreSubRoutine:
+;   tax
+;   jsr JumpEngine
+;   .word ProcessSingleEnemy
+;   .word ProcessSingleEnemy
+;   .word ProcessSingleEnemy
+;   .word ProcessSingleEnemy
+;   .word ProcessSingleEnemy
+;   .word ProcessSingleEnemy
+;   .word ProcFireball_Bubble
+;   .word DONOTHING
+;   .word HandleBlocks
+;   .word MiscObjectsCore
+;   .word ProcessCannons
+;   .word ProcessWhirlpools
+;   .word FlagpoleRoutine
 
-DONOTHING:
-  rts
+; DONOTHING:
+;   rts
 
-.export HandlePlayer
-HandlePlayer:
-  jsr GetPlayerOffscreenBits ;get offscreen bits for player object
-  jsr RelativePlayerPosition ;get relative coordinates for player object
-  farcall PlayerGfxHandler, jmp       ;draw the player
+; .export HandlePlayer
+; HandlePlayer:
+;   jsr GetPlayerOffscreenBits ;get offscreen bits for player object
+;   jsr RelativePlayerPosition ;get relative coordinates for player object
+;   farcall PlayerGfxHandler, jmp       ;draw the player
 
 ;-------------------------------------------------------------------------------------
 ; GameCoreRoutine:
@@ -93,9 +93,9 @@ GameCoreRoutine:
   ; sta SavedJoypadBits        ;as the master controller bits
   farcall GameRoutines           ;execute one of many possible subs
 
-  lda GameEngineSubroutine
-  cmp #$0d ;; in bowser cutscene
-  jeq SkipEverythingElse
+  ; lda GameEngineSubroutine
+  ; cmp #$0d ;; in bowser cutscene
+  ; jeq SkipEverythingElse
 
   lda OperMode_Task          ;check major task of operating mode
   cmp #$03                   ;if we are supposed to be here,
@@ -103,73 +103,36 @@ GameCoreRoutine:
     rts
 GameEngine:
   far OBJECT
-    ; If we are going through a pipe, we need to reserve
-    ; 16 sprites (8 for each player overlay)
-
-    ; Check to see if the leader is behind something.
-    ; If they are we want to draw them second
-    lda Player_SprAttrib
-    and #(1 << 5)
-    beq :+ ; not behind the door
-      lda #32
-:
-    ; if we are in a pipe transition, reserve enough for the sprite overlay
-    ldy InPipeTransition
-    beq :+
-      clc 
-      adc #8 * 4
-:
-    sta PlayerOAMOffset
-    sta CurrentOAMOffset
-
-    ; force player to happen first because this is stupid.
-    jsr HandlePlayer
-
-    lda #13 - 1 ; size of the different object update list
-    sta SpriteShuffleTemp
-    lda SpriteShuffleOffset
-    clc
-    adc #7
-    cmp #13
-    bcc @SkipSubtract
-      ; implicit carry set
-      sbc #13
-  @SkipSubtract:
-    sta SpriteShuffleOffset
-  @ObjectLoop:
-      lda SpriteShuffleOffset
-      clc
-      adc #9
-      cmp #13
-      bcc @SkipSubtract1
-        ; implicit carry set
-        sbc #13
-    @SkipSubtract1:
-      sta SpriteShuffleOffset
-      jsr GameCoreSubRoutine
-      dec SpriteShuffleTemp
-      bpl @ObjectLoop
-
-    ; jsr ProcFireball_Bubble    ;process fireballs and air bubbles
+    jsr ProcFireball_Bubble    ;process fireballs and air bubbles
     ; jsr ProcessAllEnemies
-    ; jsr GetPlayerOffscreenBits ;get offscreen bits for player object
-    ; jsr RelativePlayerPosition ;get relative coordinates for player object
-    ; farcall PlayerGfxHandler       ;draw the player
-    ; jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
-    ; ldx #$01
-    ; stx ObjectOffset           ;set offset for second
-    ; jsr BlockObjectsCore       ;process second block object
-    ; dex
-    ; stx ObjectOffset           ;set offset for first
-    ; jsr BlockObjectsCore       ;process first block object
-    ; jsr MiscObjectsCore        ;process misc objects (hammer, jumping coins)
-    ; jsr ProcessCannons         ;process bullet bill cannons
-    ; jsr ProcessWhirlpools      ;process whirlpools
-    ; jsr FlagpoleRoutine        ;process the flagpole
-    ; jsr RunGameTimer           ;count down the game timer
+    ldx #$00
+ProcELoop:
+      stx ObjectOffset           ;put incremented offset in X as enemy object offset
+      jsr EnemiesAndLoopsCore    ;process enemy objects
+      jsr FloateyNumbersRoutine  ;process floatey numbers
+      inx
+      cpx #$06                   ;do these two subroutines until the whole buffer is done
+    bne ProcELoop
+    jsr GetPlayerOffscreenBits ;get offscreen bits for player object
+    jsr RelativePlayerPosition ;get relative coordinates for player object
+    farcall PlayerGfxHandler       ;draw the player
+    jsr BlockObjMT_Updater     ;replace block objects with metatiles if necessary
+    ldx #$01
+    stx ObjectOffset           ;set offset for second
+    jsr BlockObjectsCore       ;process second block object
+    dex
+    stx ObjectOffset           ;set offset for first
+    jsr BlockObjectsCore       ;process first block object
+    jsr MiscObjectsCore        ;process misc objects (hammer, jumping coins)
+    jsr ProcessCannons         ;process bullet bill cannons
+    jsr ProcessWhirlpools      ;process whirlpools
+    jsr FlagpoleRoutine        ;process the flagpole
+    jsr RunGameTimer           ;count down the game timer
   endfar
 
-SkipEverythingElse:
+  farcall DrawAllMetasprites
+
+; SkipEverythingElse:
   jsr ColorRotation          ;cycle one of the background colors
     ; Check to see if its time to disable the overlay to give extra time for
   ; the follower to exit the pipe

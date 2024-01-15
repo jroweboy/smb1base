@@ -382,6 +382,13 @@ VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 .global SpriteShuffleOffset
 .global SpriteShuffleTemp
 
+.global ObjectMetasprite
+.global PlayerMetasprite
+.global EnemyMetasprite
+.global FireballMetaSprite
+.global BlockMetaSprite
+.global MiscMetaSprite
+.global BubbleMetaSprite
 
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute

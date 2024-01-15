@@ -127,14 +127,14 @@ FinializeMarioInit:
   jsr InitializeNameTables     ;initialize both name tables
   inc DisableScreenFlag        ;set flag to disable screen output
   lda Mirror_PPUCTRL
-  ora #%10000000               ;enable NMIs
+  ora #%10100000               ;enable NMIs and 8x16 sprites
   sta PPUCTRL              ;write contents of A to PPU register 1
   sta Mirror_PPUCTRL       ;and its mirror
   ; do a jsr to the main loop so we can profile it separately
   jsr IdleLoop
 
 BankInitValues:
-  .byte $00, $02, $04, $05, $06, $07
+  .byte $00, $02, $06, $07, $08, $09
 .endproc
 
 .proc IdleLoop
@@ -222,6 +222,7 @@ InitBuffer:
   beq SkipSprite0
   
     SetScanlineIRQ #$1f
+    ; cli just in case NMI runs late
     cli
     
     lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
@@ -238,6 +239,7 @@ SkipSprite0:
   sta PPUCTRL
 
   farcall SoundEngine           ;play sound
+  
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore
   lda GamePauseStatus       ;check for pause status

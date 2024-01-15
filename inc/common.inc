@@ -1,5 +1,6 @@
 ; This amazing disassembly was created by doppelganger (doppelheathen@gmail.com) here https://www.romhacking.net/documents/344/
 ; Ported to CC65 by threecreepio (https://github.com/threecreepio)
+; Massive changes to the code by jroweboy
 
 .ifndef __COMMON_INC
 __COMMON_INC = 1
@@ -101,5 +102,6 @@ skipflip:
   sty CurrentOAMOffset
 .endscope
 .endmacro
+
 
 .endif ;__COMMON_INC
