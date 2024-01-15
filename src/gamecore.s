@@ -136,19 +136,19 @@ ProcELoop:
   jsr ColorRotation          ;cycle one of the background colors
     ; Check to see if its time to disable the overlay to give extra time for
   ; the follower to exit the pipe
-  lda PipeExitTimer
-  beq :+
-    dec PipeExitTimer
-    bne :+
-      ; a == 0 means to disable the pipe transition overlay
-      .import SetupPipeTransitionOverlay
-      lda #0
-      jsr SetupPipeTransitionOverlay
-  :
-  lda InPipeTransition
-  beq :+
-    jsr DrawPipeOverlaySprite
-  :
+  ; lda PipeExitTimer
+  ; beq :+
+  ;   dec PipeExitTimer
+  ;   bne :+
+  ;     ; a == 0 means to disable the pipe transition overlay
+  ;     .import SetupPipeTransitionOverlay
+  ;     lda #0
+  ;     jsr SetupPipeTransitionOverlay
+  ; :
+  ; lda InPipeTransition
+  ; beq :+
+  ;   jsr DrawPipeOverlaySprite
+  ; :
 
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music

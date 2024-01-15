@@ -484,21 +484,31 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
           rts
 
 .proc DrawPlayer_Intermediate
-  ldx #$05                       ;store data into zero page memory
-PIntLoop:
-    lda IntermediatePlayerData,x   ;load data to display player as he always
-    sta R2 ,x                      ;appears on world/lives display
-    dex
-    bpl PIntLoop                   ;do this until all data is loaded
-  ldx #$b8                       ;load offset for small standing
-  ldy #$04                       ;load sprite data offset
-  jsr DrawPlayerLoop             ;draw player accordingly
-  lda Sprite_Attributes+36       ;get empty sprite attributes
-  ora #%01000000                 ;set horizontal flip bit for bottom-right sprite
-  sta Sprite_Attributes+32       ;store and leave
+;   ldx #$05                       ;store data into zero page memory
+; PIntLoop:
+;     lda IntermediatePlayerData,x   ;load data to display player as he always
+;     sta R2 ,x                      ;appears on world/lives display
+;     dex
+;     bpl PIntLoop                   ;do this until all data is loaded
+;   ldx #$b8                       ;load offset for small standing
+;   ldy #$04                       ;load sprite data offset
+;   jsr              ;draw player accordingly
+;   lda Sprite_Attributes+36       ;get empty sprite attributes
+;   ora #%01000000                 ;set horizontal flip bit for bottom-right sprite
+;   sta Sprite_Attributes+32       ;store and leave
+  lda #METASPRITE_SMALL_MARIO_STANDING
+  sta ObjectMetasprite
+  lda IntermediatePlayerData+0
+  sta SprObject_Rel_YPos
+  lda IntermediatePlayerData+1
+  sta PlayerFacingDir
+  lda IntermediatePlayerData+2
+  sta SprObject_SprAttrib
+  lda IntermediatePlayerData+3
+  sta SprObject_Rel_XPos
   rts
 IntermediatePlayerData:
-  .byte $58, $01, $00, $60, $ff, $04
+  .byte $58, $01, $00, $60 ; , $ff, $04
 
 .endproc
 

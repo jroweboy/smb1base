@@ -73,34 +73,34 @@ skipflip:
 .endmacro
 
 .macro AllocSpr spr
-.scope
-.ident(.concat("AllocSpr_", .string(spr))):
-.import CurrentOAMOffset
-  lda CurrentOAMOffset
-  cmp #$ff - (spr * 4)
-  bcc :+
-    rts
-  :
-  tay
-  adc #(spr * 4)
-  sta CurrentOAMOffset
-.endscope
+; .scope
+; .ident(.concat("AllocSpr_", .string(spr))):
+; .import CurrentOAMOffset
+;   lda CurrentOAMOffset
+;   cmp #$ff - (spr * 4)
+;   bcc :+
+;     rts
+;   :
+;   tay
+;   adc #(spr * 4)
+;   sta CurrentOAMOffset
+; .endscope
 .endmacro
 
 .macro ReserveSpr spr
-.scope
-.ident(.concat("ReserveSpr_", .string(spr))):
-.import CurrentOAMOffset
-  ldy CurrentOAMOffset
-  cpy #$ff - (spr * 4)
-  bcc :+
-    rts
-  :
+; .scope
+; .ident(.concat("ReserveSpr_", .string(spr))):
+; .import CurrentOAMOffset
+;   ldy CurrentOAMOffset
+;   cpy #$ff - (spr * 4)
+;   bcc :+
+;     rts
+;   :
 .endmacro
 
 .macro UpdateOAMPosition
-  sty CurrentOAMOffset
-.endscope
+;   sty CurrentOAMOffset
+; .endscope
 .endmacro
 
 

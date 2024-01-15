@@ -97,6 +97,7 @@ IRQENABLE   = $e001
     sta BANK_SELECT
     lda #.bank(function)
     sta BANK_DATA
+    sta CurrentBank
 .endmacro
 
 .macro endfar
@@ -105,6 +106,7 @@ IRQENABLE   = $e001
     sta BANK_SELECT
   pla
   sta BANK_DATA
+  sta CurrentBank
 .endscope
 .endmacro
 

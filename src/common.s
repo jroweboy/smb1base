@@ -77,46 +77,71 @@ GetAreaType:
 ;-------------------------------------------------------------------------------------
 ;$00 - used in adding to get proper offset
 
-.proc RelativePlayerPosition
+; .proc RelativePlayerPosition
 
-  ldx #$00      ;set offsets for relative cooordinates
-  ldy #$00      ;routine to correspond to player object
-  jmp RelWOfs   ;get the coordinates
-.endproc
-
+;   ldx #$00      ;set offsets for relative cooordinates
+;   ldy #$00      ;routine to correspond to player object
+;   jmp RelWOfs   ;get the coordinates
+; .endproc
+RelativePlayerPosition:
+  lda SprObject_Y_Position
+  sta SprObject_Rel_YPos
+  lda SprObject_X_Position
+  sec
+  sbc ScreenLeft_X_Pos
+  sta SprObject_Rel_XPos
+  rts
 
 RelativeFireballPosition:
-  ldy #$00                    ;set for fireball offsets
-  jsr GetProperObjOffset      ;modify X to get proper fireball offset
-  ldy #$02
-RelWOfs:
-  jsr GetObjRelativePosition  ;get the coordinates
-  ldx ObjectOffset            ;return original offset
-  rts                         ;leave
-
-.proc RelativeEnemyPosition
-  lda #$01                     ;get coordinates of enemy object 
-  ldy #$01                     ;relative to the screen
-  jmp VariableObjOfsRelPos
-.endproc
+RelativeEnemyPosition:
+  lda Enemy_Y_Position,x
+  sta Enemy_Rel_YPos,x
+  lda Enemy_X_Position,x
+  sec
+  sbc ScreenLeft_X_Pos
+  sta Enemy_Rel_XPos,x
+  rts
 
 RelativeBlockPosition:
-  lda #$09                     ;get coordinates of one block object
-  ldy #$04                     ;relative to the screen
-  jsr VariableObjOfsRelPos
-  inx                          ;adjust offset for other block object if any
-  inx
-  lda #$09
-  iny                          ;adjust other and get coordinates for other one
-  ; fall through
-VariableObjOfsRelPos:
-  stx R0                      ;store value to add to A here
-  clc
-  adc R0                      ;add A to value stored
-  tax                         ;use as enemy offset
-  jsr GetObjRelativePosition
-  ldx ObjectOffset            ;reload old object offset and leave
+  lda Block_Y_Position,x
+  sta Block_Rel_YPos,x
+  lda Block_X_Position,x
+  sec
+  sbc ScreenLeft_X_Pos
+  sta Block_Rel_YPos,x
   rts
+
+;   ldy #$00                    ;set for fireball offsets
+;   jsr GetProperObjOffset      ;modify X to get proper fireball offset
+;   ldy #$02
+; RelWOfs:
+;   jsr GetObjRelativePosition  ;get the coordinates
+;   ldx ObjectOffset            ;return original offset
+;   rts                         ;leave
+
+; .proc RelativeEnemyPosition
+;   lda #$01                     ;get coordinates of enemy object 
+;   ldy #$01                     ;relative to the screen
+;   jmp VariableObjOfsRelPos
+; .endproc
+
+; RelativeBlockPosition:
+;   lda #$09                     ;get coordinates of one block object
+;   ldy #$04                     ;relative to the screen
+;   jsr VariableObjOfsRelPos
+;   inx                          ;adjust offset for other block object if any
+;   inx
+;   lda #$09
+;   iny                          ;adjust other and get coordinates for other one
+;   ; fall through
+; VariableObjOfsRelPos:
+;   stx R0                      ;store value to add to A here
+;   clc
+;   adc R0                      ;add A to value stored
+;   tax                         ;use as enemy offset
+;   jsr GetObjRelativePosition
+;   ldx ObjectOffset            ;reload old object offset and leave
+;   rts
 
 .proc GetObjRelativePosition
   lda SprObject_Y_Position,x  ;load vertical coordinate low

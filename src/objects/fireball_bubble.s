@@ -60,7 +60,13 @@ ProcAirBubbles:
 :
     stx ObjectOffset            ;store offset
     jsr BubbleCheck             ;check timers and coordinates, create air bubble
-    jsr RelativeBubblePosition  ;get relative coordinates
+    ; jsr RelativeBubblePosition  ;get relative coordinates
+    lda Bubble_Y_Position,x
+    sta Bubble_Rel_YPos,x
+    lda Bubble_X_Position,x
+    sec
+    sbc ScreenLeft_X_Pos
+    sta Bubble_Rel_XPos,x
     jsr GetBubbleOffscreenBits  ;get offscreen information
     jsr DrawBubble              ;draw the air bubble
     dex
@@ -184,17 +190,17 @@ MoveBubl:
 ExitBubl: rts                      ;leave
 
 Bubble_MForceData:
-      .byte $ff, $50
+  .byte $ff, $50
 
 BubbleTimerData:
-      .byte $40, $20
+  .byte $40, $20
 
-.proc RelativeBubblePosition
-  ldy #$01                ;set for air bubble offsets
-  jsr GetProperObjOffset  ;modify X to get proper air bubble offset
-  ldy #$03
-  jmp RelWOfs             ;get the coordinates
-.endproc
+; .proc RelativeBubblePosition
+;   ldy #$01                ;set for air bubble offsets
+;   jsr GetProperObjOffset  ;modify X to get proper air bubble offset
+;   ldy #$03
+;   jmp RelWOfs             ;get the coordinates
+; .endproc
 
 .proc GetBubbleOffscreenBits
   ldy #$01                 ;set for air bubble offsets

@@ -427,8 +427,8 @@ PowerUpAttributes:
 
 .proc DrawPowerUp
       ; ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
-  AllocSpr 4
-  sty OriginalOAMOffset
+  ; AllocSpr 4
+  ; sty OriginalOAMOffset
   lda Enemy_Rel_YPos         ;get relative vertical coordinate
   clc
   adc #$08                   ;add eight pixels
@@ -436,50 +436,50 @@ PowerUpAttributes:
   lda Enemy_Rel_XPos         ;get relative horizontal coordinate
   sta R5                     ;store here
   ldx PowerUpType            ;get power-up type
-  lda PowerUpAttributes,x    ;get attribute data for power-up type
-  ora Enemy_SprAttrib+5      ;add background priority bit if set
-  sta R4                     ;store attributes here
-  txa
-  pha                        ;save power-up type to the stack
-    asl
-    asl                        ;multiply by four to get proper offset
-    tax                        ;use as X
-    lda #$01
-    sta R7                     ;set counter here to draw two rows of sprite object
-    sta R3                     ;init d1 of flip control
+  ; lda PowerUpAttributes,x    ;get attribute data for power-up type
+  ; ora Enemy_SprAttrib+5      ;add background priority bit if set
+  ; sta R4                     ;store attributes here
+  ; txa
+  ; pha                        ;save power-up type to the stack
+    ; asl
+    ; asl                        ;multiply by four to get proper offset
+    ; tax                        ;use as X
+    ; lda #$01
+    ; sta R7                     ;set counter here to draw two rows of sprite object
+    ; sta R3                     ;init d1 of flip control
 
-PUpDrawLoop:
-      lda PowerUpGfxTable,x      ;load left tile of power-up object
-      sta R0 
-      lda PowerUpGfxTable+1,x    ;load right tile
-      jsr DrawOneSpriteRow       ;branch to draw one row of our power-up object
-      dec R7                     ;decrement counter
-      bpl PUpDrawLoop           ;branch until two rows are drawn
+; PUpDrawLoop:
+;       lda PowerUpGfxTable,x      ;load left tile of power-up object
+;       sta R0 
+;       lda PowerUpGfxTable+1,x    ;load right tile
+;       jsr DrawOneSpriteRow       ;branch to draw one row of our power-up object
+;       dec R7                     ;decrement counter
+;       bpl PUpDrawLoop           ;branch until two rows are drawn
     ; ldy Enemy_SprDataOffset+5  ;get sprite data offset again
-    ldy OriginalOAMOffset
-  pla                        ;pull saved power-up type from the stack
-  beq PUpOfs                 ;if regular mushroom, branch, do not change colors or flip
-  cmp #$03
-  beq PUpOfs                 ;if 1-up mushroom, branch, do not change colors or flip
-    sta R0                     ;store power-up type here now
-    lda FrameCounter           ;get frame counter
-    lsr                        ;divide by 2 to change colors every two frames
-    and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
-    ora Enemy_SprAttrib+5      ;add background priority bit if any set
-    sta Sprite_Attributes,y    ;set as new palette bits for top left and
-    sta Sprite_Attributes+4,y  ;top right sprites for fire flower and star
-    ldx R0 
-    dex                        ;check power-up type for fire flower
-    beq FlipPUpRightSide       ;if found, skip this part
-      sta Sprite_Attributes+8,y  ;otherwise set new palette bits  for bottom left
-      sta Sprite_Attributes+12,y ;and bottom right sprites as well for star only
-FlipPUpRightSide:
-  lda Sprite_Attributes+4,y
-  ora #%01000000             ;set horizontal flip bit for top right sprite
-  sta Sprite_Attributes+4,y
-  lda Sprite_Attributes+12,y
-  ora #%01000000             ;set horizontal flip bit for bottom right sprite
-  sta Sprite_Attributes+12,y ;note these are only done for fire flower and star power-ups
+  ;   ldy OriginalOAMOffset
+  ; pla                        ;pull saved power-up type from the stack
+;   beq PUpOfs                 ;if regular mushroom, branch, do not change colors or flip
+;   cmp #$03
+;   beq PUpOfs                 ;if 1-up mushroom, branch, do not change colors or flip
+;     sta R0                     ;store power-up type here now
+;     lda FrameCounter           ;get frame counter
+;     lsr                        ;divide by 2 to change colors every two frames
+;     and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
+;     ora Enemy_SprAttrib+5      ;add background priority bit if any set
+;     sta Sprite_Attributes,y    ;set as new palette bits for top left and
+;     sta Sprite_Attributes+4,y  ;top right sprites for fire flower and star
+;     ldx R0 
+;     dex                        ;check power-up type for fire flower
+;     beq FlipPUpRightSide       ;if found, skip this part
+;       sta Sprite_Attributes+8,y  ;otherwise set new palette bits  for bottom left
+;       sta Sprite_Attributes+12,y ;and bottom right sprites as well for star only
+; FlipPUpRightSide:
+;   lda Sprite_Attributes+4,y
+;   ora #%01000000             ;set horizontal flip bit for top right sprite
+;   sta Sprite_Attributes+4,y
+;   lda Sprite_Attributes+12,y
+;   ora #%01000000             ;set horizontal flip bit for bottom right sprite
+;   sta Sprite_Attributes+12,y ;note these are only done for fire flower and star power-ups
 PUpOfs:
   jmp SprObjectOffscrChk     ;jump to check to see if power-up is offscreen at all, then leave
 .endproc

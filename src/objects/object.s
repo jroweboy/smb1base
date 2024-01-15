@@ -252,7 +252,7 @@ JCoinRun:  txa
            cmp #$05
            bne RunJCSubs             ;if not moving downward fast enough, keep state as-is
            inc Misc_State,x          ;otherwise increment state to change to floatey number
-RunJCSubs: jsr RelativeMiscPosition  ;get relative coordinates
+RunJCSubs: ; jsr RelativeMiscPosition  ;get relative coordinates
            jsr GetMiscOffscreenBits  ;get offscreen information
            jsr GetMiscBoundBox       ;get bounding box coordinates (why?)
            jsr JCoinGfxHandler       ;draw the coin or floatey number
@@ -498,10 +498,17 @@ TooFar:   jmp EraseEnemyObject    ;erase object if necessary
 ExScrnBd: rts ; TODO check this RTS can be removed                     ;leave
 
 .proc RelativeMiscPosition
-  ldy #$02                ;set for misc object offsets
-  jsr GetProperObjOffset  ;modify X to get proper misc object offset
-  ldy #$06
-  jmp RelWOfs             ;get the coordinates
+;   ldy #$02                ;set for misc object offsets
+;   jsr GetProperObjOffset  ;modify X to get proper misc object offset
+;   ldy #$06
+;   jmp RelWOfs             ;get the coordinates
+  lda Misc_Y_Position,x
+  sta Misc_Rel_YPos,x
+  lda Misc_X_Position,x
+  sec
+  sbc ScreenLeft_X_Pos
+  sta Misc_Rel_YPos,y
+  rts
 .endproc
 
 

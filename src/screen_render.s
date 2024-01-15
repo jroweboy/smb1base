@@ -690,7 +690,7 @@ SetPaletteColor:
   jne ExPipeE               ;branch to leave if not found
   lda R1
   cmp #$10                  ;check left foot metatile for warp pipe left metatile
-  bne ExPipeE               ;branch to leave if not found
+  jne ExPipeE               ;branch to leave if not found
   lda #$30
   sta ChangeAreaTimer       ;set timer for change of area
   lda #$03

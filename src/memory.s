@@ -217,6 +217,16 @@ IrqPointer                    = IrqPointerJmp + 1
 ReloadCHRBank:                  .res  1
 CurrentCHRBank:                 .res  6
 
+InPipeTransition:               .res  1
+PipeXPosition:                  .res  1
+PipeYPosition:                  .res  1
+PipeExitTimer:                  .res  1
+
+CurrentBank:                    .res  1
+BankShadow:                     .res  1
+TargetAddrJmp:                  .res  1
+TargetAddress:                  .res  2
+
 .segment "OAM"
 ; start $0200
 
@@ -265,19 +275,19 @@ PlatformCollisionFlag:          .res  11
 Player_Rel_XPos               = SprObject_Rel_XPos
 SprObject_Rel_XPos:             .res  1
 
-Enemy_Rel_XPos:                 .res  1
-Fireball_Rel_XPos:              .res  1
-Bubble_Rel_XPos:                .res  1
-Block_Rel_XPos:                 .res  2
-Misc_Rel_XPos:                  .res  5
+Enemy_Rel_XPos:                 .res  6
+Fireball_Rel_XPos:              .res  2
+Block_Rel_XPos:                 .res  4
+Misc_Rel_XPos:                  .res  9
+Bubble_Rel_XPos:                .res  3
 
 Player_Rel_YPos               = SprObject_Rel_YPos
 SprObject_Rel_YPos:             .res  1
-Enemy_Rel_YPos:                 .res  1
-Fireball_Rel_YPos:              .res  1
-Bubble_Rel_YPos:                .res  1
-Block_Rel_YPos:                 .res  2
-Misc_Rel_YPos:                  .res  6
+Enemy_Rel_YPos:                 .res  6
+Fireball_Rel_YPos:              .res  2
+Block_Rel_YPos:                 .res  4
+Misc_Rel_YPos:                  .res  9
+Bubble_Rel_YPos:                .res  3
 
 Player_SprAttrib              = SprObject_SprAttrib
 SprObject_SprAttrib:            .res  1
@@ -288,11 +298,11 @@ Misc_SprAttrib:                 .res  13
 Player_OffscreenBits          = SprObject_OffscrBits
 SprObject_OffscrBits:           .res  1
 
-Enemy_OffscreenBits:            .res  1
-FBall_OffscreenBits:            .res  1
-Bubble_OffscreenBits:           .res  1
-Block_OffscreenBits:            .res  2
-Misc_OffscreenBits:             .res  2
+Enemy_OffscreenBits:            .res  6
+FBall_OffscreenBits:            .res  2
+Block_OffscreenBits:            .res  4
+Misc_OffscreenBits:             .res  9
+Bubble_OffscreenBits:           .res  3
 EnemyOffscrBitsMasked:          .res  12
 Block_Orig_YPos:                .res  2
 Block_BBuf_Low:                 .res  2
@@ -300,7 +310,7 @@ Block_Metatile:                 .res  2
 Block_PageLoc2:                 .res  2
 Block_RepFlag:                  .res  2
 SprDataOffset_Ctrl:             .res  2
-Block_ResidualCounter:          .res  1
+; Block_ResidualCounter:          .res  1
 Block_Orig_XPos:                .res  8
 AttributeBuffer:                .res  7
 SprObject_X_MoveForce:          .res  1
@@ -345,7 +355,7 @@ Whirlpool_Flag                = Cannon_Timer
 Cannon_Timer:                   .res  6
 
 BowserHitPoints:                .res  1
-StompChainCounter:              .res  12
+StompChainCounter:              .res  1 ; was 12 - can be 1
 Player_CollisionBits:           .res  1
 Enemy_CollisionBits:            .res  8
 
@@ -377,7 +387,7 @@ EnemyFrenzyQueue:               .res  1
 FireballCounter:                .res  1
 DuplicateObj_Offset:            .res  2
 LakituReappearTimer:            .res  2
-NumberofGroupEnemies:           .res  1 ; only used in one subroutine , HandleGroupEnemies - sub could use a temp.
+; NumberofGroupEnemies:           .res  1 ; only used in one subroutine , HandleGroupEnemies - sub could use a temp.
 ColorRotateOffset:              .res  1
 PlayerGfxOffset:                .res  1
 WarpZoneControl:                .res  1
@@ -485,11 +495,6 @@ SecondaryMsgCounter:            .res  1
 
 ; .proc InitializeArea clears the 1st two bytes here and leaves below here alone
 
-InPipeTransition:               .res  1
-PipeXPosition:                  .res  1
-PipeYPosition:                  .res  1
-PipeExitTimer:                  .res  1
-
 ; moved from ZP
 DestinationPageLoc:             .res  1
 FirebarSpinDirection          = DestinationPageLoc
@@ -553,11 +558,6 @@ GamePauseTimer:                 .res  1
 Mirror_PPUCTRL:                 .res  1
 Mirror_PPUMASK:                 .res  1
 NumberOfPlayers:                .res  1 ; jroweboy( this is only 1 byte, was 5)
-
-CurrentBank:                    .res  1
-BankShadow:                     .res  1
-TargetAddrJmp:                  .res  1
-TargetAddress:                  .res  2
 
 IntervalTimerControl:           .res  1
 

@@ -56,7 +56,7 @@ ChkPUSte:  lda Enemy_State+5          ;check power-up object's state
 RunPUSubs: jsr RelativeEnemyPosition  ;get coordinates relative to screen
            jsr GetEnemyOffscreenBits  ;get offscreen bits
            jsr GetEnemyBoundBox       ;get bounding box coordinates
-           jsr DrawPowerUp            ;draw the power-up object
+          ;  jsr DrawPowerUp            ;draw the power-up object
            jsr PlayerEnemyCollision   ;check for collision with player
            jmp OffscreenBoundsCheck   ;check to see if it went offscreen
 ExitPUp:   rts ; TODO check this RTS can be removed                        ;and we're done
