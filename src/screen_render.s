@@ -1208,27 +1208,27 @@ SetVRAMCtrl: lda #$06
 MetatileGraphics_Low: .lobytes MetatileGraphics
 MetatileGraphics_High: .hibytes MetatileGraphics
 
-Palette0_MTiles:
+Palette0_MTiles_Old:
   .byte $24, $24, $24, $24 ;blank
   .byte $27, $27, $27, $27 ;black metatile
-  BUSH_TOPLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  BUSH_TOPLEFT_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $24, $24, $24, $35 ;bush left
-  BUSH_MIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
+  BUSH_MIDDLE_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $36, $25, $37, $25 ;bush middle
-  BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles) / 4
+  BUSH_TOPMIDDLE_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $24, $38, $24, $24 ;bush right
-  MOUNTAIN_MIDLEFT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  MOUNTAIN_MIDLEFT_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $24, $30, $30, $26 ;mountain left
-  MOUNTAIN_MIDMID_METATILE = $00 + (* - Palette0_MTiles) / 4
+  MOUNTAIN_MIDMID_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $26, $26, $34, $26 ;mountain left bottom/middle center
-  MOUNTAIN_MIDTOP_METATILE = $00 + (* - Palette0_MTiles) / 4
+  MOUNTAIN_MIDTOP_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $24, $31, $24, $32 ;mountain middle top
-  MOUNTAIN_MIDRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  MOUNTAIN_MIDRIGHT_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $33, $26, $24, $33 ;mountain right
-  MOUNTAIN_BOTRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
+  MOUNTAIN_BOTRIGHT_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $34, $26, $26, $26 ;mountain right bottom
-  MOUNTAIN_TOPRIGHT_METATILE = $00 + (* - Palette0_MTiles) / 4
-  MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles) / 4
+  MOUNTAIN_TOPRIGHT_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
+  MOUNTAIN_BOTMID_METATILE = $00 + (* - Palette0_MTiles_Old) / 4
   .byte $26, $26, $26, $26 ;mountain middle bottom
 
   .byte $24, $c0, $24, $c0 ;bridge guardrail
@@ -1260,7 +1260,7 @@ Palette0_MTiles:
   .byte $a2, $a2, $a3, $a3 ;flagpole shaft
   .byte $24, $24, $24, $24 ;blank, used in conjunction with vines
 
-Palette1_MTiles:
+Palette1_MTiles_Old:
   .byte $a2, $a2, $a3, $a3 ;vertical rope
   .byte $99, $24, $99, $24 ;horizontal rope
   .byte $24, $a2, $3e, $3f ;left pulley
@@ -1281,7 +1281,7 @@ Palette1_MTiles:
   .byte $45, $47, $45, $47 ;breakable brick w/ line 
   .byte $47, $47, $47, $47 ;breakable brick 
   .byte $45, $47, $45, $47 ;breakable brick (not used)
-CRACKED_BRICK_METATILE = $80 + (* - Palette2_MTiles) / 4
+CRACKED_BRICK_METATILE = $80 + (* - Palette1_MTiles_Old) / 4
   .byte $b4, $b6, $b5, $b7 ;cracked rock terrain
   .byte $45, $47, $45, $47 ;brick with line (power-up)
   .byte $45, $47, $45, $47 ;brick with line (vine)
@@ -1309,7 +1309,7 @@ CRACKED_BRICK_METATILE = $80 + (* - Palette2_MTiles) / 4
   .byte $8e, $91, $8f, $92 ;water pipe bottom
   .byte $24, $2f, $24, $3d ;flag ball (residual object)
 
-Palette2_MTiles:
+Palette2_MTiles_Old:
   .byte $24, $24, $24, $35 ;cloud left
   .byte $36, $25, $37, $25 ;cloud middle
   .byte $24, $38, $24, $24 ;cloud right
@@ -1318,12 +1318,12 @@ Palette2_MTiles:
   .byte $3c, $24, $24, $24 ;cloud bottom right
   .byte $41, $26, $41, $26 ;water/lava top
   .byte $26, $26, $26, $26 ;water/lava
-CLOUD_METATILE = $80 + (* - Palette2_MTiles) / 4
+CLOUD_METATILE = $80 + (* - Palette2_MTiles_Old) / 4
   .byte $b0, $b1, $b2, $b3 ;cloud level terrain
-BRIDGE_METATILE = $80 + (* - Palette2_MTiles) / 4
+BRIDGE_METATILE = $80 + (* - Palette2_MTiles_Old) / 4
   .byte $77, $79, $77, $79 ;bowser's bridge
       
-Palette3_MTiles:
+Palette3_MTiles_Old:
   .byte $53, $55, $54, $56 ;question block (coin)
   .byte $53, $55, $54, $56 ;question block (power-up)
   .byte $a5, $a7, $a6, $a8 ;coin
@@ -1331,4 +1331,111 @@ Palette3_MTiles:
   .byte $57, $59, $58, $5a ;empty block
   .byte $7b, $7d, $7c, $7e ;axe
 
+Palette0_MTiles:
+.byte $24, $24, $24, $24 ;blank
+.byte $27, $27, $27, $27 ;black metatile
+.byte $24, $24, $24, $30 ;bush left
+.byte $31, $25, $32, $25 ;bush middle
+.byte $24, $33, $24, $24 ;bush right
+.byte $24, $34, $34, $26 ;mountain left
+.byte $26, $26, $38, $26 ;mountain left bottom/middle center
+.byte $24, $35, $24, $36 ;mountain middle top
+.byte $37, $26, $24, $37 ;mountain right
+.byte $38, $26, $26, $26 ;mountain right bottom
+.byte $26, $26, $26, $26 ;mountain middle bottom
+.byte $24, $44, $24, $44 ;bridge guardrail
+.byte $24, $CF, $CF, $24 ;chain
+.byte $3E, $4E, $3F, $4F ;tall tree top, top half
+.byte $3E, $4C, $3F, $4D ;short tree top
+.byte $4E, $4C, $4F, $4D ;tall tree top, bottom half
+.byte $50, $60, $51, $61 ;warp pipe end left, points up
+.byte $52, $62, $53, $63 ;warp pipe end right, points up
+.byte $50, $60, $51, $61 ;decoration pipe end left, points up
+.byte $52, $62, $53, $63 ;decoration pipe end right, points up
+.byte $70, $70, $71, $71 ;pipe shaft left
+.byte $26, $26, $72, $72 ;pipe shaft right
+.byte $59, $69, $5A, $6A ;tree ledge left edge
+.byte $5A, $6C, $5A, $6C ;tree ledge middle
+.byte $5A, $6A, $5B, $6B ;tree ledge right edge
+.byte $A0, $B0, $A1, $B1 ;mushroom left edge
+.byte $A2, $B2, $A3, $B3 ;mushroom middle
+.byte $A4, $B4, $A5, $B5 ;mushroom right edge
+.byte $54, $64, $55, $65 ;sideways pipe end top
+.byte $56, $66, $56, $66 ;sideways pipe shaft top
+.byte $57, $67, $71, $71 ;sideways pipe joint top
+.byte $74, $84, $75, $85 ;sideways pipe end bottom
+.byte $26, $76, $26, $76 ;sideways pipe shaft bottom
+.byte $58, $68, $71, $71 ;sideways pipe joint bottom
+.byte $8C, $9C, $8D, $9D ;seaplant
+.byte $24, $24, $24, $24 ;blank, used on bricks or blocks that are hit
+.byte $24, $5F, $24, $6F ;flagpole ball
+.byte $7D, $7D, $7E, $7E ;flagpole shaft
+.byte $24, $24, $24, $24 ;blank, used in conjunction with vines
 
+Palette1_MTiles:
+.byte $7D, $7D, $7E, $7E  ;vertical rope
+.byte $5C, $24, $5C, $24  ;horizontal rope
+.byte $24, $7D, $5D, $6D  ;left pulley
+.byte $5E, $6E, $24, $7E  ;right pulley
+.byte $24, $24, $24, $24  ;blank used for balance rope
+.byte $77, $48, $78, $48  ;castle top
+.byte $48, $48, $27, $27  ;castle window left
+.byte $48, $48, $48, $48  ;castle brick wall
+.byte $27, $27, $48, $48  ;castle window right
+.byte $79, $48, $7A, $48  ;castle top w/ brick
+.byte $7B, $27, $7C, $27  ;entrance top
+.byte $27, $27, $27, $27  ;entrance bottom
+.byte $73, $73, $73, $73  ;green ledge stump
+.byte $3A, $4A, $3B, $4B  ;fence
+.byte $3C, $3C, $3D, $3D  ;tree trunk
+.byte $A6, $4E, $A7, $4F  ;mushroom stump top
+.byte $4E, $4E, $4F, $4F  ;mushroom stump bottom
+.byte $47, $48, $47, $48  ;breakable brick w/ line 
+.byte $48, $48, $48, $48  ;breakable brick 
+.byte $47, $48, $47, $48  ;breakable brick (not used)
+.byte $82, $92, $83, $93 ;cracked rock terrain
+.byte $47, $48, $47, $48 ;brick with line (power-up)
+.byte $47, $48, $47, $48 ;brick with line (vine)
+.byte $47, $48, $47, $48 ;brick with line (star)
+.byte $47, $48, $47, $48 ;brick with line (coins)
+.byte $47, $48, $47, $48 ;brick with line (1-up)
+.byte $48, $48, $48, $48 ;brick (power-up)
+.byte $48, $48, $48, $48 ;brick (vine)
+.byte $48, $48, $48, $48 ;brick (star)
+.byte $48, $48, $48, $48 ;brick (coins)
+.byte $48, $48, $48, $48 ;brick (1-up)
+.byte $24, $24, $24, $24 ;hidden block (1 coin)
+.byte $24, $24, $24, $24 ;hidden block (1-up)
+.byte $80, $90, $81, $91 ;solid block (3-d block)
+.byte $B6, $B7, $B6, $B7 ;solid block (white wall)
+.byte $45, $24, $45, $24 ;bridge
+.byte $86, $96, $87, $97 ;bullet bill cannon barrel
+.byte $88, $98, $89, $99 ;bullet bill cannon top
+.byte $94, $94, $95, $95 ;bullet bill cannon bottom
+.byte $24, $24, $24, $24 ;blank used for jumpspring
+.byte $24, $48, $24, $48 ;half brick used for jumpspring
+.byte $8A, $9A, $8B, $9B ;solid block (water level, green rock)
+.byte $24, $48, $24, $48 ;half brick (???)
+.byte $54, $64, $55, $65 ;water pipe top
+.byte $74, $84, $75, $85 ;water pipe bottom
+.byte $24, $5F, $24, $6F ;flag ball (residual object)
+
+Palette2_MTiles:
+.byte $24, $24, $24, $30 ;cloud left
+.byte $31, $25, $32, $25 ;cloud middle
+.byte $24, $33, $24, $24 ;cloud right
+.byte $24, $24, $40, $24 ;cloud bottom left
+.byte $41, $24, $42, $24 ;cloud bottom middle
+.byte $43, $24, $24, $24 ;cloud bottom right
+.byte $46, $26, $46, $26 ;water/lava top
+.byte $26, $26, $26, $26 ;water/lava
+.byte $8E, $9E, $8F, $9F  ;cloud level terrain
+.byte $39, $49, $39, $49  ;bowser's bridge
+
+Palette3_MTiles:
+.byte $A8, $B8, $A9, $B9  ;question block (coin)
+.byte $A8, $B8, $A9, $B9  ;question block (power-up)
+.byte $AA, $BA, $AB, $BB  ;coin
+.byte $AC, $BC, $AD, $BD  ;underwater coin
+.byte $AE, $BE, $AF, $BF  ;empty block
+.byte $CB, $CD, $CC, $CE  ;axe
