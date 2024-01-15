@@ -214,6 +214,8 @@ NextBank:                       .res  1
 SwitchToMainIRQ:                .res  1
 IrqPointerJmp:                  .res  3
 IrqPointer                    = IrqPointerJmp + 1
+ReloadCHRBank:                  .res  1
+CurrentCHRBank:                 .res  6
 
 .segment "OAM"
 ; start $0200

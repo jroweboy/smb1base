@@ -666,7 +666,7 @@ PlayerKilled:
 PlayerGfxProcessing:
   ; sta PlayerGfxOffset           ;store offset to graphics table here
   sta ObjectMetasprite
-  lda #$04
+  ; lda #$04
   ; jsr RenderPlayerSub           ;draw player based on offset loaded
   ; jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
   lda FireballThrowingTimer
@@ -713,6 +713,8 @@ PlayerOffscreenChk:
 ;     tay
 ;     dex                           ;decrement row counter
 ;     bpl PROfsLoop                 ;do this until all sprite rows are checked
+  lda Player_Rel_XPos
+  sta Player_Pos_ForScroll
   rts                           ;then we are done!
 
 PlayerGfxTblOffsets:

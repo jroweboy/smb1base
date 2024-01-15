@@ -199,6 +199,19 @@ ScreenOff:
   jsr UpdateScreen          ;update screen with buffer contents
 
   jsr OAMandReadJoypad
+  lda ReloadCHRBank
+  bne :+
+    ldx #PRG_FIXED_8
+  .repeat 6, I
+    stx BANK_SELECT
+    lda CurrentCHRBank + I
+    sta BANK_DATA
+  .if I <> 5
+    inx
+  .endif
+  .endrepeat
+  :
+
   
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
@@ -214,6 +227,7 @@ InitBuffer:
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
   
+
   lda HorizontalScroll
   sta IrqNewScroll
   ; lda Mirror_PPUCTRL
@@ -283,6 +297,9 @@ RotPRandomBit:
     dey                       ;decrement for loop
     bne RotPRandomBit
 SkipMainOper:
+
+  lda BankShadow
+  sta BANK_SELECT
   ply
   plx
   pla

@@ -1,6 +1,7 @@
 
 .include "common.inc"
 ; .include "object.inc"
+.include "metasprite.inc"
 
 ; screen_render.s
 .import AddToScore
@@ -496,21 +497,21 @@ PUpOfs:
 
 ;tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable:
-      .byte $fc, $fc, $aa, $ab, $ac, $ad  ;buzzy beetle frame 1
-      .byte $fc, $fc, $ae, $af, $b0, $b1  ;             frame 2
-      .byte $fc, $a5, $a6, $a7, $a8, $a9  ;koopa troopa frame 1
-      .byte $fc, $a0, $a1, $a2, $a3, $a4  ;             frame 2
-      .byte $69, $a5, $6a, $a7, $a8, $a9  ;koopa paratroopa frame 1
-      .byte $6b, $a0, $6c, $a2, $a3, $a4  ;                 frame 2
-      .byte $fc, $fc, $96, $97, $98, $99  ;spiny frame 1
-      .byte $fc, $fc, $9a, $9b, $9c, $9d  ;      frame 2
-      .byte $fc, $fc, $8f, $8e, $8e, $8f  ;spiny's egg frame 1
-      .byte $fc, $fc, $95, $94, $94, $95  ;            frame 2
-      .byte $fc, $fc, $dc, $dc, $df, $df  ;bloober frame 1
-      .byte $dc, $dc, $dd, $dd, $de, $de  ;        frame 2
-      .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1
-      .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2
-      .byte $fc, $fc, $70, $71, $72, $73  ;goomba
+      .byte $fc, $fc, $aa, $ab, $ac, $ad  ;buzzy beetle frame 1        $00
+      .byte $fc, $fc, $ae, $af, $b0, $b1  ;             frame 2        $06
+      .byte $fc, $a5, $a6, $a7, $a8, $a9  ;koopa troopa frame 1        $0c
+      .byte $fc, $a0, $a1, $a2, $a3, $a4  ;             frame 2        $12
+      .byte $69, $a5, $6a, $a7, $a8, $a9  ;koopa paratroopa frame 1    $18
+      .byte $6b, $a0, $6c, $a2, $a3, $a4  ;                 frame 2    $1e
+      .byte $fc, $fc, $96, $97, $98, $99  ;spiny frame 1               $24
+      .byte $fc, $fc, $9a, $9b, $9c, $9d  ;      frame 2               $2a
+      .byte $fc, $fc, $8f, $8e, $8e, $8f  ;spiny's egg frame 1         $30
+      .byte $fc, $fc, $95, $94, $94, $95  ;            frame 2         $36
+      .byte $fc, $fc, $dc, $dc, $df, $df  ;bloober frame 1             $3c
+      .byte $dc, $dc, $dd, $dd, $de, $de  ;        frame 2             $42
+      .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1         $48
+      .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2         $4e
+      .byte $fc, $fc, $70, $71, $72, $73  ;goomba                      $54
       .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down)
       .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2
       .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup)
@@ -541,7 +542,10 @@ EnemyGraphicsTable:
       .byte $f0, $f0, $fc, $fc, $fc, $fc  ;           frame 3
 
 EnemyGfxTableOffsets:
-      .byte $0c, $0c, $00, $0c, $0c, $a8, $54, $3c
+      .byte $0c, $0c, $00, $0c, $0c, $a8
+      ; .byte $54
+      .byte METASPRITE_GOOMBA_WALKING_1
+      .byte $3c
       .byte $ea, $18, $48, $48, $cc, $c0, $18, $18
       .byte $18, $90, $24, $ff, $48, $9c, $d2, $d8
       .byte $f0, $f6, $fc
@@ -649,9 +653,10 @@ GmbaAnim: and #%00100000        ;check for d5 set in enemy object state
           lda FrameCounter
           and #%00001000        ;check for every eighth frame
           bne CheckBowserFront
-          lda R3 
-          eor #%00000011        ;invert bits to flip horizontally every eight frames
-          sta R3                ;leave alone otherwise
+          
+          ; lda R3 
+          ; eor #%00000011        ;invert bits to flip horizontally every eight frames
+          ; sta R3                ;leave alone otherwise
 
 CheckBowserFront:
              lda EnemyAttributeData,y    ;load sprite attribute using enemy object
@@ -809,10 +814,11 @@ CheckAnimationStop:
       and #%10100000          ;for d7 or d5, or check for timers stopped
       ora TimerControl
       bne CheckDefeatedState  ;if either condition true, branch
-      txa
-      clc
-      adc #$06                ;add $06 to current enemy offset
-      tax                     ;to animate various enemy objects
+      inx
+      ; txa
+      ; clc
+      ; adc #$06                ;add $06 to current enemy offset
+      ; tax                     ;to animate various enemy objects
 
 CheckDefeatedState:
       lda Local_ed               ;check saved enemy state
@@ -827,11 +833,15 @@ CheckDefeatedState:
       sty Local_ec               ;init saved value here
 
 DrawEnemyObject:
-  ldy Local_eb                    ;load sprite data offset
-  jsr DrawEnemyObjRow        ;draw six tiles of data
-  jsr DrawEnemyObjRow        ;into sprite data
-  jsr DrawEnemyObjRow
-  ldx ObjectOffset           ;get enemy object offset
+  ; lda Local_eb                    ;load sprite data offset
+  ; ldx ObjectOffset
+  txa
+  ldx ObjectOffset
+  sta ObjectMetasprite+1,x
+  ; jsr DrawEnemyObjRow        ;draw six tiles of data
+  ; jsr DrawEnemyObjRow        ;into sprite data
+  ; jsr DrawEnemyObjRow
+  ; ldx ObjectOffset           ;get enemy object offset
   ; ldy Enemy_SprDataOffset,x  ;get sprite data offset
   ldy Local_eb
   lda Local_ef
@@ -839,45 +849,45 @@ DrawEnemyObject:
   bne CheckForVerticalFlip   ;for bullet bill, branch if not found
 
 SkipToOffScrChk:
-  jmp SprObjectOffscrChk     ;jump if found
+  ; jmp SprObjectOffscrChk     ;jump if found
 
 CheckForVerticalFlip:
-  lda VerticalFlipFlag       ;check if vertical flip flag is set here
-  beq CheckForESymmetry      ;branch if not
-  lda Sprite_Attributes,y    ;get attributes of first sprite we dealt with
-  ora #%10000000             ;set bit for vertical flip
-  iny
-  iny                        ;increment two bytes so that we store the vertical flip
-  jsr DumpSixSpr             ;in attribute bytes of enemy obj sprite data
-  dey
-  dey                        ;now go back to the Y coordinate offset
-  tya
-  tax                        ;give offset to X
-  lda Local_ef
-  cmp #HammerBro             ;check saved enemy object for hammer bro
-  beq FlipEnemyVertically
-  cmp #Lakitu                ;check saved enemy object for lakitu
-  beq FlipEnemyVertically    ;branch for hammer bro or lakitu
-  cmp #$15
-  bcs FlipEnemyVertically    ;also branch if enemy object => $15
-  txa
-  clc
-  adc #$08                   ;if not selected objects or => $15, set
-  tax                        ;offset in X for next row
+;   lda VerticalFlipFlag       ;check if vertical flip flag is set here
+;   beq CheckForESymmetry      ;branch if not
+;   lda Sprite_Attributes,y    ;get attributes of first sprite we dealt with
+;   ora #%10000000             ;set bit for vertical flip
+;   iny
+;   iny                        ;increment two bytes so that we store the vertical flip
+;   jsr DumpSixSpr             ;in attribute bytes of enemy obj sprite data
+;   dey
+;   dey                        ;now go back to the Y coordinate offset
+;   tya
+;   tax                        ;give offset to X
+;   lda Local_ef
+;   cmp #HammerBro             ;check saved enemy object for hammer bro
+;   beq FlipEnemyVertically
+;   cmp #Lakitu                ;check saved enemy object for lakitu
+;   beq FlipEnemyVertically    ;branch for hammer bro or lakitu
+;   cmp #$15
+;   bcs FlipEnemyVertically    ;also branch if enemy object => $15
+;   txa
+;   clc
+;   adc #$08                   ;if not selected objects or => $15, set
+;   tax                        ;offset in X for next row
 
-FlipEnemyVertically:
-  lda Sprite_Tilenumber,x     ;load first or second row tiles
-  pha                         ;and save tiles to the stack
-    lda Sprite_Tilenumber+4,x
-    pha
-      lda Sprite_Tilenumber+16,y  ;exchange third row tiles
-      sta Sprite_Tilenumber,x     ;with first or second row tiles
-      lda Sprite_Tilenumber+20,y
-      sta Sprite_Tilenumber+4,x
-    pla                         ;pull first or second row tiles from stack
-    sta Sprite_Tilenumber+20,y  ;and save in third row
-  pla
-  sta Sprite_Tilenumber+16,y
+; FlipEnemyVertically:
+;   lda Sprite_Tilenumber,x     ;load first or second row tiles
+;   pha                         ;and save tiles to the stack
+;     lda Sprite_Tilenumber+4,x
+;     pha
+;       lda Sprite_Tilenumber+16,y  ;exchange third row tiles
+;       sta Sprite_Tilenumber,x     ;with first or second row tiles
+;       lda Sprite_Tilenumber+20,y
+;       sta Sprite_Tilenumber+4,x
+;     pla                         ;pull first or second row tiles from stack
+;     sta Sprite_Tilenumber+20,y  ;and save in third row
+;   pla
+;   sta Sprite_Tilenumber+16,y
 
 CheckForESymmetry:
   lda BowserGfxFlag           ;are we drawing bowser at all?

@@ -184,7 +184,8 @@ __MEMORY_INC = 1
 .global SwitchToMainIRQ
 .global IrqPointerJmp
 .global IrqPointer
-
+.global ReloadCHRBank
+.global CurrentCHRBank
 
 .global NoteLenLookupTblOfs
 .global Square1SoundBuffer

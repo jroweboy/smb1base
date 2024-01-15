@@ -64,7 +64,9 @@ ObjectLoop:
       sbc #24
     :
     sta SpriteShuffleOffset
-    jsr DrawMetasprite
+    beq :+
+      jsr DrawMetasprite
+    :
     dec SpriteShuffleTemp
     bpl ObjectLoop
   rts
@@ -151,6 +153,12 @@ HorizontalFlip:
       sta Sprite_Tilenumber-16,x
     pla
     sta Sprite_Tilenumber-12,x
+    lda Sprite_Attributes-16,x
+    ora #$40
+    sta Sprite_Attributes-16,x
+    lda Sprite_Attributes-12,x
+    ora #$40
+    sta Sprite_Attributes-12,x
   OneRow:
     lda Sprite_Tilenumber-8,x
     pha
@@ -158,6 +166,12 @@ HorizontalFlip:
       sta Sprite_Tilenumber-8,x
     pla
     sta Sprite_Tilenumber-4,x
+    lda Sprite_Attributes-8,x
+    ora #$40
+    sta Sprite_Attributes-8,x
+    lda Sprite_Attributes-4,x
+    ora #$40
+    sta Sprite_Attributes-4,x
 Exit:
   rts
 .endproc

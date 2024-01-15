@@ -46,18 +46,18 @@ METASPRITES_COUNT .set 1
 .ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ):
   .byte   (.paramcount - 2) * 4
 .ident( .sprintf("%s_%s_%s", Object, Animation, "TOP_LEFT") ) = <Spr1
-	.byte   0,0+YOffset,<Spr1 | Bank | PATTERN_TABLE_1, Palette | >Spr1
+	.byte   0,8+YOffset,<Spr1 | Bank | PATTERN_TABLE_1, Palette | >Spr1
 .ifnblank Spr2
 .ident( .sprintf("%s_%s_%s", Object, Animation, "TOP_RIGHT") ) = <Spr2
-	.byte   8,0+YOffset,<Spr2 | Bank | PATTERN_TABLE_1, Palette | >Spr2
+	.byte   8,8+YOffset,<Spr2 | Bank | PATTERN_TABLE_1, Palette | >Spr2
 .endif
 .ifnblank Spr3
 .ident( .sprintf("%s_%s_%s", Object, Animation, "BOT_LEFT") ) = <Spr3
-	.byte   0,-16+YOffset,<Spr3 | Bank | PATTERN_TABLE_1, Palette | >Spr3
+	.byte   0,24+YOffset,<Spr3 | Bank | PATTERN_TABLE_1, Palette | >Spr3
 .endif
 .ifnblank Spr4
 .ident( .sprintf("%s_%s_%s", Object, Animation, "BOT_RIGHT") ) = <Spr4
-	.byte   8,-16+YOffset,<Spr4 | Bank | PATTERN_TABLE_1, Palette | >Spr4
+	.byte   8,24+YOffset,<Spr4 | Bank | PATTERN_TABLE_1, Palette | >Spr4
 .endif
 .ident( .sprintf("METASPRITE_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ))
 .ident( .sprintf("METASPRITE_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ))
@@ -78,8 +78,7 @@ METASPRITES_COUNT .set METASPRITES_COUNT + 1
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 
-
-BIG_MARIO_BANK = $00
+BIG_MARIO_BANK = SPRITE_BANK_0
 BIG_MARIO_PALETTE = $00
 MetaspriteDefine "BIG_MARIO", "STANDING",  $00, $02, $20, $22
 MetaspriteDefine "BIG_MARIO", "WALKING_1", $04, $06, $24, $26
@@ -105,9 +104,9 @@ MetaspriteDefine "BIG_MARIO", "FIRE_STANDING",  $00, $02, $20, $22
 MetaspriteDefine "BIG_MARIO", "CLIMBING_1",   $00, $02, $08, $0a
 MetaspriteDefine "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
 
-SMALL_MARIO_BANK = $00
+SMALL_MARIO_BANK = SPRITE_BANK_0
 SMALL_MARIO_PALETTE = $00
-SMALL_MARIO_Y_OFFSET = 16
+SMALL_MARIO_Y_OFFSET = 8
 MetaspriteDefine "SMALL_MARIO", "STANDING",   $00, $02
 MetaspriteDefine "SMALL_MARIO", "WALKING_1",  $04, $06
 MetaspriteDefine "SMALL_MARIO", "WALKING_2",  $08, $0a
@@ -125,7 +124,7 @@ MetaspriteDuplicate "METASPRITE_SMALL_MARIO_SWIMMING_3_KICK", "SMALL_MARIO_SWIMM
 MetaspriteDefine "SMALL_MARIO", "DEATH",           $34, $36
 MetaspriteDefine "SMALL_MARIO", "CLIMBING_2",      $38, $3a
 
-POWERUP_BANK = $01
+POWERUP_BANK = SPRITE_BANK_1
 POWERUP_1UP_PALETTE = $01
 POWERUP_STAR_PALETTE = $02
 POWERUP_FIREFLOWER_PALETTE = $01
@@ -135,20 +134,20 @@ MetaspriteDefine "POWERUP", "FIREFLOWER", $38, $3a
 MetaspriteDefine "POWERUP", "MUSHROOM",   $3c, $3e
 MetaspriteDefine "POWERUP", "1UP",        $3c, $3e
 
-EXPLOSION_BANK = $01
+EXPLOSION_BANK = SPRITE_BANK_1
 EXPLOSION_PALETTE = $03
 MetaspriteDefine "EXPLOSION", "FRAME_1", $26, $26 | SPR_FLIP_H
 MetaspriteDefine "EXPLOSION", "FRAME_2", $28, $28 | SPR_FLIP_H
 MetaspriteDefine "EXPLOSION", "FRAME_3", $2a, $2a | SPR_FLIP_H
 
-COIN_BANK = $01
+COIN_BANK = SPRITE_BANK_1
 COIN_PALETTE = $03
 MetaspriteDefine "COIN", "FRAME_1", $2c
 MetaspriteDefine "COIN", "FRAME_2", $2e
 MetaspriteDefine "COIN", "FRAME_3", $30
 MetaspriteDefine "COIN", "FRAME_4", $32
 
-MISC_BANK = $01
+MISC_BANK = SPRITE_BANK_1
 MISC_PALETTE = $03
 MISC_BUBBLE_PALETTE = $02
 MetaspriteDefine "MISC", "BRICK", $22, $22
@@ -157,9 +156,9 @@ MetaspriteDefine "MISC", "CHUNK", $16
 MetaspriteDefine "MISC", "BUBBLE", $18
 
 
-GOOMBA_BANK = $02
+GOOMBA_BANK = SPRITE_BANK_2
 GOOMBA_PALETTE = $03
 MetaspriteDefine "GOOMBA", "WALKING_1", $22, $24
-MetaspriteDefine "GOOMBA", "WALKING_2", $22 | SPR_FLIP_H, $24 | SPR_FLIP_H
+MetaspriteDefine "GOOMBA", "WALKING_2", $24 | SPR_FLIP_H, $22 | SPR_FLIP_H
 
 .endif
