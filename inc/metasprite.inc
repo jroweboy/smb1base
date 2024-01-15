@@ -13,7 +13,7 @@ SPRITE_BANK_3 = $c0
 SPR_FLIP_H = %01000000 << 8
 SPR_FLIP_V = %10000000 << 8
 
-METASPRITES_COUNT .set 0
+METASPRITES_COUNT .set 1
 .macro MetaspriteDefine Object, Animation, Spr1, Spr2, Spr3, Spr4
 .local Bank
 .local Palette
@@ -64,6 +64,7 @@ METASPRITES_COUNT .set 0
 .endif
 
 .ident( .sprintf("METASPRITE_%s_%s", Object, Animation) ) = METASPRITES_COUNT
+.out .sprintf("METASPRITE_%s_%s = %d", Object, Animation, METASPRITES_COUNT)
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 

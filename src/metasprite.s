@@ -7,6 +7,8 @@ METASPRITE_BODY = 1
 
 .include "metasprite.inc"
 
+METASPRITE_0_LO = $00
+METASPRITE_0_HI = $00
 MetaspriteTableLo:
 .repeat METASPRITES_COUNT, I
   .byte .ident(.sprintf("METASPRITE_%d_LO", I))
@@ -70,18 +72,21 @@ ObjectLoop:
 
 .proc DrawMetasprite
 Ptr = R0
-Xlo = R2
-Ylo = R3
+HFlip = R3
 Attr = R4
-
+Xlo = R5
+Ylo = R6
   
 ; TODO check offscreenbits to make sure they are onscreen still
   tay
   ldx ObjectMetasprite,y
   cpx #0
-  beq Exit
+  beq EarlyExit
   cpx #METASPRITES_COUNT ; todo remove this after fixing all bugs
-  bcs Exit
+  bcc Continue
+EarlyExit:
+    rts
+Continue:
   lda MetaspriteTableLo,x
   sta Ptr
   lda MetaspriteTableHi,x
@@ -95,6 +100,8 @@ Attr = R4
   sta Ylo
   lda SprObject_SprAttrib,y
   sta Attr
+  lda PlayerFacingDir,y
+  sta HFlip
 
   ldx CurrentOAMOffset
   ldy #0
@@ -124,6 +131,33 @@ RenderLoop:
     dey
     bne RenderLoop
   stx CurrentOAMOffset
+
+  lda HFlip
+  lsr
+  beq Exit
+HorizontalFlip:
+    ; switch every other tile id
+    lda (Ptr),y
+    lsr
+    lsr
+    lsr
+    beq Exit
+    lsr
+    beq OneRow
+  TwoRows:
+    lda Sprite_Tilenumber-16,x
+    pha
+      lda Sprite_Tilenumber-12,x
+      sta Sprite_Tilenumber-16,x
+    pla
+    sta Sprite_Tilenumber-12,x
+  OneRow:
+    lda Sprite_Tilenumber-8,x
+    pha
+      lda Sprite_Tilenumber-4,x
+      sta Sprite_Tilenumber-8,x
+    pla
+    sta Sprite_Tilenumber-4,x
 Exit:
   rts
 .endproc

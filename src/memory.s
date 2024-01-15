@@ -43,11 +43,11 @@ Misc_State:                     .res  9
 ;--------------------------- 
 
 PlayerFacingDir:                .res  1 ; 1 = right, 2 = left
+Enemy_MovingDir:                .res  17
 PowerUpType:                    .res  1
 FireballBouncingFlag:           .res  2
 HammerBroJumpTimer:             .res  9
 Player_MovingDir:               .res  1
-Enemy_MovingDir:                .res  17
 
 
 ;--------------------------- X speed
