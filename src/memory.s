@@ -618,9 +618,9 @@ AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (origi
 ; each display has to be 6 ram values because the math routine
 DisplayDigits:                  .res  6
 TopScoreDisplay               = DisplayDigits
-ScoreAndCoinDisplay:            .res  24
+ScoreAndCoinDisplay:            .res  27
 PlayerScoreDisplay            = ScoreAndCoinDisplay
-GameTimerDisplay:               .res  6
+GameTimerDisplay:               .res  4
 
 WorldSelectEnableFlag:          .res  1
 

@@ -204,7 +204,7 @@ __MEMORY_INC = 1
 .global Square2SoundQueue
 .global Square1SoundQueue
 
-StackClear = DigitModifier
+StackClear = DigitModifier+5
 
 .global IrqPointerJmp
 .global IrqPointer

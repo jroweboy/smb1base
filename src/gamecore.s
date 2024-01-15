@@ -372,8 +372,8 @@ RunGameTimer:
 ResGTCtrl:
   lda #$18                   ;reset game timer control
   sta GameTimerCtrlTimer
-  ldy #$23                   ;set offset for last digit
-  lda #$ff                   ;set value to decrement game timer digit
+  ldy #(GameTimerDisplay + 2 - DisplayDigits) ;set offset for last digit
+  lda #-1                    ;set value to decrement game timer digit
   sta DigitModifier+5
   jsr DigitsMathRoutine      ;do sub to decrement game timer slowly
   lda #$a4                   ;set status nybbles to update game timer display
