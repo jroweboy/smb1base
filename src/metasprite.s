@@ -154,10 +154,10 @@ HorizontalFlip:
     pla
     sta Sprite_Tilenumber-12,x
     lda Sprite_Attributes-16,x
-    ora #$40
+    eor #$40
     sta Sprite_Attributes-16,x
     lda Sprite_Attributes-12,x
-    ora #$40
+    eor #$40
     sta Sprite_Attributes-12,x
   OneRow:
     lda Sprite_Tilenumber-8,x
@@ -167,10 +167,10 @@ HorizontalFlip:
     pla
     sta Sprite_Tilenumber-4,x
     lda Sprite_Attributes-8,x
-    ora #$40
+    eor #$40
     sta Sprite_Attributes-8,x
     lda Sprite_Attributes-4,x
-    ora #$40
+    eor #$40
     sta Sprite_Attributes-4,x
 Exit:
   rts

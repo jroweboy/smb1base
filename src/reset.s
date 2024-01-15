@@ -30,7 +30,7 @@
     sta PPUADDR
 
     ; Y position to $2005.
-    lda #32 - 1
+    lda #32
     sta PPUSCROLL
 
     ; Prepare for the 2 later writes:

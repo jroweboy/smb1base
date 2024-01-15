@@ -622,19 +622,7 @@ CntPl:
   ; ; cmp #$00                    ;if player status normal,
   ; beq FindPlayerAction        ;branch and do not return
   jsr FindPlayerAction        ;otherwise jump and return
-  ; Add player facing dir into spr attributes
-  lda PlayerFacingDir
-  cmp #1
-  beq @FacingLeft
 
-  lda SprObject_SprAttrib
-  ora #%01000000
-  bne @Write
-@FacingLeft:
-  lda SprObject_SprAttrib
-  and #%10111111
-@Write:
-  sta SprObject_SprAttrib
   ; lda FrameCounter
   ; and #%00000100              ;check frame counter for d2 set (8 frames every
   ; bne ExPGH                   ;eighth frame), and branch if set to leave

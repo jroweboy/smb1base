@@ -45,26 +45,28 @@ METASPRITES_COUNT .set 1
 .ifdef METASPRITE_BODY
 .ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ):
   .byte   (.paramcount - 2) * 4
-.ident( .sprintf("%s_%s_%s", Object, Animation, "TOP_LEFT") ) = <Spr1
-	.byte   0,8+YOffset,<Spr1 | Bank | PATTERN_TABLE_1, Palette | >Spr1
+.ident( .sprintf("%s_%s_TOP_LEFT", Object, Animation) ) = <Spr1
+	.byte   0,8+YOffset,<Spr1 | Bank | PATTERN_TABLE_1, Palette | (>Spr1 >> 8)
+.out .sprintf("%s_%s_TOP_LEFT = $%02x", Object, Animation, Spr1)
+.out .sprintf("%s_%s_PALETTE = $%02x", Object, Animation, Palette | (>Spr1 >> 8))
 .ifnblank Spr2
-.ident( .sprintf("%s_%s_%s", Object, Animation, "TOP_RIGHT") ) = <Spr2
-	.byte   8,8+YOffset,<Spr2 | Bank | PATTERN_TABLE_1, Palette | >Spr2
+.ident( .sprintf("%s_%s_TOP_RIGHT", Object, Animation) ) = <Spr2
+	.byte   8,8+YOffset,<Spr2 | Bank | PATTERN_TABLE_1, Palette | (>Spr2 >> 8)
 .endif
 .ifnblank Spr3
-.ident( .sprintf("%s_%s_%s", Object, Animation, "BOT_LEFT") ) = <Spr3
-	.byte   0,24+YOffset,<Spr3 | Bank | PATTERN_TABLE_1, Palette | >Spr3
+.ident( .sprintf("%s_%s_BOT_LEFT", Object, Animation) ) = <Spr3
+	.byte   0,24+YOffset,<Spr3 | Bank | PATTERN_TABLE_1, Palette | (>Spr3 >> 8)
 .endif
 .ifnblank Spr4
-.ident( .sprintf("%s_%s_%s", Object, Animation, "BOT_RIGHT") ) = <Spr4
-	.byte   8,24+YOffset,<Spr4 | Bank | PATTERN_TABLE_1, Palette | >Spr4
+.ident( .sprintf("%s_%s_BOT_RIGHT", Object, Animation) ) = <Spr4
+	.byte   8,24+YOffset,<Spr4 | Bank | PATTERN_TABLE_1, Palette | (>Spr4 >> 8)
 .endif
 .ident( .sprintf("METASPRITE_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ))
 .ident( .sprintf("METASPRITE_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ))
 .endif
 
 .ident( .sprintf("METASPRITE_%s_%s", Object, Animation) ) = METASPRITES_COUNT
-.out .sprintf("METASPRITE_%s_%s = %d", Object, Animation, METASPRITES_COUNT)
+.out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 
@@ -107,7 +109,7 @@ MetaspriteDefine "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
 
 SMALL_MARIO_BANK = SPRITE_BANK_0
 SMALL_MARIO_PALETTE = $00
-SMALL_MARIO_Y_OFFSET = 9
+SMALL_MARIO_Y_OFFSET = 8
 MetaspriteDefine "SMALL_MARIO", "STANDING",   $00, $02
 MetaspriteDefine "SMALL_MARIO", "WALKING_1",  $04, $06
 MetaspriteDefine "SMALL_MARIO", "WALKING_2",  $08, $0a
@@ -162,5 +164,6 @@ GOOMBA_BANK = SPRITE_BANK_2
 GOOMBA_PALETTE = $03
 MetaspriteDefine "GOOMBA", "WALKING_1", $22, $24
 MetaspriteDefine "GOOMBA", "WALKING_2", $24 | SPR_FLIP_H, $22 | SPR_FLIP_H
+MetaspriteDefine "GOOMBA", "DEAD", $26 , $26 | SPR_FLIP_H
 
 .endif

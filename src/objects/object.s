@@ -2,7 +2,7 @@
 .include "object.inc"
 
 ; sprite_render.s
-.import EnemyGfxHandler, JCoinGfxHandler, DrawHammer, FloateyNumbersRoutine
+.import EnemyGraphicsEngine, JCoinGfxHandler, DrawHammer, FloateyNumbersRoutine
 ; collision.s
 .import PlayerCollisionCore,InjurePlayer,EnemyToBGCollisionDet,EnemiesCollision
 
@@ -401,7 +401,8 @@ RunNormalEnemies:
           sta Enemy_SprAttrib,x
           jsr GetEnemyOffscreenBits
           jsr RelativeEnemyPosition
-          jsr EnemyGfxHandler
+          jsr EnemyGraphicsEngine
+          ; jsr EnemyGfxHandler
           jsr GetEnemyBoundBox
           jsr EnemyToBGCollisionDet
           jsr EnemiesCollision

@@ -1063,6 +1063,98 @@ MoveESprColOffscreen:
       sta Sprite_Data+16,y       ;move third row sprite in column offscreen
       rts
 
+.export EnemyGraphicsEngine
+EnemyGraphicsEngine:
+  lda Enemy_ID,x
+  jsr JumpEngine
+  ;only objects $00-$14 use this table
+  .word ProcessGreenKoopa
+  .word Noop
+  .word ProcessBuzzyBeetle
+  .word ProcessRedKoopa
+  .word Noop
+  .word ProcessHammerBro
+  .word ProcessGoomba
+  .word ProcessBlooper
+  .word ProcessBulletBill
+  .word Noop
+  .word ProcessSwimmingCheepCheep
+  .word ProcessSwimmingCheepCheep
+  .word ProcessPodoboo
+  .word ProcessPiranhaPlant
+  .word ProcessJumpingParatrooper
+  .word ProcessRedFlyingParatrooper
+  .word ProcessGreebFlyingParatrooper
+  .word ProcessLakitu
+  .word ProcessSpiny
+  .word Noop
+  .word ProcessFlyingCheepCheep
+
+Noop:
+  rts
+
+.proc ProcessGoomba
+  ldx ObjectOffset
+  lda Enemy_State,x
+  ldy #METASPRITE_GOOMBA_WALKING_1
+  cmp #$02              ;check for defeated state
+  bcc GmbaAnim          ;if not defeated, go ahead and animate
+    ldy #METASPRITE_GOOMBA_DEAD
+    bne Exit
+GmbaAnim:
+  and #%00100000        ;check for d5 set in enemy object state 
+  ora TimerControl      ;or timer disable flag set
+  bne Exit              ;if either condition true, do not animate goomba
+  lda FrameCounter
+  and #%00001000        ;check for every eighth frame
+  bne Exit
+    ldy #METASPRITE_GOOMBA_WALKING_2
+Exit:
+  tya
+  sta ObjectMetasprite+1,x
+  rts
+.endproc
+
+ProcessGreenKoopa:
+ProcessBuzzyBeetle:
+ProcessRedKoopa:
+ProcessHammerBro:
+ProcessBlooper:
+ProcessBulletBill:
+ProcessSwimmingCheepCheep:
+ProcessPodoboo:
+ProcessPiranhaPlant:
+ProcessJumpingParatrooper:
+ProcessRedFlyingParatrooper:
+ProcessGreebFlyingParatrooper:
+ProcessLakitu:
+ProcessSpiny:
+ProcessFlyingCheepCheep:
+  ldx ObjectOffset
+  lda #0
+  sta ObjectMetasprite+1,x
+  rts
+
+
+; GreenKoopa            = $00
+; BuzzyBeetle           = $02
+; RedKoopa              = $03
+; HammerBro             = $05
+; Goomba                = $06
+; Bloober               = $07
+; BulletBill_FrenzyVar  = $08
+; GreyCheepCheep        = $0a
+; RedCheepCheep         = $0b
+; Podoboo               = $0c
+; PiranhaPlant          = $0d
+; GreenParatroopaJump   = $0e
+; RedParatroopa         = $0f
+; GreenParatroopaFly    = $10
+; Lakitu                = $11
+; Spiny                 = $12
+; FlyCheepCheepFrenzy   = $14
+; FlyingCheepCheep      = $14  .word MoveFlyingCheepCheep
+
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - tile numbers
 ;$02 - relative Y position
