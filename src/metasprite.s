@@ -7,15 +7,27 @@ METASPRITE_BODY = 1
 
 .include "metasprite.inc"
 
-METASPRITE_0_LO = $00
-METASPRITE_0_HI = $00
-MetaspriteTableLo:
+METASPRITE_LEFT_0_LO = $00
+METASPRITE_LEFT_0_HI = $00
+METASPRITE_RIGHT_0_LO = $00
+METASPRITE_RIGHT_0_HI = $00
+
+MetaspriteTableLeftLo:
 .repeat METASPRITES_COUNT, I
-  .byte .ident(.sprintf("METASPRITE_%d_LO", I))
+  .byte .ident(.sprintf("METASPRITE_LEFT_%d_LO", I))
 .endrepeat
-MetaspriteTableHi:
+MetaspriteTableLeftHi:
 .repeat METASPRITES_COUNT, I
-  .byte .ident(.sprintf("METASPRITE_%d_HI", I))
+  .byte .ident(.sprintf("METASPRITE_LEFT_%d_HI", I))
+.endrepeat
+
+MetaspriteTableRightLo:
+.repeat METASPRITES_COUNT, I
+  .byte .ident(.sprintf("METASPRITE_RIGHT_%d_LO", I))
+.endrepeat
+MetaspriteTableRightHi:
+.repeat METASPRITES_COUNT, I
+  .byte .ident(.sprintf("METASPRITE_RIGHT_%d_HI", I))
 .endrepeat
 
 .export DrawAllMetasprites
@@ -72,9 +84,10 @@ ObjectLoop:
   rts
 .endproc
 
+.export DrawMetasprite
 .proc DrawMetasprite
 Ptr = R0
-HFlip = R3
+Tmp = R2
 Attr = R4
 Xlo = R5
 Ylo = R6
@@ -89,22 +102,27 @@ Ylo = R6
 EarlyExit:
     rts
 Continue:
-  lda MetaspriteTableLo,x
-  sta Ptr
-  lda MetaspriteTableHi,x
-  sta Ptr+1
+  lda PlayerFacingDir,y
+  lsr
+  bne FacingLeft
+    lda MetaspriteTableRightLo,x
+    sta Ptr
+    lda MetaspriteTableRightHi,x
+    sta Ptr+1
+    bne DrawSprite ; unconditional
+  FacingLeft:
+    lda MetaspriteTableLeftLo,x
+    sta Ptr
+    lda MetaspriteTableLeftHi,x
+    sta Ptr+1
+DrawSprite:
 
-  lda SprObject_X_Position,y
-  sec
-  sbc ScreenLeft_X_Pos
+  lda SprObject_Rel_XPos,y
   sta Xlo
-  lda SprObject_Y_Position,y
+  lda SprObject_Rel_YPos,y
   sta Ylo
   lda SprObject_SprAttrib,y
   sta Attr
-  lda PlayerFacingDir,y
-  sta HFlip
-
   ldx CurrentOAMOffset
   ldy #0
   lda (Ptr),y
@@ -133,46 +151,94 @@ RenderLoop:
     dey
     bne RenderLoop
   stx CurrentOAMOffset
-
-  lda HFlip
-  lsr
-  beq Exit
-HorizontalFlip:
-    ; switch every other tile id
-    lda (Ptr),y
-    lsr
-    lsr
-    lsr
-    beq Exit
-    lsr
-    beq OneRow
-  TwoRows:
-    lda Sprite_Tilenumber-16,x
-    pha
-      lda Sprite_Tilenumber-12,x
-      sta Sprite_Tilenumber-16,x
-    pla
-    sta Sprite_Tilenumber-12,x
-    lda Sprite_Attributes-16,x
-    eor #$40
-    sta Sprite_Attributes-16,x
-    lda Sprite_Attributes-12,x
-    eor #$40
-    sta Sprite_Attributes-12,x
-  OneRow:
-    lda Sprite_Tilenumber-8,x
-    pha
-      lda Sprite_Tilenumber-4,x
-      sta Sprite_Tilenumber-8,x
-    pla
-    sta Sprite_Tilenumber-4,x
-    lda Sprite_Attributes-8,x
-    eor #$40
-    sta Sprite_Attributes-8,x
-    lda Sprite_Attributes-4,x
-    eor #$40
-    sta Sprite_Attributes-4,x
-Exit:
   rts
+
+; DrawHorizontalFlippedMetasprite:
+;   ldx CurrentOAMOffset
+;   ldy #0
+;   sty Tmp
+;   lda (Ptr),y
+;   tay
+; FlipRenderLoop:
+;     lda Tmp
+;     lsr
+;     bcc WriteForward
+;       ; Write the previous entry
+;       lda (Ptr),y
+;       ora Attr
+;       eor #$40
+;       sta Sprite_Attributes-4,x
+;       dey
+;       lda (Ptr),y
+;       sta Sprite_Tilenumber-4,x
+;       dey
+;       bne ContinueLoop ; unconditional
+;   WriteForward:
+;       lda (Ptr),y
+;       ora Attr
+;       eor #$40
+;       sta Sprite_Attributes+4,x
+;       dey
+;       lda (Ptr),y
+;       sta Sprite_Tilenumber+4,x
+;       dey
+;   ContinueLoop:
+;     lda (Ptr),y
+;     clc
+;     adc Ylo
+;     sta Sprite_Y_Position,x
+;     dey
+;     lda (Ptr),y
+;     clc
+;     adc Xlo
+;     sta Sprite_X_Position,x
+;     inx
+;     inx
+;     inx
+;     inx
+;     inc Tmp
+;     dey
+;     bne FlipRenderLoop
+;   stx CurrentOAMOffset
+;   rts
 .endproc
 
+;   lda HFlip
+;   lsr
+;   beq Exit
+; HorizontalFlip:
+;     ; switch every other tile id
+;     lda (Ptr),y
+;     lsr
+;     lsr
+;     lsr
+;     beq Exit
+;     lsr
+;     beq OneRow
+;   TwoRows:
+;     lda Sprite_Tilenumber-16,x
+;     pha
+;       lda Sprite_Tilenumber-12,x
+;       sta Sprite_Tilenumber-16,x
+;     pla
+;     sta Sprite_Tilenumber-12,x
+;     lda Sprite_Attributes-16,x
+;     eor #$40
+;     sta Sprite_Attributes-16,x
+;     lda Sprite_Attributes-12,x
+;     eor #$40
+;     sta Sprite_Attributes-12,x
+;   OneRow:
+;     lda Sprite_Tilenumber-8,x
+;     pha
+;       lda Sprite_Tilenumber-4,x
+;       sta Sprite_Tilenumber-8,x
+;     pla
+;     sta Sprite_Tilenumber-4,x
+;     lda Sprite_Attributes-8,x
+;     eor #$40
+;     sta Sprite_Attributes-8,x
+;     lda Sprite_Attributes-4,x
+;     eor #$40
+;     sta Sprite_Attributes-4,x
+; Exit:

@@ -13,67 +13,128 @@ SPRITE_BANK_3 = $c0
 SPR_FLIP_H = %01000000 << 8
 SPR_FLIP_V = %10000000 << 8
 
+.macro MetaspriteDefineBody Object, Animation, Direction, Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+.local X1, X2, Y1, Y2, Size
+.local Tile1, Tile2, Tile3, Tile4
+.local Attr1, Attr2, Attr3, Attr4
+X1 = 0
+X2 = 8
+Y1 = 8+YOffset
+Y2 = 24+YOffset
+Size .set 1
+
+Tile1 .set ((<Spr1) | Bank | PATTERN_TABLE_1)
+.ifnblank Spr2
+Size .set 2
+Tile2 .set ((<Spr2) | Bank | PATTERN_TABLE_1)
+.endif
+.ifnblank Spr3
+Size .set 3
+Tile3 .set ((<Spr3) | Bank | PATTERN_TABLE_1)
+.endif
+.ifnblank Spr4
+Size .set 4
+Tile4 .set ((<Spr4) | Bank | PATTERN_TABLE_1)
+.endif
+Attr1 .set (Palette | ((>Spr1) >> 8))
+.ifnblank Spr2
+Attr2 .set (Palette | ((>Spr2) >> 8))
+.endif
+.ifnblank Spr3
+Attr3 .set (Palette | ((>Spr3) >> 8))
+.endif
+.ifnblank Spr4
+Attr4 .set (Palette | ((>Spr4) >> 8))
+.endif
+
+.if .xmatch(Direction, "LEFT")
+; .out .sprintf("Switching tile and attr %s %s %s", Object, Animation, Direction)
+.ifnblank Spr2
+  Tmp .set Tile1
+  Tile1 .set Tile2
+  Tile2 .set Tmp
+  Tmp .set Attr1
+  Attr1 .set Attr2
+  Attr2 .set Tmp
+  Attr1 .set Attr1 ^ $40
+  Attr2 .set Attr2 ^ $40
+.endif
+.ifnblank Spr4  
+  Tmp .set Tile3
+  Tile3 .set Tile4
+  Tile4 .set Tmp
+  Tmp .set Attr3
+  Attr3 .set Attr4
+  Attr4 .set Tmp
+  Attr3 .set Attr3 ^ $40
+  Attr4 .set Attr4 ^ $40
+.endif
+.endif
+
+
+.ident( .sprintf("MetaspriteData_%s_%s_%s", Object, Animation, Direction) ):
+  .byte   (Size * 4)
+  .byte   X1, Y1, Tile1, Attr1
+.ifnblank Spr2
+  .byte   X2, Y1, Tile2, Attr2
+.endif
+.ifnblank Spr3
+  .byte   X1, Y2, Tile3, Attr3
+.endif
+.ifnblank Spr4
+  .byte   X2, Y2, Tile4, Attr4
+.endif
+.endmacro
+
 METASPRITES_COUNT .set 1
 .macro MetaspriteDefine Object, Animation, Spr1, Spr2, Spr3, Spr4
-.local Bank
-.local Palette
-.local YOffset
+.local Bank, Palette, YOffset
 
 .if .defined(.ident( .sprintf("%s_%s_BANK", Object, Animation) ))
-	Bank = .ident( .sprintf("%s_%s_BANK", Object, Animation) )
+  Bank = .ident( .sprintf("%s_%s_BANK", Object, Animation) )
 .elseif .defined(.ident( .sprintf("%s_BANK", Object) ))
-	Bank = .ident( .sprintf("%s_BANK", Object) )
+  Bank = .ident( .sprintf("%s_BANK", Object) )
 .else
-	.error .sprintf("Could not define Metasprite without the bank. Please define either %s_BANK or %s_%s_BANK", Object, Object, Animation)
+  .error .sprintf("Could not define Metasprite without the bank. Please define either %s_BANK or %s_%s_BANK", Object, Object, Animation)
 .endif
 .if .defined(.ident( .sprintf("%s_%s_PALETTE", Object, Animation) ))
-	Palette = .ident( .sprintf("%s_%s_PALETTE", Object, Animation) )
+  Palette = .ident( .sprintf("%s_%s_PALETTE", Object, Animation) )
 .elseif .defined(.ident( .sprintf("%s_PALETTE", Object) ))
-	Palette = .ident( .sprintf("%s_PALETTE", Object) )
+  Palette = .ident( .sprintf("%s_PALETTE", Object) )
 .else
-	.error .sprintf("Could not define Metasprite without the palette. Please define either %s_PALETTE or %s_%s_PALETTE", Object, Object, Animation)
+  .error .sprintf("Could not define Metasprite without the palette. Please define either %s_PALETTE or %s_%s_PALETTE", Object, Object, Animation)
 .endif
 
 .if .defined(.ident( .sprintf("%s_%s_Y_OFFSET", Object, Animation) ))
-	YOffset = <.ident( .sprintf("%s_%s_Y_OFFSET", Object, Animation) )
+  YOffset = <.ident( .sprintf("%s_%s_Y_OFFSET", Object, Animation) )
 .elseif .defined(.ident( .sprintf("%s_Y_OFFSET", Object) ))
-	YOffset = <.ident( .sprintf("%s_Y_OFFSET", Object) )
+  YOffset = <.ident( .sprintf("%s_Y_OFFSET", Object) )
 .else
-	YOffset = 0
+  YOffset = 0
 .endif
 
 .ifdef METASPRITE_BODY
-.ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ):
-  .byte   (.paramcount - 2) * 4
-.ident( .sprintf("%s_%s_TOP_LEFT", Object, Animation) ) = <Spr1
-	.byte   0,8+YOffset,<Spr1 | Bank | PATTERN_TABLE_1, Palette | (>Spr1 >> 8)
-.out .sprintf("%s_%s_TOP_LEFT = $%02x", Object, Animation, Spr1)
-.out .sprintf("%s_%s_PALETTE = $%02x", Object, Animation, Palette | (>Spr1 >> 8))
-.ifnblank Spr2
-.ident( .sprintf("%s_%s_TOP_RIGHT", Object, Animation) ) = <Spr2
-	.byte   8,8+YOffset,<Spr2 | Bank | PATTERN_TABLE_1, Palette | (>Spr2 >> 8)
-.endif
-.ifnblank Spr3
-.ident( .sprintf("%s_%s_BOT_LEFT", Object, Animation) ) = <Spr3
-	.byte   0,24+YOffset,<Spr3 | Bank | PATTERN_TABLE_1, Palette | (>Spr3 >> 8)
-.endif
-.ifnblank Spr4
-.ident( .sprintf("%s_%s_BOT_RIGHT", Object, Animation) ) = <Spr4
-	.byte   8,24+YOffset,<Spr4 | Bank | PATTERN_TABLE_1, Palette | (>Spr4 >> 8)
-.endif
-.ident( .sprintf("METASPRITE_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ))
-.ident( .sprintf("METASPRITE_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s", Object, Animation) ))
+
+MetaspriteDefineBody Object, Animation, "LEFT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+
+.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
+.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
+.ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
+.ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
 .endif
 
 .ident( .sprintf("METASPRITE_%s_%s", Object, Animation) ) = METASPRITES_COUNT
-.out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
+; .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 
 .macro MetaspriteDuplicate Mspr, Name
 .ifdef METASPRITE_BODY
-.ident( .sprintf("METASPRITE_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident(Mspr))
-.ident( .sprintf("METASPRITE_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident(Mspr))
+.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident(Mspr))
+.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident(Mspr))
+.ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident(Mspr))
+.ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident(Mspr))
 .endif
 
 .ident( Name ) = METASPRITES_COUNT
@@ -162,8 +223,9 @@ MetaspriteDefine "MISC", "BUBBLE", $18
 
 GOOMBA_BANK = SPRITE_BANK_2
 GOOMBA_PALETTE = $03
+GOOMBA_DEAD_Y_OFFSET = $08
 MetaspriteDefine "GOOMBA", "WALKING_1", $22, $24
 MetaspriteDefine "GOOMBA", "WALKING_2", $24 | SPR_FLIP_H, $22 | SPR_FLIP_H
-MetaspriteDefine "GOOMBA", "DEAD", $26 , $26 | SPR_FLIP_H
+MetaspriteDefine "GOOMBA", "DEAD", $26 | SPR_FLIP_V, $26 | SPR_FLIP_H | SPR_FLIP_V
 
 .endif

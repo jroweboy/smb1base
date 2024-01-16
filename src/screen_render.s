@@ -1,9 +1,9 @@
 .include "common.inc"
+.include "metasprite.inc"
 
 .import AreaParserTaskHandler
 
 ; player.s
-.import DrawPlayer_Intermediate
 
 .export ScreenRoutines
 .export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, AddToScore
@@ -199,6 +199,36 @@ NoReset:
 
 ;-------------------------------------------------------------------------------------
 
+.proc DrawPlayer_Intermediate
+;   ldx #$05                       ;store data into zero page memory
+; PIntLoop:
+;     lda IntermediatePlayerData,x   ;load data to display player as he always
+;     sta R2 ,x                      ;appears on world/lives display
+;     dex
+;     bpl PIntLoop                   ;do this until all data is loaded
+;   ldx #$b8                       ;load offset for small standing
+;   ldy #$04                       ;load sprite data offset
+;   jsr              ;draw player accordingly
+;   lda Sprite_Attributes+36       ;get empty sprite attributes
+;   ora #%01000000                 ;set horizontal flip bit for bottom-right sprite
+;   sta Sprite_Attributes+32       ;store and leave
+  lda #METASPRITE_SMALL_MARIO_STANDING
+  sta ObjectMetasprite
+  lda IntermediatePlayerData+0
+  sta SprObject_Rel_YPos
+  lda IntermediatePlayerData+1
+  sta PlayerFacingDir
+  lda IntermediatePlayerData+2
+  sta SprObject_SprAttrib
+  lda IntermediatePlayerData+3
+  sta SprObject_Rel_XPos
+  rts
+IntermediatePlayerData:
+  .byte $58, $01, $00, $60 ; , $ff, $04
+
+.endproc
+
+
 DisplayIntermediate:
   lda OperMode                 ;check primary mode of operation
   beq NoInter                  ;if in title screen mode, skip this
@@ -212,7 +242,10 @@ DisplayIntermediate:
   lda DisableIntermediate      ;if this flag is set, skip intermediate lives display
   bne NoInter                  ;and jump to specific task, otherwise
 PlayerInter:
-  farcall DrawPlayer_Intermediate  ;put player in appropriate place for
+  jsr DrawPlayer_Intermediate  ;put player in appropriate place for
+  lda #0
+  .import DrawAllMetasprites
+  farcall DrawAllMetasprites
   lda #$01                     ;lives display, then output lives display to buffer
 OutputInter:
   jsr WriteGameText
@@ -404,12 +437,12 @@ IconDataRead:
   beq ExitIcon            ;if set to 1-player game, we're done
   lda #$24                ;otherwise, load blank tile in 1-player position
   sta VRAM_Buffer1+3
-  lda #$ce                ;then load shroom icon tile in 2-player position
+  lda #$2a                ;then load shroom icon tile in 2-player position
   sta VRAM_Buffer1+5
 ExitIcon:
   rts
 MushroomIconData:
-  .byte $07, $22, $49, $83, $ce, $24, $24, $00
+  .byte $07, $22, $49, $83, $2a, $24, $24, $00
 .endproc
 
 
