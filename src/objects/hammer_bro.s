@@ -45,7 +45,7 @@ ProcHammerBro:
 ChkJH: lda HammerBroJumpTimer,x   ;check jump timer
        beq HammerBroJumpCode      ;if expired, branch to jump
        dec HammerBroJumpTimer,x   ;otherwise decrement jump timer
-       lda Enemy_OffscreenBits,x
+       lda Enemy_OffscreenBits
        and #%00001100             ;check offscreen bits
        bne MoveHammerBroXDir      ;if hammer bro a little offscreen, skip to movement code
        lda HammerThrowingTimer,x  ;check hammer throwing timer

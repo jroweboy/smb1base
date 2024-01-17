@@ -202,43 +202,11 @@ BubbleTimerData:
 ;   jmp RelWOfs             ;get the coordinates
 ; .endproc
 
-; .proc GetBubbleOffscreenBits
-;   ldy #$01                 ;set for air bubble offsets
-;   jsr GetProperObjOffset   ;modify X to get proper air bubble offset
-;   ldy #$03                 ;set other offset for airbubble's offscreen bits
-;   jmp GetOffScreenBitsSet  ;and get offscreen information about air bubble
-; .endproc
-
-.import RunOffscrBitsSubs
 .proc GetBubbleOffscreenBits
-  lda Bubble_X_Position,x
-  sta R1
-  lda Bubble_PageLoc,x
-  sta R2
-  lda Bubble_Y_Position,x
-  sta R3
-  lda Bubble_Y_HighPos,x
-  sta R4
-  jsr RunOffscrBitsSubs
-  ldx ObjectOffset
-  ; lda R0                      ;get value here and store elsewhere
-  sta Bubble_OffscreenBits,x
-  rts
-.endproc
-.proc GetFireballOffscreenBits
-  lda Fireball_X_Position,x
-  sta R1
-  lda Fireball_PageLoc,x
-  sta R2
-  lda Fireball_Y_Position,x
-  sta R3
-  lda Fireball_Y_HighPos,x
-  sta R4
-  jsr RunOffscrBitsSubs
-  ldx ObjectOffset
-  ; lda R0                      ;get value here and store elsewhere
-  sta FBall_OffscreenBits,x
-  rts
+  ldy #$01                 ;set for air bubble offsets
+  jsr GetProperObjOffset   ;modify X to get proper air bubble offset
+  ldy #$03                 ;set other offset for airbubble's offscreen bits
+  jmp GetOffScreenBitsSet  ;and get offscreen information about air bubble
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -264,12 +232,12 @@ ExDBub:
   rts                         ;leave
 .endproc
 
-; .proc GetFireballOffscreenBits
-;   ldy #$00                 ;set for fireball offsets
-;   jsr GetProperObjOffset   ;modify X to get proper fireball offset
-;   ldy #$02                 ;set other offset for fireball's offscreen bits
-;   jmp GetOffScreenBitsSet  ;and get offscreen information about fireball
-; .endproc
+.proc GetFireballOffscreenBits
+  ldy #$00                 ;set for fireball offsets
+  jsr GetProperObjOffset   ;modify X to get proper fireball offset
+  ldy #$02                 ;set other offset for fireball's offscreen bits
+  jmp GetOffScreenBitsSet  ;and get offscreen information about fireball
+.endproc
 
 
 ;-------------------------------------------------------------------------------------

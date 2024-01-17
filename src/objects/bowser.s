@@ -387,7 +387,7 @@ DrawFlameLoop:
          ldx ObjectOffset           ;reload original enemy offset
          jsr GetEnemyOffscreenBits  ;get offscreen information
          ldy CurrentOAMOffset
-         lda Enemy_OffscreenBits,x    ;get enemy object offscreen bits
+         lda Enemy_OffscreenBits    ;get enemy object offscreen bits
          lsr                        ;move d0 to carry and result to stack
          lsr                        ;move d1 to carry and move bits back to stack
          pha

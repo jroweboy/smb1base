@@ -99,7 +99,7 @@ BulletBillHandler:
            bne RunBBSubs             ;branch to run subroutines except movement sub
            lda Enemy_State,x
            bne ChkDSte               ;if bullet bill's state set, branch to check defeated state
-           lda Enemy_OffscreenBits,x   ;otherwise load offscreen bits
+           lda Enemy_OffscreenBits   ;otherwise load offscreen bits
            and #%00001100            ;mask out bits
            cmp #%00001100            ;check to see if all bits are set
            beq KillBB                ;if so, branch to kill this object

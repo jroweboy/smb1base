@@ -198,7 +198,6 @@ ChkMoveDir:
     sta Player_MovingDir        ;set moving direction
 PlayerSubs:
   jsr ScrollHandler           ;move the screen if necessary
-  ldx #0
   jsr GetPlayerOffscreenBits  ;get player's offscreen bits
   jsr RelativePlayerPosition  ;get coordinates relative to the screen
   ldx #$00                    ;set offset for player object
@@ -649,12 +648,12 @@ PlayerGfxProcessing:
   lda PlayerGfxTblOffsets,y     ;get offset to graphics table
   sta ObjectMetasprite
   ; sta PlayerGfxOffset           ;store it for use later
-;   ldy #$04                      ;set to update four sprite rows by default
-;   lda Player_X_Speed
-;   ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
-;   beq SUpdR                     ;if no speed or button press, branch using set value in Y
-;     dey                         ;otherwise set to update only three sprite rows
-; SUpdR:
+  ldy #$04                      ;set to update four sprite rows by default
+  lda Player_X_Speed
+  ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
+  beq SUpdR                     ;if no speed or button press, branch using set value in Y
+    dey                         ;otherwise set to update only three sprite rows
+SUpdR:
   ; tya                           ;save in A for use
   ; jsr RenderPlayerSub           ;in sub, draw player object again
 PlayerOffscreenChk:
@@ -1364,10 +1363,7 @@ InitScrlAmt:
   lda #$00
   sta ScrollAmount          ;initialize value here
 ChkPOffscr:
-  lda Player_X_Position                  ;set X for player offset
-  sta R1
-  lda Player_PageLoc                  ;set X for player offset
-  sta R2
+  ldx #$00                  ;set X for player offset
   jsr GetXOffscreenBits     ;get horizontal offscreen bits for player
   sta R0                    ;save them here
   ldy #$00                  ;load default offset (left side)

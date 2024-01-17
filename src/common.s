@@ -156,114 +156,63 @@ RelativeBlockPosition:
 ;-------------------------------------------------------------------------------------
 ;$00 - used as temp variable to hold offscreen bits
 
-; .proc GetPlayerOffscreenBits
-;   ldx #$00                 ;set offsets for player-specific variables
-;   ldy #$00                 ;and get offscreen information about player
-;   jmp GetOffScreenBitsSet
-; .endproc
-
-
-; .proc GetMiscOffscreenBits
-;   ldy #$02                 ;set for misc object offsets
-;   jsr GetProperObjOffset   ;modify X to get proper misc object offset
-;   ldy #$06                 ;set other offset for misc object's offscreen bits
-;   jmp GetOffScreenBitsSet  ;and get offscreen information about misc object
-; .endproc
-
-; .proc GetProperObjOffset
-;   txa                  ;move offset to A
-;   clc
-;   adc ObjOffsetData,y  ;add amount of bytes to offset depending on setting in Y
-;   tax                  ;put back in X and leave
-;   rts
-; ObjOffsetData:
-;   .byte $07, $16, $0d
-; .endproc
-
-; .proc GetEnemyOffscreenBits
-;   lda #$01                 ;set A to add 1 byte in order to get enemy offset
-;   ldy #$01                 ;set Y to put offscreen bits in Enemy_OffscreenBits
-;   jmp SetOffscrBitsOffset
-; .endproc
-
-; GetBlockOffscreenBits:
-;   lda #$09       ;set A to add 9 bytes in order to get block obj offset
-;   ldy #$04       ;set Y to put offscreen bits in Block_OffscreenBits
-;   ; fallthrough
-; SetOffscrBitsOffset:
-;   stx R0 
-;   clc           ;add contents of X to A to get
-;   adc R0        ;appropriate offset, then give back to X
-;   tax
-;   ; fallthrough
-.proc GetEnemyOffscreenBits
-  lda Enemy_X_Position,x
-  sta R1
-  lda Enemy_PageLoc,x
-  sta R2
-  lda Enemy_Y_Position,x
-  sta R3
-  lda Enemy_Y_HighPos,x
-  sta R4
-  jsr RunOffscrBitsSubs
-  ldx ObjectOffset
-  lda R0                      ;get value here and store elsewhere
-  sta Enemy_OffscreenBits,x
-  rts
-.endproc
-
-.export GetBlockOffscreenBits
-.proc GetBlockOffscreenBits
-  lda Block_X_Position,x
-  sta R1
-  lda Block_PageLoc,x
-  sta R2
-  lda Block_Y_Position,x
-  sta R3
-  lda Block_Y_HighPos,x
-  sta R4
-  jsr RunOffscrBitsSubs
-  ldx ObjectOffset
-  ; lda R0                      ;get value here and store elsewhere
-  sta Block_OffscreenBits,x
-  rts
-.endproc
-
-.export GetMiscOffscreenBits
-.proc GetMiscOffscreenBits
-  lda Misc_X_Position,x
-  sta R1
-  lda Misc_PageLoc,x
-  sta R2
-  lda Misc_Y_Position,x
-  sta R3
-  lda Misc_Y_HighPos,x
-  sta R4
-  jsr RunOffscrBitsSubs
-  ldx ObjectOffset
-  ; lda R0                      ;get value here and store elsewhere
-  sta Misc_OffscreenBits,x
-  rts
-.endproc
-
-.export GetPlayerOffscreenBits
 .proc GetPlayerOffscreenBits
-  lda Player_X_Position,x
-  sta R1
-  lda Player_PageLoc,x
-  sta R2
-  lda Player_Y_Position,x
-  sta R3
-  lda Player_Y_HighPos,x
-  sta R4
-  jsr RunOffscrBitsSubs
-  ldx ObjectOffset
-  ; lda R0                      ;get value here and store elsewhere
-  sta Player_OffscreenBits,x
-  rts
+  ldx #$00                 ;set offsets for player-specific variables
+  ldy #$00                 ;and get offscreen information about player
+  jmp GetOffScreenBitsSet
 .endproc
 
-.export RunOffscrBitsSubs
+
+.proc GetMiscOffscreenBits
+  ldy #$02                 ;set for misc object offsets
+  jsr GetProperObjOffset   ;modify X to get proper misc object offset
+  ldy #$06                 ;set other offset for misc object's offscreen bits
+  jmp GetOffScreenBitsSet  ;and get offscreen information about misc object
+.endproc
+
+.proc GetProperObjOffset
+  txa                  ;move offset to A
+  clc
+  adc ObjOffsetData,y  ;add amount of bytes to offset depending on setting in Y
+  tax                  ;put back in X and leave
+  rts
+ObjOffsetData:
+  .byte $07, $16, $0d
+.endproc
+
+.proc GetEnemyOffscreenBits
+  lda #$01                 ;set A to add 1 byte in order to get enemy offset
+  ldy #$01                 ;set Y to put offscreen bits in Enemy_OffscreenBits
+  jmp SetOffscrBitsOffset
+.endproc
+
+GetBlockOffscreenBits:
+  lda #$09       ;set A to add 9 bytes in order to get block obj offset
+  ldy #$04       ;set Y to put offscreen bits in Block_OffscreenBits
+  ; fallthrough
+SetOffscrBitsOffset:
+  stx R0 
+  clc           ;add contents of X to A to get
+  adc R0        ;appropriate offset, then give back to X
+  tax
+  ; fallthrough
+GetOffScreenBitsSet:
+  tya                         ;save offscreen bits offset to stack for now
+  pha
+    jsr RunOffscrBitsSubs
+    asl                         ;move low nybble to high nybble
+    asl
+    asl
+    asl
+    ora R0                      ;mask together with previously saved low nybble
+    sta R0                      ;store both here
+  pla                         ;get offscreen bits offset from stack
+  tay
+  lda R0                      ;get value here and store elsewhere
+  sta SprObject_OffscrBits,y
+  ldx ObjectOffset
+  rts
+
 .proc RunOffscrBitsSubs
   jsr GetXOffscreenBits  ;do subroutine here
   lsr                    ;move high nybble to low
@@ -271,14 +220,7 @@ RelativeBlockPosition:
   lsr
   lsr
   sta R0                 ;store here
-  jsr GetYOffscreenBits
-  asl                         ;move low nybble to high nybble
-  asl
-  asl
-  asl
-  ora R0                      ;mask together with previously saved low nybble
-  ; sta R0                      ;store both here
-  rts
+  jmp GetYOffscreenBits
 .endproc
 
 ;--------------------------------
@@ -289,48 +231,33 @@ RelativeBlockPosition:
 ;$07 - used to store pixel difference between X positions of object and screen edges
 
 .proc GetXOffscreenBits
-  ; stx R4                      ;save position in buffer to here
+  stx R4                      ;save position in buffer to here
   ldy #$01                    ;start with right side of screen
-Loop:
+XOfsLoop:
     lda ScreenEdge_X_Pos,y      ;get pixel coordinate of edge
     sec                         ;get difference between pixel coordinate of edge
-    ; sbc SprObject_X_Position,x  ;and pixel coordinate of object position
-    sbc R1
+    sbc SprObject_X_Position,x  ;and pixel coordinate of object position
     sta R7                      ;store here
     lda ScreenEdge_PageLoc,y    ;get page location of edge
-    ; sbc SprObject_PageLoc,x     ;subtract page location of object position from it
-    sbc R2
+    sbc SprObject_PageLoc,x     ;subtract page location of object position from it
     ldx DefaultXOnscreenOfs,y   ;load offset value here
     cmp #$00
-    bmi Continue                ;if beyond right edge or in front of left edge, branch
-    ldx DefaultXOnscreenOfs+1,y ;if not, load alternate offset value here
-    cmp #$01      
-    bpl Continue                ;if one page or more to the left of either edge, branch
-      lda #$38                    ;if no branching, load value here and store
-      sta R6 
-      lda #$08                    ;load some other value and execute subroutine
-      ; jsr DividePDiff ; inline dividepdiff
-      sta R5        ;store current value in A here
-      lda R7        ;get pixel difference
-      cmp R6        ;compare to preset value
-      bcs Continue   ;if pixel difference >= preset value, branch
-        lsr           ;divide by eight to get tile difference
-        lsr
-        lsr
-        and #$07      ;mask out all but 3 LSB
-        cpy #$01      ;right side of the screen or top?
-        bcs :+  ;if so, branch, use difference / 8 as offset
-          adc R5        ;if not, add value to difference / 8
-      :
-        tax           ;use as offset
-Continue:
+    bmi XLdBData                ;if beyond right edge or in front of left edge, branch
+      ldx DefaultXOnscreenOfs+1,y ;if not, load alternate offset value here
+      cmp #$01      
+      bpl XLdBData                ;if one page or more to the left of either edge, branch
+        lda #$38                    ;if no branching, load value here and store
+        sta R6 
+        lda #$08                    ;load some other value and execute subroutine
+        jsr DividePDiff
+XLdBData:
     lda XOffscreenBitsData,x    ;get bits here
-    ; ldx R4                      ;reobtain position in buffer
-    ; cmp #$00                    ;if bits not zero, branch to leave
-    bne Exit
+    ldx R4                      ;reobtain position in buffer
+    cmp #$00                    ;if bits not zero, branch to leave
+    bne ExXOfsBS
     dey                         ;otherwise, do left side of screen now
-    bpl Loop                ;branch if not already done with left side
-Exit:
+    bpl XOfsLoop                ;branch if not already done with left side
+ExXOfsBS:
   rts
 
 XOffscreenBitsData:
@@ -345,49 +272,33 @@ DefaultXOnscreenOfs:
 
 
 .proc GetYOffscreenBits
-  ; stx R4                       ;save position in buffer to here
+  stx R4                       ;save position in buffer to here
   ldy #$01                     ;start with top of screen
-Loop:
-    lda HighPosUnitData,y        ;load coordinate for edge of vertical unit
-    sec
-    ; sbc SprObject_Y_Position,x   ;subtract from vertical coordinate of object
-    sbc R3
-    sta R7                       ;store here
-    lda #$01                     ;subtract one from vertical high byte of object
-    ; sbc SprObject_Y_HighPos,x
-    sbc R4
-    ldx DefaultYOnscreenOfs,y    ;load offset value here
-    cmp #$00
-    bmi Continue                 ;if under top of the screen or beyond bottom, branch
-    ldx DefaultYOnscreenOfs+1,y  ;if not, load alternate offset value here
-    cmp #$01
-    bpl Continue                 ;if one vertical unit or more above the screen, branch
-      lda #$20                     ;if no branching, load value here and store
-      sta R6 
-      lda #$04                     ;load some other value and execute subroutine
-      ; jsr DividePDiff ; inline dividepdiff
-      sta R5        ;store current value in A here
-      lda R7        ;get pixel difference
-      cmp R6        ;compare to preset value
-      bcs Continue   ;if pixel difference >= preset value, branch
-        lsr           ;divide by eight to get tile difference
-        lsr
-        lsr
-        and #$07      ;mask out all but 3 LSB
-        cpy #$01      ;right side of the screen or top?
-        bcs :+  ;if so, branch, use difference / 8 as offset
-          adc R5        ;if not, add value to difference / 8
-    :
-        tax           ;use as offset
-  Continue:
-    lda YOffscreenBitsData,x     ;get offscreen data bits using offset
-    ; ldx R4                       ;reobtain position in buffer
-    ; cmp #$00
-    bne Exit                 ;if bits not zero, branch to leave
-    dey                          ;otherwise, do bottom of the screen now
-    bpl Loop
-Exit:
-  rts
+YOfsLoop:
+  lda HighPosUnitData,y        ;load coordinate for edge of vertical unit
+  sec
+  sbc SprObject_Y_Position,x   ;subtract from vertical coordinate of object
+  sta R7                       ;store here
+  lda #$01                     ;subtract one from vertical high byte of object
+  sbc SprObject_Y_HighPos,x
+  ldx DefaultYOnscreenOfs,y    ;load offset value here
+  cmp #$00
+  bmi YLdBData                 ;if under top of the screen or beyond bottom, branch
+  ldx DefaultYOnscreenOfs+1,y  ;if not, load alternate offset value here
+  cmp #$01
+  bpl YLdBData                 ;if one vertical unit or more above the screen, branch
+  lda #$20                     ;if no branching, load value here and store
+  sta R6 
+  lda #$04                     ;load some other value and execute subroutine
+  jsr DividePDiff
+YLdBData:
+  lda YOffscreenBitsData,x     ;get offscreen data bits using offset
+  ldx R4                       ;reobtain position in buffer
+  cmp #$00
+  bne ExYOfsBS                 ;if bits not zero, branch to leave
+  dey                          ;otherwise, do bottom of the screen now
+  bpl YOfsLoop
+ExYOfsBS: rts
 
 YOffscreenBitsData:
   .byte $00, $08, $0c, $0e
@@ -403,6 +314,26 @@ HighPosUnitData:
 .endproc
 
 ;--------------------------------
+
+.proc DividePDiff
+.export DividePDiff
+
+  sta R5        ;store current value in A here
+  lda R7        ;get pixel difference
+  cmp R6        ;compare to preset value
+  bcs ExDivPD   ;if pixel difference >= preset value, branch
+  lsr           ;divide by eight to get tile difference
+  lsr
+  lsr
+  and #$07      ;mask out all but 3 LSB
+  cpy #$01      ;right side of the screen or top?
+  bcs SetOscrO  ;if so, branch, use difference / 8 as offset
+  adc R5        ;if not, add value to difference / 8
+SetOscrO:
+  tax           ;use as offset
+ExDivPD:
+  rts           ;leave
+.endproc
 
 .proc TransposePlayers
   sec                       ;set carry flag by default to end game
