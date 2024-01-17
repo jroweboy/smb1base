@@ -4,10 +4,19 @@
 .segment "FIXED"
 
 
+; Profiler friendly version of the farcall that does jsr rts instead
+; Switch this back before release.
 FarCallInit:
-  lda #$4c
+  lda #$20 ; #$4c
   sta TargetAddrJmp
+  lda #$60
+  sta TargetAddress+2
   rts
+
+; FarCallInit:
+;   lda #$4c
+;   sta TargetAddrJmp
+;   rts
 
 ; x = bank to switch to
 FarCallCommon:

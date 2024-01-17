@@ -53,6 +53,8 @@ MetaspriteTableRightHi:
   sta CurrentOAMOffset
 
   ; draw the player first so it doesn't ever flicker
+  ldy #0
+  ldx ObjectMetasprite,y
   jsr DrawMetasprite
 
   lda #24 - 1 ; size of the different object update list
@@ -76,9 +78,16 @@ ObjectLoop:
       sbc #24
     :
     sta SpriteShuffleOffset
-    beq :+
-      jsr DrawMetasprite
-    :
+    ; skip index zero since we draw the player first always.
+    beq Continue
+      ; TODO check offscreenbits to make sure they are onscreen still
+      tay
+      ldx ObjectMetasprite,y
+      beq Continue
+      cpx #METASPRITES_COUNT ; todo remove this after fixing all bugs
+      bcs Continue
+        jsr DrawMetasprite
+  Continue:
     dec SpriteShuffleTemp
     bpl ObjectLoop
   rts
@@ -92,16 +101,6 @@ Attr = R4
 Xlo = R5
 Ylo = R6
   
-; TODO check offscreenbits to make sure they are onscreen still
-  tay
-  ldx ObjectMetasprite,y
-  cpx #0
-  beq EarlyExit
-  cpx #METASPRITES_COUNT ; todo remove this after fixing all bugs
-  bcc Continue
-EarlyExit:
-    rts
-Continue:
   lda PlayerFacingDir,y
   lsr
   bne FacingLeft

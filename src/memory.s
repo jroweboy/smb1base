@@ -226,6 +226,7 @@ CurrentBank:                    .res  1
 BankShadow:                     .res  1
 TargetAddrJmp:                  .res  1
 TargetAddress:                  .res  2
+TargetAddrDummy:                .res  1
 
 .segment "OAM"
 ; start $0200
