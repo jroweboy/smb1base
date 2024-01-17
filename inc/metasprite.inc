@@ -74,15 +74,15 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 
 .ident( .sprintf("MetaspriteData_%s_%s_%s", Object, Animation, Direction) ):
   .byte   (Size * 4)
-  .byte   X1, Y1, Tile1, Attr1
+  .byte   Tile1, Attr1, Y1, X1
 .ifnblank Spr2
-  .byte   X2, Y1, Tile2, Attr2
+  .byte   Tile2, Attr2, Y1, X2
 .endif
 .ifnblank Spr3
-  .byte   X1, Y2, Tile3, Attr3
+  .byte   Tile3, Attr3, Y2, X1
 .endif
 .ifnblank Spr4
-  .byte   X2, Y2, Tile4, Attr4
+  .byte   Tile4, Attr4, Y2, X2
 .endif
 .endmacro
 

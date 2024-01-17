@@ -67,9 +67,7 @@ MetaspriteTableRightHi:
     ; implicit carry set
     sbc #24
 :
-  sta SpriteShuffleOffset
 ObjectLoop:
-    lda SpriteShuffleOffset
     clc
     adc #13
     cmp #24
@@ -77,29 +75,34 @@ ObjectLoop:
       ; implicit carry set
       sbc #24
     :
-    sta SpriteShuffleOffset
     ; skip index zero since we draw the player first always.
-    beq Continue
+    beq NextLoop
       ; TODO check offscreenbits to make sure they are onscreen still
       tay
       ldx ObjectMetasprite,y
-      beq Continue
+      beq NextLoop
       cpx #METASPRITES_COUNT ; todo remove this after fixing all bugs
-      bcs Continue
+      bcs NextLoop
+        sta SpriteShuffleOffset
         jsr DrawMetasprite
-  Continue:
+        lda SpriteShuffleOffset
+  NextLoop:
     dec SpriteShuffleTemp
     bpl ObjectLoop
+  sta SpriteShuffleOffset
   rts
+
 .endproc
 
 .export DrawMetasprite
 .proc DrawMetasprite
 Ptr = R0
 Tmp = R2
-Attr = R4
-Xlo = R5
+Atr = R3
+Xlo = R4
+; Xhi = R5
 Ylo = R6
+; Yhi = R7
   
   lda PlayerFacingDir,y
   lsr
@@ -121,28 +124,42 @@ DrawSprite:
   lda SprObject_Rel_YPos,y
   sta Ylo
   lda SprObject_SprAttrib,y
-  sta Attr
+  sta Atr
   ldx CurrentOAMOffset
   ldy #0
   lda (Ptr),y
   tay
+  bpl RenderLoop
+
+Skip3:
+    dey
+Skip2:
+    dey
+    dey
+    inx
+    inx
+    inx
+    inx
 RenderLoop:
     lda (Ptr),y
-    ora Attr
-    sta Sprite_Attributes,x
     dey
-    lda (Ptr),y
-    sta Sprite_Tilenumber,x
-    dey
-    lda (Ptr),y
-    clc
-    adc Ylo
-    sta Sprite_Y_Position,x
-    dey
-    lda (Ptr),y
     clc
     adc Xlo
     sta Sprite_X_Position,x
+
+    lda (Ptr),y
+    dey
+    clc
+    adc Ylo
+    sta Sprite_Y_Position,x
+
+    lda (Ptr),y
+    dey
+    ora Atr
+    sta Sprite_Attributes,x
+
+    lda (Ptr),y
+    sta Sprite_Tilenumber,x
     inx
     inx
     inx
@@ -150,94 +167,7 @@ RenderLoop:
     dey
     bne RenderLoop
   stx CurrentOAMOffset
+Exit:
   rts
 
-; DrawHorizontalFlippedMetasprite:
-;   ldx CurrentOAMOffset
-;   ldy #0
-;   sty Tmp
-;   lda (Ptr),y
-;   tay
-; FlipRenderLoop:
-;     lda Tmp
-;     lsr
-;     bcc WriteForward
-;       ; Write the previous entry
-;       lda (Ptr),y
-;       ora Attr
-;       eor #$40
-;       sta Sprite_Attributes-4,x
-;       dey
-;       lda (Ptr),y
-;       sta Sprite_Tilenumber-4,x
-;       dey
-;       bne ContinueLoop ; unconditional
-;   WriteForward:
-;       lda (Ptr),y
-;       ora Attr
-;       eor #$40
-;       sta Sprite_Attributes+4,x
-;       dey
-;       lda (Ptr),y
-;       sta Sprite_Tilenumber+4,x
-;       dey
-;   ContinueLoop:
-;     lda (Ptr),y
-;     clc
-;     adc Ylo
-;     sta Sprite_Y_Position,x
-;     dey
-;     lda (Ptr),y
-;     clc
-;     adc Xlo
-;     sta Sprite_X_Position,x
-;     inx
-;     inx
-;     inx
-;     inx
-;     inc Tmp
-;     dey
-;     bne FlipRenderLoop
-;   stx CurrentOAMOffset
-;   rts
 .endproc
-
-;   lda HFlip
-;   lsr
-;   beq Exit
-; HorizontalFlip:
-;     ; switch every other tile id
-;     lda (Ptr),y
-;     lsr
-;     lsr
-;     lsr
-;     beq Exit
-;     lsr
-;     beq OneRow
-;   TwoRows:
-;     lda Sprite_Tilenumber-16,x
-;     pha
-;       lda Sprite_Tilenumber-12,x
-;       sta Sprite_Tilenumber-16,x
-;     pla
-;     sta Sprite_Tilenumber-12,x
-;     lda Sprite_Attributes-16,x
-;     eor #$40
-;     sta Sprite_Attributes-16,x
-;     lda Sprite_Attributes-12,x
-;     eor #$40
-;     sta Sprite_Attributes-12,x
-;   OneRow:
-;     lda Sprite_Tilenumber-8,x
-;     pha
-;       lda Sprite_Tilenumber-4,x
-;       sta Sprite_Tilenumber-8,x
-;     pla
-;     sta Sprite_Tilenumber-4,x
-;     lda Sprite_Attributes-8,x
-;     eor #$40
-;     sta Sprite_Attributes-8,x
-;     lda Sprite_Attributes-4,x
-;     eor #$40
-;     sta Sprite_Attributes-4,x
-; Exit:
