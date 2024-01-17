@@ -716,7 +716,7 @@ GetMaskedOffScrBits:
         beq CMBits                  ;if precisely at the left edge, branch
         ldy R0                      ;if to the right of left edge, use value in $00 for A
 CMBits: tya                         ;otherwise use contents of Y
-        and Enemy_OffscreenBits     ;preserve bitwise whatever's in here
+        and Enemy_OffscreenBits,x     ;preserve bitwise whatever's in here
         sta EnemyOffscrBitsMasked,x ;save masked offscreen bits here
         bne MoveBoundBoxOffscreen   ;if anything set here, branch
         jmp SetupEOffsetFBBox       ;otherwise, do something else

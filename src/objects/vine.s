@@ -66,7 +66,7 @@ VDrawLoop: jsr DrawVine              ;draw vine
            iny                       ;increment offset
            cpy Vine_FlagOffset        ;if offset in Y and offset here
            bne VDrawLoop             ;do not yet match, loop back to draw more vine
-           lda Enemy_OffscreenBits
+           lda Enemy_OffscreenBits,x
            and #%00001100            ;mask offscreen bits
            beq WrCMTile              ;if none of the saved offscreen bits set, skip ahead
            dey                       ;otherwise decrement Y to get proper offset again

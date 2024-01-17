@@ -997,45 +997,45 @@ CheckToMirrorJSpring:
       sta Sprite_Attributes+20,y  ;for second and third row right sprites
 
 SprObjectOffscrChk:
-         ldx ObjectOffset          ;get enemy buffer offset
-         lda Enemy_OffscreenBits   ;check offscreen information
-         lsr
-         lsr                       ;shift three times to the right
-         lsr                       ;which puts d2 into carry
-         pha                       ;save to stack
-         bcc LcChk                 ;branch if not set
-         lda #$04                  ;set for right column sprites
-         jsr MoveESprColOffscreen  ;and move them offscreen
-LcChk:   pla                       ;get from stack
-         lsr                       ;move d3 to carry
-         pha                       ;save to stack
-         bcc Row3C                 ;branch if not set
-         lda #$00                  ;set for left column sprites,
-         jsr MoveESprColOffscreen  ;move them offscreen
-Row3C:   pla                       ;get from stack again
-         lsr                       ;move d5 to carry this time
-         lsr
-         pha                       ;save to stack again
-         bcc Row23C                ;branch if carry not set
-         lda #$10                  ;set for third row of sprites
-         jsr MoveESprRowOffscreen  ;and move them offscreen
-Row23C:  pla                       ;get from stack
-         lsr                       ;move d6 into carry
-         pha                       ;save to stack
-         bcc AllRowC
-         lda #$08                  ;set for second and third rows
-         jsr MoveESprRowOffscreen  ;move them offscreen
-AllRowC: pla                       ;get from stack once more
-         lsr                       ;move d7 into carry
-         bcc ExEGHandler
-         jsr MoveESprRowOffscreen  ;move all sprites offscreen (A should be 0 by now)
-         lda Enemy_ID,x
-         cmp #Podoboo              ;check enemy identifier for podoboo
-         beq ExEGHandler           ;skip this part if found, we do not want to erase podoboo!
-         lda Enemy_Y_HighPos,x     ;check high byte of vertical position
-         cmp #$02                  ;if not yet past the bottom of the screen, branch
-         bne ExEGHandler
-         jsr EraseEnemyObject      ;what it says
+;          ldx ObjectOffset          ;get enemy buffer offset
+;          lda Enemy_OffscreenBits   ;check offscreen information
+;          lsr
+;          lsr                       ;shift three times to the right
+;          lsr                       ;which puts d2 into carry
+;          pha                       ;save to stack
+;          bcc LcChk                 ;branch if not set
+;          lda #$04                  ;set for right column sprites
+;          jsr MoveESprColOffscreen  ;and move them offscreen
+; LcChk:   pla                       ;get from stack
+;          lsr                       ;move d3 to carry
+;          pha                       ;save to stack
+;          bcc Row3C                 ;branch if not set
+;          lda #$00                  ;set for left column sprites,
+;          jsr MoveESprColOffscreen  ;move them offscreen
+; Row3C:   pla                       ;get from stack again
+;          lsr                       ;move d5 to carry this time
+;          lsr
+;          pha                       ;save to stack again
+;          bcc Row23C                ;branch if carry not set
+;          lda #$10                  ;set for third row of sprites
+;          jsr MoveESprRowOffscreen  ;and move them offscreen
+; Row23C:  pla                       ;get from stack
+;          lsr                       ;move d6 into carry
+;          pha                       ;save to stack
+;          bcc AllRowC
+;          lda #$08                  ;set for second and third rows
+;          jsr MoveESprRowOffscreen  ;move them offscreen
+; AllRowC: pla                       ;get from stack once more
+;          lsr                       ;move d7 into carry
+;          bcc ExEGHandler
+;          jsr MoveESprRowOffscreen  ;move all sprites offscreen (A should be 0 by now)
+;          lda Enemy_ID,x
+;          cmp #Podoboo              ;check enemy identifier for podoboo
+;          beq ExEGHandler           ;skip this part if found, we do not want to erase podoboo!
+;          lda Enemy_Y_HighPos,x     ;check high byte of vertical position
+;          cmp #$02                  ;if not yet past the bottom of the screen, branch
+;          bne ExEGHandler
+;          jsr EraseEnemyObject      ;what it says
 ExEGHandler:
       rts
 
@@ -1367,7 +1367,7 @@ TopSP: jsr DumpThreeSpr            ;dump vertical coordinate into Y coordinates
 BotSP: sta Sprite_Y_Position+12,y  ;dump vertical coordinate + 128 pixels
        sta Sprite_Y_Position+16,y  ;into Y coordinates
        sta Sprite_Y_Position+20,y
-       lda Enemy_OffscreenBits     ;get offscreen bits
+       lda Enemy_OffscreenBits,x     ;get offscreen bits
        pha                         ;save to stack
        and #%00001000              ;check d3
        beq SOfs
@@ -1605,7 +1605,7 @@ FlagpoleGfxHandler:
 ChkFlagOffscreen:
       ldx ObjectOffset               ;get object offset for flag
       ldy OriginalOAMOffset
-      lda Enemy_OffscreenBits        ;get offscreen bits
+      lda Enemy_OffscreenBits,x        ;get offscreen bits
       and #%00001110                 ;mask out all but d3-d1
       beq ExitDumpSpr                ;if none of these bits set, branch to leave
 

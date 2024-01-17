@@ -117,7 +117,7 @@ SpinCounterClockwise:
 
 ProcFirebar:
           jsr GetEnemyOffscreenBits   ;get offscreen information
-          lda Enemy_OffscreenBits     ;check for d3 set
+          lda Enemy_OffscreenBits,x     ;check for d3 set
           and #%00001000              ;if so, branch to leave
           jne SkipFBar
           lda TimerControl            ;if master timer control set, branch

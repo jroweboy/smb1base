@@ -18,7 +18,7 @@ __GLOBALS_INC = 1
 .global PlayerEnemyDiff
 .global Bitmasks
 .global RelWOfs
-.global GetProperObjOffset
+; .global GetProperObjOffset
 .global MoveObjectHorizontally
 .global MoveD_EnemyVertically
 .global MoveEnemyHorizontally
