@@ -276,19 +276,19 @@ PlatformCollisionFlag:          .res  11
 Player_Rel_XPos               = SprObject_Rel_XPos
 SprObject_Rel_XPos:             .res  1
 
-Enemy_Rel_XPos:                 .res  6
-Fireball_Rel_XPos:              .res  2
-Block_Rel_XPos:                 .res  4
-Misc_Rel_XPos:                  .res  9
-Bubble_Rel_XPos:                .res  3
+Enemy_Rel_XPos:                 .res  1
+Fireball_Rel_XPos:              .res  1
+Block_Rel_XPos:                 .res  2
+Misc_Rel_XPos:                  .res  5
+Bubble_Rel_XPos:                .res  1
 
 Player_Rel_YPos               = SprObject_Rel_YPos
 SprObject_Rel_YPos:             .res  1
-Enemy_Rel_YPos:                 .res  6
-Fireball_Rel_YPos:              .res  2
-Block_Rel_YPos:                 .res  4
-Misc_Rel_YPos:                  .res  9
-Bubble_Rel_YPos:                .res  3
+Enemy_Rel_YPos:                 .res  1
+Fireball_Rel_YPos:              .res  1
+Block_Rel_YPos:                 .res  2
+Misc_Rel_YPos:                  .res  5
+Bubble_Rel_YPos:                .res  1
 
 Player_SprAttrib              = SprObject_SprAttrib
 SprObject_SprAttrib:            .res  1
@@ -299,11 +299,11 @@ Misc_SprAttrib:                 .res  13
 Player_OffscreenBits          = SprObject_OffscrBits
 SprObject_OffscrBits:           .res  1
 
-Enemy_OffscreenBits:            .res  6
-FBall_OffscreenBits:            .res  2
-Block_OffscreenBits:            .res  4
-Misc_OffscreenBits:             .res  9
-Bubble_OffscreenBits:           .res  3
+Enemy_OffscreenBits:            .res  1
+FBall_OffscreenBits:            .res  1
+Block_OffscreenBits:            .res  2
+Misc_OffscreenBits:             .res  2
+Bubble_OffscreenBits:           .res  1
 EnemyOffscrBitsMasked:          .res  12
 Block_Orig_YPos:                .res  2
 Block_BBuf_Low:                 .res  2

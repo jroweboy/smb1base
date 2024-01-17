@@ -199,7 +199,13 @@ SetOffscrBitsOffset:
 GetOffScreenBitsSet:
   tya                         ;save offscreen bits offset to stack for now
   pha
-    jsr RunOffscrBitsSubs
+    jsr GetXOffscreenBits  ;do subroutine here
+    lsr                    ;move high nybble to low
+    lsr
+    lsr
+    lsr
+    sta R0                 ;store here
+    jsr GetYOffscreenBits
     asl                         ;move low nybble to high nybble
     asl
     asl
@@ -213,16 +219,6 @@ GetOffScreenBitsSet:
   ldx ObjectOffset
   rts
 
-.proc RunOffscrBitsSubs
-  jsr GetXOffscreenBits  ;do subroutine here
-  lsr                    ;move high nybble to low
-  lsr
-  lsr
-  lsr
-  sta R0                 ;store here
-  jmp GetYOffscreenBits
-.endproc
-
 ;--------------------------------
 ;(these apply to these three subsections)
 ;$04 - used to store offset to sprite object data
@@ -233,7 +229,7 @@ GetOffScreenBitsSet:
 .proc GetXOffscreenBits
   stx R4                      ;save position in buffer to here
   ldy #$01                    ;start with right side of screen
-XOfsLoop:
+Loop:
     lda ScreenEdge_X_Pos,y      ;get pixel coordinate of edge
     sec                         ;get difference between pixel coordinate of edge
     sbc SprObject_X_Position,x  ;and pixel coordinate of object position
@@ -242,21 +238,34 @@ XOfsLoop:
     sbc SprObject_PageLoc,x     ;subtract page location of object position from it
     ldx DefaultXOnscreenOfs,y   ;load offset value here
     cmp #$00
-    bmi XLdBData                ;if beyond right edge or in front of left edge, branch
-      ldx DefaultXOnscreenOfs+1,y ;if not, load alternate offset value here
-      cmp #$01      
-      bpl XLdBData                ;if one page or more to the left of either edge, branch
-        lda #$38                    ;if no branching, load value here and store
-        sta R6 
-        lda #$08                    ;load some other value and execute subroutine
-        jsr DividePDiff
-XLdBData:
+    bmi Continue                ;if beyond right edge or in front of left edge, branch
+    ldx DefaultXOnscreenOfs+1,y ;if not, load alternate offset value here
+    cmp #$01      
+    bpl Continue                ;if one page or more to the left of either edge, branch
+      lda #$38                    ;if no branching, load value here and store
+      sta R6 
+      lda #$08                    ;load some other value and execute subroutine
+      ; jsr DividePDiff ; inlined
+      sta R5        ;store current value in A here
+      lda R7        ;get pixel difference
+      cmp R6        ;compare to preset value
+      bcs Continue   ;if pixel difference >= preset value, branch
+      lsr           ;divide by eight to get tile difference
+      lsr
+      lsr
+      and #$07      ;mask out all but 3 LSB
+      cpy #$01      ;right side of the screen or top?
+      bcs :+        ;if so, branch, use difference / 8 as offset
+      adc R5        ;if not, add value to difference / 8
+    :
+      tax           ;use as offset
+Continue:
     lda XOffscreenBitsData,x    ;get bits here
     ldx R4                      ;reobtain position in buffer
     cmp #$00                    ;if bits not zero, branch to leave
     bne ExXOfsBS
     dey                         ;otherwise, do left side of screen now
-    bpl XOfsLoop                ;branch if not already done with left side
+    bpl Loop                    ;branch if not already done with left side
 ExXOfsBS:
   rts
 
@@ -274,31 +283,45 @@ DefaultXOnscreenOfs:
 .proc GetYOffscreenBits
   stx R4                       ;save position in buffer to here
   ldy #$01                     ;start with top of screen
-YOfsLoop:
-  lda HighPosUnitData,y        ;load coordinate for edge of vertical unit
-  sec
-  sbc SprObject_Y_Position,x   ;subtract from vertical coordinate of object
-  sta R7                       ;store here
-  lda #$01                     ;subtract one from vertical high byte of object
-  sbc SprObject_Y_HighPos,x
-  ldx DefaultYOnscreenOfs,y    ;load offset value here
-  cmp #$00
-  bmi YLdBData                 ;if under top of the screen or beyond bottom, branch
-  ldx DefaultYOnscreenOfs+1,y  ;if not, load alternate offset value here
-  cmp #$01
-  bpl YLdBData                 ;if one vertical unit or more above the screen, branch
-  lda #$20                     ;if no branching, load value here and store
-  sta R6 
-  lda #$04                     ;load some other value and execute subroutine
-  jsr DividePDiff
-YLdBData:
+Loop:
+    lda HighPosUnitData,y        ;load coordinate for edge of vertical unit
+    sec
+    sbc SprObject_Y_Position,x   ;subtract from vertical coordinate of object
+    sta R7                       ;store here
+    lda #$01                     ;subtract one from vertical high byte of object
+    sbc SprObject_Y_HighPos,x
+    ldx DefaultYOnscreenOfs,y    ;load offset value here
+    cmp #$00
+    bmi Continue                 ;if under top of the screen or beyond bottom, branch
+    ldx DefaultYOnscreenOfs+1,y  ;if not, load alternate offset value here
+    cmp #$01
+    bpl Continue                 ;if one vertical unit or more above the screen, branch
+      lda #$20                     ;if no branching, load value here and store
+      sta R6 
+      lda #$04                     ;load some other value and execute subroutine
+      ; jsr DividePDiff ; inlined
+      sta R5        ;store current value in A here
+      lda R7        ;get pixel difference
+      cmp R6        ;compare to preset value
+      bcs Continue   ;if pixel difference >= preset value, branch
+      lsr           ;divide by eight to get tile difference
+      lsr
+      lsr
+      and #$07      ;mask out all but 3 LSB
+      cpy #$01      ;right side of the screen or top?
+      bcs :+        ;if so, branch, use difference / 8 as offset
+      adc R5        ;if not, add value to difference / 8
+    :
+      tax           ;use as offset
+Continue:
   lda YOffscreenBitsData,x     ;get offscreen data bits using offset
   ldx R4                       ;reobtain position in buffer
   cmp #$00
   bne ExYOfsBS                 ;if bits not zero, branch to leave
   dey                          ;otherwise, do bottom of the screen now
-  bpl YOfsLoop
-ExYOfsBS: rts
+  bpl Loop
+ExYOfsBS:
+  rts
 
 YOffscreenBitsData:
   .byte $00, $08, $0c, $0e
