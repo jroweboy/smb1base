@@ -100,9 +100,9 @@ Ptr = R0
 Tmp = R2
 Atr = R3
 Xlo = R4
-; Xhi = R5
+Xhi = R5
 Ylo = R6
-; Yhi = R7
+Yhi = R7
   
   lda PlayerFacingDir,y
   lsr
@@ -119,10 +119,17 @@ Ylo = R6
     sta Ptr+1
 DrawSprite:
 
-  lda SprObject_Rel_XPos,y
+  lda SprObject_X_Position,y
+  sec
+  sbc ScreenLeft_X_Pos
   sta Xlo
-  lda SprObject_Rel_YPos,y
+  lda SprObject_PageLoc,y
+  sbc ScreenLeft_PageLoc
+  sta Xhi
+  lda SprObject_Y_Position,y
   sta Ylo
+  lda SprObject_Y_HighPos,y
+  sta Yhi
   lda SprObject_SprAttrib,y
   sta Atr
   ldx CurrentOAMOffset
@@ -135,23 +142,33 @@ Skip3:
     dey
 Skip2:
     dey
+    lda #$f8
+    sta Sprite_Y_Position,x
+    inx
+    inx
+    inx
+    inx
     dey
-    inx
-    inx
-    inx
-    inx
+    beq LoopEnded
 RenderLoop:
     lda (Ptr),y
     dey
     clc
     adc Xlo
     sta Sprite_X_Position,x
+    lda Xhi
+    adc #0
+    bne Skip3
 
     lda (Ptr),y
     dey
     clc
     adc Ylo
     sta Sprite_Y_Position,x
+    lda Yhi
+    adc #0
+    cmp #1
+    bne Skip2
 
     lda (Ptr),y
     dey
@@ -166,6 +183,7 @@ RenderLoop:
     inx
     dey
     bne RenderLoop
+LoopEnded:
   stx CurrentOAMOffset
 Exit:
   rts

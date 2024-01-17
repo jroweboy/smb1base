@@ -1,22 +1,6 @@
 
+_COMMON_DEFINE_SEGMENTS = 1
 .include "common.inc"
-
-; Define Global Labels named after the segment that they appear in
-.macro labelled_segment_def s1,s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
-.ifblank s1
-  ; First parameter is empty
-  .exitmacro
-.endif
-.pushseg
-.segment .string(s1)
-.ident(.string(s1)):
-.export .ident(.string(s1))
-.popseg
-labelled_segment_def s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
-.endmacro
-
-labelled_segment_def OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE, TITLE_MUSIC
-labelled_segment_def TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE
 
 .segment "LOWCODE"
 
@@ -77,73 +61,46 @@ GetAreaType:
 ;-------------------------------------------------------------------------------------
 ;$00 - used in adding to get proper offset
 
-; .proc RelativePlayerPosition
-
-;   ldx #$00      ;set offsets for relative cooordinates
-;   ldy #$00      ;routine to correspond to player object
-;   jmp RelWOfs   ;get the coordinates
-; .endproc
-RelativePlayerPosition:
-  lda SprObject_Y_Position
-  sta SprObject_Rel_YPos
-  lda SprObject_X_Position
-  sec
-  sbc ScreenLeft_X_Pos
-  sta SprObject_Rel_XPos
-  rts
+.proc RelativePlayerPosition
+  ldx #$00      ;set offsets for relative cooordinates
+  ldy #$00      ;routine to correspond to player object
+  jmp RelWOfs   ;get the coordinates
+.endproc
 
 RelativeFireballPosition:
-RelativeEnemyPosition:
-  lda Enemy_Y_Position,x
-  sta Enemy_Rel_YPos,x
-  lda Enemy_X_Position,x
-  sec
-  sbc ScreenLeft_X_Pos
-  sta Enemy_Rel_XPos,x
-  rts
+  ldy #$00                    ;set for fireball offsets
+  jsr GetProperObjOffset      ;modify X to get proper fireball offset
+  ldy #$02
+RelWOfs:
+  jsr GetObjRelativePosition  ;get the coordinates
+  ldx ObjectOffset            ;return original offset
+  rts                         ;leave
+
+.proc RelativeEnemyPosition
+  lda #$01                     ;get coordinates of enemy object
+  ldy #$01                     ;relative to the screen
+  jmp VariableObjOfsRelPos
+.endproc
 
 RelativeBlockPosition:
-  lda Block_Y_Position,x
-  sta Block_Rel_YPos,x
-  lda Block_X_Position,x
-  sec
-  sbc ScreenLeft_X_Pos
-  sta Block_Rel_YPos,x
+  lda #$09                     ;get coordinates of one block object
+  ldy #$04                     ;relative to the screen
+  jsr VariableObjOfsRelPos
+  inx                          ;adjust offset for other block object if any
+  inx
+  lda #$09
+  iny                          ;adjust other and get coordinates for other one
+  ; fall through
+VariableObjOfsRelPos:
+  stx R0                      ;store value to add to A here
+  clc
+  adc R0                      ;add A to value stored
+  tax                         ;use as enemy offset
+  jsr GetObjRelativePosition
+  ldx ObjectOffset            ;reload old object offset and leave
   rts
 
-;   ldy #$00                    ;set for fireball offsets
-;   jsr GetProperObjOffset      ;modify X to get proper fireball offset
-;   ldy #$02
-; RelWOfs:
-;   jsr GetObjRelativePosition  ;get the coordinates
-;   ldx ObjectOffset            ;return original offset
-;   rts                         ;leave
-
-; .proc RelativeEnemyPosition
-;   lda #$01                     ;get coordinates of enemy object 
-;   ldy #$01                     ;relative to the screen
-;   jmp VariableObjOfsRelPos
-; .endproc
-
-; RelativeBlockPosition:
-;   lda #$09                     ;get coordinates of one block object
-;   ldy #$04                     ;relative to the screen
-;   jsr VariableObjOfsRelPos
-;   inx                          ;adjust offset for other block object if any
-;   inx
-;   lda #$09
-;   iny                          ;adjust other and get coordinates for other one
-;   ; fall through
-; VariableObjOfsRelPos:
-;   stx R0                      ;store value to add to A here
-;   clc
-;   adc R0                      ;add A to value stored
-;   tax                         ;use as enemy offset
-;   jsr GetObjRelativePosition
-;   ldx ObjectOffset            ;reload old object offset and leave
-;   rts
-
-.proc GetObjRelativePosition
+GetObjRelativePosition:
   lda SprObject_Y_Position,x  ;load vertical coordinate low
   sta SprObject_Rel_YPos,y    ;store here
   lda SprObject_X_Position,x  ;load horizontal coordinate
@@ -151,7 +108,6 @@ RelativeBlockPosition:
   sbc ScreenLeft_X_Pos
   sta SprObject_Rel_XPos,y    ;store result here
   rts
-.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used as temp variable to hold offscreen bits

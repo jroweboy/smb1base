@@ -209,7 +209,7 @@ BubbleTimerData:
   jmp GetOffScreenBitsSet  ;and get offscreen information about air bubble
 .endproc
 
-;-------------------------------------------------------------------------------------
+;------------------------sw-------------------------------------------------------------
 
 .proc DrawBubble
   ldy Player_Y_HighPos        ;if player's vertical high position

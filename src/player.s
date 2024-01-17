@@ -490,28 +490,28 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
 ;$07 - number of rows to draw
 ;these also used in IntermediatePlayerData
 
-RenderPlayerSub:
-  sta R7                       ;store number of rows of sprites to draw
-  lda Player_Rel_XPos
-  sta Player_Pos_ForScroll     ;store player's relative horizontal position
-  sta R5                       ;store it here also
-  lda Player_Rel_YPos
-  sta R2                       ;store player's vertical position
-  lda PlayerFacingDir
-  sta R3                       ;store player's facing direction
-  lda Player_SprAttrib
-  sta R4                       ;store player's sprite attributes
-  ldx PlayerGfxOffset          ;load graphics table offset
-  ldy PlayerOAMOffset
+; RenderPlayerSub:
+;   sta R7                       ;store number of rows of sprites to draw
+;   lda Player_Rel_XPos
+;   sta Player_Pos_ForScroll     ;store player's relative horizontal position
+;   sta R5                       ;store it here also
+;   lda Player_Rel_YPos
+;   sta R2                       ;store player's vertical position
+;   lda PlayerFacingDir
+;   sta R3                       ;store player's facing direction
+;   lda Player_SprAttrib
+;   sta R4                       ;store player's sprite attributes
+;   ldx PlayerGfxOffset          ;load graphics table offset
+;   ldy PlayerOAMOffset
 
-DrawPlayerLoop:
-    lda PlayerGraphicsTable,x    ;load player's left side
-    sta R0 
-    lda PlayerGraphicsTable+1,x  ;now load right side
-    jsr DrawOneSpriteRow
-    dec R7                       ;decrement rows of sprites to draw
-    bne DrawPlayerLoop           ;do this until all rows are drawn  
-  rts
+; DrawPlayerLoop:
+;     lda PlayerGraphicsTable,x    ;load player's left side
+;     sta R0 
+;     lda PlayerGraphicsTable+1,x  ;now load right side
+;     jsr DrawOneSpriteRow
+;     dec R7                       ;decrement rows of sprites to draw
+;     bne DrawPlayerLoop           ;do this until all rows are drawn  
+;   rts
 
 ;tiles arranged in order, 2 tiles per row, top to bottom
 SwimTileRepOffset     = PlayerGraphicsTable + $9e
@@ -628,7 +628,7 @@ DoChangeSize:
 PlayerKilled:
   ; ldy #$0e                      ;load offset for player killed
   ; lda PlayerGfxTblOffsets,y     ;get offset to graphics table
-  lda #PlayerKilledGraphicsOffset
+  lda #METASPRITE_SMALL_MARIO_DEATH
 
 PlayerGfxProcessing:
   ; sta PlayerGfxOffset           ;store offset to graphics table here

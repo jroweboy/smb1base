@@ -215,13 +215,15 @@ NoReset:
   lda #METASPRITE_SMALL_MARIO_STANDING
   sta ObjectMetasprite
   lda IntermediatePlayerData+0
-  sta SprObject_Rel_YPos
+  sta SprObject_Y_Position
   lda IntermediatePlayerData+1
   sta PlayerFacingDir
   lda IntermediatePlayerData+2
   sta SprObject_SprAttrib
   lda IntermediatePlayerData+3
-  sta SprObject_Rel_XPos
+  sta SprObject_X_Position
+  lda #1
+  sta SprObject_Y_HighPos
   rts
 IntermediatePlayerData:
   .byte $58, $01, $00, $60 ; , $ff, $04
@@ -243,9 +245,13 @@ DisplayIntermediate:
   bne NoInter                  ;and jump to specific task, otherwise
 PlayerInter:
   jsr DrawPlayer_Intermediate  ;put player in appropriate place for
+  far METASPRITE
   lda #0
-  .import DrawAllMetasprites
-  farcall DrawAllMetasprites
+  ldy #0
+  ldx ObjectMetasprite
+  .import DrawMetasprite
+  jsr DrawMetasprite
+  endfar
   lda #$01                     ;lives display, then output lives display to buffer
 OutputInter:
   jsr WriteGameText

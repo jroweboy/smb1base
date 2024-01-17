@@ -125,7 +125,7 @@ MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, S
 .endif
 
 .ident( .sprintf("METASPRITE_%s_%s", Object, Animation) ) = METASPRITES_COUNT
-; .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
+.out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 

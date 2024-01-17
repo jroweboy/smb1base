@@ -18,11 +18,18 @@ __COMMON_INC = 1
   .exitmacro
 .endif
 .global .ident(.string(s1))
+.ifdef _COMMON_DEFINE_SEGMENTS
+.pushseg
+.segment .string(s1)
+.ident(.string(s1)):
+.export .ident(.string(s1))
+.popseg
+.endif
 labelled_segment s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
 .endmacro
 
 labelled_segment OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE, TITLE_MUSIC
-labelled_segment TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE
+labelled_segment TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE, METASPRITE
 
 .include "charmap.inc"
 .include "memory.inc"
