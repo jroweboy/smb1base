@@ -423,26 +423,36 @@ ExJCGfx: rts                         ;leave
 ;$07 - counter
 
 ;tiles arranged in top left, right, bottom left, right order
-PowerUpGfxTable:
-  .byte MUSHROOM_TOP_LEFT, MUSHROOM_TOP_RIGHT, MUSHROOM_BOT_LEFT, MUSHROOM_BOT_RIGHT ;regular mushroom
-  .byte FIREFLOWER_TOP_LEFT, FIREFLOWER_TOP_LEFT, FIREFLOWER_BOT_LEFT, FIREFLOWER_BOT_LEFT ;fire flower
-  .byte STAR_TOP_LEFT, STAR_TOP_LEFT, STAR_BOT_LEFT, STAR_BOT_LEFT ;star
-  .byte ONEUP_TOP_LEFT, ONEUP_TOP_RIGHT, ONEUP_BOT_LEFT, ONEUP_BOT_RIGHT ;1-up mushroom
+; PowerUpGfxTable:
+;   .byte MUSHROOM_TOP_LEFT, MUSHROOM_TOP_RIGHT, MUSHROOM_BOT_LEFT, MUSHROOM_BOT_RIGHT ;regular mushroom
+;   .byte FIREFLOWER_TOP_LEFT, FIREFLOWER_TOP_LEFT, FIREFLOWER_BOT_LEFT, FIREFLOWER_BOT_LEFT ;fire flower
+;   .byte STAR_TOP_LEFT, STAR_TOP_LEFT, STAR_BOT_LEFT, STAR_BOT_LEFT ;star
+;   .byte ONEUP_TOP_LEFT, ONEUP_TOP_RIGHT, ONEUP_BOT_LEFT, ONEUP_BOT_RIGHT ;1-up mushroom
 
-PowerUpAttributes:
-    .byte $02, $01, $02, $01
+; PowerUpAttributes:
+;     .byte $02, $01, $02, $01
+
+PowerUpGfxTable:
+  .byte METASPRITE_POWERUP_MUSHROOM
+  .byte METASPRITE_POWERUP_FIREFLOWER
+  .byte METASPRITE_POWERUP_STAR
+  .byte METASPRITE_POWERUP_1UP
 
 .proc DrawPowerUp
       ; ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
   ; AllocSpr 4
   ; sty OriginalOAMOffset
-  lda Enemy_Rel_YPos         ;get relative vertical coordinate
-  clc
-  adc #$08                   ;add eight pixels
-  sta R2                     ;store result here
-  lda Enemy_Rel_XPos         ;get relative horizontal coordinate
-  sta R5                     ;store here
+  ; lda Enemy_Rel_YPos         ;get relative vertical coordinate
+  ; clc
+  ; adc #$08                   ;add eight pixels
+  ; sta R2                     ;store result here
+  ; lda Enemy_Rel_XPos         ;get relative horizontal coordinate
+  ; sta R5                     ;store here
   ldx PowerUpType            ;get power-up type
+  lda PowerUpGfxTable,x
+  ldx ObjectOffset
+  sta EnemyMetasprite,x
+  rts
   ; lda PowerUpAttributes,x    ;get attribute data for power-up type
   ; ora Enemy_SprAttrib+5      ;add background priority bit if set
   ; sta R4                     ;store attributes here
@@ -487,8 +497,8 @@ PowerUpAttributes:
 ;   lda Sprite_Attributes+12,y
 ;   ora #%01000000             ;set horizontal flip bit for bottom right sprite
 ;   sta Sprite_Attributes+12,y ;note these are only done for fire flower and star power-ups
-PUpOfs:
-  jmp SprObjectOffscrChk     ;jump to check to see if power-up is offscreen at all, then leave
+; PUpOfs:
+  ; jmp SprObjectOffscrChk     ;jump to check to see if power-up is offscreen at all, then leave
 .endproc
 
 ;-------------------------------------------------------------------------------------

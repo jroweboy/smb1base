@@ -71,7 +71,6 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 .endif
 .endif
 
-
 .ident( .sprintf("MetaspriteData_%s_%s_%s", Object, Animation, Direction) ):
   .byte   (Size * 4)
   .byte   Tile1, Attr1, Y1, X1
@@ -88,7 +87,7 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 
 METASPRITES_COUNT .set 1
 .macro MetaspriteDefine Object, Animation, Spr1, Spr2, Spr3, Spr4
-.local Bank, Palette, YOffset
+.local Bank, Palette, YOffset, Mirror
 
 .if .defined(.ident( .sprintf("%s_%s_BANK", Object, Animation) ))
   Bank = .ident( .sprintf("%s_%s_BANK", Object, Animation) )
@@ -113,14 +112,30 @@ METASPRITES_COUNT .set 1
   YOffset = 0
 .endif
 
+.if .defined(.ident( .sprintf("%s_%s_NO_MIRROR", Object, Animation) ))
+  Mirror = 0
+.elseif .defined(.ident( .sprintf("%s_NO_MIRROR", Object) ))
+  Mirror = 0
+.else
+  Mirror = 1
+.endif
+
 .ifdef METASPRITE_BODY
 
+.if Mirror = 1
 MetaspriteDefineBody Object, Animation, "LEFT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+.endif
 MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
 
 .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
+.if Mirror = 1
 .ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
 .ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
+.else
+.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
+.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
+.endif
+
 .ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
 .ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
 .endif
@@ -189,11 +204,13 @@ MetaspriteDefine "SMALL_MARIO", "DEATH",           $34, $36
 MetaspriteDefine "SMALL_MARIO", "CLIMBING_2",      $38, $3a
 
 POWERUP_BANK = SPRITE_BANK_1
-POWERUP_Y_OFFSET = 8
+; POWERUP_Y_OFFSET = 8
 POWERUP_1UP_PALETTE = $01
 POWERUP_STAR_PALETTE = $02
 POWERUP_FIREFLOWER_PALETTE = $01
 POWERUP_MUSHROOM_PALETTE = $02
+POWERUP_1UP_NO_MIRROR = 1
+POWERUP_MUSHROOM_NO_MIRROR = 1
 MetaspriteDefine "POWERUP", "STAR",       $34, $36
 MetaspriteDefine "POWERUP", "FIREFLOWER", $38, $3a
 MetaspriteDefine "POWERUP", "MUSHROOM",   $3c, $3e
