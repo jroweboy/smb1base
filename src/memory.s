@@ -300,9 +300,9 @@ SprObject_OffscrBits:           .res  1
 
 Enemy_OffscreenBits:            .res  1
 FBall_OffscreenBits:            .res  1
+Bubble_OffscreenBits:           .res  1
 Block_OffscreenBits:            .res  2
 Misc_OffscreenBits:             .res  2
-Bubble_OffscreenBits:           .res  1
 EnemyOffscrBitsMasked:          .res  12
 Block_Orig_YPos:                .res  2
 Block_BBuf_Low:                 .res  2

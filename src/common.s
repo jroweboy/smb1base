@@ -114,7 +114,7 @@ GetObjRelativePosition:
 
 .proc GetPlayerOffscreenBits
   ldx #$00                 ;set offsets for player-specific variables
-  ldy #$00                 ;and get offscreen information about player
+  ldy #Player_OffscreenBits - SprObject_OffscrBits ;and get offscreen information about player
   jmp GetOffScreenBitsSet
 .endproc
 
@@ -122,7 +122,7 @@ GetObjRelativePosition:
 .proc GetMiscOffscreenBits
   ldy #$02                 ;set for misc object offsets
   jsr GetProperObjOffset   ;modify X to get proper misc object offset
-  ldy #$06                 ;set other offset for misc object's offscreen bits
+  ldy #Misc_OffscreenBits - SprObject_OffscrBits ;set other offset for misc object's offscreen bits
   jmp GetOffScreenBitsSet  ;and get offscreen information about misc object
 .endproc
 
@@ -138,13 +138,13 @@ ObjOffsetData:
 
 .proc GetEnemyOffscreenBits
   lda #$01                 ;set A to add 1 byte in order to get enemy offset
-  ldy #$01                 ;set Y to put offscreen bits in Enemy_OffscreenBits
+  ldy #Enemy_OffscreenBits - SprObject_OffscrBits ;set Y to put offscreen bits in Enemy_OffscreenBits
   jmp SetOffscrBitsOffset
 .endproc
 
 GetBlockOffscreenBits:
   lda #$09       ;set A to add 9 bytes in order to get block obj offset
-  ldy #$04       ;set Y to put offscreen bits in Block_OffscreenBits
+  ldy #Block_OffscreenBits - SprObject_OffscrBits ;set Y to put offscreen bits in Block_OffscreenBits
   ; fallthrough
 SetOffscrBitsOffset:
   stx R0 
