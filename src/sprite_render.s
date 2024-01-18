@@ -353,6 +353,7 @@ InversePowerOfTwo:
 ;-------------------------------------------------------------------------------------
 
 DrawFloateyNumber_Coin:
+  AllocSpr 2
   lda FrameCounter          ;get frame counter
   lsr                       ;divide by 2
   bcs @NotRsNum             ;branch if d0 not set to raise number every other frame
@@ -360,7 +361,9 @@ DrawFloateyNumber_Coin:
 @NotRsNum:
   lda Misc_Y_Position,x     ;get vertical coordinate
   jsr DumpTwoSpr            ;dump into both sprites
-  lda Misc_Rel_XPos         ;get relative horizontal coordinate
+  lda Misc_X_Position,x         ;get relative horizontal coordinate
+  sec
+  sbc ScreenLeft_X_Pos
   sta Sprite_X_Position,y   ;store as X coordinate for first sprite
   clc
   adc #$08                  ;add eight pixels
@@ -372,39 +375,43 @@ DrawFloateyNumber_Coin:
   sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
   lda #FLOATEY_NUM_0                  ;that resemble "200"
   sta Sprite_Tilenumber+4,y
-  jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
+  rts
+  ; jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
 
 JumpingCoinTiles:
-  .byte JUMPING_COIN_TILE_1, JUMPING_COIN_TILE_2
-  .byte JUMPING_COIN_TILE_3, JUMPING_COIN_TILE_4
+  .byte METASPRITE_COIN_FRAME_1, METASPRITE_COIN_FRAME_2
+  .byte METASPRITE_COIN_FRAME_3, METASPRITE_COIN_FRAME_4
+;   .byte JUMPING_COIN_TILE_1, JUMPING_COIN_TILE_2
+;   .byte JUMPING_COIN_TILE_3, JUMPING_COIN_TILE_4
 
 JCoinGfxHandler:
   ;  ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
-  AllocSpr 2
   lda Misc_State,x            ;get state of misc object
   cmp #$02                    ;if 2 or greater, 
   bcs DrawFloateyNumber_Coin  ;branch to draw floatey number
-    lda Misc_Y_Position,x       ;store vertical coordinate as
-    sta Sprite_Y_Position,y     ;Y coordinate for first sprite
-    clc
-    adc #$08                    ;add eight pixels
-    sta Sprite_Y_Position+4,y   ;store as Y coordinate for second sprite
-    lda Misc_Rel_XPos           ;get relative horizontal coordinate
-    sta Sprite_X_Position,y
-    sta Sprite_X_Position+4,y   ;store as X coordinate for first and second sprites
+    ; lda Misc_Y_Position,x       ;store vertical coordinate as
+    ; sta Sprite_Y_Position,y     ;Y coordinate for first sprite
+    ; clc
+    ; adc #$08                    ;add eight pixels
+    ; sta Sprite_Y_Position+4,y   ;store as Y coordinate for second sprite
+    ; lda Misc_Rel_XPos           ;get relative horizontal coordinate
+    ; sta Sprite_X_Position,y
+    ; sta Sprite_X_Position+4,y   ;store as X coordinate for first and second sprites
     lda FrameCounter            ;get frame counter
     lsr                         ;divide by 2 to alter every other frame
     and #%00000011              ;mask out d2-d1
     tax                         ;use as graphical offset
     lda JumpingCoinTiles,x      ;load tile number
-    iny                         ;increment OAM data offset to write tile numbers
-    jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
-    dey                         ;decrement to get old offset
-    lda #$02
-    sta Sprite_Attributes,y     ;set attribute byte in first sprite
-    lda #$82
-    sta Sprite_Attributes+4,y   ;set attribute byte with vertical flip in second sprite
     ldx ObjectOffset            ;get misc object offset
+    sta MiscMetaSprite,x
+    ; iny                         ;increment OAM data offset to write tile numbers
+    ; jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
+    ; dey                         ;decrement to get old offset
+    ; lda #$02
+    ; sta Sprite_Attributes,y     ;set attribute byte in first sprite
+    ; lda #$82
+    ; sta Sprite_Attributes+4,y   ;set attribute byte with vertical flip in second sprite
+    ; ldx ObjectOffset            ;get misc object offset
 ExJCGfx: rts                         ;leave
 
 ;-------------------------------------------------------------------------------------
@@ -999,36 +1006,37 @@ CheckToMirrorJSpring:
 SprObjectOffscrChk:
          ldx ObjectOffset          ;get enemy buffer offset
          lda Enemy_OffscreenBits   ;check offscreen information
-         lsr
-         lsr                       ;shift three times to the right
-         lsr                       ;which puts d2 into carry
-         pha                       ;save to stack
-         bcc LcChk                 ;branch if not set
-         lda #$04                  ;set for right column sprites
-         jsr MoveESprColOffscreen  ;and move them offscreen
-LcChk:   pla                       ;get from stack
-         lsr                       ;move d3 to carry
-         pha                       ;save to stack
-         bcc Row3C                 ;branch if not set
-         lda #$00                  ;set for left column sprites,
-         jsr MoveESprColOffscreen  ;move them offscreen
-Row3C:   pla                       ;get from stack again
-         lsr                       ;move d5 to carry this time
-         lsr
-         pha                       ;save to stack again
-         bcc Row23C                ;branch if carry not set
-         lda #$10                  ;set for third row of sprites
-         jsr MoveESprRowOffscreen  ;and move them offscreen
-Row23C:  pla                       ;get from stack
-         lsr                       ;move d6 into carry
-         pha                       ;save to stack
-         bcc AllRowC
-         lda #$08                  ;set for second and third rows
-         jsr MoveESprRowOffscreen  ;move them offscreen
-AllRowC: pla                       ;get from stack once more
-         lsr                       ;move d7 into carry
+;          lsr
+;          lsr                       ;shift three times to the right
+;          lsr                       ;which puts d2 into carry
+;          pha                       ;save to stack
+;          bcc LcChk                 ;branch if not set
+;          lda #$04                  ;set for right column sprites
+;          jsr MoveESprColOffscreen  ;and move them offscreen
+; LcChk:   pla                       ;get from stack
+;          lsr                       ;move d3 to carry
+;          pha                       ;save to stack
+;          bcc Row3C                 ;branch if not set
+;          lda #$00                  ;set for left column sprites,
+;          jsr MoveESprColOffscreen  ;move them offscreen
+; Row3C:   pla                       ;get from stack again
+;          lsr                       ;move d5 to carry this time
+;          lsr
+;          pha                       ;save to stack again
+;          bcc Row23C                ;branch if carry not set
+;          lda #$10                  ;set for third row of sprites
+;          jsr MoveESprRowOffscreen  ;and move them offscreen
+; Row23C:  pla                       ;get from stack
+;          lsr                       ;move d6 into carry
+;          pha                       ;save to stack
+;          bcc AllRowC
+;          lda #$08                  ;set for second and third rows
+;          jsr MoveESprRowOffscreen  ;move them offscreen
+; AllRowC: pla                       ;get from stack once more
+;          lsr                       ;move d7 into carry
+         asl
          bcc ExEGHandler
-         jsr MoveESprRowOffscreen  ;move all sprites offscreen (A should be 0 by now)
+        ;  jsr MoveESprRowOffscreen  ;move all sprites offscreen (A should be 0 by now)
          lda Enemy_ID,x
          cmp #Podoboo              ;check enemy identifier for podoboo
          beq ExEGHandler           ;skip this part if found, we do not want to erase podoboo!
@@ -1059,7 +1067,10 @@ MoveESprColOffscreen:
       clc                         ;add A to enemy object OAM data offset
       adc OriginalOAMOffset
       tay                         ;use as offset
-      jsr MoveColOffscreen        ;move first and second row sprites in column offscreen
+      ; jsr MoveColOffscreen        ;move first and second row sprites in column offscreen
+      lda #$f8
+      sta Sprite_Y_Position,y
+      sta Sprite_Y_Position+8,y
       sta Sprite_Data+16,y       ;move third row sprite in column offscreen
       rts
 
@@ -1162,73 +1173,73 @@ ProcessFlyingCheepCheep:
 ;$04 - attributes
 ;$05 - relative X position
 
-DefaultBlockObjTiles:
-  .byte BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_2, BRICK_BUMP_TILE_2
+; DefaultBlockObjTiles:
+;   .byte BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_1 ; , BRICK_BUMP_TILE_2, BRICK_BUMP_TILE_2
 
 DrawBlock:
-           lda Block_Rel_YPos            ;get relative vertical coordinate of block object
-           sta R2                        ;store here
-           lda Block_Rel_XPos            ;get relative horizontal coordinate of block object
-           sta R5                        ;store here
-           lda #$03
-           sta R4                        ;set attribute byte here
-           lsr
-           sta R3                        ;set horizontal flip bit here (will not be used)
+          ;  lda Block_Rel_YPos            ;get relative vertical coordinate of block object
+          ;  sta R2                        ;store here
+          ;  lda Block_Rel_XPos            ;get relative horizontal coordinate of block object
+          ;  sta R5                        ;store here
+          ;  lda #$03
+          ;  sta R4                        ;set attribute byte here
+          ;  lsr
+          ;  sta R3                        ;set horizontal flip bit here (will not be used)
           ;  ldy Block_SprDataOffset,x     ;get sprite data offset
 
-        AllocSpr 4
-           sty OriginalOAMOffset
-           ldx #$00                      ;reset X for use as offset to tile data
-DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
-           sta R0                        ;set here
-           lda DefaultBlockObjTiles+1,x  ;get right tile number
-           jsr DrawOneSpriteRow          ;do sub to write tile numbers to first row of sprites
-           cpx #$04                      ;check incremented offset
-           bne DBlkLoop                  ;and loop back until all four sprites are done
+        ; AllocSpr 2
+          ;  sty OriginalOAMOffset
+          ;  ldx #$00                      ;reset X for use as offset to tile data
+; DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
+;            sta R0                        ;set here
+;            lda DefaultBlockObjTiles+1,x  ;get right tile number
+;            jsr DrawOneSpriteRow          ;do sub to write tile numbers to first row of sprites
+;            cpx #$04                      ;check incremented offset
+;            bne DBlkLoop                  ;and loop back until all four sprites are done
            ldx ObjectOffset              ;get block object offset
+           lda #METASPRITE_MISC_BRICK
+           sta BlockMetaSprite,x
           ;  ldy Block_SprDataOffset,x     ;get sprite data offset
-           ldy OriginalOAMOffset
+          ;  ldy OriginalOAMOffset
            lda AreaType
            cmp #$01                      ;check for ground level type area
            beq ChkRep                    ;if found, branch to next part
-           lda #BRICK_BUMP_TILE_2
-           sta Sprite_Tilenumber,y       ;otherwise remove brick tiles with lines
-           sta Sprite_Tilenumber+4,y     ;and replace then with lineless brick tiles
+          ;  lda #BRICK_BUMP_TILE_2
+          ;  sta Sprite_Tilenumber,y       ;otherwise remove brick tiles with lines
+          ;  sta Sprite_Tilenumber+4,y     ;and replace then with lineless brick tiles
 ChkRep:    lda Block_Metatile,x          ;check replacement metatile
            cmp #$c4                      ;if not used block metatile, then
-           bne BlkOffscr                 ;branch ahead to use current graphics
-           lda #BLOCK_USED_TILE          ;set A for used block tile
-           iny                           ;increment Y to write to tile bytes
-           jsr DumpFourSpr               ;do sub to dump into all four sprites
-           dey                           ;return Y to original offset
-           lda #$03                      ;set palette bits
-           ldx AreaType
-           dex                           ;check for ground level type area again
-           beq SetBFlip                  ;if found, use current palette bits
-           lsr                           ;otherwise set to $01
-SetBFlip:  ldx ObjectOffset              ;put block object offset back in X
-           sta Sprite_Attributes,y       ;store attribute byte as-is in first sprite
-           ora #%01000000
-           sta Sprite_Attributes+4,y     ;set horizontal flip bit for second sprite
-           ora #%10000000
-           sta Sprite_Attributes+12,y    ;set both flip bits for fourth sprite
-           and #%10000011
-           sta Sprite_Attributes+8,y     ;set vertical flip bit for third sprite
-BlkOffscr: lda Block_OffscreenBits       ;get offscreen bits for block object
-           pha                           ;save to stack
-           and #%00000100                ;check to see if d2 in offscreen bits are set
-           beq PullOfsB                  ;if not set, branch, otherwise move sprites offscreen
-           lda #$f8                      ;move offscreen two OAMs
-           sta Sprite_Y_Position+4,y     ;on the right side
-           sta Sprite_Y_Position+12,y
-PullOfsB:  pla                           ;pull offscreen bits from stack
-ChkLeftCo: and #%00001000                ;check to see if d3 in offscreen bits are set
-           beq ExDBlk                    ;if not set, branch, otherwise move sprites offscreen
-
-MoveColOffscreen:
-        lda #$f8                   ;move offscreen two OAMs
-        sta Sprite_Y_Position,y    ;on the left side (or two rows of enemy on either side
-        sta Sprite_Y_Position+8,y  ;if branched here from enemy graphics handler)
+           bne ExDBlk                 ;branch ahead to use current graphics
+           
+           lda #METASPRITE_MISC_BLOCK
+           sta BlockMetaSprite,x
+;            lda #BLOCK_USED_TILE          ;set A for used block tile
+;            iny                           ;increment Y to write to tile bytes
+;            jsr DumpFourSpr               ;do sub to dump into all four sprites
+;            dey                           ;return Y to original offset
+;            lda #$03                      ;set palette bits
+;            ldx AreaType
+;            dex                           ;check for ground level type area again
+;            beq SetBFlip                  ;if found, use current palette bits
+;            lsr                           ;otherwise set to $01
+; SetBFlip:  ldx ObjectOffset              ;put block object offset back in X
+;            sta Sprite_Attributes,y       ;store attribute byte as-is in first sprite
+;            ora #%01000000
+;            sta Sprite_Attributes+4,y     ;set horizontal flip bit for second sprite
+;            ora #%10000000
+;            sta Sprite_Attributes+12,y    ;set both flip bits for fourth sprite
+;            and #%10000011
+;            sta Sprite_Attributes+8,y     ;set vertical flip bit for third sprite
+; BlkOffscr: lda Block_OffscreenBits       ;get offscreen bits for block object
+;            pha                           ;save to stack
+;            and #%00000100                ;check to see if d2 in offscreen bits are set
+;            beq PullOfsB                  ;if not set, branch, otherwise move sprites offscreen
+;            lda #$f8                      ;move offscreen two OAMs
+;            sta Sprite_Y_Position+4,y     ;on the right side
+;            sta Sprite_Y_Position+12,y
+; PullOfsB:  pla                           ;pull offscreen bits from stack
+  rts
+ChkLeftCo: 
 ExDBlk: rts
 
 ;-------------------------------------------------------------------------------------
@@ -1288,7 +1299,13 @@ AllocSpr 4
   adc #$06                   ;plus 6 pixels to position fourth brick chunk correctly
   sta Sprite_X_Position+12,y ;save into X coordinate of fourth sprite
   lda Block_OffscreenBits    ;get offscreen bits for block object
-  jsr ChkLeftCo              ;do sub to move left half of sprites offscreen if necessary
+  ; jsr ChkLeftCo              ;do sub to move left half of sprites offscreen if necessary
+  and #%00001000                ;check to see if d3 in offscreen bits are set
+  beq :+                    ;if not set, branch, otherwise move sprites offscreen
+    lda #$f8                   ;move offscreen two OAMs
+    sta Sprite_Y_Position,y    ;on the left side (or two rows of enemy on either side
+    sta Sprite_Y_Position+8,y  ;if branched here from enemy graphics handler)
+:
   lda Block_OffscreenBits    ;get offscreen bits again
   asl                        ;shift d7 into carry
   bcc :+                ;if d7 not set, branch to last part

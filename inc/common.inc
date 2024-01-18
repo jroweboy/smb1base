@@ -84,11 +84,12 @@ skipflip:
 .ident(.concat("AllocSpr_", .string(spr))):
 .import CurrentOAMOffset
   lda CurrentOAMOffset
-  cmp #$ff - (spr * 4)
-  bcc :+
-    rts
-  :
+  ; cmp #$ff - (spr * 4)
+  ; bcc :+
+  ;   rts
+  ; :
   tay
+  clc
   adc #(spr * 4)
   sta CurrentOAMOffset
 .endscope
@@ -99,10 +100,10 @@ skipflip:
 .ident(.concat("ReserveSpr_", .string(spr))):
 .import CurrentOAMOffset
   ldy CurrentOAMOffset
-  cpy #$ff - (spr * 4)
-  bcc :+
-    rts
-  :
+  ; cpy #$ff - (spr * 4)
+  ; bcc :+
+  ;   rts
+  ; :
 .endmacro
 
 .macro UpdateOAMPosition

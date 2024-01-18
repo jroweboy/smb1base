@@ -982,12 +982,12 @@ NoTopSc:
 ;$06, $07 - block buffer address low/high
 
 .proc RemoveCoin_Axe
-  ldy #<VRAM_Buffer2                 ;set low byte so offset points to $0341
+  ldy #VRAM_Buffer2 - VRAM_Buffer1 + 1 ;set low byte so offset points to $0341
   lda #$03                 ;load offset for default blank metatile
   ldx AreaType             ;check area type
-  bne WriteBlankMT         ;if not water type, use offset
-  lda #$04                 ;otherwise load offset for blank metatile used in water
-WriteBlankMT:
+  bne :+                   ;if not water type, use offset
+    lda #$04                 ;otherwise load offset for blank metatile used in water
+:
   jsr PutBlockMetatile     ;do a sub to write blank metatile to vram buffer
   lda #$06
   sta VRAM_Buffer_AddrCtrl ;set vram address controller to $0341 and leave

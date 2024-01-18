@@ -1277,7 +1277,7 @@ HandleAxeMetatile:
 ErACM:
   ldy R2              ;load vertical high nybble offset for block buffer
   lda #$00            ;load blank metatile
-  sta (R6) ,y         ;store to remove old contents from block buffer
+  sta (R6),y          ;store to remove old contents from block buffer
   jmp RemoveCoin_Axe  ;update the screen accordingly
 
 
@@ -1745,79 +1745,88 @@ NoJSFnd: rts           ;leave
 ;$06-$07 - used as block buffer address indirect
 
 BlockYPosAdderData:
-;     Swimming, Big, Small
-  .byte $00, $04, $12
+;     Big, Small
+  .byte $04, $12
 
 PlayerHeadCollision:
-           pha                      ;store metatile number to stack
-           lda #$11                 ;load unbreakable block object state by default
-           ldx SprDataOffset_Ctrl   ;load offset control bit here
-           ldy PlayerSize           ;check player's size
-           bne DBlockSte            ;if small, branch
-           lda #$12                 ;otherwise load breakable block object state
-DBlockSte: sta Block_State,x        ;store into block object buffer
-           jsr DestroyBlockMetatile ;store blank metatile in vram buffer to write to name table
-           ldx SprDataOffset_Ctrl   ;load offset control bit
-           lda R2                   ;get vertical high nybble offset used in block buffer routine
-           sta Block_Orig_YPos,x    ;set as vertical coordinate for block object
-           tay
-           lda R6                   ;get low byte of block buffer address used in same routine
-           sta Block_BBuf_Low,x     ;save as offset here to be used later
-           lda (R6) ,y              ;get contents of block buffer at old address at $06, $07
-           jsr BlockBumpedChk       ;do a sub to check which block player bumped head on
-           sta R0                   ;store metatile here
-           ldy PlayerSize           ;check player's size
-           bne ChkBrick             ;if small, use metatile itself as contents of A
-           tya                      ;otherwise init A (note: big = 0)
-ChkBrick:  bcc PutMTileB            ;if no match was found in previous sub, skip ahead
-           ldy #$11                 ;otherwise load unbreakable state into block object buffer
-           sty Block_State,x        ;note this applies to both player sizes
-           lda #$c4                 ;load empty block metatile into A for now
-           ldy R0                   ;get metatile from before
-           cpy #$58                 ;is it brick with coins (with line)?
-           beq StartBTmr            ;if so, branch
-           cpy #$5d                 ;is it brick with coins (without line)?
-           bne PutMTileB            ;if not, branch ahead to store empty block metatile
-StartBTmr: lda BrickCoinTimerFlag   ;check brick coin timer flag
-           bne ContBTmr             ;if set, timer expired or counting down, thus branch
-           lda #$0b
-           sta BrickCoinTimer       ;if not set, set brick coin timer
-           inc BrickCoinTimerFlag   ;and set flag linked to it
-ContBTmr:  lda BrickCoinTimer       ;check brick coin timer
-           bne PutOldMT             ;if not yet expired, branch to use current metatile
-           ldy #$c4                 ;otherwise use empty block metatile
-PutOldMT:  tya                      ;put metatile into A
-PutMTileB: sta Block_Metatile,x     ;store whatever metatile be appropriate here
-           jsr InitBlock_XY_Pos     ;get block object horizontal coordinates saved
-           ldy R2                   ;get vertical high nybble offset
-           lda #$23
-           sta (R6) ,y              ;write blank metatile $23 to block buffer
-           lda #$10
-           sta BlockBounceTimer     ;set block bounce timer
-           pla                      ;pull original metatile from stack
-           sta R5                   ;and save here
-           ldy #$00                 ;set default offset
-           lda CrouchingFlag        ;is player crouching?
-           bne SmallBP              ;if so, branch to increment offset
-           lda PlayerSize           ;is player big?
-           beq BigBP                ;if so, branch to use default offset
-SmallBP:   iny                      ;increment for small or big and crouching
-BigBP:     lda Player_Y_Position    ;get player's vertical coordinate
-           clc
-           adc BlockYPosAdderData,y ;add value determined by size
-           and #$f0                 ;mask out low nybble to get 16-pixel correspondence
-           sta Block_Y_Position,x   ;save as vertical coordinate for block object
-           ldy Block_State,x        ;get block object state
-           cpy #$11
-           beq Unbreak              ;if set to value loaded for unbreakable, branch
-           jsr BrickShatter         ;execute code for breakable brick
-           jmp InvOBit              ;skip subroutine to do last part of code here
-Unbreak:   jsr BumpBlock            ;execute code for unbreakable brick or question block
-InvOBit:   lda SprDataOffset_Ctrl   ;invert control bit used by block objects
-           eor #$01                 ;and floatey numbers
-           sta SprDataOffset_Ctrl
-           rts                      ;leave!
-
+  pha                      ;store metatile number to stack
+    lda #$11                 ;load unbreakable block object state by default
+    ldx SprDataOffset_Ctrl   ;load offset control bit here
+    ldy PlayerSize           ;check player's size
+    bne :+            ;if small, branch
+      lda #$12                 ;otherwise load breakable block object state
+:
+    sta Block_State,x        ;store into block object buffer
+    jsr DestroyBlockMetatile ;store blank metatile in vram buffer to write to name table
+    ldx SprDataOffset_Ctrl   ;load offset control bit
+    lda R2                   ;get vertical high nybble offset used in block buffer routine
+    sta Block_Orig_YPos,x    ;set as vertical coordinate for block object
+    tay
+    lda R6                   ;get low byte of block buffer address used in same routine
+    sta Block_BBuf_Low,x     ;save as offset here to be used later
+    lda (R6),y              ;get contents of block buffer at old address at $06, $07
+    jsr BlockBumpedChk       ;do a sub to check which block player bumped head on
+    sta R0                   ;store metatile here
+    ldy PlayerSize           ;check player's size
+    bne :+             ;if small, use metatile itself as contents of A
+      tya                      ;otherwise init A (note: big = 0)
+:   
+    bcc PutMTileB            ;if no match was found in previous sub, skip ahead
+      ldy #$11                 ;otherwise load unbreakable state into block object buffer
+      sty Block_State,x        ;note this applies to both player sizes
+      lda #$c4                 ;load empty block metatile into A for now
+      ldy R0                   ;get metatile from before
+      cpy #$58                 ;is it brick with coins (with line)?
+      beq StartBTmr            ;if so, branch
+        cpy #$5d                 ;is it brick with coins (without line)?
+        bne PutMTileB            ;if not, branch ahead to store empty block metatile
+StartBTmr: 
+      lda BrickCoinTimerFlag   ;check brick coin timer flag
+      bne :+             ;if set, timer expired or counting down, thus branch
+        lda #$0b
+        sta BrickCoinTimer       ;if not set, set brick coin timer
+        inc BrickCoinTimerFlag   ;and set flag linked to it
+:  
+      lda BrickCoinTimer       ;check brick coin timer
+      bne :+             ;if not yet expired, branch to use current metatile
+        ldy #$c4                 ;otherwise use empty block metatile
+:  
+      tya                      ;put metatile into A
+PutMTileB:
+    sta Block_Metatile,x     ;store whatever metatile be appropriate here
+    jsr InitBlock_XY_Pos     ;get block object horizontal coordinates saved
+    ldy R2                   ;get vertical high nybble offset
+    lda #$23
+    sta (R6),y               ;write blank metatile $23 to block buffer
+    lda #$10
+    sta BlockBounceTimer     ;set block bounce timer
+  pla                      ;pull original metatile from stack
+  sta R5                   ;and save here
+  ldy #$00                 ;set default offset
+  lda CrouchingFlag        ;is player crouching?
+  bne SmallBP              ;if so, branch to increment offset
+    lda PlayerSize           ;is player big?
+    beq BigBP                ;if so, branch to use default offset
+SmallBP:
+    iny                      ;increment for small or big and crouching
+BigBP:
+  lda Player_Y_Position    ;get player's vertical coordinate
+  clc
+  adc BlockYPosAdderData,y ;add value determined by size
+  and #$f0                 ;mask out low nybble to get 16-pixel correspondence
+  sta Block_Y_Position,x   ;save as vertical coordinate for block object
+  ldy Block_State,x        ;get block object state
+  cpy #$11
+  beq :+                   ;if set to value loaded for unbreakable, branch
+    jsr BrickShatter         ;execute code for breakable brick
+    jmp InvOBit              ;skip subroutine to do last part of code here
+:   
+  jsr BumpBlock            ;execute code for unbreakable brick or question block
+InvOBit:
+  lda SprDataOffset_Ctrl   ;invert control bit used by block objects
+  eor #$01                 ;and floatey numbers
+  sta SprDataOffset_Ctrl
+  rts                      ;leave!
 
 
 ;--------------------------------

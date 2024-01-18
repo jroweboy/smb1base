@@ -118,6 +118,7 @@ METASPRITES_COUNT .set 1
 MetaspriteDefineBody Object, Animation, "LEFT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
 MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
 
+.out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 .ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
 .ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
 .ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
@@ -125,7 +126,6 @@ MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, S
 .endif
 
 .ident( .sprintf("METASPRITE_%s_%s", Object, Animation) ) = METASPRITES_COUNT
-; .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 
@@ -215,9 +215,11 @@ MetaspriteDefine "COIN", "FRAME_4", $32
 MISC_BANK = SPRITE_BANK_1
 MISC_PALETTE = $03
 MISC_BUBBLE_PALETTE = $02
+MISC_Y_OFFSET = -8
 MetaspriteDefine "MISC", "BRICK", $22, $22
-MetaspriteDefine "MISC", "BLOCK", $24, $24
-MetaspriteDefine "MISC", "CHUNK", $16
+MetaspriteDefine "MISC", "BLOCK", $24, $24 | SPR_FLIP_H
+; drawn manually
+; MetaspriteDefine "MISC", "CHUNK", $16
 MetaspriteDefine "MISC", "BUBBLE", $18
 
 

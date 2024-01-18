@@ -96,7 +96,7 @@ GameCoreRoutine:
   ; lda GameEngineSubroutine
   ; cmp #$0d ;; in bowser cutscene
   ; jeq SkipEverythingElse
-  
+
   lda #0
   sta PlayerOAMOffset
   sta CurrentOAMOffset
@@ -299,16 +299,18 @@ BlockObjectsCore:
         tay                         ;put in Y for now
         txa
         clc
-        adc #$09                    ;add 9 bytes to offset (note two block objects are created
+        adc #Block_Y_Speed - SprObject_Y_Speed  ;add 9 bytes to offset (note two block objects are created
         tax                         ;when using brick chunks, but only one offset for both)
         dey                         ;decrement Y to check for solid block state
         beq BouncingBlockHandler    ;branch if found, otherwise continue for brick chunks
         jsr ImposeGravityBlock      ;do sub to impose gravity on one block object object
         jsr MoveObjectHorizontally  ;do another sub to move horizontally
-        txa
-        clc                         ;move onto next block object
-        adc #$02
-        tax
+        ; txa
+        ; clc                         ;move onto next block object
+        ; adc #$02
+        ; tax
+        inx
+        inx
         jsr ImposeGravityBlock      ;do sub to impose gravity on other block object
         jsr MoveObjectHorizontally  ;do another sub to move horizontally
         ldx ObjectOffset            ;get block object offset used for both
@@ -343,6 +345,7 @@ BouncingBlockHandler:
            lda #$01
            sta Block_RepFlag,x        ;otherwise set flag to replace metatile
 KillBlock: lda #$00                   ;if branched here, nullify object state
+           sta BlockMetaSprite,x
 UpdSte:    sta Block_State,x          ;store contents of A in block object state
            rts
 
