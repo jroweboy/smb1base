@@ -1082,9 +1082,9 @@ RemBridge:
   rts                   ;and leave
 
 BlockGfxData:
-  .byte $45, $45, $47, $47
-  .byte $47, $47, $47, $47
-  .byte $57, $58, $59, $5a
+  .byte $47, $47, $48, $48
+  .byte $48, $48, $48, $48
+  .byte $AE, $AF, $BE, $BF
   .byte $24, $24, $24, $24
   .byte $26, $26, $26, $26
 

@@ -206,8 +206,8 @@ SpawnBrickChunks:
       clc                        ;add 8 pixels to vertical coordinate
       adc #$08                   ;and save as vertical coordinate for one of them
       sta Block_Y_Position+2,x
-      lda #$fa
-      sta Block_Y_Speed,x        ;set vertical speed...again??? (redundant)
+      ; lda #$fa
+      ; sta Block_Y_Speed,x        ;set vertical speed...again??? (redundant)
       rts
 
 

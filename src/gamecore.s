@@ -270,13 +270,13 @@ UpdateLoop:
     beq NextBUpd              ;branch to move onto next block object
       lda Block_BBuf_Low,x      ;get low byte of block buffer
       sta R6                    ;store into block buffer address
-      lda #$05
+      lda #>Block_Buffer_1
       sta R7                    ;set high byte of block buffer address
       lda Block_Orig_YPos,x     ;get original vertical coordinate of block object
       sta R2                    ;store here and use as offset to block buffer
       tay
       lda Block_Metatile,x      ;get metatile to be written
-      sta (R6) ,y               ;write it to the block buffer
+      sta (R6),y                ;write it to the block buffer
       jsr WriteBlockMetatile  ;do sub to replace metatile where block object is
       lda #$00
       sta Block_RepFlag,x       ;clear block object flag
