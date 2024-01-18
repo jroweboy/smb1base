@@ -48,9 +48,6 @@ MetaspriteTableRightHi:
 ;     clc 
 ;     adc #8 * 4
 ; :
-  lda #0
-  sta PlayerOAMOffset
-  sta CurrentOAMOffset
 
   ; draw the player first so it doesn't ever flicker
   ldy #0

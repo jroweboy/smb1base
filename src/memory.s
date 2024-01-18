@@ -275,20 +275,19 @@ PlatformCollisionFlag:          .res  11
 
 Player_Rel_XPos               = SprObject_Rel_XPos
 SprObject_Rel_XPos:             .res  1
-
 Enemy_Rel_XPos:                 .res  1
 Fireball_Rel_XPos:              .res  1
+Bubble_Rel_XPos:                .res  1
 Block_Rel_XPos:                 .res  2
 Misc_Rel_XPos:                  .res  5
-Bubble_Rel_XPos:                .res  1
 
 Player_Rel_YPos               = SprObject_Rel_YPos
 SprObject_Rel_YPos:             .res  1
 Enemy_Rel_YPos:                 .res  1
 Fireball_Rel_YPos:              .res  1
+Bubble_Rel_YPos:                .res  1
 Block_Rel_YPos:                 .res  2
 Misc_Rel_YPos:                  .res  5
-Bubble_Rel_YPos:                .res  1
 
 Player_SprAttrib              = SprObject_SprAttrib
 SprObject_SprAttrib:            .res  1

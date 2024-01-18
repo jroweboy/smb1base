@@ -1234,72 +1234,78 @@ ExDBlk: rts
 ;-------------------------------------------------------------------------------------
 ;$00 - used to hold palette bits for attribute byte or relative X position
 
-DrawBrickChunks:
-         lda #$02                   ;set palette bits here
-         sta R0 
-         lda #$75                   ;set tile number for ball (something residual, likely)
-         ldy GameEngineSubroutine
-         cpy #$05                   ;if end-of-level routine running,
-         beq DChunks                ;use palette and tile number assigned
-         lda #$03                   ;otherwise set different palette bits
-         sta R0 
-         lda #$84                   ;and set tile number for brick chunks
-DChunks: 
-        AllocSpr 4
-         iny                        ;increment to start with tile bytes in OAM
-         jsr DumpFourSpr            ;do sub to dump tile number into all four sprites
-         lda FrameCounter           ;get frame counter
-         asl
-         asl
-         asl                        ;move low nybble to high
-         asl
-         and #$c0                   ;get what was originally d3-d2 of low nybble
-         ora R0                     ;add palette bits
-         iny                        ;increment offset for attribute bytes
-         jsr DumpFourSpr            ;do sub to dump attribute data into all four sprites
-         dey
-         dey                        ;decrement offset to Y coordinate
-         lda Block_Rel_YPos         ;get first block object's relative vertical coordinate
-         jsr DumpTwoSpr             ;do sub to dump current Y coordinate into two sprites
-         lda Block_Rel_XPos         ;get first block object's relative horizontal coordinate
-         sta Sprite_X_Position,y    ;save into X coordinate of first sprite
-         lda Block_Orig_XPos,x      ;get original horizontal coordinate
-         sec
-         sbc ScreenLeft_X_Pos       ;subtract coordinate of left side from original coordinate
-         sta R0                     ;store result as relative horizontal coordinate of original
-         sec
-         sbc Block_Rel_XPos         ;get difference of relative positions of original - current
-         adc R0                     ;add original relative position to result
-         adc #$06                   ;plus 6 pixels to position second brick chunk correctly
-         sta Sprite_X_Position+4,y  ;save into X coordinate of second sprite
-         lda Block_Rel_YPos+1       ;get second block object's relative vertical coordinate
-         sta Sprite_Y_Position+8,y
-         sta Sprite_Y_Position+12,y ;dump into Y coordinates of third and fourth sprites
-         lda Block_Rel_XPos+1       ;get second block object's relative horizontal coordinate
-         sta Sprite_X_Position+8,y  ;save into X coordinate of third sprite
-         lda R0                     ;use original relative horizontal position
-         sec
-         sbc Block_Rel_XPos+1       ;get difference of relative positions of original - current
-         adc R0                     ;add original relative position to result
-         adc #$06                   ;plus 6 pixels to position fourth brick chunk correctly
-         sta Sprite_X_Position+12,y ;save into X coordinate of fourth sprite
-         lda Block_OffscreenBits    ;get offscreen bits for block object
-         jsr ChkLeftCo              ;do sub to move left half of sprites offscreen if necessary
-         lda Block_OffscreenBits    ;get offscreen bits again
-         asl                        ;shift d7 into carry
-         bcc ChnkOfs                ;if d7 not set, branch to last part
-         lda #$f8
-         jsr DumpTwoSpr             ;otherwise move top sprites offscreen
-ChnkOfs: lda R0                     ;if relative position on left side of screen,
-         bpl ExBCDr                 ;go ahead and leave
-         lda Sprite_X_Position,y    ;otherwise compare left-side X coordinate
-         cmp Sprite_X_Position+4,y  ;to right-side X coordinate
-         bcc ExBCDr                 ;branch to leave if less
-         lda #$f8                   ;otherwise move right half of sprites offscreen
-         sta Sprite_Y_Position+4,y
-         sta Sprite_Y_Position+12,y
-ExBCDr:  rts                        ;leave
-
+.proc DrawBrickChunks
+  lda #$02                    ;set palette bits here
+  sta R0 
+;  lda #$75                   ;set tile number for ball (something residual, likely)
+  ldy GameEngineSubroutine
+  cpy #$05                    ;if end-of-level routine running,
+  beq :+                      ;use palette and tile number assigned
+    lda #$03                   ;otherwise set different palette bits
+    sta R0 
+    ;  lda #$84                   ;and set tile number for brick chunks
+    lda #BRICK_CHUNK_TILE
+:
+  ; lazy way to keep the sprite tile here.
+  pha
+AllocSpr 4
+  pla
+  iny                        ;increment to start with tile bytes in OAM
+  jsr DumpFourSpr            ;do sub to dump tile number into all four sprites
+  lda FrameCounter           ;get frame counter
+  asl
+  asl
+  asl                        ;move low nybble to high
+  asl
+  and #$c0                   ;get what was originally d3-d2 of low nybble
+  ora R0                     ;add palette bits
+  iny                        ;increment offset for attribute bytes
+  jsr DumpFourSpr            ;do sub to dump attribute data into all four sprites
+  dey
+  dey                        ;decrement offset to Y coordinate
+  lda Block_Rel_YPos         ;get first block object's relative vertical coordinate
+  jsr DumpTwoSpr             ;do sub to dump current Y coordinate into two sprites
+  lda Block_Rel_XPos         ;get first block object's relative horizontal coordinate
+  sta Sprite_X_Position,y    ;save into X coordinate of first sprite
+  lda Block_Orig_XPos,x      ;get original horizontal coordinate
+  sec
+  sbc ScreenLeft_X_Pos       ;subtract coordinate of left side from original coordinate
+  sta R0                     ;store result as relative horizontal coordinate of original
+  sec
+  sbc Block_Rel_XPos         ;get difference of relative positions of original - current
+  adc R0                     ;add original relative position to result
+  adc #$06                   ;plus 6 pixels to position second brick chunk correctly
+  sta Sprite_X_Position+4,y  ;save into X coordinate of second sprite
+  lda Block_Rel_YPos+1       ;get second block object's relative vertical coordinate
+  sta Sprite_Y_Position+8,y
+  sta Sprite_Y_Position+12,y ;dump into Y coordinates of third and fourth sprites
+  lda Block_Rel_XPos+1       ;get second block object's relative horizontal coordinate
+  sta Sprite_X_Position+8,y  ;save into X coordinate of third sprite
+  lda R0                     ;use original relative horizontal position
+  sec
+  sbc Block_Rel_XPos+1       ;get difference of relative positions of original - current
+  adc R0                     ;add original relative position to result
+  adc #$06                   ;plus 6 pixels to position fourth brick chunk correctly
+  sta Sprite_X_Position+12,y ;save into X coordinate of fourth sprite
+  lda Block_OffscreenBits    ;get offscreen bits for block object
+  jsr ChkLeftCo              ;do sub to move left half of sprites offscreen if necessary
+  lda Block_OffscreenBits    ;get offscreen bits again
+  asl                        ;shift d7 into carry
+  bcc :+                ;if d7 not set, branch to last part
+    lda #$f8
+    jsr DumpTwoSpr             ;otherwise move top sprites offscreen
+:
+  lda R0                     ;if relative position on left side of screen,
+  bpl Exit                 ;go ahead and leave
+  lda Sprite_X_Position,y    ;otherwise compare left-side X coordinate
+  cmp Sprite_X_Position+4,y  ;to right-side X coordinate
+  bcc Exit                 ;branch to leave if less
+    lda #$f8                   ;otherwise move right half of sprites offscreen
+    sta Sprite_Y_Position+4,y
+    sta Sprite_Y_Position+12,y
+Exit:
+  rts                        ;leave
+.endproc
 ;-------------------------------------------------------------------------------------
 
 DrawFireball:

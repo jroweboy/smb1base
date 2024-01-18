@@ -96,6 +96,10 @@ GameCoreRoutine:
   ; lda GameEngineSubroutine
   ; cmp #$0d ;; in bowser cutscene
   ; jeq SkipEverythingElse
+  
+  lda #0
+  sta PlayerOAMOffset
+  sta CurrentOAMOffset
 
   lda OperMode_Task          ;check major task of operating mode
   cmp #$03                   ;if we are supposed to be here,

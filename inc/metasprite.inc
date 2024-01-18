@@ -125,7 +125,7 @@ MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, S
 .endif
 
 .ident( .sprintf("METASPRITE_%s_%s", Object, Animation) ) = METASPRITES_COUNT
-.out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
+; .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 METASPRITES_COUNT .set METASPRITES_COUNT + 1
 .endmacro
 
@@ -149,7 +149,7 @@ MetaspriteDefine "BIG_MARIO", "WALKING_1", $04, $06, $24, $26
 MetaspriteDefine "BIG_MARIO", "WALKING_2", $08, $0a, $28, $2a
 MetaspriteDefine "BIG_MARIO", "WALKING_3", $0c, $0e, $2c, $2e
 MetaspriteDefine "BIG_MARIO", "SKIDDING",  $10, $12, $30, $32
-MetaspriteDefine "BIG_MARIO", "JUMPING",   $10, $12, $30, $32
+MetaspriteDefine "BIG_MARIO", "JUMPING",   $14, $16, $34, $36
 MetaspriteDefine "BIG_MARIO", "CROUCHING", $18, $1a, $38, $3a
 
 MetaspriteDefine "BIG_MARIO", "SWIMMING_1_KICK", $00, $02, $20, $22
@@ -160,11 +160,11 @@ MetaspriteDefine "BIG_MARIO", "SWIMMING_3_KICK", $04, $06, $28, $22
 MetaspriteDefine "BIG_MARIO", "SWIMMING_3_HOLD", $04, $06, $2a, $22
 
 MetaspriteDefine "BIG_MARIO", "FIRE_STANDING",  $00, $02, $20, $22
-; MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_1", $04, $06, $24, $26
-; MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_2", $08, $0a, $28, $2a
-; MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_3", $0c, $0e, $2c, $2e
-; MetaspriteDefine "BIG_MARIO", "FIRE_SKIDDING",  $10, $12, $30, $32
-; MetaspriteDefine "BIG_MARIO", "FIRE_JUMPING",   $14, $16, $34, $36
+MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_1", $04, $06, $24, $26 ; TODO
+MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_2", $08, $0a, $28, $2a ; TODO
+MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_3", $0c, $0e, $2c, $2e ; TODO
+MetaspriteDefine "BIG_MARIO", "FIRE_SKIDDING",  $10, $12, $30, $32 ; TODO
+MetaspriteDefine "BIG_MARIO", "FIRE_JUMPING",   $14, $16, $34, $36 ; TODO
 MetaspriteDefine "BIG_MARIO", "CLIMBING_1",   $00, $02, $08, $0a
 MetaspriteDefine "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
 

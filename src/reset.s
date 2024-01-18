@@ -103,6 +103,7 @@ MMC3Init:
     ora PRG_FIXED_8
     sta BANK_SELECT
     lda BankInitValues,x
+    sta CurrentCHRBank,x
     sta BANK_DATA
     dex
     bpl CHRBankInitLoop
@@ -200,7 +201,7 @@ ScreenOff:
 
   jsr OAMandReadJoypad
   lda ReloadCHRBank
-  bne :+
+  beq :+
     ldx #PRG_FIXED_8
   .repeat 6, I
     stx BANK_SELECT
@@ -210,6 +211,8 @@ ScreenOff:
     inx
   .endif
   .endrepeat
+    ldx #0
+    stx ReloadCHRBank
   :
 
   

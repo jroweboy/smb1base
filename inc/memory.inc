@@ -172,7 +172,6 @@ __MEMORY_INC = 1
 .global FloateyNum_Timer
 .global DigitModifier
 
-
 .global NmiDisable
 .global NmiSkipped
 
@@ -186,6 +185,7 @@ __MEMORY_INC = 1
 .global IrqPointer
 .global ReloadCHRBank
 .global CurrentCHRBank
+PlayerChrBank = CurrentCHRBank + 2
 
 .global NoteLenLookupTblOfs
 .global Square1SoundBuffer

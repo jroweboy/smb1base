@@ -633,6 +633,13 @@ PlayerKilled:
 PlayerGfxProcessing:
   ; sta PlayerGfxOffset           ;store offset to graphics table here
   sta ObjectMetasprite
+  tay
+  lda PlayerBankTable,y
+  cmp PlayerChrBank
+  beq :+
+    sta PlayerChrBank
+    inc ReloadCHRBank
+  :
   ; lda #$04
   ; jsr RenderPlayerSub           ;draw player based on offset loaded
   ; jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
@@ -704,6 +711,50 @@ PlayerGfxTblOffsets:
   .byte METASPRITE_SMALL_MARIO_DEATH
   .byte METASPRITE_SMALL_MARIO_STANDING
 
+
+PlayerBankTable = PlayerBankTableReal - METASPRITE_BIG_MARIO_STANDING
+PlayerBankTableReal:
+.byte CHR_BIGMARIO ; "BIG_MARIO", "STANDING",  $00, $02, $20, $22
+.byte CHR_BIGMARIO ; "BIG_MARIO", "WALKING_1", $04, $06, $24, $26
+.byte CHR_BIGMARIO ; "BIG_MARIO", "WALKING_2", $08, $0a, $28, $2a
+.byte CHR_BIGMARIO ; "BIG_MARIO", "WALKING_3", $0c, $0e, $2c, $2e
+.byte CHR_BIGMARIO ; "BIG_MARIO", "SKIDDING",  $10, $12, $30, $32
+.byte CHR_BIGMARIO ; "BIG_MARIO", "JUMPING",   $10, $12, $30, $32
+.byte CHR_BIGMARIO ; "BIG_MARIO", "CROUCHING", $18, $1a, $38, $3a
+
+.byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_1_KICK", $00, $02, $20, $22
+.byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_1_HOLD", $00, $02, $24, $22
+.byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_2_KICK", $04, $06, $20, $26
+.byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_2_HOLD", $04, $06, $24, $26
+.byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_3_KICK", $04, $06, $28, $22
+.byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_3_HOLD", $04, $06, $2a, $22
+
+.byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_STANDING",  $00, $02, $20, $22
+.byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_WALKING_1", $04, $06, $24, $26 ; TODO
+.byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_WALKING_2", $08, $0a, $28, $2a ; TODO
+.byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_WALKING_3", $0c, $0e, $2c, $2e ; TODO
+.byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_SKIDDING",  $10, $12, $30, $32 ; TODO
+.byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_JUMPING",   $14, $16, $34, $36 ; TODO
+.byte CHR_MARIOACTION ; "BIG_MARIO", "CLIMBING_1",   $00, $02, $08, $0a
+.byte CHR_MARIOACTION ; "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
+
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "STANDING",   $00, $02
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "WALKING_1",  $04, $06
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "WALKING_2",  $08, $0a
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "WALKING_3",  $0c, $0e
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "SKIDDING",   $10, $12
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "JUMPING",    $14, $16
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "CLIMBING_1", $18, $1a
+
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "SWIMMING_1_KICK", $20, $22
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "SWIMMING_1_HOLD", $24, $26
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "SWIMMING_2_KICK", $28, $2a
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "SWIMMING_2_HOLD", $2c, $2e
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "SWIMMING_3_KICK", $30, $32
+.byte CHR_SMALLMARIO ; "METASPRITE_SMALL_MARIO_SWIMMING_3_KICK", "SMALL_MARIO_SWIMMING_3_HOLD"
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "DEATH",           $34, $36
+.byte CHR_SMALLMARIO ; "SMALL_MARIO", "CLIMBING_2",      $38, $3a
+
 HandleChangeSize:
   ldy PlayerAnimCtrl           ;get animation frame control
   lda FrameCounter
@@ -726,6 +777,7 @@ GetOffsetFromAnimCtrl:
     ; asl                        ;multiply animation frame control
     ; asl                        ;by eight to get proper amount
     ; asl                        ;to add to our offset
+    clc
     adc PlayerGfxTblOffsets,y  ;add to offset to graphics table
     rts                        ;and return with result in A
 ChangeSizeOffsetAdder:
