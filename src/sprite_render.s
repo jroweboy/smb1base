@@ -448,10 +448,20 @@ PowerUpGfxTable:
   ; sta R2                     ;store result here
   ; lda Enemy_Rel_XPos         ;get relative horizontal coordinate
   ; sta R5                     ;store here
-  ldx PowerUpType            ;get power-up type
-  lda PowerUpGfxTable,x
   ldx ObjectOffset
+  ldy PowerUpType            ;get power-up type
+  beq SkipPaletteCycle
+  cpy #3
+  beq SkipPaletteCycle
+    lda FrameCounter           ;get frame counter
+    lsr                        ;divide by 2 to change colors every two frames
+    and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
+    ; ora Enemy_SprAttrib,x      ;add background priority bit if any set
+    sta Enemy_SprAttrib,x
+SkipPaletteCycle:
+  lda PowerUpGfxTable,y
   sta EnemyMetasprite,x
+Exit:
   rts
   ; lda PowerUpAttributes,x    ;get attribute data for power-up type
   ; ora Enemy_SprAttrib+5      ;add background priority bit if set
@@ -866,13 +876,16 @@ DrawEnemyObject:
   bne CheckForVerticalFlip   ;for bullet bill, branch if not found
 
 SkipToOffScrChk:
-  ; jmp SprObjectOffscrChk     ;jump if found
+  jmp SprObjectOffscrChk     ;jump if found
 
 CheckForVerticalFlip:
-;   lda VerticalFlipFlag       ;check if vertical flip flag is set here
-;   beq CheckForESymmetry      ;branch if not
+  lda VerticalFlipFlag       ;check if vertical flip flag is set here
+  beq CheckForESymmetry      ;branch if not
 ;   lda Sprite_Attributes,y    ;get attributes of first sprite we dealt with
-;   ora #%10000000             ;set bit for vertical flip
+
+    lda Enemy_SprAttrib,x
+    ora #%10000000             ;set bit for vertical flip
+    sta Enemy_SprAttrib,x
 ;   iny
 ;   iny                        ;increment two bytes so that we store the vertical flip
 ;   jsr DumpSixSpr             ;in attribute bytes of enemy obj sprite data
@@ -880,19 +893,22 @@ CheckForVerticalFlip:
 ;   dey                        ;now go back to the Y coordinate offset
 ;   tya
 ;   tax                        ;give offset to X
-;   lda Local_ef
-;   cmp #HammerBro             ;check saved enemy object for hammer bro
-;   beq FlipEnemyVertically
-;   cmp #Lakitu                ;check saved enemy object for lakitu
-;   beq FlipEnemyVertically    ;branch for hammer bro or lakitu
-;   cmp #$15
-;   bcs FlipEnemyVertically    ;also branch if enemy object => $15
+    lda Local_ef
+    cmp #HammerBro             ;check saved enemy object for hammer bro
+    beq FlipEnemyVertically
+    cmp #Lakitu                ;check saved enemy object for lakitu
+    beq FlipEnemyVertically    ;branch for hammer bro or lakitu
+    cmp #$15
+    bcs FlipEnemyVertically    ;also branch if enemy object => $15
 ;   txa
 ;   clc
 ;   adc #$08                   ;if not selected objects or => $15, set
 ;   tax                        ;offset in X for next row
 
-; FlipEnemyVertically:
+FlipEnemyVertically:
+    ; set enemy flip flag if the flip flag is set
+    lda VerticalFlipFlag
+    sta EnemyVerticalFlip,x
 ;   lda Sprite_Tilenumber,x     ;load first or second row tiles
 ;   pha                         ;and save tiles to the stack
 ;     lda Sprite_Tilenumber+4,x
@@ -1120,10 +1136,18 @@ Noop:
   ldy #METASPRITE_GOOMBA_WALKING_1
   cmp #$02              ;check for defeated state
   bcc GmbaAnim          ;if not defeated, go ahead and animate
-    ldy #METASPRITE_GOOMBA_DEAD
+    ; check if the death is from being bumped. if its bumped then d5 is set
+    cmp #4        ;check for enemy stomped
+    bne :+
+      ; goomba was squished so use that metasprite instead
+      ldy #METASPRITE_GOOMBA_DEAD
+    :
+    lda Enemy_SprAttrib,x
+    ora #%10000000
+    sta Enemy_SprAttrib,x
     bne Exit
 GmbaAnim:
-  and #%00100000        ;check for d5 set in enemy object state 
+  and #%00100000        ;check for d5 set in enemy object state
   ora TimerControl      ;or timer disable flag set
   bne Exit              ;if either condition true, do not animate goomba
   lda FrameCounter
@@ -1337,27 +1361,34 @@ Exit:
 
 DrawFireball:
   AllocSpr 1
-      lda Fireball_Rel_YPos      ;get relative vertical coordinate
-      sta Sprite_Y_Position,y    ;store as sprite Y coordinate
-      lda Fireball_Rel_XPos      ;get relative horizontal coordinate
-      sta Sprite_X_Position,y    ;store as sprite X coordinate, then do shared code
+  lda Fireball_Rel_YPos      ;get relative vertical coordinate
+  sta Sprite_Y_Position,y    ;store as sprite Y coordinate
+  lda Fireball_Rel_XPos      ;get relative horizontal coordinate
+  sta Sprite_X_Position,y    ;store as sprite X coordinate, then do shared code
 
 DrawSingleFireball:
-       lda FrameCounter         ;get frame counter
-       lsr                      ;divide by four
-       lsr
-       pha                      ;save result to stack
-       and #$01                 ;mask out all but last bit
-       eor #FIREBALL_TILE1                 ;set either tile $64 or $65 as fireball tile
-       sta Sprite_Tilenumber,y  ;thus tile changes every four frames
-       pla                      ;get from stack
-       lsr                      ;divide by four again
-       lsr
-       lda #$02                 ;load value $02 to set palette in attrib byte
-       bcc FireA                ;if last bit shifted out was not set, skip this
-       ora #%11000000           ;otherwise flip both ways every eight frames
-FireA: sta Sprite_Attributes,y  ;store attribute byte and leave
-       rts
+  lda FrameCounter         ;get frame counter
+  lsr                      ;divide by four
+  lsr
+  pha                      ;save result to stack
+    ;and #$01                 ;mask out all but last bit
+    ; eor #FIREBALL_TILE1                 ;set either tile $64 or $65 as fireball tile
+    ; sta Sprite_Tilenumber,y  ;thus tile changes every four frames
+    lsr
+    lda #FIREBALL_TILE1
+    bcc :+
+      lda #FIREBALL_TILE2
+    :
+    sta Sprite_Tilenumber,y
+  pla                      ;get from stack
+  lsr                      ;divide by four again
+  lsr
+  lda #$02                 ;load value $02 to set palette in attrib byte
+  bcc FireA                ;if last bit shifted out was not set, skip this
+  ora #%11000000           ;otherwise flip both ways every eight frames
+FireA:
+  sta Sprite_Attributes,y  ;store attribute byte and leave
+  rts
 
 ;-------------------------------------------------------------------------------------
 

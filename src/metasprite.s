@@ -94,7 +94,7 @@ ObjectLoop:
 .export DrawMetasprite
 .proc DrawMetasprite
 Ptr = R0
-Tmp = R2
+VFlip = R2
 Atr = R3
 Xlo = R4
 Xhi = R5
@@ -116,6 +116,15 @@ Yhi = R7
     sta Ptr+1
 DrawSprite:
 
+  lda #0
+  cpy #1
+  bcc NotVFlippedEnemy
+  cpy #7
+  bpl NotVFlippedEnemy
+    lda EnemyVerticalFlip-1,y
+NotVFlippedEnemy:
+  sta VFlip
+
   lda SprObject_X_Position,y
   sec
   sbc ScreenLeft_X_Pos
@@ -135,10 +144,12 @@ DrawSprite:
   tay
   bpl RenderLoop
 
-Skip3:
+; Offscreen sprites end up here
+Skip3: ; X Offscreen
     dey
-Skip2:
+Skip2: ; Y Offscreen
     dey
+    ; Move this sprite offscreen
     lda #$f8
     sta Sprite_Y_Position,x
     inx
@@ -148,6 +159,7 @@ Skip2:
     dey
     beq LoopEnded
 RenderLoop:
+    ; load the x position and make sure its on screen
     lda (Ptr),y
     dey
     clc
@@ -157,6 +169,7 @@ RenderLoop:
     adc #0
     bne Skip3
 
+    ; load the y position and also make sure its on screen
     lda (Ptr),y
     dey
     clc
@@ -164,14 +177,28 @@ RenderLoop:
     sta Sprite_Y_Position,x
     lda Yhi
     adc #0
-    cmp #1
+    cmp #1      ; page 1 is the "main" y position
     bne Skip2
 
+    ; Mix attributes but if the NO_PALETTE bit is set, prevent
+    ; the palette from changing.
     lda (Ptr),y
-    dey
+    and #(SPR_NO_PALETTE >> 8)
+    beq AllowPaletteChange
+      ; No palette change bit set, so pull the byte and
+      ; mask off the palette from the attribute byte
+      lda Atr
+      and #%11111100
+      ora (Ptr),y
+      jmp WritePalette
+  AllowPaletteChange:
+    lda (Ptr),y
     ora Atr
+  WritePalette:
     sta Sprite_Attributes,x
+    dey
 
+    ; set the tile number and move to the next sprite
     lda (Ptr),y
     sta Sprite_Tilenumber,x
     inx
@@ -182,6 +209,27 @@ RenderLoop:
     bne RenderLoop
 LoopEnded:
   stx CurrentOAMOffset
+
+  lda VFlip
+  beq Exit
+    ; reload the size. If its 8 or less then we don't need to do anything
+    lda (Ptr),y
+    cmp #8 + 1
+    bcc Exit
+      ; sprite has two columns, so flip the two columns
+      lda Sprite_Tilenumber-4,x     ;load first or second row tiles
+      pha                         ;and save tiles to the stack
+        lda Sprite_Tilenumber-8,x
+        pha
+          lda Sprite_Tilenumber-12,x  ;exchange third row tiles
+          sta Sprite_Tilenumber-4,x     ;with first or second row tiles
+          lda Sprite_Tilenumber-16,x
+          sta Sprite_Tilenumber-8,x
+        pla                         ;pull first or second row tiles from stack
+        sta Sprite_Tilenumber-16,x  ;and save in third row
+      pla
+      sta Sprite_Tilenumber-12,x
+
 Exit:
   rts
 

@@ -12,6 +12,7 @@ SPRITE_BANK_3 = $c0
 ; Custom values to signify that this sprite should be flipped in the metasprite
 SPR_FLIP_H = %01000000 << 8
 SPR_FLIP_V = %10000000 << 8
+SPR_NO_PALETTE = %00100000 << 8
 
 .macro MetaspriteDefineBody Object, Animation, Direction, Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
 .local X1, X2, Y1, Y2, Size
@@ -208,11 +209,12 @@ POWERUP_BANK = SPRITE_BANK_1
 POWERUP_1UP_PALETTE = $01
 POWERUP_STAR_PALETTE = $02
 POWERUP_FIREFLOWER_PALETTE = $01
+POWERUP_FIREFLOWER_Y_OFFSET = -8
 POWERUP_MUSHROOM_PALETTE = $02
 POWERUP_1UP_NO_MIRROR = 1
 POWERUP_MUSHROOM_NO_MIRROR = 1
 MetaspriteDefine "POWERUP", "STAR",       $34, $36
-MetaspriteDefine "POWERUP", "FIREFLOWER", $38, $3a
+MetaspriteDefine "POWERUP", "FIREFLOWER", $38, $38 | SPR_FLIP_H , $3a | SPR_NO_PALETTE, $3a | SPR_FLIP_H | SPR_NO_PALETTE
 MetaspriteDefine "POWERUP", "MUSHROOM",   $3c, $3e
 MetaspriteDefine "POWERUP", "1UP",        $3c, $3e
 
@@ -223,7 +225,7 @@ MetaspriteDefine "EXPLOSION", "FRAME_2", $28, $28 | SPR_FLIP_H
 MetaspriteDefine "EXPLOSION", "FRAME_3", $2a, $2a | SPR_FLIP_H
 
 COIN_BANK = SPRITE_BANK_1
-COIN_PALETTE = $03
+COIN_PALETTE = $02
 MetaspriteDefine "COIN", "FRAME_1", $2c
 MetaspriteDefine "COIN", "FRAME_2", $2e
 MetaspriteDefine "COIN", "FRAME_3", $30
@@ -245,6 +247,6 @@ GOOMBA_PALETTE = $03
 GOOMBA_DEAD_Y_OFFSET = $08
 MetaspriteDefine "GOOMBA", "WALKING_1", $22, $24
 MetaspriteDefine "GOOMBA", "WALKING_2", $24 | SPR_FLIP_H, $22 | SPR_FLIP_H
-MetaspriteDefine "GOOMBA", "DEAD", $26 | SPR_FLIP_V, $26 | SPR_FLIP_H | SPR_FLIP_V
+MetaspriteDefine "GOOMBA", "DEAD", $26, $26 | SPR_FLIP_H
 
 .endif

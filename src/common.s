@@ -590,6 +590,7 @@ EraseEnemyObject:
   sta Enemy_SprAttrib,x
   sta EnemyFrameTimer,x
   sta ObjectMetasprite+1,x
+  sta EnemyVerticalFlip,x
   rts
 
 WorldAddrOffsets:

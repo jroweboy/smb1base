@@ -387,7 +387,7 @@ EnemyFrenzyQueue:               .res  1
 FireballCounter:                .res  1
 DuplicateObj_Offset:            .res  2
 LakituReappearTimer:            .res  2
-; NumberofGroupEnemies:           .res  1 ; only used in one subroutine , HandleGroupEnemies - sub could use a temp.
+NumberofGroupEnemies:           .res  1 ; only used in one subroutine , HandleGroupEnemies - sub could use a temp.
 ColorRotateOffset:              .res  1
 PlayerGfxOffset:                .res  1
 WarpZoneControl:                .res  1
@@ -413,6 +413,10 @@ FireballMetaSprite:             .res  2
 BlockMetaSprite:                .res  4
 MiscMetaSprite:                 .res  9
 BubbleMetaSprite:               .res  3
+
+; ObjectVerticalFlip:               .res  1
+; PlayerVerticalFlip     = ObjectMetasprite
+EnemyVerticalFlip:                .res  6
 
 A_B_Buttons:                    .res  1
 Up_Down_Buttons:                .res  1

@@ -391,6 +391,8 @@ VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 .global MiscMetaSprite
 .global BubbleMetaSprite
 
+.global EnemyVerticalFlip
+
 .global Player_X_Scroll
 .global Player_XSpeedAbsolute
 .global FrictionAdderHigh

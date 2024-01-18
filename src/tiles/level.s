@@ -1044,7 +1044,7 @@ SetYGp: sty R0                    ;save y coordinate here
         iny                       ;otherwise increment to three enemies
 ; CntGrp: sty NumberofGroupEnemies  ;save number of enemies here
 CntGrp:
-        sty R4                    ;save number of enemies here
+        sty NumberofGroupEnemies  ;save number of enemies here
 GrLoop: ldx #$ff                  ;start at beginning of enemy buffers
 GSltLp: inx                       ;increment and branch if past
         cpx #$05                  ;end of buffers
@@ -1069,8 +1069,8 @@ GSltLp: inx                       ;increment and branch if past
         sta Enemy_Y_HighPos,x     ;put enemy within the screen vertically
         sta Enemy_Flag,x
         farcall CheckpointEnemyID     ;process each enemy object separately
-      ;   dec NumberofGroupEnemies  ;do this until we run out of enemy objects
-        dec R4
+        dec NumberofGroupEnemies  ;do this until we run out of enemy objects
+      ;   dec R7
         bne GrLoop
 NextED: jmp Inc2B                 ;jump to increment data offset and leave
 
