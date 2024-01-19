@@ -842,11 +842,11 @@ CheckAnimationStop:
       and #%10100000          ;for d7 or d5, or check for timers stopped
       ora TimerControl
       bne CheckDefeatedState  ;if either condition true, branch
-      inx
-      ; txa
-      ; clc
-      ; adc #$06                ;add $06 to current enemy offset
-      ; tax                     ;to animate various enemy objects
+      ; inx
+      txa
+      clc
+      adc #$06                ;add $06 to current enemy offset
+      tax                     ;to animate various enemy objects
 
 CheckDefeatedState:
       lda Local_ed               ;check saved enemy state
@@ -1142,6 +1142,7 @@ Noop:
     bne :+
       ; goomba was squished so use that metasprite instead
       ldy #METASPRITE_GOOMBA_DEAD
+      ; the sprite in CHR is upside down intentionally so let the flip happen anyway
     :
     lda Enemy_SprAttrib,x
     ora #%10000000
@@ -1157,11 +1158,52 @@ GmbaAnim:
     ldy #METASPRITE_GOOMBA_WALKING_2
 Exit:
   tya
-  sta ObjectMetasprite+1,x
+  sta EnemyMetasprite,x
   rts
 .endproc
 
-ProcessGreenKoopa:
+.proc ProcessGreenKoopa
+  ; default animation cycle for the koopa
+  ldy #METASPRITE_KOOPA_WALKING_1
+  ldx ObjectOffset
+  lda Enemy_State,x
+  cmp #$02
+  bcc CheckRightSideUpShell
+    ldy #METASPRITE_KOOPA_SHELL
+    lda Enemy_State,x
+    ; fallthrough intentional. The original code does this too
+CheckRightSideUpShell:
+  cmp #$04 ; enemy stomped
+  bne NormalKoopaAnimation
+    ; Shell is upside down in OAM, so flip the koopa right side up
+    ; and then check for animation
+    lda Enemy_SprAttrib,x
+    ora #%10000000
+    sta Enemy_SprAttrib,x
+    ; if the shell is right side up 
+    ldy #METASPRITE_KOOPA_SHELL
+NormalKoopaAnimation:
+  ; check for the animation bits
+  ; for d7 or d5, or check for timers stopped
+  and #%10100000
+  ora TimerControl
+  bne WriteMetasprite
+    ; Check if the timer is in the last 5 frame rules
+    lda EnemyIntervalTimer,x
+    cmp #$05
+    bcs WriteMetasprite
+      ; and run the animation every 8 frames
+      lda FrameCounter
+      and #%00001000
+      bne WriteMetasprite
+        ; This uses the next sequential metasprite ID for all the shell animations
+        iny
+WriteMetasprite:
+  tya
+  sta EnemyMetasprite,x
+  rts
+.endproc
+
 ProcessBuzzyBeetle:
 ProcessRedKoopa:
 ProcessHammerBro:
@@ -1178,7 +1220,7 @@ ProcessSpiny:
 ProcessFlyingCheepCheep:
   ldx ObjectOffset
   lda #0
-  sta ObjectMetasprite+1,x
+  sta EnemyMetasprite,x
   rts
 
 

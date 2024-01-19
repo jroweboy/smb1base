@@ -476,7 +476,7 @@ ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to ski
 ChkSwimE: ldy AreaType                ;if level not water-type,
           bne SetPESub                ;skip this subroutine
           .import SetupBubble
-          jsr SetupBubble             ;otherwise, execute sub to set up air bubbles
+          farcall SetupBubble             ;otherwise, execute sub to set up air bubbles
 SetPESub: lda #$07                    ;set to run player entrance subroutine
           sta GameEngineSubroutine    ;on the next frame of game engine
           rts
