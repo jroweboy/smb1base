@@ -183,18 +183,17 @@ RenderLoop:
     ; Mix attributes but if the NO_PALETTE bit is set, prevent
     ; the palette from changing.
     lda (Ptr),y
-    and #(SPR_NO_PALETTE >> 8)
+    bit NoPaletteBitMask
     beq AllowPaletteChange
       ; No palette change bit set, so pull the byte and
       ; mask off the palette from the attribute byte
       lda Atr
       and #%11111100
       ora (Ptr),y
-      jmp WritePalette
-  AllowPaletteChange:
-    lda (Ptr),y
+      bne WritePalette ; unconditional
+AllowPaletteChange:
     ora Atr
-  WritePalette:
+WritePalette:
     sta Sprite_Attributes,x
     dey
 
@@ -233,4 +232,6 @@ LoopEnded:
 Exit:
   rts
 
+NoPaletteBitMask:
+  .byte (SPR_NO_PALETTE >> 8)
 .endproc

@@ -214,6 +214,9 @@ NoReset:
 ;   sta Sprite_Attributes+32       ;store and leave
   lda #METASPRITE_SMALL_MARIO_STANDING
   sta ObjectMetasprite
+  lda #CHR_SMALLMARIO
+  sta PlayerChrBank
+  inc ReloadCHRBank
   lda IntermediatePlayerData+0
   sta SprObject_Y_Position
   lda IntermediatePlayerData+1
