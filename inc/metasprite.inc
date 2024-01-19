@@ -266,4 +266,17 @@ MetaspriteDefine "GOOMBA", "WALKING_1", $22, $24
 MetaspriteDefine "GOOMBA", "WALKING_2", $24 | SPR_FLIP_H, $22 | SPR_FLIP_H
 MetaspriteDefine "GOOMBA", "DEAD", $26, $26 | SPR_FLIP_H
 
+
+KOOPA_BANK = SPRITE_BANK_2
+KOOPA_Y_OFFSET = -8
+KOOPA_PALETTE = $00 ; Don't set a palette here so we can do red or green koopa later
+MetaspriteDefine "KOOPA", "WALKING_1", $18, $12, $30, $32
+MetaspriteDefine "KOOPA", "WALKING_2", $38, $16, $34, $36
+MetaspriteDefine "KOOPA", "SHELL", $1a, $1a | SPR_FLIP_H
+MetaspriteDefine "KOOPA", "SHELL_REVIVE", $3a, $3a | SPR_FLIP_H
+MetaspriteDefine "KOOPA", "FLYING_1", $10, $12, $30, $32
+MetaspriteDefine "KOOPA", "FLYING_2", $14, $16, $34, $36
+
+
+
 .endif
