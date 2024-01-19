@@ -1162,27 +1162,41 @@ Exit:
   rts
 .endproc
 
+.proc ProcessRedKoopa
+  ldx ObjectOffset
+  lda Enemy_SprAttrib,x
+  ora #OAM_PALLETE_2
+  sta Enemy_SprAttrib,x
+  bne ProcessKoopa  ; unconditional
+.endproc
 .proc ProcessGreenKoopa
   ; default animation cycle for the koopa
-  ldy #METASPRITE_KOOPA_WALKING_1
   ldx ObjectOffset
+  lda Enemy_SprAttrib,x
+  ora #OAM_PALLETE_1
+  sta Enemy_SprAttrib,x
+  ; fallthrough
+.endproc
+.proc ProcessKoopa
+  ldy #METASPRITE_KOOPA_WALKING_1
   lda Enemy_State,x
   cmp #$02
   bcc CheckRightSideUpShell
     ldy #METASPRITE_KOOPA_SHELL
-    lda Enemy_State,x
     ; fallthrough intentional. The original code does this too
 CheckRightSideUpShell:
+  and #%00001111
   cmp #$04 ; enemy stomped
   bne NormalKoopaAnimation
+    ; if the shell is right side up 
+    ldy #METASPRITE_KOOPA_SHELL
     ; Shell is upside down in OAM, so flip the koopa right side up
     ; and then check for animation
     lda Enemy_SprAttrib,x
     ora #%10000000
     sta Enemy_SprAttrib,x
-    ; if the shell is right side up 
-    ldy #METASPRITE_KOOPA_SHELL
 NormalKoopaAnimation:
+  lda Enemy_State,x
   ; check for the animation bits
   ; for d7 or d5, or check for timers stopped
   and #%10100000
@@ -1205,7 +1219,6 @@ WriteMetasprite:
 .endproc
 
 ProcessBuzzyBeetle:
-ProcessRedKoopa:
 ProcessHammerBro:
 ProcessBlooper:
 ProcessBulletBill:

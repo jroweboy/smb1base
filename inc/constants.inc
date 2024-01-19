@@ -31,6 +31,13 @@ JOYPAD_PORT1          = $4016
 JOYPAD_PORT2          = $4017
 APU_FRAMECOUNTER      = $4017
 
+OAM_FLIP_V            = %10000000
+OAM_FLIP_H            = %01000000
+OAM_PALLETE_0         = %00000000
+OAM_PALLETE_1         = %00000001
+OAM_PALLETE_2         = %00000010
+OAM_PALLETE_3         = %00000011
+
 ;-------------------------------------------------------------------------------------
 ;CONSTANTS
 
@@ -135,14 +142,10 @@ JUMPING_COIN_TILE_4 = $b3
 FLOATEY_NUM_00 = $45
 FLOATEY_NUM_10 = $47
 FLOATEY_NUM_20 = $49
-FLOATEY_NUM_40 = $4a
-FLOATEY_NUM_50 = $4c
-FLOATEY_NUM_80 = $4e
+FLOATEY_NUM_40 = $4b
+FLOATEY_NUM_50 = $4d
+FLOATEY_NUM_80 = $4f
 FLOATEY_NUM_0  = $51
-; FLOATEY_NUM_40 = $ff
-; FLOATEY_NUM_50 = $ff
-; FLOATEY_NUM_80 = $ff
-; FLOATEY_NUM_0  = $ff
 FLOATEY_NUM_1  = $53
 FLOATEY_NUM_UP = $55
 
