@@ -147,10 +147,16 @@ METASPRITES_COUNT .set METASPRITES_COUNT + 1
 
 .macro MetaspriteDuplicate Mspr, Name
 .ifdef METASPRITE_BODY
-.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident(Mspr))
-.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident(Mspr))
-.ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident(Mspr))
-.ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident(Mspr))
+.Local LL, LH, RL, RH
+LL = .ident(.sprintf("METASPRITE_LEFT_%d_LO", .lobyte(.ident(Mspr))))
+LH = .ident(.sprintf("METASPRITE_LEFT_%d_HI", .lobyte(.ident(Mspr))))
+RL = .ident(.sprintf("METASPRITE_RIGHT_%d_LO", .lobyte(.ident(Mspr))))
+RH = .ident(.sprintf("METASPRITE_RIGHT_%d_HI", .lobyte(.ident(Mspr))))
+
+.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = LL
+.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = LH
+.ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = RL
+.ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = RH
 .endif
 
 .ident( Name ) = METASPRITES_COUNT
@@ -184,6 +190,7 @@ MetaspriteDefine "BIG_MARIO", "FIRE_JUMPING",   $14, $16, $34, $36 ; TODO
 MetaspriteDefine "BIG_MARIO", "CLIMBING_1",   $00, $02, $08, $0a
 MetaspriteDefine "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
 
+
 SMALL_MARIO_BANK = SPRITE_BANK_0
 SMALL_MARIO_PALETTE = $00
 SMALL_MARIO_Y_OFFSET = 8
@@ -204,6 +211,10 @@ MetaspriteDuplicate "METASPRITE_SMALL_MARIO_SWIMMING_3_KICK", "SMALL_MARIO_SWIMM
 MetaspriteDefine "SMALL_MARIO", "DEATH",           $34, $36
 MetaspriteDefine "SMALL_MARIO", "CLIMBING_2",      $38, $3a
 
+MetaspriteDuplicate "METASPRITE_SMALL_MARIO_STANDING", "METASPRITE_SMALL_MARIO_GROW_STANDING"
+MetaspriteDefine "BIG_MARIO", "GROW_INTERMEDIATE", $18, $1a, $38, $3a
+MetaspriteDuplicate "METASPRITE_BIG_MARIO_STANDING", "METASPRITE_BIG_MARIO_GROW_STANDING"
+
 POWERUP_BANK = SPRITE_BANK_1
 ; POWERUP_Y_OFFSET = 8
 POWERUP_1UP_PALETTE = $01
@@ -218,8 +229,13 @@ MetaspriteDefine "POWERUP", "FIREFLOWER", $38, $38 | SPR_FLIP_H , $3a | SPR_NO_P
 MetaspriteDefine "POWERUP", "MUSHROOM",   $3c, $3e
 MetaspriteDefine "POWERUP", "1UP",        $3c, $3e
 
+FIREBALL_BANK = SPRITE_BANK_0
+FIREBALL_PALETTE = $02
 EXPLOSION_BANK = SPRITE_BANK_1
-EXPLOSION_PALETTE = $03
+EXPLOSION_PALETTE = $02
+; These are drawn manually due to firebars. For now.
+; MetaspriteDefine "FIREBALL", "FRAME_1", $3c
+; MetaspriteDefine "FIREBALL", "FRAME_2", $3e
 MetaspriteDefine "EXPLOSION", "FRAME_1", $26, $26 | SPR_FLIP_H
 MetaspriteDefine "EXPLOSION", "FRAME_2", $28, $28 | SPR_FLIP_H
 MetaspriteDefine "EXPLOSION", "FRAME_3", $2a, $2a | SPR_FLIP_H
@@ -240,7 +256,8 @@ MetaspriteDefine "MISC", "BLOCK", $24, $24 | SPR_FLIP_H
 ; drawn manually
 ; MetaspriteDefine "MISC", "CHUNK", $16
 MetaspriteDefine "MISC", "BUBBLE", $18
-
+MetaspriteDefine "MISC", "SMALL_OVERLAY", $1e, $1e
+MetaspriteDefine "MISC", "LARGE_OVERLAY", $1e, $1e, $1e, $1e
 
 GOOMBA_BANK = SPRITE_BANK_2
 GOOMBA_PALETTE = $03

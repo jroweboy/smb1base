@@ -439,6 +439,22 @@ PowerUpGfxTable:
   .byte METASPRITE_POWERUP_1UP
 
 .proc DrawPowerUp
+  ldx ObjectOffset
+  ldy PowerUpType            ;get power-up type
+  beq SkipPaletteCycle
+  cpy #3
+  beq SkipPaletteCycle
+    lda FrameCounter           ;get frame counter
+    lsr                        ;divide by 2 to change colors every two frames
+    and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
+    ; we don't use background priority bit anymore for power ups and enemies
+    ; ora Enemy_SprAttrib,x      ;add background priority bit if any set
+    sta Enemy_SprAttrib,x
+SkipPaletteCycle:
+  lda PowerUpGfxTable,y
+  sta EnemyMetasprite,x
+Exit:
+  jmp SprObjectOffscrChk
       ; ldy Enemy_SprDataOffset+5  ;get power-up's sprite data offset
   ; AllocSpr 4
   ; sty OriginalOAMOffset
@@ -448,21 +464,6 @@ PowerUpGfxTable:
   ; sta R2                     ;store result here
   ; lda Enemy_Rel_XPos         ;get relative horizontal coordinate
   ; sta R5                     ;store here
-  ldx ObjectOffset
-  ldy PowerUpType            ;get power-up type
-  beq SkipPaletteCycle
-  cpy #3
-  beq SkipPaletteCycle
-    lda FrameCounter           ;get frame counter
-    lsr                        ;divide by 2 to change colors every two frames
-    and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
-    ; ora Enemy_SprAttrib,x      ;add background priority bit if any set
-    sta Enemy_SprAttrib,x
-SkipPaletteCycle:
-  lda PowerUpGfxTable,y
-  sta EnemyMetasprite,x
-Exit:
-  rts
   ; lda PowerUpAttributes,x    ;get attribute data for power-up type
   ; ora Enemy_SprAttrib+5      ;add background priority bit if set
   ; sta R4                     ;store attributes here
@@ -1362,6 +1363,8 @@ Exit:
 DrawFireball:
   AllocSpr 1
   lda Fireball_Rel_YPos      ;get relative vertical coordinate
+  sec 
+  sbc #4 ; offset to account for the CHR sprite being 4 pixels lower
   sta Sprite_Y_Position,y    ;store as sprite Y coordinate
   lda Fireball_Rel_XPos      ;get relative horizontal coordinate
   sta Sprite_X_Position,y    ;store as sprite X coordinate, then do shared code

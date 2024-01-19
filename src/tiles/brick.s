@@ -265,34 +265,42 @@ UseMiscS:  sty JumpCoinMiscOffset  ;store offset of misc object buffer here (res
 
 ;-------------------------------------------------------------------------------------
 
-SetupPowerUp:
-           lda #PowerUpObject        ;load power-up identifier into
-           sta Enemy_ID+5            ;special use slot of enemy object buffer
-           lda Block_PageLoc,x       ;store page location of block object
-           sta Enemy_PageLoc+5       ;as page location of power-up object
-           lda Block_X_Position,x    ;store horizontal coordinate of block object
-           sta Enemy_X_Position+5    ;as horizontal coordinate of power-up object
-           lda #$01
-           sta Enemy_Y_HighPos+5     ;set vertical high byte of power-up object
-           lda Block_Y_Position,x    ;get vertical coordinate of block object
-           sec
-           sbc #$08                  ;subtract 8 pixels
-           sta Enemy_Y_Position+5    ;and use as vertical coordinate of power-up object
-PwrUpJmp:  lda #$01                  ;this is a residual jump point in enemy object jump table
-           sta Enemy_State+5         ;set power-up object's state
-           sta Enemy_Flag+5          ;set buffer flag
-           lda #$03
-           sta Enemy_BoundBoxCtrl+5  ;set bounding box size control for power-up object
-           lda PowerUpType
-           cmp #$02                  ;check currently loaded power-up type
-           bcs PutBehind             ;if star or 1-up, branch ahead
-           lda PlayerStatus          ;otherwise check player's current status
-           cmp #$02
-           bcc StrType               ;if player not fiery, use status as power-up type
-           lsr                       ;otherwise shift right to force fire flower type
-StrType:   sta PowerUpType           ;store type here
-PutBehind: lda #%00100000
-           sta Enemy_SprAttrib+5     ;set background priority bit
-           lda #Sfx_GrowPowerUp
-           sta Square2SoundQueue     ;load power-up reveal sound and leave
-           rts
+.proc SetupPowerUp
+  lda #PowerUpObject        ;load power-up identifier into
+  sta Enemy_ID+5            ;special use slot of enemy object buffer
+  lda Block_PageLoc,x       ;store page location of block object
+  sta Enemy_PageLoc+5       ;as page location of power-up object
+  lda Block_X_Position,x    ;store horizontal coordinate of block object
+  sta Enemy_X_Position+5    ;as horizontal coordinate of power-up object
+  lda #$01
+  sta Enemy_Y_HighPos+5     ;set vertical high byte of power-up object
+  lda Block_Y_Position,x    ;get vertical coordinate of block object
+  sec
+  sbc #$08                  ;subtract 8 pixels
+  sta Enemy_Y_Position+5    ;and use as vertical coordinate of power-up object
+  ; fallthrough
+.endproc
+.proc PwrUpJmp
+  lda #$01                  ;this is a residual jump point in enemy object jump table
+  sta Enemy_State+5         ;set power-up object's state
+  sta Enemy_Flag+5          ;set buffer flag
+  lda #$03
+  sta Enemy_BoundBoxCtrl+5  ;set bounding box size control for power-up object
+  lda PowerUpType
+  cmp #$02                  ;check currently loaded power-up type
+  bcs PutBehind             ;if star or 1-up, branch ahead
+  lda PlayerStatus          ;otherwise check player's current status
+  cmp #$02
+  bcc StrType               ;if player not fiery, use status as power-up type
+  lsr                       ;otherwise shift right to force fire flower type
+StrType:
+  sta PowerUpType           ;store type here
+PutBehind:
+  lda #%00100000
+  sta Enemy_SprAttrib+5     ;set background priority bit
+  lda #Sfx_GrowPowerUp
+  sta Square2SoundQueue     ;load power-up reveal sound and leave
+  lda #0
+  sta EnemyMetasprite+5
+  rts
+.endproc
