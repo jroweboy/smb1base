@@ -1,4 +1,5 @@
 .include "common.inc"
+.include "metasprite.inc"
 
 .import DrawFireball, DumpFourSpr, FireballBGCollision
 
@@ -132,6 +133,7 @@ RunFB:
 EraseFB:
   lda #$00                     ;erase fireball state
   sta Fireball_State,x
+  sta FireballMetasprite,x
 NoFBall:
   rts                          ;leave
 
@@ -243,9 +245,9 @@ ExDBub:
 ;-------------------------------------------------------------------------------------
 
 ExplosionTiles:
-  .byte FIREBALL_FIREWORK_EXPLOSION_TILE_1
-  .byte FIREBALL_FIREWORK_EXPLOSION_TILE_2
-  .byte FIREBALL_FIREWORK_EXPLOSION_TILE_3
+  .byte METASPRITE_EXPLOSION_FRAME_1
+  .byte METASPRITE_EXPLOSION_FRAME_2
+  .byte METASPRITE_EXPLOSION_FRAME_3
 
 DrawExplosion_Fireball:
   ; ldy Alt_SprDataOffset,x  ;get OAM data offset of alternate sort for fireball's explosion
@@ -258,44 +260,49 @@ DrawExplosion_Fireball:
   ;fallthrough
 DrawExplosion_Fireworks:
 .export DrawExplosion_Fireworks
-  tax                         ;use whatever's in A for offset
-AllocSpr 4
-  lda ExplosionTiles,x        ;get tile number using offset
-  iny                         ;increment Y (contains sprite data offset)
-  jsr DumpFourSpr             ;and dump into tile number part of sprite data
-  dey                         ;decrement Y so we have the proper offset again
-  ldx ObjectOffset            ;return enemy object buffer offset to X
-  lda Fireball_Rel_YPos       ;get relative vertical coordinate
-  sec                         ;subtract four pixels vertically
-  sbc #$04                    ;for first and third sprites
-  sta Sprite_Y_Position,y
-  sta Sprite_Y_Position+8,y
-  clc                         ;add eight pixels vertically
-  adc #$08                    ;for second and fourth sprites
-  sta Sprite_Y_Position+4,y
-  sta Sprite_Y_Position+12,y
-  lda Fireball_Rel_XPos       ;get relative horizontal coordinate
-  sec                         ;subtract four pixels horizontally
-  sbc #$04                    ;for first and second sprites
-  sta Sprite_X_Position,y
-  sta Sprite_X_Position+4,y
-  clc                         ;add eight pixels horizontally
-  adc #$08                    ;for third and fourth sprites
-  sta Sprite_X_Position+8,y
-  sta Sprite_X_Position+12,y
-  lda #$02                    ;set palette attributes for all sprites, but
-  sta Sprite_Attributes,y     ;set no flip at all for first sprite
-  lda #$82
-  sta Sprite_Attributes+4,y   ;set vertical flip for second sprite
-  lda #$42
-  sta Sprite_Attributes+8,y   ;set horizontal flip for third sprite
-  lda #$c2
-  sta Sprite_Attributes+12,y  ;set both flips for fourth sprite
+  tay                         ;use whatever's in A for offset
+  lda ExplosionTiles,y        ;get tile number using offset
+  sta FireballMetasprite,x
+  ; prevent rotation of the fireball from bleeding into the explosion
+  lda #0
+  sta Fireball_SprAttrib,x
+
+  ; iny                         ;increment Y (contains sprite data offset)
+  ; jsr DumpFourSpr             ;and dump into tile number part of sprite data
+  ; dey                         ;decrement Y so we have the proper offset again
+  ; ldx ObjectOffset            ;return enemy object buffer offset to X
+  ; lda Fireball_Rel_YPos       ;get relative vertical coordinate
+  ; sec                         ;subtract four pixels vertically
+  ; sbc #$04                    ;for first and third sprites
+  ; sta Sprite_Y_Position,y
+  ; sta Sprite_Y_Position+8,y
+  ; clc                         ;add eight pixels vertically
+  ; adc #$08                    ;for second and fourth sprites
+  ; sta Sprite_Y_Position+4,y
+  ; sta Sprite_Y_Position+12,y
+  ; lda Fireball_Rel_XPos       ;get relative horizontal coordinate
+  ; sec                         ;subtract four pixels horizontally
+  ; sbc #$04                    ;for first and second sprites
+  ; sta Sprite_X_Position,y
+  ; sta Sprite_X_Position+4,y
+  ; clc                         ;add eight pixels horizontally
+  ; adc #$08                    ;for third and fourth sprites
+  ; sta Sprite_X_Position+8,y
+  ; sta Sprite_X_Position+12,y
+  ; lda #$02                    ;set palette attributes for all sprites, but
+  ; sta Sprite_Attributes,y     ;set no flip at all for first sprite
+  ; lda #$82
+  ; sta Sprite_Attributes+4,y   ;set vertical flip for second sprite
+  ; lda #$42
+  ; sta Sprite_Attributes+8,y   ;set horizontal flip for third sprite
+  ; lda #$c2
+  ; sta Sprite_Attributes+12,y  ;set both flips for fourth sprite
   rts                         ;we are done
 
 KillFireBall:
   lda #$00                    ;clear fireball state to kill it
   sta Fireball_State,x
+  sta FireballMetasprite,x
   rts
 
 

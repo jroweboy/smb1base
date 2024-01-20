@@ -223,7 +223,7 @@ ProcJumpCoin:
   beq JCoinRun              ;if so, branch to handle jumping coin
     ; remove the jumping coin metasprite now
     lda #0
-    sta MiscMetaSprite,x
+    sta MiscMetasprite,x
     inc Misc_State,x          ;otherwise increment state to either start off or as timer
     lda Misc_X_Position,x     ;get horizontal coordinate for misc object
     clc                       ;whether its jumping coin (state 0 only) or floatey number

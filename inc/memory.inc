@@ -266,8 +266,11 @@ VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 
 .global Player_SprAttrib
 .global SprObject_SprAttrib
-
 .global Enemy_SprAttrib
+.global Fireball_SprAttrib
+.global Block_SprAttrib
+.global Misc_SprAttrib
+.global Bubble_SprAttrib
 
 .global SprObject_OffscrBits
 .global Player_OffscreenBits
@@ -386,10 +389,10 @@ VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 .global ObjectMetasprite
 .global PlayerMetasprite
 .global EnemyMetasprite
-.global FireballMetaSprite
-.global BlockMetaSprite
-.global MiscMetaSprite
-.global BubbleMetaSprite
+.global FireballMetasprite
+.global BlockMetasprite
+.global MiscMetasprite
+.global BubbleMetasprite
 
 .global EnemyVerticalFlip
 

@@ -345,7 +345,7 @@ BouncingBlockHandler:
            lda #$01
            sta Block_RepFlag,x        ;otherwise set flag to replace metatile
 KillBlock: lda #$00                   ;if branched here, nullify object state
-           sta BlockMetaSprite,x
+           sta BlockMetasprite,x
 UpdSte:    sta Block_State,x          ;store contents of A in block object state
            rts
 

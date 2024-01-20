@@ -231,14 +231,16 @@ MetaspriteDefine "POWERUP", "1UP",        $3c, $3e
 
 FIREBALL_BANK = SPRITE_BANK_0
 FIREBALL_PALETTE = $02
+FIREBALL_Y_OFFSET = -16
 EXPLOSION_BANK = SPRITE_BANK_1
 EXPLOSION_PALETTE = $02
-; These are drawn manually due to firebars. For now.
-; MetaspriteDefine "FIREBALL", "FRAME_1", $3c
-; MetaspriteDefine "FIREBALL", "FRAME_2", $3e
+EXPLOSION_Y_OFFSET = -12  ; Vanilla offsets the explosion by -4. The other -8 is to account for position due to 8x16 sprites?
+MetaspriteDefine "FIREBALL", "FRAME_1", $3c
+MetaspriteDefine "FIREBALL", "FRAME_2", $3e
 MetaspriteDefine "EXPLOSION", "FRAME_1", $26, $26 | SPR_FLIP_H
 MetaspriteDefine "EXPLOSION", "FRAME_2", $28, $28 | SPR_FLIP_H
 MetaspriteDefine "EXPLOSION", "FRAME_3", $2a, $2a | SPR_FLIP_H
+; Firebars will still draw Fireballs manually for now 
 
 COIN_BANK = SPRITE_BANK_1
 COIN_PALETTE = $02

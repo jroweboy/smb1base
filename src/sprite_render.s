@@ -403,7 +403,7 @@ JCoinGfxHandler:
     tax                         ;use as graphical offset
     lda JumpingCoinTiles,x      ;load tile number
     ldx ObjectOffset            ;get misc object offset
-    sta MiscMetaSprite,x
+    sta MiscMetasprite,x
     ; iny                         ;increment OAM data offset to write tile numbers
     ; jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
     ; dey                         ;decrement to get old offset
@@ -1288,7 +1288,7 @@ DrawBlock:
 ;            bne DBlkLoop                  ;and loop back until all four sprites are done
            ldx ObjectOffset              ;get block object offset
            lda #METASPRITE_MISC_BRICK
-           sta BlockMetaSprite,x
+           sta BlockMetasprite,x
           ;  ldy Block_SprDataOffset,x     ;get sprite data offset
           ;  ldy OriginalOAMOffset
            lda AreaType
@@ -1302,7 +1302,7 @@ ChkRep:    lda Block_Metatile,x          ;check replacement metatile
            bne ExDBlk                 ;branch ahead to use current graphics
            
            lda #METASPRITE_MISC_BLOCK
-           sta BlockMetaSprite,x
+           sta BlockMetasprite,x
 ;            lda #BLOCK_USED_TILE          ;set A for used block tile
 ;            iny                           ;increment Y to write to tile bytes
 ;            jsr DumpFourSpr               ;do sub to dump into all four sprites
@@ -1415,14 +1415,38 @@ Exit:
 .endproc
 ;-------------------------------------------------------------------------------------
 
-DrawFireball:
-  AllocSpr 1
-  lda Fireball_Rel_YPos      ;get relative vertical coordinate
-  sec 
-  sbc #4 ; offset to account for the CHR sprite being 4 pixels lower
-  sta Sprite_Y_Position,y    ;store as sprite Y coordinate
-  lda Fireball_Rel_XPos      ;get relative horizontal coordinate
-  sta Sprite_X_Position,y    ;store as sprite X coordinate, then do shared code
+.proc DrawFireball
+
+  lda FrameCounter         ;get frame counter
+  lsr                      ;divide by four
+  lsr
+  pha                      ;save result to stack
+    ;and #$01                 ;mask out all but last bit
+    ; eor #FIREBALL_TILE1                 ;set either tile $64 or $65 as fireball tile
+    ; sta Sprite_Tilenumber,y  ;thus tile changes every four frames
+    lsr
+    lda #METASPRITE_FIREBALL_FRAME_1
+    bcc :+
+      lda #METASPRITE_FIREBALL_FRAME_2
+    :
+    sta FireballMetasprite,x
+  pla                      ;get from stack
+  lsr                      ;divide by four again
+  lsr
+  lda #$02                 ;load value $02 to set palette in attrib byte
+  bcc FireA                ;if last bit shifted out was not set, skip this
+  ora #%11000000           ;otherwise flip both ways every eight frames
+FireA:
+  sta Fireball_SprAttrib,x  ;store attribute byte and leave
+  rts
+.endproc
+  ; AllocSpr 1
+  ; lda Fireball_Rel_YPos      ;get relative vertical coordinate
+  ; sec 
+  ; sbc #4 ; offset to account for the CHR sprite being 4 pixels lower
+  ; sta Sprite_Y_Position,y    ;store as sprite Y coordinate
+  ; lda Fireball_Rel_XPos      ;get relative horizontal coordinate
+  ; sta Sprite_X_Position,y    ;store as sprite X coordinate, then do shared code
 
 DrawSingleFireball:
   lda FrameCounter         ;get frame counter

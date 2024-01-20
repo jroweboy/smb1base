@@ -291,9 +291,13 @@ Misc_Rel_YPos:                  .res  5
 
 Player_SprAttrib              = SprObject_SprAttrib
 SprObject_SprAttrib:            .res  1
-
-Enemy_SprAttrib:                .res  11
-Misc_SprAttrib:                 .res  13
+Enemy_SprAttrib:               .res  6
+Fireball_SprAttrib:            .res  2
+Block_SprAttrib:               .res  4
+Misc_SprAttrib:                .res  9
+Bubble_SprAttrib:              .res  3
+; Enemy_SprAttrib:                .res  11
+; Misc_SprAttrib:                 .res  13
 
 Player_OffscreenBits          = SprObject_OffscrBits
 SprObject_OffscrBits:           .res  1
@@ -409,10 +413,10 @@ SpriteShuffleTemp:              .res  1
 ObjectMetasprite:               .res  1
 PlayerMetasprite     = ObjectMetasprite
 EnemyMetasprite:                .res  6
-FireballMetaSprite:             .res  2
-BlockMetaSprite:                .res  4
-MiscMetaSprite:                 .res  9
-BubbleMetaSprite:               .res  3
+FireballMetasprite:             .res  2
+BlockMetasprite:                .res  4
+MiscMetasprite:                 .res  9
+BubbleMetasprite:               .res  3
 
 ; ObjectVerticalFlip:               .res  1
 ; PlayerVerticalFlip     = ObjectMetasprite

@@ -145,9 +145,12 @@ NotVFlippedEnemy:
   bpl RenderLoop
 
 ; Offscreen sprites end up here
-Skip3: ; X Offscreen
+
+Skip4:   ; X Offscreen
     dey
-Skip2: ; Y Offscreen
+Skip3:   ; Y Offscreen
+    dey
+Skip2:
     dey
     ; Move this sprite offscreen
     lda #$f8
@@ -160,25 +163,45 @@ Skip2: ; Y Offscreen
     beq LoopEnded
 RenderLoop:
     ; load the x position and make sure its on screen
-    lda (Ptr),y
-    dey
     clc
+    lda (Ptr),y
+    bpl PositiveX
+      adc Xlo
+      sta Sprite_X_Position,x
+      lda Xhi
+      adc #$ff
+      beq ContinueAfterX
+      bne Skip4
+  PositiveX:
     adc Xlo
     sta Sprite_X_Position,x
     lda Xhi
     adc #0
-    bne Skip3
+    bne Skip4
+  ContinueAfterX:
+    dey
 
     ; load the y position and also make sure its on screen
-    lda (Ptr),y
-    dey
     clc
+    lda (Ptr),y
+    bpl PositiveY
+      ; NegativeY
+      adc Ylo
+      sta Sprite_Y_Position,x
+      lda Yhi
+      adc #$ff
+      cmp #1      ; page 1 is the "main" y position
+      beq ContinueAfterY
+      bne Skip3
+  PositiveY:
     adc Ylo
     sta Sprite_Y_Position,x
     lda Yhi
     adc #0
     cmp #1      ; page 1 is the "main" y position
-    bne Skip2
+    bne Skip3
+  ContinueAfterY:
+    dey
 
     ; Mix attributes but if the NO_PALETTE bit is set, prevent
     ; the palette from changing.
