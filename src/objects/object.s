@@ -13,16 +13,16 @@
 .export EnemiesAndLoopsCore
 
 ; gamecore.s
-.export MiscObjectsCore, ProcessSingleEnemy
+.export MiscObjectsCore
 
 .segment "OBJECT"
 
 ;-------------------------------------------------------------------------------------
-.proc ProcessSingleEnemy
-  stx ObjectOffset
-  jsr EnemiesAndLoopsCore
-  jmp FloateyNumbersRoutine
-.endproc
+; .proc ProcessSingleEnemy
+;   stx ObjectOffset
+;   jsr EnemiesAndLoopsCore
+;   jmp FloateyNumbersRoutine
+; .endproc
 
 .proc EnemiesAndLoopsCore
   lda Enemy_Flag,x         ;check data here for MSB set

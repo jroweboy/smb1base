@@ -352,39 +352,13 @@ InversePowerOfTwo:
 
 ;-------------------------------------------------------------------------------------
 
-DrawFloateyNumber_Coin:
-  AllocSpr 2
-  lda FrameCounter          ;get frame counter
-  lsr                       ;divide by 2
-  bcs @NotRsNum             ;branch if d0 not set to raise number every other frame
-    dec Misc_Y_Position,x     ;otherwise, decrement vertical coordinate
-@NotRsNum:
-  lda Misc_Y_Position,x     ;get vertical coordinate
-  jsr DumpTwoSpr            ;dump into both sprites
-  lda Misc_X_Position,x         ;get relative horizontal coordinate
-  sec
-  sbc ScreenLeft_X_Pos
-  sta Sprite_X_Position,y   ;store as X coordinate for first sprite
-  clc
-  adc #$08                  ;add eight pixels
-  sta Sprite_X_Position+4,y ;store as X coordinate for second sprite
-  lda #$02
-  sta Sprite_Attributes,y   ;store attribute byte in both sprites
-  sta Sprite_Attributes+4,y
-  lda #FLOATEY_NUM_20
-  sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
-  lda #FLOATEY_NUM_0                  ;that resemble "200"
-  sta Sprite_Tilenumber+4,y
-  rts
-  ; jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
-
 JumpingCoinTiles:
   .byte METASPRITE_COIN_FRAME_1, METASPRITE_COIN_FRAME_2
   .byte METASPRITE_COIN_FRAME_3, METASPRITE_COIN_FRAME_4
 ;   .byte JUMPING_COIN_TILE_1, JUMPING_COIN_TILE_2
 ;   .byte JUMPING_COIN_TILE_3, JUMPING_COIN_TILE_4
 
-JCoinGfxHandler:
+.proc JCoinGfxHandler
   ;  ldy Misc_SprDataOffset,x    ;get coin/floatey number's OAM data offset
   lda Misc_State,x            ;get state of misc object
   cmp #$02                    ;if 2 or greater, 
@@ -400,9 +374,8 @@ JCoinGfxHandler:
     lda FrameCounter            ;get frame counter
     lsr                         ;divide by 2 to alter every other frame
     and #%00000011              ;mask out d2-d1
-    tax                         ;use as graphical offset
-    lda JumpingCoinTiles,x      ;load tile number
-    ldx ObjectOffset            ;get misc object offset
+    tay                         ;use as graphical offset
+    lda JumpingCoinTiles,y      ;load tile number
     sta MiscMetasprite,x
     ; iny                         ;increment OAM data offset to write tile numbers
     ; jsr DumpTwoSpr              ;do sub to dump tile number into both sprites
@@ -414,6 +387,36 @@ JCoinGfxHandler:
     ; ldx ObjectOffset            ;get misc object offset
 ExJCGfx: rts                         ;leave
 
+DrawFloateyNumber_Coin:
+  ; AllocSpr 2
+  lda FrameCounter          ;get frame counter
+  lsr                       ;divide by 2
+  bcs @NotRsNum             ;branch if d0 not set to raise number every other frame
+    dec Misc_Y_Position,x     ;otherwise, decrement vertical coordinate
+@NotRsNum:
+  lda #METASPRITE_NUMBER_200
+  sta MiscMetasprite,x
+  ; lda Misc_Y_Position,x     ;get vertical coordinate
+  ; jsr DumpTwoSpr            ;dump into both sprites
+  ; lda Misc_X_Position,x         ;get relative horizontal coordinate
+  ; sec
+  ; sbc ScreenLeft_X_Pos
+  ; sta Sprite_X_Position,y   ;store as X coordinate for first sprite
+  ; clc
+  ; adc #$08                  ;add eight pixels
+  ; sta Sprite_X_Position+4,y ;store as X coordinate for second sprite
+  ; lda #$02
+  ; sta Sprite_Attributes,y   ;store attribute byte in both sprites
+  ; sta Sprite_Attributes+4,y
+  ; lda #FLOATEY_NUM_20
+  ; sta Sprite_Tilenumber,y   ;put tile numbers into both sprites
+  ; lda #FLOATEY_NUM_0                  ;that resemble "200"
+  ; sta Sprite_Tilenumber+4,y
+  rts
+  ; jmp ExJCGfx               ;then jump to leave (why not an rts here instead?)
+
+
+.endproc
 ;-------------------------------------------------------------------------------------
 ;$00-$01 - used to hold tiles for drawing the power-up, $00 also used to hold power-up type
 ;$02 - used to hold bottom row Y position
@@ -1704,56 +1707,70 @@ ScoreUpdateData:
 ;$04 - attribute byte for floatey number
 ;$05 - used as X coordinate for floatey number
 
+FlagpoleScoreNumTiles:
+  ; .byte FLOATEY_NUM_50, FLOATEY_NUM_00
+  ; .byte FLOATEY_NUM_20, FLOATEY_NUM_00
+  ; .byte FLOATEY_NUM_80, FLOATEY_NUM_0
+  ; .byte FLOATEY_NUM_40, FLOATEY_NUM_0
+  ; .byte FLOATEY_NUM_10, FLOATEY_NUM_0
+  ; .byte METASPRITE_
 
 FlagpoleGfxHandler:
-    AllocSpr 6
-    sty OriginalOAMOffset
-      lda Enemy_Rel_XPos             ;get relative horizontal coordinate
-      sta Sprite_X_Position,y        ;store as X coordinate for first sprite
-      clc
-      adc #$08                       ;add eight pixels and store
-      sta Sprite_X_Position+4,y      ;as X coordinate for second and third sprites
-      sta Sprite_X_Position+8,y
-      clc
-      adc #$0c                       ;add twelve more pixels and
-      sta R5                         ;store here to be used later by floatey number
-      lda Enemy_Y_Position,x         ;get vertical coordinate
-      jsr DumpTwoSpr                 ;and do sub to dump into first and second sprites
-      adc #$08                       ;add eight pixels
-      sta Sprite_Y_Position+8,y      ;and store into third sprite
-      lda FlagpoleFNum_Y_Pos         ;get vertical coordinate for floatey number
-      sta R2                         ;store it here
-      lda #$01
-      sta R3                         ;set value for flip which will not be used, and
-      sta R4                         ;attribute byte for floatey number
-      sta Sprite_Attributes,y        ;set attribute bytes for all three sprites
-      sta Sprite_Attributes+4,y
-      sta Sprite_Attributes+8,y
-      lda #GOAL_FLAG_TRIANGLE
-      sta Sprite_Tilenumber,y        ;put triangle shaped tile
-      sta Sprite_Tilenumber+8,y      ;into first and third sprites
-      lda #GOAL_FLAG_SKULL
-      sta Sprite_Tilenumber+4,y      ;put skull tile into second sprite
-      lda FlagpoleCollisionYPos      ;get vertical coordinate at time of collision
-      beq ChkFlagOffscreen           ;if zero, branch ahead
-      tya
-      clc                            ;add 12 bytes to sprite data offset
-      adc #$0c
-      tay                            ;put back in Y
-      lda FlagpoleScore              ;get offset used to award points for touching flagpole
-      asl                            ;multiply by 2 to get proper offset here
-      tax
-      lda FlagpoleScoreNumTiles,x    ;get appropriate tile data
-      sta R0 
-      lda FlagpoleScoreNumTiles+1,x
-      jsr DrawOneSpriteRow           ;use it to render floatey number
+  ldx #5
+  lda #METASPRITE_MISC_FLAGPOLE_FLAG
+  sta EnemyMetasprite,x
+  ; ldx #0
+  ldy FlagpoleScore
+  lda FlagpoleScoreNumTiles,y
+  
+;     AllocSpr 6
+;     sty OriginalOAMOffset
+;       lda Enemy_Rel_XPos             ;get relative horizontal coordinate
+;       sta Sprite_X_Position,y        ;store as X coordinate for first sprite
+;       clc
+;       adc #$08                       ;add eight pixels and store
+;       sta Sprite_X_Position+4,y      ;as X coordinate for second and third sprites
+;       sta Sprite_X_Position+8,y
+;       clc
+;       adc #$0c                       ;add twelve more pixels and
+;       sta R5                         ;store here to be used later by floatey number
+;       lda Enemy_Y_Position,x         ;get vertical coordinate
+;       jsr DumpTwoSpr                 ;and do sub to dump into first and second sprites
+;       adc #$08                       ;add eight pixels
+;       sta Sprite_Y_Position+8,y      ;and store into third sprite
+;       lda FlagpoleFNum_Y_Pos         ;get vertical coordinate for floatey number
+;       sta R2                         ;store it here
+;       lda #$01
+;       sta R3                         ;set value for flip which will not be used, and
+;       sta R4                         ;attribute byte for floatey number
+;       sta Sprite_Attributes,y        ;set attribute bytes for all three sprites
+;       sta Sprite_Attributes+4,y
+;       sta Sprite_Attributes+8,y
+;       lda #GOAL_FLAG_TRIANGLE
+;       sta Sprite_Tilenumber,y        ;put triangle shaped tile
+;       sta Sprite_Tilenumber+8,y      ;into first and third sprites
+;       lda #GOAL_FLAG_SKULL
+;       sta Sprite_Tilenumber+4,y      ;put skull tile into second sprite
+;       lda FlagpoleCollisionYPos      ;get vertical coordinate at time of collision
+;       beq ChkFlagOffscreen           ;if zero, branch ahead
+;       tya
+;       clc                            ;add 12 bytes to sprite data offset
+;       adc #$0c
+;       tay                            ;put back in Y
+;       lda FlagpoleScore              ;get offset used to award points for touching flagpole
+;       asl                            ;multiply by 2 to get proper offset here
+;       tax
+;       lda FlagpoleScoreNumTiles,x    ;get appropriate tile data
+;       sta R0 
+;       lda FlagpoleScoreNumTiles+1,x
+;       jsr DrawOneSpriteRow           ;use it to render floatey number
 
-ChkFlagOffscreen:
-      ldx ObjectOffset               ;get object offset for flag
-      ldy OriginalOAMOffset
-      lda Enemy_OffscreenBits        ;get offscreen bits
-      and #%00001110                 ;mask out all but d3-d1
-      beq ExitDumpSpr                ;if none of these bits set, branch to leave
+; ChkFlagOffscreen:
+;       ldx ObjectOffset               ;get object offset for flag
+;       ldy OriginalOAMOffset
+;       lda Enemy_OffscreenBits        ;get offscreen bits
+;       and #%00001110                 ;mask out all but d3-d1
+;       beq ExitDumpSpr                ;if none of these bits set, branch to leave
 
 ;-------------------------------------------------------------------------------------
 
@@ -1777,11 +1794,3 @@ DumpTwoSpr:
 
 ExitDumpSpr:
   rts
-
-FlagpoleScoreNumTiles:
-  .byte FLOATEY_NUM_50, FLOATEY_NUM_00
-  .byte FLOATEY_NUM_20, FLOATEY_NUM_00
-  .byte FLOATEY_NUM_80, FLOATEY_NUM_0
-  .byte FLOATEY_NUM_40, FLOATEY_NUM_0
-  .byte FLOATEY_NUM_10, FLOATEY_NUM_0
-

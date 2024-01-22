@@ -524,8 +524,8 @@ GiveFPScr: ldy FlagpoleScore         ;get score offset from earlier (when player
            jsr AddToScore            ;do sub to award player points depending on height of collision
            lda #$05
            sta GameEngineSubroutine  ;set to run end-of-level subroutine on next frame
-FPGfx:     jsr GetEnemyOffscreenBits ;get offscreen information
-           jsr RelativeEnemyPosition ;get relative coordinates
+FPGfx:     ;jsr GetEnemyOffscreenBits ;get offscreen information
+           ;jsr RelativeEnemyPosition ;get relative coordinates
            jmp FlagpoleGfxHandler    ;draw flagpole flag and floatey number
 ExitFlagP: rts ; TODO check this RTS can be removed
 

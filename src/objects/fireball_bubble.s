@@ -243,7 +243,7 @@ ExDBub:
 
 
 ;-------------------------------------------------------------------------------------
-
+.export ExplosionTiles
 ExplosionTiles:
   .byte METASPRITE_EXPLOSION_FRAME_1
   .byte METASPRITE_EXPLOSION_FRAME_2
@@ -258,15 +258,12 @@ DrawExplosion_Fireball:
   cmp #$03                 ;check to see if time to kill fireball
   bcs KillFireBall         ;branch if so, otherwise continue to draw explosion
   ;fallthrough
-DrawExplosion_Fireworks:
-.export DrawExplosion_Fireworks
   tay                         ;use whatever's in A for offset
   lda ExplosionTiles,y        ;get tile number using offset
   sta FireballMetasprite,x
   ; prevent rotation of the fireball from bleeding into the explosion
   lda #0
   sta Fireball_SprAttrib,x
-
   ; iny                         ;increment Y (contains sprite data offset)
   ; jsr DumpFourSpr             ;and dump into tile number part of sprite data
   ; dey                         ;decrement Y so we have the proper offset again

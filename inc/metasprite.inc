@@ -251,15 +251,35 @@ MetaspriteDefine "COIN", "FRAME_4", $32
 
 MISC_BANK = SPRITE_BANK_1
 MISC_PALETTE = $03
-MISC_BUBBLE_PALETTE = $02
 MISC_Y_OFFSET = -8
 MetaspriteDefine "MISC", "BRICK", $22, $22
 MetaspriteDefine "MISC", "BLOCK", $24, $24 | SPR_FLIP_H
-; drawn manually
+; drawn manually for now until i figure out if i have frames for the brick
+; break animation with just metasprites
 ; MetaspriteDefine "MISC", "CHUNK", $16
+MISC_BUBBLE_PALETTE = $02
 MetaspriteDefine "MISC", "BUBBLE", $18
 MetaspriteDefine "MISC", "SMALL_OVERLAY", $1e, $1e
 MetaspriteDefine "MISC", "LARGE_OVERLAY", $1e, $1e, $1e, $1e
+MISC_STAR_FLAG_PALETTE = $02
+MetaspriteDefine "MISC", "STAR_FLAG", $3c, $3e
+MetaspriteDefine "MISC", "FLAGPOLE_FLAG", $1c, $1e
+
+NUMBER_BANK = SPRITE_BANK_1
+NUMBER_PALETTE = $02
+NUMBER_Y_OFFSET = -8
+MetaspriteDefine "NUMBER", "100", $06, $10
+MetaspriteDefine "NUMBER", "200", $08, $10
+MetaspriteDefine "NUMBER", "400", $0a, $10
+MetaspriteDefine "NUMBER", "500", $0c, $10
+MetaspriteDefine "NUMBER", "800", $0e, $10
+MetaspriteDefine "NUMBER", "1000", $06, $04
+MetaspriteDefine "NUMBER", "2000", $08, $04
+MetaspriteDefine "NUMBER", "4000", $0a, $04
+MetaspriteDefine "NUMBER", "5000", $0c, $04
+MetaspriteDefine "NUMBER", "8000", $0e, $04
+MetaspriteDefine "NUMBER", "1UP", $12, $14
+
 
 GOOMBA_BANK = SPRITE_BANK_2
 GOOMBA_PALETTE = $03

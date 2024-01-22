@@ -245,8 +245,8 @@ InitBuffer:
     lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
     lsr
     bcs SkipSprite0
-      lda OperMode
-      beq SkipSprite0
+      ; lda OperMode
+      ; beq SkipSprite0
         jsr MoveAllSpritesOffscreen
 SkipSprite0:
   lda Mirror_PPUCTRL

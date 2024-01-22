@@ -518,14 +518,15 @@ SFcRt: sty Enemy_MovingDir,x  ;set moving direction here
        rts
 
 SetupFloateyNumber:
-       sta FloateyNum_Control,x ;set number of points control for floatey numbers
-       lda #$30
-       sta FloateyNum_Timer,x   ;set timer for floatey numbers
-       lda Enemy_Y_Position,x
-       sta FloateyNum_Y_Pos,x   ;set vertical coordinate
-       lda Enemy_Rel_XPos
-       sta FloateyNum_X_Pos,x   ;set horizontal coordinate and leave
-ExSFN: rts
+  sta FloateyNum_Control,x ;set number of points control for floatey numbers
+  lda #$30
+  sta FloateyNum_Timer,x   ;set timer for floatey numbers
+  lda Enemy_Y_Position,x
+  sta FloateyNum_Y_Pos,x   ;set vertical coordinate
+  lda Enemy_Rel_XPos
+  sta FloateyNum_X_Pos,x   ;set horizontal coordinate and leave
+ExSFN:
+  rts
 
 
 ;-------------------------------------------------------------------------------------

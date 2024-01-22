@@ -1,6 +1,7 @@
 
 .include "common.inc"
 .include "object.inc"
+.include "metasprite.inc"
 
 ; sprite_render.s
 .import DrawExplosion_Fireworks, DigitsMathRoutine, UpdateNumber
@@ -9,6 +10,7 @@
 
 ;--------------------------------
 
+.import ExplosionTiles
 RunFireworks:
   dec ExplosionTimerCounter,x ;decrement explosion timing counter here
   bne SetupExpl               ;if not expired, skip this part
@@ -19,18 +21,25 @@ RunFireworks:
     cmp #$03                    ;check explosion graphics counter
     bcs FireworksSoundScore     ;if at a certain point, branch to kill this object
 SetupExpl:
-  jsr RelativeEnemyPosition   ;get relative coordinates of explosion
-  lda Enemy_Rel_YPos          ;copy relative coordinates
-  sta Fireball_Rel_YPos       ;from the enemy object to the fireball object
-  lda Enemy_Rel_XPos          ;first vertical, then horizontal
-  sta Fireball_Rel_XPos
+  ; jsr RelativeEnemyPosition   ;get relative coordinates of explosion
+  ; lda Enemy_Rel_YPos          ;copy relative coordinates
+  ; sta Fireball_Rel_YPos       ;from the enemy object to the fireball object
+  ; lda Enemy_Rel_XPos          ;first vertical, then horizontal
+  ; sta Fireball_Rel_XPos
 ;      ldy Enemy_SprDataOffset,x   ;get OAM data offset
-  AllocSpr 4
-  lda ExplosionGfxCounter,x   ;get explosion graphics counter
-  jmp DrawExplosion_Fireworks ;do a sub to draw the explosion then leave
+  ; AllocSpr 4
+  ldy ExplosionGfxCounter,x   ;get explosion graphics counter
+  lda ExplosionTiles,y        ;get tile number using offset
+  sta EnemyMetasprite,x
+  ; prevent rotation of the fireball from bleeding into the explosion
+  lda #0
+  sta Enemy_SprAttrib,x
+  rts
+  ; jmp DrawExplosion_Fireworks ;do a sub to draw the explosion then leave
 FireworksSoundScore:
   lda #$00               ;disable enemy buffer flag
   sta Enemy_Flag,x
+  sta EnemyMetasprite,x
   lda #Sfx_Blast         ;play fireworks/gunfire sound
   sta Square2SoundQueue
   lda #$05               ;set part of score modifier for 500 points
@@ -126,30 +135,32 @@ SetoffF: lda FireworksCounter    ;check fireworks counter
          sta EnemyFrenzyBuffer   ;otherwise set fireworks object in frenzy queue
 
 DrawStarFlag:
-  jsr RelativeEnemyPosition  ;get relative coordinates of star flag
-  ReserveSpr 4
-  ldx #$03                   ;do four sprites
-DSFLoop:
-    lda Enemy_Rel_YPos         ;get relative vertical coordinate
-    clc
-    adc StarFlagYPosAdder,x    ;add Y coordinate adder data
-    sta Sprite_Y_Position,y    ;store as Y coordinate
-    lda StarFlagTileData,x     ;get tile number
-    sta Sprite_Tilenumber,y    ;store as tile number
-    lda #$22                   ;set palette and background priority bits
-    sta Sprite_Attributes,y    ;store as attributes
-    lda Enemy_Rel_XPos         ;get relative horizontal coordinate
-    clc
-    adc StarFlagXPosAdder,x    ;add X coordinate adder data
-    sta Sprite_X_Position,y    ;store as X coordinate
-    iny
-    iny                        ;increment OAM data offset four bytes
-    iny                        ;for next sprite
-    iny
-    dex                        ;move onto next sprite
-    bpl DSFLoop                ;do this until all sprites are done
-  UpdateOAMPosition
-  ldx ObjectOffset           ;get enemy object offset and leave
+;   jsr RelativeEnemyPosition  ;get relative coordinates of star flag
+;   ReserveSpr 4
+;   ldx #$03                   ;do four sprites
+; DSFLoop:
+;     lda Enemy_Rel_YPos         ;get relative vertical coordinate
+;     clc
+;     adc StarFlagYPosAdder,x    ;add Y coordinate adder data
+;     sta Sprite_Y_Position,y    ;store as Y coordinate
+;     lda StarFlagTileData,x     ;get tile number
+;     sta Sprite_Tilenumber,y    ;store as tile number
+;     lda #$22                   ;set palette and background priority bits
+;     sta Sprite_Attributes,y    ;store as attributes
+;     lda Enemy_Rel_XPos         ;get relative horizontal coordinate
+;     clc
+;     adc StarFlagXPosAdder,x    ;add X coordinate adder data
+;     sta Sprite_X_Position,y    ;store as X coordinate
+;     iny
+;     iny                        ;increment OAM data offset four bytes
+;     iny                        ;for next sprite
+;     iny
+;     dex                        ;move onto next sprite
+;     bpl DSFLoop                ;do this until all sprites are done
+;   UpdateOAMPosition
+;   ldx ObjectOffset           ;get enemy object offset and leave
+  lda #METASPRITE_MISC_STAR_FLAG
+  sta EnemyMetasprite,x
   rts
 
 DrawFlagSetTimer:
