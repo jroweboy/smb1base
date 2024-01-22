@@ -962,7 +962,7 @@ MusicHeaderData:
 
 TimeRunningOutHdr:    .byte $08, <TimeRunOutMusData, >TimeRunOutMusData, $27, $18
 Star_CloudHdr:        .byte $20, <Star_CloudMData, >Star_CloudMData, $2e, $1a, $40
-EndOfLevelMusHdr:     .byte $20, <WinLevelMusData, >WinLevelMusData, $3d, $21
+EndOfLevelMusHdr:     .byte $20, <WinLevelMusData, >WinLevelMusData, $3c, $21
 UndergroundMusHdr:    .byte $18, <UndergroundMusData, >UndergroundMusData, $00, $00
 SilenceHdr:           .byte $08, <SilenceData, >SilenceData, $00
 CastleMusHdr:         .byte $00, <CastleMusData, >CastleMusData, $93, $62
