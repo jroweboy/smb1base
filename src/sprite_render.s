@@ -1136,20 +1136,24 @@ Noop:
 
 .proc ProcessPiranhaPlant
   ldx ObjectOffset
-  lda PiranhaPlant_Y_Speed,x
-  bmi DrawPiranha     ;if piranha plant moving upwards, branch
-  lda EnemyFrameTimer,x
-  beq DrawPiranha     ;if timer for movement expired, branch
-  rts
+  lda #%00100000              ;set background priority bit in sprite
+  sta Enemy_SprAttrib,x       ;attributes to give illusion of being inside pipe
+  lda TimerControl
+  bne Exit                    ; Just use the previous metasprite and leave if we aren't moving
+    lda PiranhaPlant_Y_Speed,x
+    bmi DrawPiranha     ;if piranha plant moving upwards, branch
+      lda EnemyFrameTimer,x
+      bne Exit     ;if timer for movement expired, branch
 DrawPiranha:
   ldy #METASPRITE_PIRANHA_MOUTH_OPEN
-  lda FrameCounter
-  and #%00001000        ;check for every eighth frame
-  bne Exit
-    ldy #METASPRITE_PIRANHA_MOUTH_CLOSED
-Exit:
+    lda FrameCounter
+    and #%00001000        ;check for every eighth frame
+    bne DrawSprite
+      ldy #METASPRITE_PIRANHA_MOUTH_CLOSED
+DrawSprite:
   tya
   sta EnemyMetasprite,x
+Exit:
   rts
 .endproc
 

@@ -25,9 +25,9 @@ InitPiranhaPlant:
 
 MovePiranhaPlant:
       lda Enemy_State,x           ;check enemy state
-      bne PutinPipe               ;if set at all, branch to leave
+      bne Exit               ;if set at all, branch to leave
       lda EnemyFrameTimer,x       ;check enemy's timer here
-      bne PutinPipe               ;branch to end if not yet expired
+      bne Exit               ;branch to end if not yet expired
       lda PiranhaPlant_MoveFlag,x ;check movement flag
       bne SetupToMovePPlant       ;if moving, skip to part ahead
       lda PiranhaPlant_Y_Speed,x  ;if currently rising, branch 
@@ -43,7 +43,7 @@ MovePiranhaPlant:
 ChkPlayerNearPipe:
       lda R0                      ;get saved horizontal difference
       cmp #$21
-      bcc PutinPipe               ;if player within a certain distance, branch to leave
+      bcc Exit               ;if player within a certain distance, branch to leave
 
 ReversePlantSpeed:
       lda PiranhaPlant_Y_Speed,x  ;get vertical speed
@@ -63,21 +63,19 @@ RiseFallPiranhaPlant:
       sta R0                      ;save vertical coordinate here
       lda FrameCounter            ;get frame counter
       lsr
-      bcc PutinPipe               ;branch to leave if d0 set (execute code every other frame)
+      bcc Exit               ;branch to leave if d0 set (execute code every other frame)
       lda TimerControl            ;get master timer control
-      bne PutinPipe               ;branch to leave if set (likely not necessary)
+      bne Exit               ;branch to leave if set (likely not necessary)
       lda Enemy_Y_Position,x      ;get current vertical coordinate
       clc
       adc PiranhaPlant_Y_Speed,x  ;add vertical speed to move up or down
       sta Enemy_Y_Position,x      ;save as new vertical coordinate
       cmp R0                      ;compare against low or high coordinate
-      bne PutinPipe               ;branch to leave if not yet reached
+      bne Exit               ;branch to leave if not yet reached
       lda #$00
       sta PiranhaPlant_MoveFlag,x ;otherwise clear movement flag
       lda #$40
       sta EnemyFrameTimer,x       ;set timer to delay piranha plant movement
 
-PutinPipe:
-      lda #%00100000              ;set background priority bit in sprite
-      sta Enemy_SprAttrib,x       ;attributes to give illusion of being inside pipe
+Exit:
       rts                         ;then leave
