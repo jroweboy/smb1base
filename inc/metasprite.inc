@@ -261,8 +261,10 @@ MISC_BUBBLE_PALETTE = $02
 MetaspriteDefine "MISC", "BUBBLE", $18
 MetaspriteDefine "MISC", "SMALL_OVERLAY", $1e, $1e
 MetaspriteDefine "MISC", "LARGE_OVERLAY", $1e, $1e, $1e, $1e
+MISC_STAR_FLAG_BANK = SPRITE_BANK_2
 MISC_STAR_FLAG_PALETTE = $02
 MetaspriteDefine "MISC", "STAR_FLAG", $3c, $3e
+MISC_FLAGPOLE_FLAG_BANK = SPRITE_BANK_2
 MetaspriteDefine "MISC", "FLAGPOLE_FLAG", $1c, $1e
 
 NUMBER_BANK = SPRITE_BANK_1

@@ -1722,6 +1722,8 @@ FlagpoleGfxHandler:
   ; ldx #0
   ldy FlagpoleScore
   lda FlagpoleScoreNumTiles,y
+  ; sta R0
+  ; jsr DrawOneSpriteRow
   
 ;     AllocSpr 6
 ;     sty OriginalOAMOffset

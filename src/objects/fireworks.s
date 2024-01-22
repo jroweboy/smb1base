@@ -161,6 +161,10 @@ DrawStarFlag:
 ;   ldx ObjectOffset           ;get enemy object offset and leave
   lda #METASPRITE_MISC_STAR_FLAG
   sta EnemyMetasprite,x
+  lda #OAM_BACKGROUND_PRIORTY
+  sta Enemy_SprAttrib,x
+  lda #1
+  sta Enemy_MovingDir,x
   rts
 
 DrawFlagSetTimer:

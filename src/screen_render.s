@@ -668,59 +668,60 @@ GameTextOffsets:
 
 .export SetupPipeTransitionOverlay
 .proc SetupPipeTransitionOverlay
-  sta InPipeTransition
-  beq ClearTransition
-  cmp #1
-  beq IsDownPipe
-  cmp #2
-  beq IsRightPipe
-  ; fallthrough
-RisingEntrance:
-  lda #$90 + 32
-  sta PipeYPosition
-  jmp IsDownPipe
-ClearTransition:
-  ; reset the color for the palette back to the original
-  lda #$27
-  jmp SetPaletteColor
-  ; rts
-IsRightPipe:
-  lda Player_X_Position   ;get player's horizontal coordinate
-  clc
-  adc #$08 + 16                ;add eight pixels
-  and #$f0                ;mask out low nybble to give 16-pixel correspondence
-  sta PipeXPosition
-  lda Player_Y_Position
-  sta PipeYPosition
-  jmp ChangeColorToBackground
-IsDownPipe:
-  lda RelativePlayerPosition
-  sta PipeXPosition
-  ; fallthrough
-ChangeColorToBackground:
-  ldy BackgroundColorCtrl
-  bne :+
-    ldy AreaType
-:
-  lda BackgroundColors,y   ;to background color instead
-  ; jmp SetPaletteColor
-  ; fallthrough
-SetPaletteColor:
-  ldx VRAM_Buffer1_Offset
-  sta VRAM_Buffer1+3,x
-  lda #$3f
-  sta VRAM_Buffer1+0,x
-  lda #$1b
-  sta VRAM_Buffer1+1,x
-  lda #1
-  sta VRAM_Buffer1+2,x
-  lda #0
-  sta VRAM_Buffer1+4,x
-  lda VRAM_Buffer1_Offset
-  clc 
-  adc #4
-  sta VRAM_Buffer1_Offset
-  rts
+rts
+;   sta InPipeTransition
+;   beq ClearTransition
+;   cmp #1
+;   beq IsDownPipe
+;   cmp #2
+;   beq IsRightPipe
+;   ; fallthrough
+; RisingEntrance:
+;   lda #$90 + 32
+;   sta PipeYPosition
+;   jmp IsDownPipe
+; ClearTransition:
+;   ; reset the color for the palette back to the original
+;   lda #$27
+;   jmp SetPaletteColor
+;   ; rts
+; IsRightPipe:
+;   lda Player_X_Position   ;get player's horizontal coordinate
+;   clc
+;   adc #$08 + 16                ;add eight pixels
+;   and #$f0                ;mask out low nybble to give 16-pixel correspondence
+;   sta PipeXPosition
+;   lda Player_Y_Position
+;   sta PipeYPosition
+;   jmp ChangeColorToBackground
+; IsDownPipe:
+;   lda RelativePlayerPosition
+;   sta PipeXPosition
+;   ; fallthrough
+; ChangeColorToBackground:
+;   ldy BackgroundColorCtrl
+;   bne :+
+;     ldy AreaType
+; :
+;   lda BackgroundColors,y   ;to background color instead
+;   ; jmp SetPaletteColor
+;   ; fallthrough
+; SetPaletteColor:
+;   ldx VRAM_Buffer1_Offset
+;   sta VRAM_Buffer1+3,x
+;   lda #$3f
+;   sta VRAM_Buffer1+0,x
+;   lda #$1b
+;   sta VRAM_Buffer1+1,x
+;   lda #1
+;   sta VRAM_Buffer1+2,x
+;   lda #0
+;   sta VRAM_Buffer1+4,x
+;   lda VRAM_Buffer1_Offset
+;   clc 
+;   adc #4
+;   sta VRAM_Buffer1_Offset
+;   rts
 .endproc
 
 .proc HandlePipeEntry
