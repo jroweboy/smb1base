@@ -17,6 +17,9 @@
 
 .export OperModeExecutionTree
 
+; reset.s
+.export PlayerEndWorld
+
 .segment "CODE"
 
 ;-------------------------------------------------------------------------------------

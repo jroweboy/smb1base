@@ -2,7 +2,7 @@
 .include "common.inc"
 
 
-
+.import PlayerEndWorld, PrcNextA
 .import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
 .import OperModeExecutionTree, UpdateTopScore
 .import InitScroll, UpdateScreen, SoundEngine
@@ -255,6 +255,25 @@ SkipSprite0:
 
   farcall SoundEngine           ;play sound
   
+.ifdef WORLD_HAX
+	dec DebugCooldown
+	bpl :++
+	inc DebugCooldown
+	lda SavedJoypadBits
+	and #Select_Button
+	beq :++
+  lda #10
+	sta DebugCooldown
+  lda SavedJoypadBits
+	and #B_Button
+  beq :+
+  farcall PrcNextA
+  jmp :++
+  :
+	jsr PlayerEndWorld
+	:
+.endif
+
   jsr PauseRoutine          ;handle pause
   jsr UpdateTopScore
   lda GamePauseStatus       ;check for pause status

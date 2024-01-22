@@ -637,3 +637,6 @@ ContinueWorld:                  .res  1
     ; _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
     
 WarmBootValidation:             .res  1
+.ifdef WORLD_HAX
+DebugCooldown:                  .res  1
+.endif

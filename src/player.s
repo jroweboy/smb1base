@@ -33,6 +33,9 @@
 ; gamecore.s
 .export ResetPalStar
 
+; reset.s
+.export PrcNextA
+
 .segment "PLAYER"
 
 ;-------------------------------------------------------------------------------------
@@ -936,6 +939,7 @@ RdyNextA:
   lda StarFlagTaskControl
   cmp #$05                  ;if star flag task control not yet set
   bne ExitNA                ;beyond last valid task number, branch to leave
+PrcNextA:
   inc LevelNumber           ;increment level number used for game logic
   lda LevelNumber
   cmp #$03                  ;check to see if we have yet reached level -4

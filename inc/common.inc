@@ -5,6 +5,9 @@
 .ifndef __COMMON_INC
 __COMMON_INC = 1
 
+;DEBUG FLAGS
+WORLD_HAX = 1
+
 .macpack longbranch
 .macpack generic
 
