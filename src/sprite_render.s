@@ -1134,6 +1134,25 @@ EnemyGraphicsEngine:
 Noop:
   rts
 
+.proc ProcessPiranhaPlant
+  ldx ObjectOffset
+  lda PiranhaPlant_Y_Speed,x
+  bmi DrawPiranha     ;if piranha plant moving upwards, branch
+  lda EnemyFrameTimer,x
+  beq DrawPiranha     ;if timer for movement expired, branch
+  rts
+DrawPiranha:
+  ldy #METASPRITE_PIRANHA_MOUTH_OPEN
+  lda FrameCounter
+  and #%00001000        ;check for every eighth frame
+  bne Exit
+    ldy #METASPRITE_PIRANHA_MOUTH_CLOSED
+Exit:
+  tya
+  sta EnemyMetasprite,x
+  rts
+.endproc
+
 .proc ProcessGoomba
   ldx ObjectOffset
   lda Enemy_State,x
@@ -1227,7 +1246,6 @@ ProcessBlooper:
 ProcessBulletBill:
 ProcessSwimmingCheepCheep:
 ProcessPodoboo:
-ProcessPiranhaPlant:
 ProcessJumpingParatrooper:
 ProcessRedFlyingParatrooper:
 ProcessGreebFlyingParatrooper:
