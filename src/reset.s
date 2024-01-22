@@ -4,7 +4,7 @@
 
 
 .import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
-.import OperModeExecutionTree, MoveSpritesOffscreen, UpdateTopScore
+.import OperModeExecutionTree, UpdateTopScore
 .import InitScroll, UpdateScreen, SoundEngine
 .import FarCallInit
 
@@ -58,7 +58,7 @@
     sta PPUADDR
 
     ; Restore new_x.
-    stx IrqNewScroll
+    ; stx IrqNewScroll
   plx
   pla
   rti
@@ -242,12 +242,10 @@ InitBuffer:
     ; cli just in case NMI runs late
     cli
     
-    lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
-    lsr
-    bcs SkipSprite0
-      ; lda OperMode
-      ; beq SkipSprite0
-        jsr MoveAllSpritesOffscreen
+    ; lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
+    ; lsr
+    ; bcs SkipSprite0
+    ;   jsr MoveAllSpritesOffscreen
 SkipSprite0:
   lda Mirror_PPUCTRL
   sta IrqPPUCTRL

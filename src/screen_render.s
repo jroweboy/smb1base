@@ -7,7 +7,7 @@
 
 .export ScreenRoutines, FloateyNumbersCore
 .export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, AddToScore
-.export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
+.export MoveAllSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, UpdateTopScore, RenderAttributeTables
 .export WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
 .export RemBridge, GiveOneCoin, DrawMushroomIcon, WriteBlockMetatile
@@ -63,9 +63,9 @@ AreaPalette:
 
 
 ;-------------------------------------------------------------------------------------
-MoveSpritesOffscreen:
-  lda #$f8
-  bne MoveSpriteOffscreenUnrolledWrites + 3
+; MoveSpritesOffscreen:
+;   lda #$f8
+;   bne MoveSpriteOffscreenUnrolledWrites + 3
 MoveAllSpritesOffscreen:
   lda #$f8
 MoveSpriteOffscreenUnrolledWrites:

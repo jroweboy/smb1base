@@ -3,7 +3,7 @@
 
 .segment "METASPRITE"
 
-.import AddToScore
+.import MoveAllSpritesOffscreen
 
 METASPRITE_BODY = 1
 
@@ -34,6 +34,7 @@ MetaspriteTableRightHi:
 
 .export DrawAllMetasprites
 .proc DrawAllMetasprites
+  jsr MoveAllSpritesOffscreen
   ; If we are going through a pipe, we need to reserve
   ; 16 sprites (8 for each player overlay)
 
@@ -102,7 +103,6 @@ FloateyNumberLoop:
     bpl FloateyNumberLoop
 
   rts
-
 .endproc
 
 .export DrawMetasprite
