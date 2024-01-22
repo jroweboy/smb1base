@@ -72,7 +72,8 @@ PlayerEntrance:
     cmp #$07                  ;otherwise branch to normal entry
     bne PlayerRdy
 ChkBehPipe:
-  lda InPipeTransition      ;check for sprite attributes
+  ; lda InPipeTransition
+  lda Player_SprAttrib        ;check for sprite attributes
   bne IntroEntr             ;branch if found
     lda #$01
     jmp AutoControlPlayer     ;force player to walk to the right
@@ -85,17 +86,17 @@ IntroEntr:
 EntrMode2:
   lda JoypadOverride        ;if controller override bits set here,
   bne VineEntr              ;branch to enter with vine
-    lda #3
-    jsr SetupPipeTransitionOverlay
+    ; lda #3
+    ; jsr SetupPipeTransitionOverlay
     lda #$ff                  ;otherwise, set value here then execute sub
     jsr MovePlayerYAxis       ;to move player upwards
     lda Player_Y_Position     ;check to see if player is at a specific coordinate
     cmp #$91                  ;if player risen to a certain point (this requires pipes
     bcs @ContinuePipeEntry    ;to be at specific height to look/function right) branch
-    .import FRAME_LAG_COUNT
+    ; .import FRAME_LAG_COUNT
       ; lda #FRAME_LAG_COUNT
-      lda #0
-      sta PipeExitTimer
+      ; lda #0
+      ; sta PipeExitTimer
       ; jsr SetupPipeTransitionOverlay
       jmp PlayerRdy
 @ContinuePipeEntry:
@@ -322,18 +323,18 @@ ChgAreaMode: inc DisableScreenFlag     ;set flag to disable screen output
              lda #$00
              sta OperMode_Task         ;set secondary mode of operation
              sta Sprite0HitDetectFlag  ;disable sprite 0 check
-             jsr SetupPipeTransitionOverlay
-             lda #0 ; make sure we have the value 0 set since its used right after
+            ;  jsr SetupPipeTransitionOverlay
+            ;  lda #0 ; make sure we have the value 0 set since its used right after
 ExitCAPipe:  rts                       ;leave
 
 EnterSidePipe:
   lda #$08               ;set player's horizontal speed
   sta Player_X_Speed
-  lda InPipeTransition
-  bne :+
-    lda #2
-    jsr SetupPipeTransitionOverlay
-:
+;   lda InPipeTransition
+;   bne :+
+;     lda #2
+;     jsr SetupPipeTransitionOverlay
+; :
   ldy #$01               ;set controller right button by default 
   lda Player_X_Position  ;mask out higher nybble of player's
   and #%00001111         ;horizontal position

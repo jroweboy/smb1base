@@ -740,18 +740,18 @@ rts
   sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
   lda #Sfx_PipeDown_Injury
   sta Square1SoundQueue     ;load pipedown/injury sound
-  lda #1
-  jsr SetupPipeTransitionOverlay
-  lda Player_X_Position
-  sec
-  sbc ScreenLeft_X_Pos
-  sta PipeXPosition
-  lda Player_Y_Position
-  clc
-  adc #32
-  sta PipeYPosition
-;  lda #%00100000
-;  sta Player_SprAttrib      ;set background priority bit in player's attributes
+  ; lda #1
+  ; jsr SetupPipeTransitionOverlay
+  ; lda Player_X_Position
+  ; sec
+  ; sbc ScreenLeft_X_Pos
+  ; sta PipeXPosition
+  ; lda Player_Y_Position
+  ; clc
+  ; adc #32
+  ; sta PipeYPosition
+  lda #%00100000
+  sta Player_SprAttrib      ;set background priority bit in player's attributes
   lda WarpZoneControl       ;check warp zone control
   beq ExPipeE               ;branch to leave if none found
   and #%00000011            ;mask out all but 2 LSB

@@ -1215,23 +1215,23 @@ ChkPBtm:
     cmp #$1f                   ;if collided with water pipe (bottom), continue
     bne StopPlayerMove         ;otherwise branch to impede player's movement
 PipeDwnS:
-  ; lda Player_SprAttrib       ;check player's attributes
-  ; bne PlyrPipe               ;if already set, branch, do not play sound again
-  lda InPipeTransition
-  bne :+
+  lda Player_SprAttrib       ;check player's attributes
+  bne PlyrPipe               ;if already set, branch, do not play sound again
+  ; lda InPipeTransition
+  ; bne :+
     ldy #Sfx_PipeDown_Injury
     sty Square1SoundQueue      ;otherwise load pipedown/injury sound
-    lda PlayerEntranceCtrl  ;;; check if we are entering the pipe in auto mode
-    cmp #7
-    bne :+
+    ; lda PlayerEntranceCtrl  ;;; check if we are entering the pipe in auto mode
+    ; cmp #7
+    ; bne :+
       ;; if we are then start a pipe transition
-      .import SetupPipeTransitionOverlay
-      lda #2
-      jsr SetupPipeTransitionOverlay
-  :
-; PlyrPipe:
-  ; ora #%00100000
-  ; sta Player_SprAttrib       ;set background priority bit in player attributes
+      ; .import SetupPipeTransitionOverlay
+      ; lda #2
+      ; jsr SetupPipeTransitionOverlay
+  ; :
+PlyrPipe:
+  ora #%00100000
+  sta Player_SprAttrib       ;set background priority bit in player attributes
   lda Player_X_Position
   and #%00001111             ;get lower nybble of player's horizontal coordinate
   beq ChkGERtn               ;if at zero, branch ahead to skip this part

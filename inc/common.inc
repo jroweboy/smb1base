@@ -10,6 +10,7 @@ __COMMON_INC = 1
 
 .linecont on
 .feature force_range
+.autoimport     +
 
 ; Global Labels named after the segment that they appear in
 .macro labelled_segment s1,s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
