@@ -5,7 +5,7 @@
 
 ; player.s
 
-.export ScreenRoutines
+.export ScreenRoutines, FloateyNumbersCore
 .export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, AddToScore
 .export MoveAllSpritesOffscreen, MoveSpritesOffscreen, RenderAreaGraphics
 .export InitializeNameTables, UpdateTopScore, RenderAttributeTables
@@ -788,6 +788,49 @@ ExPipeE:
   rts                       ;leave!!!
 .endproc
 
+.proc FloateyNumbersCore
+  lda FloateyNum_Control,x     ;load control for floatey number
+  beq EndFloateyNumber         ;if zero, branch to leave
+    cmp #$0b                     ;if less than $0b, branch
+    bcc ChkNumTimer
+      lda #$0b                     ;otherwise set to $0b, thus keeping
+      sta FloateyNum_Control,x     ;it in range
+ChkNumTimer:
+    tay                          ;use as Y
+    lda FloateyNum_Timer,x       ;check value here
+    bne DecNumTimer              ;if nonzero, branch ahead
+      sta FloateyNum_Control,x     ;initialize floatey number control and leave
+EndFloateyNumber:
+  rts
+DecNumTimer:
+  dec FloateyNum_Timer,x       ;decrement value here
+  cmp #$2b                     ;if not reached a certain point, branch  
+  bne Exit
+    cpy #$0b                     ;check offset for $0b
+    bne LoadNumTiles             ;branch ahead if not found
+      inc NumberofLives            ;give player one extra life (1-up)
+      lda #Sfx_ExtraLife
+      sta Square2SoundQueue        ;and play the 1-up sound
+  LoadNumTiles:
+    ldx ScoreUpdateDigit,y        ;load point value here
+    lda ScoreUpdateAmount-1,y     ;load again and this time
+    sta DigitModifier,x          ;store as amount to add to the digit
+    jmp AddToScore               ;update the score accordingly
+Exit:
+  rts
+
+;high nybble is digit number, low nybble is number to
+;add to the digit of the player's score
+ScoreUpdateData:
+ScoreUpdateAmount:
+  .byte $01, $02, $04, $05, $08
+  .byte $01, $02, $04, $05, $08, $00
+ScoreUpdateDigit:
+  .byte $04, $04, $04, $04, $04
+  .byte $03, $03, $03, $03, $03, $00
+
+.endproc
+
 ;-------------------------------------------------------------------------------------
 GiveOneCoin:
   lda #$01               ;set digit modifier to add 1 coin
@@ -830,13 +873,13 @@ NoZSup:
   rts
       
 CoinTallyOffsets:
-      .byte $17, $1d
+  .byte $17, $1d
 
 ScoreOffsets:
-      .byte $0b, $11
+  .byte $0b, $11
 
 StatusBarNybbles:
-      .byte $02, $13
+  .byte $02, $13
 
 
 ;-------------------------------------------------------------------------------------

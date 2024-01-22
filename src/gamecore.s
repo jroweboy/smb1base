@@ -3,7 +3,7 @@
 .include "player.inc"
 
 ; objects/object.s
-.import FloateyNumbersRoutine, MiscObjectsCore, ProcessSingleEnemy, EnemiesAndLoopsCore
+.import MiscObjectsCore, ProcessSingleEnemy, EnemiesAndLoopsCore, FloateyNumbersCore
 ; objects/cannon.s
 .import ProcessCannons
 ; music.s
@@ -113,7 +113,7 @@ GameEngine:
 ProcELoop:
       stx ObjectOffset           ;put incremented offset in X as enemy object offset
       jsr EnemiesAndLoopsCore    ;process enemy objects
-      jsr FloateyNumbersRoutine  ;process floatey numbers
+      jsr FloateyNumbersCore  ;process floatey numbers
       inx
       cpx #$06                   ;do these two subroutines until the whole buffer is done
     bne ProcELoop
@@ -480,10 +480,10 @@ WhPull: lda #$10
 ;-------------------------------------------------------------------------------------
 
 FlagpoleScoreMods:
-      .byte $05, $02, $08, $04, $01
+  .byte $05, $02, $08, $04, $01
 
 FlagpoleScoreDigits:
-      .byte $03, $03, $04, $04, $04
+  .byte $03, $03, $04, $04, $04
 
 FlagpoleRoutine:
            ldx #$05                  ;set enemy object offset

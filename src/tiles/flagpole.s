@@ -32,6 +32,8 @@ FlagpoleObject:
   sta Enemy_PageLoc+5      ;page location for the flag
   lda #$30
   sta Enemy_Y_Position+5   ;set vertical coordinate for flag
+  lda #1
+  sta Enemy_Y_HighPos+5
   lda #$b0
   sta FlagpoleFNum_Y_Pos   ;set initial vertical coordinate for flagpole's floatey number
   lda #FlagpoleFlagObject

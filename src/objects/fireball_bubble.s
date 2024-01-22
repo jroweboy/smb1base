@@ -56,23 +56,32 @@ ProcAirBubbles:
   ; lda AreaType                ;if not water type level, skip the rest of this
   ; bne BublExit
   lda SwimmingFlag
-  beq BublExit
-  ldx #$02                    ;otherwise load counter and use as offset
-:
-    stx ObjectOffset            ;store offset
-    jsr BubbleCheck             ;check timers and coordinates, create air bubble
-    ; jsr RelativeBubblePosition  ;get relative coordinates
-    lda Bubble_Y_Position,x
-    sta Bubble_Rel_YPos,x
-    lda Bubble_X_Position,x
-    sec
-    sbc ScreenLeft_X_Pos
-    sta Bubble_Rel_XPos,x
-    jsr GetBubbleOffscreenBits  ;get offscreen information
-    jsr DrawBubble              ;draw the air bubble
-    dex
-    bpl :-                ;do this until all three are handled
-BublExit:
+  beq NotSwimming
+    ldx #$02                    ;otherwise load counter and use as offset
+  AirBubbleLoop:
+      stx ObjectOffset            ;store offset
+      jsr BubbleCheck             ;check timers and coordinates, create air bubble
+      ; jsr RelativeBubblePosition  ;get relative coordinates
+      lda Bubble_Y_Position,x
+      sta Bubble_Rel_YPos,x
+      lda Bubble_X_Position,x
+      sec
+      sbc ScreenLeft_X_Pos
+      sta Bubble_Rel_XPos,x
+      jsr GetBubbleOffscreenBits  ;get offscreen information
+      jsr DrawBubble              ;draw the air bubble
+      dex
+      bpl AirBubbleLoop                ;do this until all three are handled
+  rts
+NotSwimming:
+  lda PlayerStatus           ;check player's status
+  cmp #$02
+  bcs Exit
+    ; Not fiery state and not swimming, so kill fireball
+    lda #0
+    sta FireballMetasprite
+    sta FireballMetasprite+1
+Exit:
   rts                         ;then leave
 .endproc
 
@@ -86,7 +95,7 @@ FireballExplosion:
   asl
   bcs FireballExplosion        ;if so, branch to get relative coordinates and draw explosion
   ldy Fireball_State,x         ;if fireball inactive, branch to leave
-  beq ProcFireball_Bubble::BublExit
+  beq NoFBall
   dey                          ;if fireball state set to 1, skip this part and just run it
   beq RunFB
   lda Player_X_Position        ;get player's horizontal position

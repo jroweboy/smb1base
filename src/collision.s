@@ -271,10 +271,10 @@ NSFnd: rts
 ;--------------------------------
 
 KickedShellXSpdData:
-      .byte $30, $d0
+  .byte $30, $d0
 
 DemotedKoopaXSpdData:
-      .byte $08, $f8
+  .byte $08, $f8
 
 PlayerEnemyCollision:
   lda FrameCounter            ;check counter for d0 set
@@ -415,6 +415,7 @@ KillPlayer:
       stx Player_X_Speed   ;halt player's horizontal movement by initializing speed
       inx
       stx EventMusicQueue  ;set event music queue to death music
+      stx DeathMusicLoaded
       lda #$fc
       sta Player_Y_Speed   ;set new vertical speed
       lda #$0b             ;set subroutine to run on next frame
