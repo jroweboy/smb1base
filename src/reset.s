@@ -468,6 +468,8 @@ InitializeMemoryRAMHi = $07
 InitPageLoop:
     stx InitializeMemoryRAMHi
 InitByteLoop:
+      cpx #2            ; jroweboy: don't clear sprite ram
+      beq SkipByte
       cpx #$01          ;check to see if we're on the stack ($0100-$01ff)
       bne InitByte      ;if not, go ahead anyway
       cpy #<StackClear  ;otherwise, check to see if we're at $0160-$01ff
