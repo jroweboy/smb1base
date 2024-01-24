@@ -450,8 +450,10 @@ PowerUpGfxTable:
     lda FrameCounter           ;get frame counter
     lsr                        ;divide by 2 to change colors every two frames
     and #%00000011             ;mask out all but d1 and d0 (previously d2 and d1)
-    ; we don't use background priority bit anymore for power ups and enemies
-    ; ora Enemy_SprAttrib,x      ;add background priority bit if any set
+    sta R2
+    lda Enemy_SprAttrib,x      ;add background priority bit if any set
+    and #%11100000
+    ora R2
     sta Enemy_SprAttrib,x
 SkipPaletteCycle:
   lda PowerUpGfxTable,y
