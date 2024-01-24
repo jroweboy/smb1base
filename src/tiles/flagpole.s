@@ -6,7 +6,7 @@
 
 ;--------------------------------
 
-FlagBalls_Residual:
+; FlagBalls_Residual:
 ;       jsr GetLrgObjAttrib  ;get low nybble from object byte
 ;       ldx #$02             ;render flag balls on third row from top
 ;       lda #$6d             ;of screen downwards based on low nybble
@@ -34,7 +34,7 @@ FlagpoleObject:
   sta Enemy_Y_Position+5   ;set vertical coordinate for flag
   lda #1
   sta Enemy_Y_HighPos+5
-  lda #$b0
+  lda #$b0 + 8 ; jroweboy offset the flag score by 8 px to account for 8x16 difference
   sta FlagpoleFNum_Y_Pos   ;set initial vertical coordinate for flagpole's floatey number
   lda #FlagpoleFlagObject
   sta Enemy_ID+5           ;set flag identifier, note that identifier and coordinates

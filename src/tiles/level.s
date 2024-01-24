@@ -567,7 +567,7 @@ RunAObj:  lda R0                     ;get stored value and add offset to it
       .word CastleObject
       .word StaircaseObject
       .word ExitPipe
-      .word FlagBalls_Residual
+      .word FlagpoleObject
 
 ;small objects (rows $00-$0b or 00-11, d6-d4 all clear)
       .word QuestionBlock     ;power-up

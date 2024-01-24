@@ -187,7 +187,7 @@ Square1SoundQueue:              .res  1
 
 ; start $0100
 blank_stack:                    .res  8 ; not used
-VerticalFlipFlag:               .res  4 ; jroweboy: this is acutally only one byte?
+; VerticalFlipFlag:               .res  4
 FlagpoleFNum_Y_Pos:             .res  1
 FlagpoleFNum_YMFDummy:          .res  1
 FlagpoleScore:                  .res  1

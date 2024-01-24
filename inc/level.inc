@@ -18,7 +18,7 @@
 
 ;objects for special row $0f or 15
 .global EndlessRope, BalancePlatRope, CastleObject, StaircaseObject
-.global ExitPipe, FlagBalls_Residual
+.global ExitPipe, FlagpoleObject
 
 ;small objects (rows $00-$0b or 00-11, d6-d4 all clear)
 .global QuestionBlock, Hidden1UpBlock, BrickWithCoins, BrickWithItem

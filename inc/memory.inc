@@ -159,7 +159,7 @@ __MEMORY_INC = 1
 ; .segment "STACK"
 
 .global PlayerNeckLength, PlayerNeckTemp
-.global VerticalFlipFlag
+; .global VerticalFlipFlag
 .global FlagpoleFNum_Y_Pos
 .global FlagpoleFNum_YMFDummy
 .global FlagpoleScore

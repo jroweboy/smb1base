@@ -603,7 +603,7 @@ EnemyGfxHandler:
       sty OriginalOAMOffset
       sty Local_eb                     ;get sprite data offset
       lda #$00
-      sta VerticalFlipFlag        ;initialize vertical flip flag by default
+      ; sta VerticalFlipFlag        ;initialize vertical flip flag by default
       lda Enemy_MovingDir,x
       sta R3                      ;get enemy object moving direction
       lda Enemy_SprAttrib,x
@@ -658,7 +658,7 @@ CheckForPodoboo:
       bne CheckBowserGfxFlag  ;branch if not found
       lda Enemy_Y_Speed,x     ;if moving upwards, branch
       bmi CheckBowserGfxFlag
-      inc VerticalFlipFlag    ;otherwise, set flag for vertical flip
+      ; inc VerticalFlipFlag    ;otherwise, set flag for vertical flip
 
 CheckBowserGfxFlag:
              lda BowserGfxFlag   ;if not drawing bowser at all, skip to something else
@@ -708,7 +708,7 @@ ChkFrontSte: lda Local_ed                     ;check saved enemy state
              beq DrawBowser
 
 FlipBowserOver:
-      stx VerticalFlipFlag  ;set vertical flip flag to nonzero
+      ; stx VerticalFlipFlag  ;set vertical flip flag to nonzero
 
 DrawBowser:
       jmp DrawEnemyObject   ;draw bowser's graphics now
@@ -859,7 +859,7 @@ CheckDefeatedState:
       cmp #$04              ;check for saved enemy object => $04
       bcc DrawEnemyObject   ;branch if less
       ldy #$01
-      sty VerticalFlipFlag  ;set vertical flip flag
+      ; sty VerticalFlipFlag  ;set vertical flip flag
       dey
       sty Local_ec               ;init saved value here
 
@@ -883,7 +883,7 @@ SkipToOffScrChk:
   jmp SprObjectOffscrChk     ;jump if found
 
 CheckForVerticalFlip:
-  lda VerticalFlipFlag       ;check if vertical flip flag is set here
+  ; lda VerticalFlipFlag       ;check if vertical flip flag is set here
   beq CheckForESymmetry      ;branch if not
 ;   lda Sprite_Attributes,y    ;get attributes of first sprite we dealt with
 
@@ -911,7 +911,7 @@ CheckForVerticalFlip:
 
 FlipEnemyVertically:
     ; set enemy flip flag if the flip flag is set
-    lda VerticalFlipFlag
+    ; lda VerticalFlipFlag
     sta EnemyVerticalFlip,x
 ;   lda Sprite_Tilenumber,x     ;load first or second row tiles
 ;   pha                         ;and save tiles to the stack
@@ -1000,7 +1000,7 @@ CheckToMirrorLakitu:
         lda Local_ef                     ;check for lakitu enemy object
         cmp #Lakitu
         bne CheckToMirrorJSpring    ;branch if not found
-        lda VerticalFlipFlag
+        ; lda VerticalFlipFlag
         bne NVFLak                  ;branch if vertical flip flag set
         lda Sprite_Attributes+16,y  ;save vertical flip and palette bits
         and #%10000001              ;in third row left sprite
@@ -1619,24 +1619,54 @@ SetHFAt:
 ;$04 - attribute byte for floatey number
 ;$05 - used as X coordinate for floatey number
 
+
+.proc FlagpoleGfxHandler
+  lda #METASPRITE_MISC_FLAGPOLE_FLAG
+  sta EnemyMetasprite+5
+
+  lda FlagpoleCollisionYPos
+  beq Exit
+    lda MiscMetasprite+5
+    bne AlreadyInitializedScore
+      ; Initialize the score position
+
+      ldy FlagpoleScore
+      lda FlagpoleScoreNumTiles,y
+      sta MiscMetasprite+5
+      lda #1
+      sta Misc_Y_HighPos+5
+      lda Enemy_X_Position+5
+      clc
+      adc #20 ; add 20px to align with vanilla
+      sta Misc_X_Position+5
+      lda Enemy_PageLoc+5
+      adc #00
+      sta Misc_PageLoc+5
+
+  AlreadyInitializedScore:
+
+    lda FlagpoleFNum_Y_Pos
+    sta Misc_Y_Position+5
+Exit:
+  rts
+
 FlagpoleScoreNumTiles:
   ; .byte FLOATEY_NUM_50, FLOATEY_NUM_00
   ; .byte FLOATEY_NUM_20, FLOATEY_NUM_00
   ; .byte FLOATEY_NUM_80, FLOATEY_NUM_0
   ; .byte FLOATEY_NUM_40, FLOATEY_NUM_0
   ; .byte FLOATEY_NUM_10, FLOATEY_NUM_0
-  ; .byte METASPRITE_
+  .byte METASPRITE_NUMBER_5000
+  .byte METASPRITE_NUMBER_2000
+  .byte METASPRITE_NUMBER_800
+  .byte METASPRITE_NUMBER_400
+  .byte METASPRITE_NUMBER_100
+.endproc
 
-FlagpoleGfxHandler:
-  ldx #5
-  lda #METASPRITE_MISC_FLAGPOLE_FLAG
-  sta EnemyMetasprite,x
   ; ldx #0
-  ldy FlagpoleScore
-  lda FlagpoleScoreNumTiles,y
   ; sta R0
   ; jsr DrawOneSpriteRow
-  AllocSpr 2
+  ; AllocSpr 2
 
 ;     AllocSpr 6
 ;     sty OriginalOAMOffset
