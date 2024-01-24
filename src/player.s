@@ -25,7 +25,7 @@
 ; objects/vine.s
 .import Setup_Vine
 
-.import SetupPipeTransitionOverlay, BubbleCheck
+.import SetupPipeTransitionOverlay
 
 ; gamemode.s
 .export GameRoutines, PlayerCtrlRoutine, ScrollScreen

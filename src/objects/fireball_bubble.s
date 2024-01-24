@@ -61,15 +61,19 @@ ProcAirBubbles:
   AirBubbleLoop:
       stx ObjectOffset            ;store offset
       jsr BubbleCheck             ;check timers and coordinates, create air bubble
-      ; jsr RelativeBubblePosition  ;get relative coordinates
-      lda Bubble_Y_Position,x
-      sta Bubble_Rel_YPos,x
-      lda Bubble_X_Position,x
-      sec
-      sbc ScreenLeft_X_Pos
-      sta Bubble_Rel_XPos,x
-      jsr GetBubbleOffscreenBits  ;get offscreen information
-      jsr DrawBubble              ;draw the air bubble
+      ldy Player_Y_HighPos        ;if player's vertical high position
+      dey                         ;not within screen, skip all of this
+      bne SkipBubble
+        ldy #METASPRITE_MISC_BUBBLE
+        lda Bubble_Y_Position,x 
+        cmp #$f0
+        bcc :+
+          ; Clear the metasprite if the bubble is offscreen
+          ldy #0
+        :
+        tya
+        sta BubbleMetasprite,x
+    SkipBubble:
       dex
       bpl AirBubbleLoop                ;do this until all three are handled
   rts
@@ -148,14 +152,9 @@ NoFBall:
 
 FireballXSpdData:
 	.byte $40, $c0
-; AngleToFireballXSpeed:
-; .incbin "../fireball_x_speed.bin"
-; AngleToFireballYSpeed:
-; .incbin "../fireball_y_speed.bin"
 .endproc
 
 BubbleCheck:
-.export BubbleCheck
   lda PseudoRandomBitReg+1,x  ;get part of LSFR
   and #$01
   sta R7                     ;store pseudorandom bit here
@@ -206,42 +205,7 @@ Bubble_MForceData:
 BubbleTimerData:
   .byte $40, $20
 
-; .proc RelativeBubblePosition
-;   ldy #$01                ;set for air bubble offsets
-;   jsr GetProperObjOffset  ;modify X to get proper air bubble offset
-;   ldy #$03
-;   jmp RelWOfs             ;get the coordinates
-; .endproc
-
-.proc GetBubbleOffscreenBits
-  ldy #$01                 ;set for air bubble offsets
-  jsr GetProperObjOffset   ;modify X to get proper air bubble offset
-  ldy #$03                 ;set other offset for airbubble's offscreen bits
-  jmp GetOffScreenBitsSet  ;and get offscreen information about air bubble
-.endproc
-
 ;------------------------sw-------------------------------------------------------------
-
-.proc DrawBubble
-  ldy Player_Y_HighPos        ;if player's vertical high position
-  dey                         ;not within screen, skip all of this
-  bne ExDBub
-  lda Bubble_OffscreenBits    ;check air bubble's offscreen bits
-  and #%00001000
-  bne ExDBub                  ;if bit set, branch to leave
-  ; ldy Bubble_SprDataOffset,x  ;get air bubble's OAM data offset
-  AllocSpr 1
-  lda Bubble_Rel_XPos         ;get relative horizontal coordinate
-  sta Sprite_X_Position,y     ;store as X coordinate here
-  lda Bubble_Rel_YPos         ;get relative vertical coordinate
-  sta Sprite_Y_Position,y     ;store as Y coordinate here
-  lda #BUBBLE_TILE
-  sta Sprite_Tilenumber,y     ;put air bubble tile into OAM data
-  lda #$02
-  sta Sprite_Attributes,y     ;set attribute byte
-ExDBub:
-  rts                         ;leave
-.endproc
 
 .proc GetFireballOffscreenBits
   ldy #$00                 ;set for fireball offsets
