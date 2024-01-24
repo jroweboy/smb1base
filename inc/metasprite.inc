@@ -181,12 +181,13 @@ MetaspriteDefine "BIG_MARIO", "SWIMMING_2_HOLD", $04, $06, $24, $26
 MetaspriteDefine "BIG_MARIO", "SWIMMING_3_KICK", $04, $06, $28, $22
 MetaspriteDefine "BIG_MARIO", "SWIMMING_3_HOLD", $04, $06, $2a, $22
 
-MetaspriteDefine "BIG_MARIO", "FIRE_STANDING",  $00, $02, $20, $22
-MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_1", $04, $06, $24, $26 ; TODO
-MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_2", $08, $0a, $28, $2a ; TODO
-MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_3", $0c, $0e, $2c, $2e ; TODO
-MetaspriteDefine "BIG_MARIO", "FIRE_SKIDDING",  $10, $12, $30, $32 ; TODO
-MetaspriteDefine "BIG_MARIO", "FIRE_JUMPING",   $14, $16, $34, $36 ; TODO
+MetaspriteDefine "BIG_MARIO", "FIRE_STANDING",  $00, $02, $2c, $2e
+; MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_1", $00, $02, $2c, $2e
+MetaspriteDuplicate "METASPRITE_BIG_MARIO_FIRE_STANDING", "BIG_MARIO_FIRE_WALKING_1"
+MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_2", $00, $02, $30, $32 ; TODO
+MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_3", $00, $02, $14, $16
+MetaspriteDefine "BIG_MARIO", "FIRE_SKIDDING",  $00, $02, $34, $36
+MetaspriteDefine "BIG_MARIO", "FIRE_JUMPING",   $00, $02, $10, $12
 MetaspriteDefine "BIG_MARIO", "CLIMBING_1",   $00, $02, $08, $0a
 MetaspriteDefine "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
 
@@ -231,7 +232,7 @@ MetaspriteDefine "POWERUP", "1UP",        $3c, $3e
 
 FIREBALL_BANK = SPRITE_BANK_0
 FIREBALL_PALETTE = $02
-FIREBALL_Y_OFFSET = -16
+FIREBALL_Y_OFFSET = -12
 EXPLOSION_BANK = SPRITE_BANK_1
 EXPLOSION_PALETTE = $02
 EXPLOSION_Y_OFFSET = -12  ; Vanilla offsets the explosion by -4. The other -8 is to account for position due to 8x16 sprites?

@@ -94,6 +94,17 @@ ColdBoot:
   jsr InitializeMemory         ;clear memory using pointer in Y
   sta SND_DELTA_REG+1          ;reset delta counter load register
   sta OperMode                 ;reset primary mode of operation
+  ; for debugging, clear the sprite tile numbers so its easier to see in sprite viewers
+  ldx #0
+  lda #0
+  :
+    sta Sprite_Attributes,x
+    sta Sprite_Tilenumber,x
+    inx
+    inx
+    inx
+    inx
+    bne :-
 MMC3Init:
   ; setup the jmp instruction for the FarBank Target
   jsr FarCallInit

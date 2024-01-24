@@ -34,7 +34,7 @@ MetaspriteTableRightHi:
 
 .export DrawAllMetasprites
 .proc DrawAllMetasprites
-  jsr MoveAllSpritesOffscreen
+  ; jsr MoveAllSpritesOffscreen
   ; If we are going through a pipe, we need to reserve
   ; 16 sprites (8 for each player overlay)
 
@@ -55,7 +55,11 @@ MetaspriteTableRightHi:
   ; draw the player first so it doesn't ever flicker
   ldy #0
   ldx ObjectMetasprite,y
-  jsr DrawMetasprite
+  ; unless the player is currently flickering due to damage taken
+  beq :+
+    jsr DrawMetasprite
+  :
+
 
   lda #24 - 1 ; size of the different object update list
   sta SpriteShuffleTemp
@@ -101,7 +105,17 @@ FloateyNumberLoop:
   Skip:
     dex
     bpl FloateyNumberLoop
-
+  
+  ; Clear sprites up to the offset
+  lda #$f8
+  ldx CurrentOAMOffset
+  ClearLoop:
+    sta Sprite_Y_Position,x
+    inx
+    inx
+    inx
+    inx
+    bne ClearLoop
   rts
 .endproc
 

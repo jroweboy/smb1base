@@ -574,6 +574,11 @@ PlayerAnimStanding = * - BigPlayerTable
 SwimKickTileNum:
   .byte $1c, $4A ; Big, Small
 
+ClearMarioSprite:
+  lda #0
+  sta ObjectMetasprite
+  rts
+
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store player's vertical offscreen bits
 PlayerGfxHandler:
@@ -581,7 +586,7 @@ PlayerGfxHandler:
   beq CntPl                   ;not set, skip checkpoint and continue code
   lda FrameCounter
   lsr                         ;otherwise check frame counter and branch
-  bcs ExPGH                   ;to leave on every other frame (when d0 is set)
+  bcs ClearMarioSprite        ;to leave on every other frame (when d0 is set)
 CntPl:
   lda GameEngineSubroutine    ;if executing specific game engine routine,
   cmp #$0b                    ;branch ahead to some other part
@@ -635,62 +640,36 @@ PlayerKilled:
   lda #METASPRITE_SMALL_MARIO_DEATH
 
 PlayerGfxProcessing:
-  ; sta PlayerGfxOffset           ;store offset to graphics table here
   sta ObjectMetasprite
-  tay
-  lda PlayerBankTable,y
-  cmp PlayerChrBank
-  beq :+
-    sta PlayerChrBank
-    inc ReloadCHRBank
-  :
-  ; lda #$04
-  ; jsr RenderPlayerSub           ;draw player based on offset loaded
-  ; jsr ChkForPlayerAttrib        ;set horizontal flip bits as necessary
+
   lda FireballThrowingTimer
   beq PlayerOffscreenChk        ;if fireball throw timer not set, skip to the end
-  ldy #$00                      ;set value to initialize by default
-  lda PlayerAnimTimer           ;get animation frame timer
-  cmp FireballThrowingTimer     ;compare to fireball throw timer
-  sty FireballThrowingTimer     ;initialize fireball throw timer
-  bcs PlayerOffscreenChk        ;if animation frame timer => fireball throw timer skip to end
-  sta FireballThrowingTimer     ;otherwise store animation timer into fireball throw timer
-  ldy #$07                      ;load offset for throwing
-  lda PlayerGfxTblOffsets,y     ;get offset to graphics table
-  sta ObjectMetasprite
-  ; sta PlayerGfxOffset           ;store it for use later
+    ldy #$00                      ;set value to initialize by default
+    lda PlayerAnimTimer           ;get animation frame timer
+    cmp FireballThrowingTimer     ;compare to fireball throw timer
+    sty FireballThrowingTimer     ;initialize fireball throw timer
+    bcs PlayerOffscreenChk        ;if animation frame timer => fireball throw timer skip to end
+      sta FireballThrowingTimer     ;otherwise store animation timer into fireball throw timer
+      lda ObjectMetasprite
+      clc
+      adc #FIRE_MARIO_OFFSET
+      sta ObjectMetasprite
   ldy #$04                      ;set to update four sprite rows by default
   lda Player_X_Speed
   ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
   beq SUpdR                     ;if no speed or button press, branch using set value in Y
     dey                         ;otherwise set to update only three sprite rows
 SUpdR:
-  ; tya                           ;save in A for use
-  ; jsr RenderPlayerSub           ;in sub, draw player object again
 PlayerOffscreenChk:
-;   lda Player_OffscreenBits      ;get player's offscreen bits
-;   lsr
-;   lsr                           ;move vertical bits to low nybble
-;   lsr
-;   lsr
-;   sta R0                        ;store here
-;   ldx #$03                      ;check all four rows of player sprites
-;   lda PlayerOAMOffset           ;get player's sprite data offset
-;   clc
-;   adc #$18                      ;add 24 bytes to start at bottom row
-;   tay                           ;set as offset here
-; PROfsLoop:
-;     lda #$f8                      ;load offscreen Y coordinate just in case
-;     lsr R0                        ;shift bit into carry
-;     bcc NPROffscr                 ;if bit not set, skip, do not move sprites
-;     jsr DumpTwoSpr                ;otherwise dump offscreen Y coordinate into sprite data
-; NPROffscr:
-;     tya
-;     sec                           ;subtract eight bytes to do
-;     sbc #$08                      ;next row up
-;     tay
-;     dex                           ;decrement row counter
-;     bpl PROfsLoop                 ;do this until all sprite rows are checked
+
+  ; Load the bank for the player if it changed
+  ldy ObjectMetasprite
+  lda PlayerBankTable,y
+  cmp PlayerChrBank
+  beq :+
+    sta PlayerChrBank
+    inc ReloadCHRBank
+  :
   lda Player_Rel_XPos
   sta Player_Pos_ForScroll
   rts                           ;then we are done!
@@ -732,6 +711,8 @@ PlayerBankTableReal:
 .byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_2_HOLD"
 .byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_3_KICK"
 .byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_3_HOLD"
+
+FIRE_MARIO_OFFSET = * - PlayerBankTableReal
 .byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_STANDING"
 .byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_WALKING_1"
 .byte CHR_MARIOACTION ; "BIG_MARIO", "FIRE_WALKING_2"

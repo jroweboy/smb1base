@@ -173,11 +173,11 @@ CheckTopOfBlock:
        sbc #$10                ;subtract $10 to move up one row in the block buffer
        sta R2                  ;store as new vertical high nybble offset
        tay 
-       lda (R6) ,y             ;get contents of block buffer in same column, one row up
+       lda (R6),y             ;get contents of block buffer in same column, one row up
        cmp #$c2                ;is it a coin? (not underwater)
        bne TopEx               ;if not, branch to leave
        lda #$00
-       sta (R6) ,y             ;otherwise put blank metatile where coin was
+       sta (R6),y             ;otherwise put blank metatile where coin was
        jsr RemoveCoin_Axe      ;write blank metatile to vram buffer
        ldx SprDataOffset_Ctrl  ;get control bit
        jmp SetupJumpCoin       ;create jumping coin object and update coin variables
