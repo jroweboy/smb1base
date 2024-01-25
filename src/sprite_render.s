@@ -259,90 +259,101 @@ DrawLargePlatform:
   beq ShrinkPlatform
     ldy SecondaryHardMode       ;check for secondary hard mode flag set
     bne ShrinkPlatform          ;branch if its hardmode
-      AllocSpr 6
-      sty R2                      ;store here
-      iny                         ;add 3 to it for offset
-      iny                         ;to X coordinate
-      iny
-      lda Enemy_Rel_XPos          ;get horizontal relative coordinate
-      jsr SixSpriteStacker        ;store X coordinates using A as base, stack horizontally
-      ldy R2
-      ldx ObjectOffset
-      lda Enemy_Y_Position,x      ;get vertical coordinate
-      jsr DumpSixSpr             ;dump into first four sprites as Y coordinate
-      jmp ProcessTiles
+      ldy #METASPRITE_PLATFORM_LARGE
+      bne ProcessTiles
+      ; AllocSpr 6
+      ; sty R2                      ;store here
+      ; iny                         ;add 3 to it for offset
+      ; iny                         ;to X coordinate
+      ; iny
+      ; lda Enemy_Rel_XPos          ;get horizontal relative coordinate
+      ; jsr SixSpriteStacker        ;store X coordinates using A as base, stack horizontally
+      ; ldy R2
+      ; ldx ObjectOffset
+      ; lda Enemy_Y_Position,x      ;get vertical coordinate
+      ; jsr DumpSixSpr             ;dump into first four sprites as Y coordinate
+      ; jmp ProcessTiles
 
 ShrinkPlatform:
-  AllocSpr 4
-  sty R2                     ;store here
-  iny                         ;add 3 to it for offset
-  iny                         ;to X coordinate
-  iny
-  lda Enemy_Rel_XPos          ;get horizontal relative coordinate
-  jsr FourSpriteStacker        ;store X coordinates using A as base, stack horizontally
-  ldx ObjectOffset
-  ldy R2
-  lda Enemy_Y_Position,x      ;get vertical coordinate
-  jsr DumpFourSpr             ;dump into first four sprites as Y coordinate
+  ldy #METASPRITE_PLATFORM_SMALL
+  ; AllocSpr 4
+  ; sty R2                     ;store here
+  ; iny                         ;add 3 to it for offset
+  ; iny                         ;to X coordinate
+  ; iny
+  ; lda Enemy_Rel_XPos          ;get horizontal relative coordinate
+  ; jsr FourSpriteStacker        ;store X coordinates using A as base, stack horizontally
+  ; ldx ObjectOffset
+  ; ldy R2
+  ; lda Enemy_Y_Position,x      ;get vertical coordinate
+  ; jsr DumpFourSpr             ;dump into first four sprites as Y coordinate
 
 ProcessTiles:
-  lda #PLATFORM_GIRDER ; $bc                    ;load default tile for platform (girder)
+  ; lda #PLATFORM_GIRDER ; $bc                    ;load default tile for platform (girder)
   ldx CloudTypeOverride
   beq SetPlatformTilenum      ;if cloud level override flag not set, use
-  lda #PLATFORM_CLOUD ; $fe                    ;otherwise load other tile for platform (puff)
-
+  ; lda #PLATFORM_CLOUD ; $fe                    ;otherwise load other tile for platform (puff)
+    ; TODO cloud platform
 SetPlatformTilenum:
   ldx ObjectOffset            ;get enemy object buffer offset
-  iny                         ;increment Y for tile offset
-  jsr DumpSixSpr              ;dump tile number into all six sprites
-  lda #$02                    ;set palette controls
-  iny                         ;increment Y for sprite attributes
-  jsr DumpSixSpr              ;dump attributes into all six sprites
-  inx                         ;increment X for enemy objects
-  jsr GetXOffscreenBits       ;get offscreen bits again
-  sta R1                      ;check d7 of offscreen bits
-  ; can't use processor flags because of loop earlier, so we need to cmp #ff
-  ; which indicates that all rows are offscreen
-  cmp #$ff
-  bne :+
-    ldy R2
-    jmp MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
-: 
-  ; at least one sprite is on screen
-  ldx #0
-  ; New offscreen check using the same shuffle constant from earlier
-  ; lda PlatformLastOAMOrder
-  @loop:
-    lda PlatformLastOAMOrder
-    clc
-    adc #5
-    cmp #6
-    bcc @SkipSubtract1
-      ; implicit carry set
-      sbc #6
-  @SkipSubtract1:
-    sta PlatformLastOAMOrder
+  ; Alternate frames for the girder for sprite shuffling
+  lda FrameCounter
+  and #1
+  sta R2
+  tya
+  clc
+  adc R2
+  sta EnemyMetasprite,x
+;   iny                         ;increment Y for tile offset
+;   jsr DumpSixSpr              ;dump tile number into all six sprites
+;   lda #$02                    ;set palette controls
+;   iny                         ;increment Y for sprite attributes
+;   jsr DumpSixSpr              ;dump attributes into all six sprites
+;   inx                         ;increment X for enemy objects
+;   jsr GetXOffscreenBits       ;get offscreen bits again
+;   sta R1                      ;check d7 of offscreen bits
+;   ; can't use processor flags because of loop earlier, so we need to cmp #ff
+;   ; which indicates that all rows are offscreen
+;   cmp #$ff
+;   bne :+
+;     ldy R2
+;     jmp MoveSixSpritesOffscreen ;otherwise branch to move all sprites offscreen
+; : 
+;   ; at least one sprite is on screen
+;   ldx #0
+;   ; New offscreen check using the same shuffle constant from earlier
+;   ; lda PlatformLastOAMOrder
+;   @loop:
+;     lda PlatformLastOAMOrder
+;     clc
+;     adc #5
+;     cmp #6
+;     bcc @SkipSubtract1
+;       ; implicit carry set
+;       sbc #6
+;   @SkipSubtract1:
+;     sta PlatformLastOAMOrder
 
-    lda R1
-    and InversePowerOfTwo,x
-    beq :+
-      ; sprite is offscreen so move it offscreen
-      lda PlatformLastOAMOrder
-      asl
-      asl
-      clc
-      adc R2
-      tay
-      lda #$f8
-      sta Sprite_Y_Position,y
-    :
+;     lda R1
+;     and InversePowerOfTwo,x
+;     beq :+
+;       ; sprite is offscreen so move it offscreen
+;       lda PlatformLastOAMOrder
+;       asl
+;       asl
+;       clc
+;       adc R2
+;       tay
+;       lda #$f8
+;       sta Sprite_Y_Position,y
+;     :
 
-    inx
-    cpx #6
-    bne @loop
+;     inx
+;     cpx #6
+;     bne @loop
 
 
-  ldx ObjectOffset
+  ; ldx ObjectOffset
   rts
 
 InversePowerOfTwo:

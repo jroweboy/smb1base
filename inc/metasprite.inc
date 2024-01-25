@@ -3,165 +3,10 @@
 .ifndef __METASPRITE_INC
 __METASPRITE_INC = 1
 
-PATTERN_TABLE_1 = $01
-SPRITE_BANK_0 = $00
-SPRITE_BANK_1 = $40
-SPRITE_BANK_2 = $80
-SPRITE_BANK_3 = $c0
+.include "metasprite_p.inc"
 
-; Custom values to signify that this sprite should be flipped in the metasprite
-SPR_FLIP_H = %01000000 << 8
-SPR_FLIP_V = %10000000 << 8
-SPR_NO_PALETTE = %00100000 << 8
-
-.macro MetaspriteDefineBody Object, Animation, Direction, Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
-.local X1, X2, Y1, Y2, Size
-.local Tile1, Tile2, Tile3, Tile4
-.local Attr1, Attr2, Attr3, Attr4
-X1 = 0
-X2 = 8
-Y1 = 8+YOffset
-Y2 = 24+YOffset
-Size .set 1
-
-Tile1 .set ((<Spr1) | Bank | PATTERN_TABLE_1)
-.ifnblank Spr2
-Size .set 2
-Tile2 .set ((<Spr2) | Bank | PATTERN_TABLE_1)
-.endif
-.ifnblank Spr3
-Size .set 3
-Tile3 .set ((<Spr3) | Bank | PATTERN_TABLE_1)
-.endif
-.ifnblank Spr4
-Size .set 4
-Tile4 .set ((<Spr4) | Bank | PATTERN_TABLE_1)
-.endif
-Attr1 .set (Palette | ((>Spr1) >> 8))
-.ifnblank Spr2
-Attr2 .set (Palette | ((>Spr2) >> 8))
-.endif
-.ifnblank Spr3
-Attr3 .set (Palette | ((>Spr3) >> 8))
-.endif
-.ifnblank Spr4
-Attr4 .set (Palette | ((>Spr4) >> 8))
-.endif
-
-.if .xmatch(Direction, "LEFT")
-; .out .sprintf("Switching tile and attr %s %s %s", Object, Animation, Direction)
-.ifnblank Spr2
-  Tmp .set Tile1
-  Tile1 .set Tile2
-  Tile2 .set Tmp
-  Tmp .set Attr1
-  Attr1 .set Attr2
-  Attr2 .set Tmp
-  Attr1 .set Attr1 ^ $40
-  Attr2 .set Attr2 ^ $40
-.endif
-.ifnblank Spr4  
-  Tmp .set Tile3
-  Tile3 .set Tile4
-  Tile4 .set Tmp
-  Tmp .set Attr3
-  Attr3 .set Attr4
-  Attr4 .set Tmp
-  Attr3 .set Attr3 ^ $40
-  Attr4 .set Attr4 ^ $40
-.endif
-.endif
-
-.ident( .sprintf("MetaspriteData_%s_%s_%s", Object, Animation, Direction) ):
-  .byte   (Size * 4)
-  .byte   Tile1, Attr1, Y1, X1
-.ifnblank Spr2
-  .byte   Tile2, Attr2, Y1, X2
-.endif
-.ifnblank Spr3
-  .byte   Tile3, Attr3, Y2, X1
-.endif
-.ifnblank Spr4
-  .byte   Tile4, Attr4, Y2, X2
-.endif
-.endmacro
-
-METASPRITES_COUNT .set 1
-.macro MetaspriteDefine Object, Animation, Spr1, Spr2, Spr3, Spr4
-.local Bank, Palette, YOffset, Mirror
-
-.if .defined(.ident( .sprintf("%s_%s_BANK", Object, Animation) ))
-  Bank = .ident( .sprintf("%s_%s_BANK", Object, Animation) )
-.elseif .defined(.ident( .sprintf("%s_BANK", Object) ))
-  Bank = .ident( .sprintf("%s_BANK", Object) )
-.else
-  .error .sprintf("Could not define Metasprite without the bank. Please define either %s_BANK or %s_%s_BANK", Object, Object, Animation)
-.endif
-.if .defined(.ident( .sprintf("%s_%s_PALETTE", Object, Animation) ))
-  Palette = .ident( .sprintf("%s_%s_PALETTE", Object, Animation) )
-.elseif .defined(.ident( .sprintf("%s_PALETTE", Object) ))
-  Palette = .ident( .sprintf("%s_PALETTE", Object) )
-.else
-  .error .sprintf("Could not define Metasprite without the palette. Please define either %s_PALETTE or %s_%s_PALETTE", Object, Object, Animation)
-.endif
-
-.if .defined(.ident( .sprintf("%s_%s_Y_OFFSET", Object, Animation) ))
-  YOffset = <.ident( .sprintf("%s_%s_Y_OFFSET", Object, Animation) )
-.elseif .defined(.ident( .sprintf("%s_Y_OFFSET", Object) ))
-  YOffset = <.ident( .sprintf("%s_Y_OFFSET", Object) )
-.else
-  YOffset = 0
-.endif
-
-.if .defined(.ident( .sprintf("%s_%s_NO_MIRROR", Object, Animation) ))
-  Mirror = 0
-.elseif .defined(.ident( .sprintf("%s_NO_MIRROR", Object) ))
-  Mirror = 0
-.else
-  Mirror = 1
-.endif
-
-.ifdef METASPRITE_BODY
-
-.if Mirror = 1
-MetaspriteDefineBody Object, Animation, "LEFT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
-.endif
-MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
-
-.out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
-.if Mirror = 1
-.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
-.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
-.else
-.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
-.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
-.endif
-
-.ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
-.ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
-.endif
-
-.ident( .sprintf("METASPRITE_%s_%s", Object, Animation) ) = METASPRITES_COUNT
-METASPRITES_COUNT .set METASPRITES_COUNT + 1
-.endmacro
-
-.macro MetaspriteDuplicate Mspr, Name
-.ifdef METASPRITE_BODY
-.Local LL, LH, RL, RH
-LL = .ident(.sprintf("METASPRITE_LEFT_%d_LO", .lobyte(.ident(Mspr))))
-LH = .ident(.sprintf("METASPRITE_LEFT_%d_HI", .lobyte(.ident(Mspr))))
-RL = .ident(.sprintf("METASPRITE_RIGHT_%d_LO", .lobyte(.ident(Mspr))))
-RH = .ident(.sprintf("METASPRITE_RIGHT_%d_HI", .lobyte(.ident(Mspr))))
-
-.ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = LL
-.ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = LH
-.ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = RL
-.ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = RH
-.endif
-
-.ident( Name ) = METASPRITES_COUNT
-METASPRITES_COUNT .set METASPRITES_COUNT + 1
-.endmacro
+; Reserve Metasprite 0 as the "unused" sprite
+MetaspriteReserve "NULL"
 
 BIG_MARIO_BANK = SPRITE_BANK_0
 BIG_MARIO_PALETTE = $00
@@ -185,7 +30,7 @@ FIRE_MARIO_PALETTE = $00
 FIRE_MARIO_Y_OFFSET = -8
 MetaspriteDefine "FIRE_MARIO", "STANDING",  $00, $02, $2c, $2e
 ; MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_1", $00, $02, $2c, $2e
-MetaspriteDuplicate "METASPRITE_FIRE_MARIO_STANDING", "FIRE_MARIO_WALKING_1"
+MetaspriteDuplicate "FIRE_MARIO_STANDING", "FIRE_MARIO_WALKING_1"
 MetaspriteDefine "FIRE_MARIO", "WALKING_2", $00, $02, $30, $32 ; TODO
 MetaspriteDefine "FIRE_MARIO", "WALKING_3", $00, $02, $14, $16
 MetaspriteDefine "FIRE_MARIO", "SKIDDING",  $00, $02, $34, $36
@@ -217,7 +62,7 @@ MetaspriteDefine "SMALL_MARIO", "SWIMMING_2_KICK", $28, $2a
 MetaspriteDefine "SMALL_MARIO", "SWIMMING_3_KICK", $30, $32
 MetaspriteDefine "SMALL_MARIO", "SWIMMING_1_HOLD", $24, $26
 MetaspriteDefine "SMALL_MARIO", "SWIMMING_2_HOLD", $2c, $2e
-MetaspriteDuplicate "METASPRITE_SMALL_MARIO_SWIMMING_3_KICK", "SMALL_MARIO_SWIMMING_3_HOLD"
+MetaspriteDuplicate "SMALL_MARIO_SWIMMING_3_KICK", "SMALL_MARIO_SWIMMING_3_HOLD"
 
 SMALL_FIRE_BANK = SPRITE_BANK_0
 SMALL_FIRE_PALETTE = $00
@@ -234,16 +79,15 @@ MetaspriteDefine "SMALL_FIRE", "SWIMMING_2_KICK", $00, $02, $30, $32
 MetaspriteDefine "SMALL_FIRE", "SWIMMING_3_KICK", $00, $02, $34, $36
 MetaspriteDefine "SMALL_FIRE", "SWIMMING_1_HOLD", $00, $02, $28, $2a
 MetaspriteDefine "SMALL_FIRE", "SWIMMING_2_HOLD", $00, $02, $2c, $2e
-MetaspriteDuplicate "METASPRITE_SMALL_FIRE_SWIMMING_3_KICK", "SMALL_FIRE_SWIMMING_3_HOLD"
-
+MetaspriteDuplicate "SMALL_FIRE_SWIMMING_3_KICK", "SMALL_FIRE_SWIMMING_3_HOLD"
 
 MetaspriteDefine "SMALL_MARIO", "CLIMBING_1", $18, $1a
 MetaspriteDefine "SMALL_MARIO", "CLIMBING_2", $38, $3a
 MetaspriteDefine "SMALL_MARIO", "DEATH",      $34, $36
 
-MetaspriteDuplicate "METASPRITE_SMALL_MARIO_STANDING", "METASPRITE_SMALL_MARIO_GROW_STANDING"
+MetaspriteDuplicate "SMALL_MARIO_STANDING", "SMALL_MARIO_GROW_STANDING"
 MetaspriteDefine "BIG_MARIO", "GROW_INTERMEDIATE", $18, $1a, $38, $3a
-MetaspriteDuplicate "METASPRITE_BIG_MARIO_STANDING", "METASPRITE_BIG_MARIO_GROW_STANDING"
+MetaspriteDuplicate "BIG_MARIO_STANDING", "BIG_MARIO_GROW_STANDING"
 
 POWERUP_BANK = SPRITE_BANK_1
 ; POWERUP_Y_OFFSET = 8
@@ -298,6 +142,13 @@ MISC_FLAGPOLE_FLAG_BANK = SPRITE_BANK_3
 MISC_FLAGPOLE_FLAG_PALETTE = $01
 MetaspriteDefine "MISC", "FLAGPOLE_FLAG", $1c, $1e
 
+PLATFORM_BANK = SPRITE_BANK_1
+PLATFORM_PALETTE = $02
+MetaspriteReserve "PLATFORM_SMALL"
+MetaspriteReserve "PLATFORM_SMALL_FRAME_2"
+MetaspriteReserve "PLATFORM_LARGE"
+MetaspriteReserve "PLATFORM_LARGE_FRAME_2"
+
 NUMBER_BANK = SPRITE_BANK_1
 NUMBER_PALETTE = $02
 NUMBER_Y_OFFSET = -16
@@ -341,6 +192,8 @@ PIRANHA_PALETTE = $01
 PIRANHA_MOUTH_OPEN_Y_OFFSET = -8
 PIRANHA_MOUTH_CLOSED_Y_OFFSET = -8
 MetaspriteDefine "PIRANHA", "MOUTH_OPEN", $56, $56 | SPR_FLIP_H, $76, $76 | SPR_FLIP_H
-MetaspriteDefine "PIRANHA", "MOUTH_CLOSED", $58, $58 | SPR_FLIP_H, $78, $78 | SPR_FLIP_H 
+MetaspriteDefine "PIRANHA", "MOUTH_CLOSED", $58, $58 | SPR_FLIP_H, $78, $78 | SPR_FLIP_H
+
+MetaspriteReserve "BOWSER"
 
 .endif
