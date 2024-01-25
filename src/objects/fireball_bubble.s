@@ -76,12 +76,13 @@ ProcAirBubbles:
     SkipBubble:
       dex
       bpl AirBubbleLoop                ;do this until all three are handled
-  rts
+  ; Fall through and check if the fireball needs to be cleared because we took damage
+  ; rts
 NotSwimming:
   lda PlayerStatus           ;check player's status
   cmp #$02
   bcs Exit
-    ; Not fiery state and not swimming, so kill fireball
+    ; Not fiery state anymore, so kill fireball
     lda #0
     sta FireballMetasprite
     sta FireballMetasprite+1

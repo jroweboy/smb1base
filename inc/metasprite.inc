@@ -172,7 +172,6 @@ MetaspriteDefine "BIG_MARIO", "WALKING_2", $08, $0a, $28, $2a
 MetaspriteDefine "BIG_MARIO", "WALKING_3", $0c, $0e, $2c, $2e
 MetaspriteDefine "BIG_MARIO", "SKIDDING",  $10, $12, $30, $32
 MetaspriteDefine "BIG_MARIO", "JUMPING",   $14, $16, $34, $36
-MetaspriteDefine "BIG_MARIO", "CROUCHING", $18, $1a, $38, $3a
 
 MetaspriteDefine "BIG_MARIO", "SWIMMING_1_KICK", $00, $02, $20, $22
 MetaspriteDefine "BIG_MARIO", "SWIMMING_2_KICK", $04, $06, $20, $26
@@ -181,16 +180,27 @@ MetaspriteDefine "BIG_MARIO", "SWIMMING_1_HOLD", $00, $02, $24, $22
 MetaspriteDefine "BIG_MARIO", "SWIMMING_2_HOLD", $04, $06, $24, $26
 MetaspriteDefine "BIG_MARIO", "SWIMMING_3_HOLD", $04, $06, $2a, $22
 
-MetaspriteDefine "BIG_MARIO", "FIRE_STANDING",  $00, $02, $2c, $2e
+FIRE_MARIO_BANK = SPRITE_BANK_0
+FIRE_MARIO_PALETTE = $00
+FIRE_MARIO_Y_OFFSET = -8
+MetaspriteDefine "FIRE_MARIO", "STANDING",  $00, $02, $2c, $2e
 ; MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_1", $00, $02, $2c, $2e
-MetaspriteDuplicate "METASPRITE_BIG_MARIO_FIRE_STANDING", "BIG_MARIO_FIRE_WALKING_1"
-MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_2", $00, $02, $30, $32 ; TODO
-MetaspriteDefine "BIG_MARIO", "FIRE_WALKING_3", $00, $02, $14, $16
-MetaspriteDefine "BIG_MARIO", "FIRE_SKIDDING",  $00, $02, $34, $36
-MetaspriteDefine "BIG_MARIO", "FIRE_JUMPING",   $00, $02, $10, $12
+MetaspriteDuplicate "METASPRITE_FIRE_MARIO_STANDING", "FIRE_MARIO_WALKING_1"
+MetaspriteDefine "FIRE_MARIO", "WALKING_2", $00, $02, $30, $32 ; TODO
+MetaspriteDefine "FIRE_MARIO", "WALKING_3", $00, $02, $14, $16
+MetaspriteDefine "FIRE_MARIO", "SKIDDING",  $00, $02, $34, $36
+MetaspriteDefine "FIRE_MARIO", "JUMPING",   $00, $02, $10, $12
+
+MetaspriteDefine "FIRE_MARIO", "SWIMMING_1_KICK", $00, $02, $20, $22
+MetaspriteDefine "FIRE_MARIO", "SWIMMING_2_KICK", $04, $06, $20, $26
+MetaspriteDefine "FIRE_MARIO", "SWIMMING_3_KICK", $04, $06, $28, $22
+MetaspriteDefine "FIRE_MARIO", "SWIMMING_1_HOLD", $00, $02, $24, $22
+MetaspriteDefine "FIRE_MARIO", "SWIMMING_2_HOLD", $04, $06, $24, $26
+MetaspriteDefine "FIRE_MARIO", "SWIMMING_3_HOLD", $04, $06, $2a, $22
+
+MetaspriteDefine "BIG_MARIO", "CROUCHING",    $18, $1a, $38, $3a
 MetaspriteDefine "BIG_MARIO", "CLIMBING_1",   $00, $02, $08, $0a
 MetaspriteDefine "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
-
 
 SMALL_MARIO_BANK = SPRITE_BANK_0
 SMALL_MARIO_PALETTE = $00
@@ -201,8 +211,6 @@ MetaspriteDefine "SMALL_MARIO", "WALKING_2",  $08, $0a
 MetaspriteDefine "SMALL_MARIO", "WALKING_3",  $0c, $0e
 MetaspriteDefine "SMALL_MARIO", "SKIDDING",   $10, $12
 MetaspriteDefine "SMALL_MARIO", "JUMPING",    $14, $16
-MetaspriteDefine "SMALL_MARIO", "CLIMBING_1", $18, $1a
-MetaspriteDefine "SMALL_MARIO", "CLIMBING_2", $38, $3a
 
 MetaspriteDefine "SMALL_MARIO", "SWIMMING_1_KICK", $20, $22
 MetaspriteDefine "SMALL_MARIO", "SWIMMING_2_KICK", $28, $2a
@@ -210,7 +218,28 @@ MetaspriteDefine "SMALL_MARIO", "SWIMMING_3_KICK", $30, $32
 MetaspriteDefine "SMALL_MARIO", "SWIMMING_1_HOLD", $24, $26
 MetaspriteDefine "SMALL_MARIO", "SWIMMING_2_HOLD", $2c, $2e
 MetaspriteDuplicate "METASPRITE_SMALL_MARIO_SWIMMING_3_KICK", "SMALL_MARIO_SWIMMING_3_HOLD"
-MetaspriteDefine "SMALL_MARIO", "DEATH",           $34, $36
+
+SMALL_FIRE_BANK = SPRITE_BANK_0
+SMALL_FIRE_PALETTE = $00
+SMALL_FIRE_Y_OFFSET = -8
+MetaspriteDefine "SMALL_FIRE", "STANDING",   $00, $02, $20, $22
+MetaspriteDefine "SMALL_FIRE", "WALKING_1",  $00, $02, $04, $06
+MetaspriteDefine "SMALL_FIRE", "WALKING_2",  $00, $02, $08, $0a
+MetaspriteDefine "SMALL_FIRE", "WALKING_3",  $00, $02, $0c, $0e
+MetaspriteDefine "SMALL_FIRE", "SKIDDING",   $00, $02, $10, $12
+MetaspriteDefine "SMALL_FIRE", "JUMPING",    $00, $02, $14, $16
+
+MetaspriteDefine "SMALL_FIRE", "SWIMMING_1_KICK", $00, $02, $24, $26
+MetaspriteDefine "SMALL_FIRE", "SWIMMING_2_KICK", $00, $02, $30, $32
+MetaspriteDefine "SMALL_FIRE", "SWIMMING_3_KICK", $00, $02, $34, $36
+MetaspriteDefine "SMALL_FIRE", "SWIMMING_1_HOLD", $00, $02, $28, $2a
+MetaspriteDefine "SMALL_FIRE", "SWIMMING_2_HOLD", $00, $02, $2c, $2e
+MetaspriteDuplicate "METASPRITE_SMALL_FIRE_SWIMMING_3_KICK", "SMALL_FIRE_SWIMMING_3_HOLD"
+
+
+MetaspriteDefine "SMALL_MARIO", "CLIMBING_1", $18, $1a
+MetaspriteDefine "SMALL_MARIO", "CLIMBING_2", $38, $3a
+MetaspriteDefine "SMALL_MARIO", "DEATH",      $34, $36
 
 MetaspriteDuplicate "METASPRITE_SMALL_MARIO_STANDING", "METASPRITE_SMALL_MARIO_GROW_STANDING"
 MetaspriteDefine "BIG_MARIO", "GROW_INTERMEDIATE", $18, $1a, $38, $3a

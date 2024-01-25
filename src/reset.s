@@ -146,13 +146,13 @@ FinializeMarioInit:
   jsr IdleLoop
 
 BankInitValues:
-  .byte $00, $02, $06, $07, $08, $09
+  .byte $00, $02, CHR_SMALLMARIO, CHR_MISC, CHR_OVERWORLD_SPRITES, CHR_OVERWORLD_SPRITES+1
 .endproc
 
 .proc IdleLoop
   lda NmiDisable
   beq IdleLoop
-  jsr GameLoop
+    jsr GameLoop
   jmp IdleLoop
 .endproc
 

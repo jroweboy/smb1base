@@ -163,9 +163,11 @@ DrawSprite:
   jsr MetaspriteRenderLoop
 
   ldy OrigOffset
+  dey
+  bmi NotEnemy
   cpy #8
-  bcs NotEnemyOrPlayer
-    lda EnemyVerticalFlip-1,y
+  bcs NotEnemy
+    lda EnemyVerticalFlip,y
     beq NotVFlippedEnemy
       ldy #0
       ; reload the size. If its 8 or less then we don't need to do anything
@@ -186,7 +188,7 @@ DrawSprite:
         pla
         sta Sprite_Tilenumber-12,x
   NotVFlippedEnemy:
-NotEnemyOrPlayer:
+NotEnemy:
 
 Exit:
   rts
