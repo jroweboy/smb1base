@@ -17,10 +17,10 @@ _COMMON_DEFINE_SEGMENTS = 1
   pla
   sta R5 
   iny
-  lda (R4) ,y  ;load pointer from indirect
+  lda (R4),y  ;load pointer from indirect
   sta R6       ;note that if an RTS is performed in next routine
   iny          ;it will return to the execution before the sub
-  lda (R4) ,y  ;that called this routine
+  lda (R4),y  ;that called this routine
   sta R7 
   jmp (R6)  ;jump to the address we loaded
 .endproc
@@ -56,8 +56,30 @@ GetAreaType:
   rol
   rol                  ;make %0xx00000 into %000000xx
   sta AreaType         ;save 2 MSB as area type
+  tay
+  lda AreaTypeBankMap,y
+  cmp AreaChrBank
+  beq :+
+    sta AreaChrBank
+    clc
+    adc #2
+    sta AreaChrBank+1
+    lda AreaTypeEnemyBankMap,y
+    sta EnemyChrBank
+    sta EnemyChrBank+1
+    inc EnemyChrBank+1
+    inc ReloadCHRBank
+  :
+  lda AreaType
   rts
-
+AreaTypeBankMap:
+  .byte CHR_BG_WATER, CHR_BG_GROUND, CHR_BG_UNDERGROUND, CHR_BG_CASTLE
+AreaTypeEnemyBankMap:
+  .byte CHR_SPR_WATER, CHR_SPR_GROUND, CHR_SPR_UNDERGROUND, CHR_SPR_CASTLE
+; Water = 0
+; Ground = 1
+; UnderGround = 2
+; Castle = 3
 ;-------------------------------------------------------------------------------------
 ;$00 - used in adding to get proper offset
 

@@ -322,9 +322,9 @@ DrawEraseRope:
          sta VRAM_Buffer1+2,x
          lda Enemy_Y_Speed,y         ;if platform moving upwards, branch 
          bmi EraseR1                 ;to do something else
-         lda #$a2
+         lda #BALANCE_PLATFORM_ROPE_1
          sta VRAM_Buffer1+3,x        ;otherwise put tile numbers for left
-         lda #$a3                    ;and right sides of rope in vram buffer
+         lda #BALANCE_PLATFORM_ROPE_2 ;and right sides of rope in vram buffer
          sta VRAM_Buffer1+4,x
          jmp OtherRope               ;jump to skip this part
 EraseR1: lda #$24                    ;put blank tiles in vram buffer
@@ -345,9 +345,9 @@ OtherRope:
          sta VRAM_Buffer1+7,x        ;set length again for 2 bytes
          pla                         ;pull first copy of vertical speed from stack
          bpl EraseR2                 ;if moving upwards (note inversion earlier), skip this
-         lda #$a2
+         lda #BALANCE_PLATFORM_ROPE_1
          sta VRAM_Buffer1+8,x        ;otherwise put tile numbers for left
-         lda #$a3                    ;and right sides of rope in vram
+         lda #BALANCE_PLATFORM_ROPE_2 ;and right sides of rope in vram
          sta VRAM_Buffer1+9,x        ;transfer buffer
          jmp EndRp                   ;jump to skip this part
 EraseR2: lda #$24                    ;put blank tiles in vram buffer

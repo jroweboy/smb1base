@@ -187,7 +187,9 @@ __MEMORY_INC = 1
 .global IrqPointer
 .global ReloadCHRBank
 .global CurrentCHRBank
+AreaChrBank = CurrentCHRBank
 PlayerChrBank = CurrentCHRBank + 2
+EnemyChrBank = CurrentCHRBank + 4
 
 .global NoteLenLookupTblOfs
 .global Square1SoundBuffer

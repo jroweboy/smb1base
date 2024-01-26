@@ -179,7 +179,7 @@ MetaSpriteBankName=session
 
 FilterCHR=1
 FilterName=1
-FileNameCHR=C:\dev\smb1base\chr\rearranged_background
+FileNameCHR=Z:\Users\jroweboy\dev\smb1base\chr\bg_water
 FileNameName=
 FileNamePal=
 FileNameMetaSpriteBank=
