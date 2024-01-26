@@ -139,12 +139,14 @@ SkpFSte:  clc
           sta FirebarSpinState_High,x
 SetupGFB: sta Local_ef                     ;save high byte of spinning thing, modified or otherwise
           jsr RelativeEnemyPosition   ;get relative coordinates to screen
-          AllocSpr 6
+          AllocSpr 1
       ;     jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
       ;     ldy Enemy_SprDataOffset,x   ;get OAM data offset
           lda Enemy_Rel_YPos          ;get relative vertical coordinate
-          sta Sprite_Y_Position,y     ;store as Y in OAM data
           sta R7                      ;also save here
+          sec
+          sbc #4
+          sta Sprite_Y_Position,y     ;store as Y in OAM data
           lda Enemy_Rel_XPos          ;get relative horizontal coordinate
           sta Sprite_X_Position,y     ;store as X in OAM data
           sta R6                      ;also save here
@@ -166,7 +168,7 @@ DrawFbar: lda Local_ef                     ;load high byte of spinstate
           cmp #$04
           bne NextFbar
           lda OriginalOAMOffset
-          AllocSpr 6
+          AllocSpr 5
           sty R6
 NextFbar: inc R0                      ;move onto the next firebar part
           lda R0 
@@ -209,8 +211,11 @@ VAHandl: lda Enemy_Rel_YPos       ;if vertical relative coordinate offscreen,
          adc #$01                 ;otherwise get two's compliment of second part
 AddVA:   clc                      ;add vertical coordinate relative to screen to 
          adc Enemy_Rel_YPos       ;the second data, modified or otherwise
-SetVFbr: sta Sprite_Y_Position,y  ;store as Y coordinate here
+SetVFbr: 
          sta R7                   ;also store here for now
+         sec
+         sbc #4                   ; offset the drawn sprite by 4 to account for 8x16 sprite position
+         sta Sprite_Y_Position,y  ;store as Y coordinate here
 
 FirebarCollision:
          jsr DrawSingleFireball   ;run sub here to draw current tile of firebar
@@ -246,7 +251,7 @@ ChkVFBD: cmp #$08                 ;if difference => 8 pixels, skip ahead of this
          lda R6                   ;if firebar on far right on the screen, skip this,
          cmp #$f0                 ;because, really, what's the point?
          bcs Chk2Ofs
-         lda Sprite_X_Position+4  ;get OAM X coordinate for sprite #1
+         lda Player_Rel_XPos
          clc
          adc #$04                 ;add four pixels
          sta R4                   ;store here

@@ -126,7 +126,13 @@ MetaspriteDefine "COIN", "FRAME_4", $32
 MISC_BANK = SPRITE_BANK_1
 MISC_PALETTE = $03
 MISC_Y_OFFSET = -8
-MetaspriteDefine "MISC", "BRICK", $22, $22
+
+; The brick and block sprite palettes are set by the code
+MISC_BRICK_GROUND_PALETTE = $00
+MISC_BRICK_OTHER_PALETTE = $00 ; The brick palette is set by the code
+MISC_BLOCK_PALETTE = $00 ; The block palette is set by the code
+MetaspriteDefine "MISC", "BRICK_OTHER", $20, $20
+MetaspriteDefine "MISC", "BRICK_GROUND", $22, $22
 MetaspriteDefine "MISC", "BLOCK", $24, $24 | SPR_FLIP_H
 ; drawn manually for now until i figure out if i have frames for the brick
 ; break animation with just metasprites

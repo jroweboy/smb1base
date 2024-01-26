@@ -291,8 +291,17 @@ NextBUpd:
 
 ;-------------------------------------------------------------------------------------
 
+; Because the metasprite is rendered after, we need to keep the block around for one
+; extra frame in order to clear the metasprite on the same frame it would in vanilla
+EliminateBlock:
+  lda #0
+  sta BlockMetasprite,x
+  sta Block_State,x
+  rts
+
 BlockObjectsCore:
         lda Block_State,x           ;get state of block object
+        bmi EliminateBlock
         beq UpdSte                  ;if not set, branch to leave
         and #$0f                    ;mask out high nybble
         pha                         ;push to stack
@@ -344,8 +353,9 @@ BouncingBlockHandler:
            bcs UpdSte                 ;if still above amount, not time to kill block yet, thus branch
            lda #$01
            sta Block_RepFlag,x        ;otherwise set flag to replace metatile
-KillBlock: lda #$00                   ;if branched here, nullify object state
-           sta BlockMetasprite,x
+KillBlock: lda #$80                   ;if branched here, nullify object state
+           bne UpdSte
+KeepBlock: lda #1
 UpdSte:    sta Block_State,x          ;store contents of A in block object state
            rts
 

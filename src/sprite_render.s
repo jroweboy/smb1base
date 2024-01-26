@@ -87,29 +87,29 @@ FourSpriteStacker:
   sta R1
   sty R3
 
-  ; Change the start index for the shuffle each time
-  lda PlatformLastOAMOrder
-  clc
-  adc #3
-  cmp #4
-  bcc @SkipSubtract
-    ; implicit carry set
-    sbc #4
-@SkipSubtract:
-  sta PlatformLastOAMOrder
+;   ; Change the start index for the shuffle each time
+;   lda PlatformLastOAMOrder
+;   clc
+;   adc #3
+;   cmp #4
+;   bcc @SkipSubtract
+;     ; implicit carry set
+;     sbc #4
+; @SkipSubtract:
+;   sta PlatformLastOAMOrder
 
-  ldx #4           ;do six sprites
+;   ldx #4           ;do six sprites
 @StkLp:
-    ; keep platforms from disappearing with too many on screen
-    lda PlatformLastOAMOrder
-    clc
-    adc #3
-    cmp #4
-    bcc @SkipSubtract1
-      ; implicit carry set
-      sbc #4
-  @SkipSubtract1:
-    sta PlatformLastOAMOrder
+;     ; keep platforms from disappearing with too many on screen
+;     lda PlatformLastOAMOrder
+;     clc
+;     adc #3
+;     cmp #4
+;     bcc @SkipSubtract1
+;       ; implicit carry set
+;       sbc #4
+;   @SkipSubtract1:
+;     sta PlatformLastOAMOrder
     asl
     asl
     clc
@@ -145,28 +145,28 @@ SixSpriteStacker:
   sty R3
 
   ; Change the start index for the shuffle each time
-  lda PlatformLastOAMOrder
-  clc
-  adc #1
-  cmp #6
-  bcc @SkipSubtract
-    ; implicit carry set
-    sbc #6
-@SkipSubtract:
-  sta PlatformLastOAMOrder
+;   lda PlatformLastOAMOrder
+;   clc
+;   adc #1
+;   cmp #6
+;   bcc @SkipSubtract
+;     ; implicit carry set
+;     sbc #6
+; @SkipSubtract:
+;   sta PlatformLastOAMOrder
 
-  ldx #$06           ;do six sprites
+;   ldx #$06           ;do six sprites
 @loop:
-    ; keep platforms from disappearing with too many on screen
-    lda PlatformLastOAMOrder
-    clc
-    adc #5
-    cmp #6
-    bcc @SkipSubtract1
-      ; implicit carry set
-      sbc #6
-  @SkipSubtract1:
-    sta PlatformLastOAMOrder
+;     ; keep platforms from disappearing with too many on screen
+;     lda PlatformLastOAMOrder
+;     clc
+;     adc #5
+;     cmp #6
+;     bcc @SkipSubtract1
+;       ; implicit carry set
+;       sbc #6
+;   @SkipSubtract1:
+;     sta PlatformLastOAMOrder
     asl
     asl
     clc
@@ -1304,71 +1304,30 @@ ProcessFlyingCheepCheep:
 ; DefaultBlockObjTiles:
 ;   .byte BRICK_BUMP_TILE_1, BRICK_BUMP_TILE_1 ; , BRICK_BUMP_TILE_2, BRICK_BUMP_TILE_2
 
-DrawBlock:
-          ;  lda Block_Rel_YPos            ;get relative vertical coordinate of block object
-          ;  sta R2                        ;store here
-          ;  lda Block_Rel_XPos            ;get relative horizontal coordinate of block object
-          ;  sta R5                        ;store here
-          ;  lda #$03
-          ;  sta R4                        ;set attribute byte here
-          ;  lsr
-          ;  sta R3                        ;set horizontal flip bit here (will not be used)
-          ;  ldy Block_SprDataOffset,x     ;get sprite data offset
-
-        ; AllocSpr 2
-          ;  sty OriginalOAMOffset
-          ;  ldx #$00                      ;reset X for use as offset to tile data
-; DBlkLoop:  lda DefaultBlockObjTiles,x    ;get left tile number
-;            sta R0                        ;set here
-;            lda DefaultBlockObjTiles+1,x  ;get right tile number
-;            jsr DrawOneSpriteRow          ;do sub to write tile numbers to first row of sprites
-;            cpx #$04                      ;check incremented offset
-;            bne DBlkLoop                  ;and loop back until all four sprites are done
-           ldx ObjectOffset              ;get block object offset
-           lda #METASPRITE_MISC_BRICK
-           sta BlockMetasprite,x
-          ;  ldy Block_SprDataOffset,x     ;get sprite data offset
-          ;  ldy OriginalOAMOffset
-           lda AreaType
-           cmp #$01                      ;check for ground level type area
-           beq ChkRep                    ;if found, branch to next part
-          ;  lda #BRICK_BUMP_TILE_2
-          ;  sta Sprite_Tilenumber,y       ;otherwise remove brick tiles with lines
-          ;  sta Sprite_Tilenumber+4,y     ;and replace then with lineless brick tiles
-ChkRep:    lda Block_Metatile,x          ;check replacement metatile
-           cmp #$c4                      ;if not used block metatile, then
-           bne ExDBlk                 ;branch ahead to use current graphics
-           
-           lda #METASPRITE_MISC_BLOCK
-           sta BlockMetasprite,x
-;            lda #BLOCK_USED_TILE          ;set A for used block tile
-;            iny                           ;increment Y to write to tile bytes
-;            jsr DumpFourSpr               ;do sub to dump into all four sprites
-;            dey                           ;return Y to original offset
-;            lda #$03                      ;set palette bits
-;            ldx AreaType
-;            dex                           ;check for ground level type area again
-;            beq SetBFlip                  ;if found, use current palette bits
-;            lsr                           ;otherwise set to $01
-; SetBFlip:  ldx ObjectOffset              ;put block object offset back in X
-;            sta Sprite_Attributes,y       ;store attribute byte as-is in first sprite
-;            ora #%01000000
-;            sta Sprite_Attributes+4,y     ;set horizontal flip bit for second sprite
-;            ora #%10000000
-;            sta Sprite_Attributes+12,y    ;set both flip bits for fourth sprite
-;            and #%10000011
-;            sta Sprite_Attributes+8,y     ;set vertical flip bit for third sprite
-; BlkOffscr: lda Block_OffscreenBits       ;get offscreen bits for block object
-;            pha                           ;save to stack
-;            and #%00000100                ;check to see if d2 in offscreen bits are set
-;            beq PullOfsB                  ;if not set, branch, otherwise move sprites offscreen
-;            lda #$f8                      ;move offscreen two OAMs
-;            sta Sprite_Y_Position+4,y     ;on the right side
-;            sta Sprite_Y_Position+12,y
-; PullOfsB:  pla                           ;pull offscreen bits from stack
+.proc DrawBlock
+  ldx ObjectOffset              ;get block object offset
+  ldy #METASPRITE_MISC_BRICK_GROUND
+  lda #3
+  sta Block_SprAttrib,x
+  lda AreaType
+  cmp #1                        ;check for ground level type area
+  beq CheckReplacement          ;if found, branch to next part
+    ldy #METASPRITE_MISC_BRICK_OTHER
+CheckReplacement:
+  lda Block_Metatile,x          ;check replacement metatile
+  cmp #$c4                      ;if not used block metatile, then
+  bne Exit                 ;branch ahead to use current graphics
+    ldy #METASPRITE_MISC_BLOCK
+    lda AreaType
+    cmp #1
+    beq Exit
+      lda #1
+      sta Block_SprAttrib,x
+Exit:
+  tya
+  sta BlockMetasprite,x
   rts
-ChkLeftCo: 
-ExDBlk: rts
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to hold palette bits for attribute byte or relative X position

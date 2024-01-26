@@ -116,6 +116,8 @@ MetaspriteTableRightHi:
 ;     adc #8 * 4
 ; :
 
+LoopCount = M0
+
   ; draw the player first so it doesn't ever flicker
   ldy #0
   ldx ObjectMetasprite,y
@@ -126,7 +128,7 @@ MetaspriteTableRightHi:
 
 
   lda #24 - 1 ; size of the different object update list
-  sta SpriteShuffleTemp
+  sta LoopCount
   lda SpriteShuffleOffset
   clc
   adc #19
@@ -135,7 +137,13 @@ MetaspriteTableRightHi:
     ; implicit carry set
     sbc #24
 :
-ObjectLoop:
+  sta SpriteShuffleOffset
+  lda FrameCounter
+  lsr
+  lda SpriteShuffleOffset
+  bcc ObjectLoopNegative
+
+ObjectLoopPositive:
     clc
     adc #13
     cmp #24
@@ -155,8 +163,33 @@ ObjectLoop:
         jsr DrawMetasprite
         lda SpriteShuffleOffset
   NextLoop:
-    dec SpriteShuffleTemp
-    bpl ObjectLoop
+    dec LoopCount
+    bpl ObjectLoopPositive
+  jmp HandleFloateyNumbers
+
+ObjectLoopNegative:
+    sec
+    sbc #13
+    bcs :+
+      ; implicit carry clear
+      adc #24
+    :
+    ; skip index zero since we draw the player first always.
+    beq NextLoop2
+      ; TODO check offscreenbits to make sure they are onscreen still
+      tay
+      ldx ObjectMetasprite,y
+      beq NextLoop2
+      cpx #METASPRITES_COUNT ; todo remove this after fixing all bugs
+      bcs NextLoop2
+        sta SpriteShuffleOffset
+        jsr DrawMetasprite
+        lda SpriteShuffleOffset
+  NextLoop2:
+    dec LoopCount
+    bpl ObjectLoopNegative
+
+HandleFloateyNumbers:
   sta SpriteShuffleOffset
 
   ldx #7-1
