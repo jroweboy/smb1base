@@ -15,7 +15,7 @@ SPR_FLIP_H = %01000000 << 8
 SPR_FLIP_V = %10000000 << 8
 SPR_NO_PALETTE = %00100000 << 8
 
-.macro MetaspriteDefineBody Object, Animation, Direction, Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+.macro MetaspriteBoxBody Object, Animation, Direction, Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
 .local X1, X2, Y1, Y2, Size
 .local Tile1, Tile2, Tile3, Tile4
 .local Attr1, Attr2, Attr3, Attr4
@@ -88,7 +88,7 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 .endif
 .endmacro
 
-.macro MetaspriteDefine Object, Animation, Spr1, Spr2, Spr3, Spr4
+.macro MetaspriteBox Object, Animation, Spr1, Spr2, Spr3, Spr4
 .local Bank, Palette, YOffset, Mirror
 
 .if .defined(.ident( .sprintf("%s_%s_BANK", Object, Animation) ))
@@ -125,9 +125,9 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 .ifdef METASPRITE_BODY
 
 .if Mirror = 1
-MetaspriteDefineBody Object, Animation, "LEFT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+MetaspriteBoxBody Object, Animation, "LEFT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
 .endif
-MetaspriteDefineBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+MetaspriteBoxBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
 
 .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 .if Mirror = 1
