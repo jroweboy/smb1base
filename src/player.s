@@ -251,7 +251,7 @@ HoleBottom:
   sty R7
 ChkHoleX:
   cmp R7                      ;compare vertical high byte with value set here
-  bmi CheckMusicFinished                ;if less, branch to leave
+  bmi ExitCtrl                ;if less, branch to leave
     dex                         ;otherwise decrement flag in X
     bmi CloudExit               ;if flag was clear, branch to set modes and other values
 CheckMusicFinished:

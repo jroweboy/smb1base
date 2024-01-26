@@ -20,7 +20,7 @@
 ;$02 - offset to sprite data
 
 VineYPosAdder:
-      .byte $00, $30
+  .byte $00, $30
 
 DrawVine:
          sty R0                     ;save offset here
@@ -31,7 +31,7 @@ DrawVine:
       ;    ldy Enemy_SprDataOffset,x  ;get sprite data offset
       ReserveSpr 6
          sty R2                    ;store sprite data offset here
-         jsr SixSpriteStackerVanilla ;stack six sprites on top of each other vertically
+         jsr SixSpriteStacker       ;stack six sprites on top of each other vertically
          lda Enemy_Rel_XPos         ;get relative horizontal coordinate
          sta Sprite_X_Position,y    ;store in first, third and fifth sprites
          sta Sprite_X_Position+8,y
@@ -82,19 +82,14 @@ NextVSp: iny                        ;move offset to next OAM data
          ldy R0                     ;return offset set earlier
          rts
 
-SixSpriteStackerVanilla:
-  ldx #$06           ;do six sprites
-@StkLp:
-    sta Sprite_Data,y ;store X or Y coordinate into OAM data
-    clc
-    adc #$08           ;add eight pixels
-    iny
-    iny                ;move offset four bytes forward
-    iny
-    iny
-    dex                ;do another sprite
-    bne @StkLp          ;do this until all sprites are done
-  ldy R2             ;get saved OAM data offset and leave
+SixSpriteStacker:
+.repeat 6, I
+  sta Sprite_Data + (I*4),y ;store X or Y coordinate into OAM data
+.if I <> 5
+  clc
+  adc #$08           ;add eight pixels
+.endif
+.endrepeat
   rts
 
 ;-------------------------------------------------------------------------------------
@@ -175,17 +170,17 @@ DrawLargePlatform:
   beq ShrinkPlatform
     ldy SecondaryHardMode       ;check for secondary hard mode flag set
     bne ShrinkPlatform          ;branch if its hardmode
-      ldy #METASPRITE_PLATFORM_LARGE
-      bne ProcessTiles
+      ldy #METASPRITE_PLATFORM_GIRDER_LARGE
+      ldx CloudTypeOverride
+      beq ProcessTiles      ;if cloud level override flag not set, use
+        ldy #METASPRITE_PLATFORM_CLOUD_LARGE
+        bne ProcessTiles
 ShrinkPlatform:
-  ldy #METASPRITE_PLATFORM_SMALL
-ProcessTiles:
-  ; lda #PLATFORM_GIRDER ; $bc                    ;load default tile for platform (girder)
+  ldy #METASPRITE_PLATFORM_GIRDER_SMALL
   ldx CloudTypeOverride
-  beq SetPlatformTilenum      ;if cloud level override flag not set, use
-  ; lda #PLATFORM_CLOUD ; $fe                    ;otherwise load other tile for platform (puff)
-    ; TODO cloud platform
-SetPlatformTilenum:
+  beq ProcessTiles      ;if cloud level override flag not set, use
+    ldy #METASPRITE_PLATFORM_CLOUD_SMALL
+ProcessTiles:
   ldx ObjectOffset            ;get enemy object buffer offset
   ; Alternate frames for the girder for sprite shuffling
   lda FrameCounter
@@ -196,11 +191,6 @@ SetPlatformTilenum:
   adc R2
   sta EnemyMetasprite,x
   rts
-
-InversePowerOfTwo:
-.repeat 8, I
-  .byte (1 << (7-I))
-.endrepeat
 
 ;-------------------------------------------------------------------------------------
 

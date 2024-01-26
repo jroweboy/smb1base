@@ -5,12 +5,17 @@ set(PROJECT_NAME smb1base)
 project(${PROJECT_NAME} ASM C)
 
 add_executable(${PROJECT_NAME}
-
-  chr/rearranged_background.chr
+  
+  chr/bg_castle.chr
+  chr/bg_ground.chr
+  chr/bg_underground.chr
+  chr/bg_water.chr
   chr/sprites_castle.chr
   chr/sprites_mario.chr
+  chr/sprites_misc.chr
   chr/sprites_overworld.chr
   chr/sprites_underground.chr
+  chr/sprites_water.chr
 
   inc/charmap.inc
   inc/common.inc
@@ -18,6 +23,9 @@ add_executable(${PROJECT_NAME}
   inc/globals.inc
   inc/level.inc
   inc/memory.inc
+  inc/metasprite.inc
+  inc/metasprite_custom.inc
+  inc/metasprite_p.inc
   inc/mmc3.inc
   inc/nes2header.inc
   inc/object.inc

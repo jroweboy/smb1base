@@ -584,20 +584,21 @@ InitVStf:
 
 ;--------------------------------
 ;$00 - used to store enemy identifier in KillEnemies
-KillEnemies:
+.proc KillEnemies
   sta R0            ;store identifier here
   lda #$00
   ldx #$04          ;check for identifier in enemy object buffer
 KillELoop:
-  ldy Enemy_ID,x
-  cpy R0            ;if not found, branch
-  bne NoKillE
-  sta Enemy_Flag,x  ;if found, deactivate enemy object flag
-NoKillE:
-  dex               ;do this until all slots are checked
-  bpl KillELoop
+    ldy Enemy_ID,x
+    cpy R0            ;if not found, branch
+    bne :+
+      sta EnemyMetasprite,x
+      sta Enemy_Flag,x  ;if found, deactivate enemy object flag
+  :
+    dex               ;do this until all slots are checked
+    bpl KillELoop
   rts
-
+.endproc
 
 ;-------------------------------------------------------------------------------------
 
