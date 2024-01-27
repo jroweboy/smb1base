@@ -220,6 +220,12 @@ MetaspriteBox "BUZZY_BEETLE", "WALKING_2", $04, $06
 MetaspriteBox "BUZZY_BEETLE", "SHELL", $20, $20 | SPR_FLIP_H
 
 
+CHEEP_CHEEP_BANK = SPRITE_BANK_2
+CHEEP_CHEEP_PALETTE = $01
+MetaspriteBox "CHEEP_CHEEP", "SWIM_1", $2c, $2e
+MetaspriteBox "CHEEP_CHEEP", "SWIM_2", $2a, $2e
+
+
 
 MetaspriteReserve "BOWSER"
 

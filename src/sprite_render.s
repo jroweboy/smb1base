@@ -1089,13 +1089,30 @@ WriteMetasprite:
   rts
 .endproc
 
+ProcessSwimmingCheepCheep:
+  ; fallthrough
+.proc ProcessFlyingCheepCheep
+  ldy #METASPRITE_CHEEP_CHEEP_SWIM_1
+  lda Enemy_State,x
+  ; check for the animation bits
+  and #%10100000
+  ora TimerControl      ;or timer disable flag set
+  bne WriteMetasprite   ;if either condition true, do not animate goomba
+    lda FrameCounter
+    and #%00001000        ;check for every eighth frame
+    bne WriteMetasprite
+      iny
+WriteMetasprite:
+  tya
+  sta EnemyMetasprite,x
+  rts
+.endproc
+
 ProcessHammerBro:
 ProcessBlooper:
-ProcessSwimmingCheepCheep:
 
 ProcessLakitu:
 ProcessSpiny:
-ProcessFlyingCheepCheep:
   lda #0
   sta EnemyMetasprite,x
   rts
