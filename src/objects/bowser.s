@@ -1,5 +1,6 @@
 .include "common.inc"
 .include "object.inc"
+.include "metasprite.inc"
 
 .import SpawnHammerObj, MoveVOffset, RemBridge
 
@@ -301,13 +302,38 @@ ExBGfxH:
 
 ProcessBowserHalf:
   inc BowserGfxFlag         ;increment bowser's graphics flag, then run subroutines
-  jsr RunRetainerObj        ;to get offscreen bits, relative position and draw bowser (finally!)
+  jsr ChooseBowserMetasprite
+  jsr GetEnemyOffscreenBits
+  jsr RelativeEnemyPosition
+  ; jsr RunRetainerObj        ;to get offscreen bits, relative position and draw bowser (finally!)
   lda Enemy_State,x
   bne ExBGfxH               ;if either enemy object not in normal state, branch to leave
   lda #$0a
   sta Enemy_BoundBoxCtrl,x  ;set bounding box size control
   jsr GetEnemyBoundBox      ;get bounding box coordinates
   jmp PlayerEnemyCollision  ;do player-to-enemy collision detection
+
+.proc ChooseBowserMetasprite
+  ; 1 == drawing front. 2 == drawing rear
+  lda BowserGfxFlag
+  lsr
+  bcs BowserFront
+    ; Drawing bowsers rear
+    ldy #METASPRITE_BOWSER_REAR_WALK_1
+    bne WriteMetasprite
+BowserFront:
+    ldy #METASPRITE_BOWSER_FRONT_MOUTH_OPEN
+WriteMetasprite:
+  tya
+  sta EnemyMetasprite,x
+  lda Enemy_State,x
+  and #%00100000
+  beq BowserNotDefeated
+    ; if bowser is defeated set the vertical flip flag
+    inc EnemyVerticalFlip,x
+BowserNotDefeated:
+  rts
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to hold movement force and tile number

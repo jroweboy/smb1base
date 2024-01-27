@@ -19,6 +19,7 @@ SPR_NO_PALETTE = %00100000 << 8
 .local X1, X2, Y1, Y2, Size
 .local Tile1, Tile2, Tile3, Tile4
 .local Attr1, Attr2, Attr3, Attr4
+.local DrawSprite1, DrawSprite2, DrawSprite3, DrawSprite4
 
 X1 = 0
 X2 = 8
@@ -26,19 +27,29 @@ Y1 = 8+YOffset
 Y2 = 24+YOffset
 Size .set 1
 
+DrawSprite2 .set 0
+DrawSprite3 .set 0
+DrawSprite4 .set 0
+
+DrawSprite1 .set 1
 Tile1 .set ((<Spr1) | Bank | PATTERN_TABLE_1)
+
 .ifnblank Spr2
+DrawSprite2 .set 1
 Size .set 2
 Tile2 .set ((<Spr2) | Bank | PATTERN_TABLE_1)
 .endif
 .ifnblank Spr3
+DrawSprite3 .set 1
 Size .set 3
 Tile3 .set ((<Spr3) | Bank | PATTERN_TABLE_1)
 .endif
 .ifnblank Spr4
+DrawSprite4 .set 1
 Size .set 4
 Tile4 .set ((<Spr4) | Bank | PATTERN_TABLE_1)
 .endif
+
 Attr1 .set (Palette | ((>Spr1) >> 8))
 .ifnblank Spr2
 Attr2 .set (Palette | ((>Spr2) >> 8))
@@ -62,7 +73,13 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
   Attr1 .set Attr1 ^ $40
   Attr2 .set Attr2 ^ $40
 .endif
-.ifnblank Spr4  
+.if .blank(Spr4) .and(.not .blank(Spr3))
+  DrawSprite4 .set 1
+  DrawSprite3 .set 0
+  Attr4 .set Attr3 ^ $40
+  Tile4 .set Tile3
+.endif
+.ifnblank Spr4
   Tmp .set Tile3
   Tile3 .set Tile4
   Tile4 .set Tmp
@@ -76,14 +93,16 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 
 .ident( .sprintf("MetaspriteData_%s_%s_%s", Object, Animation, Direction) ):
   .byte   (Size * 4)
+.if DrawSprite1 <> 0
   .byte   Tile1, Attr1, Y1, X1
-.ifnblank Spr2
+.endif
+.if DrawSprite2 <> 0
   .byte   Tile2, Attr2, Y1, X2
 .endif
-.ifnblank Spr3
+.if DrawSprite3 <> 0
   .byte   Tile3, Attr3, Y2, X1
 .endif
-.ifnblank Spr4
+.if DrawSprite4 <> 0
   .byte   Tile4, Attr4, Y2, X2
 .endif
 .endmacro

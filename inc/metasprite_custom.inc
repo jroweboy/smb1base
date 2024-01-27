@@ -88,29 +88,29 @@ MetaspritePlatformCloudLargeFrame2:
 ;;;;;;;;;;;
 ; Bowser
 
-Y_OFFSET .set 0
-X_OFFSET .set 0
-PALETTE  .set 2
+; Y_OFFSET .set 0
+; X_OFFSET .set 0
+; PALETTE  .set 2
 
-MetaspriteData "METASPRITE_BOWSER", MetaspriteBowserLeft, MetaspriteBowserRight
-MetaspriteBowserLeft:
-  .byte  7 * 4
-  .byte  MetaspriteBank($6c, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  0 + X_OFFSET
-  .byte  MetaspriteBank($6e, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
-  .byte  MetaspriteBank($70, SPRITE_BANK_3), PALETTE, - 8 + Y_OFFSET, 16 + X_OFFSET
-  .byte  MetaspriteBank($4c, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  0 + X_OFFSET
-  .byte  MetaspriteBank($4e, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  8 + X_OFFSET
-  .byte  MetaspriteBank($50, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 16 + X_OFFSET
-  .byte  MetaspriteBank($52, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 24 + X_OFFSET
-MetaspriteBowserRight:
-  .byte  7 * 4
-  .byte  MetaspriteBank($6c, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  0 + X_OFFSET
-  .byte  MetaspriteBank($6e, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
-  .byte  MetaspriteBank($70, SPRITE_BANK_3), PALETTE, - 8 + Y_OFFSET, 16 + X_OFFSET
-  .byte  MetaspriteBank($4c, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  0 + X_OFFSET
-  .byte  MetaspriteBank($4e, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  8 + X_OFFSET
-  .byte  MetaspriteBank($50, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 16 + X_OFFSET
-  .byte  MetaspriteBank($52, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 24 + X_OFFSET
+; MetaspriteData "METASPRITE_BOWSER_OPEN_MOUTH_WALK_1", MetaspriteBowserOpenMouthLeftWalk1, MetaspriteBowserOpenMouthRightWalk1
+; MetaspriteBowserOpenMouthLeftWalk1:
+;   .byte  3 * 4
+;   .byte  MetaspriteBank($6c, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  0 + X_OFFSET
+;   .byte  MetaspriteBank($6e, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
+;   .byte  MetaspriteBank($70, SPRITE_BANK_3), PALETTE, - 8 + Y_OFFSET, 16 + X_OFFSET
+;   .byte  MetaspriteBank($4c, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  0 + X_OFFSET
+;   .byte  MetaspriteBank($4e, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  8 + X_OFFSET
+;   .byte  MetaspriteBank($50, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 16 + X_OFFSET
+;   .byte  MetaspriteBank($52, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 24 + X_OFFSET
+; MetaspriteBowserOpenMouthRightWalk1:
+;   .byte  3 * 4
+;   .byte  MetaspriteBank($6c, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  0 + X_OFFSET
+;   .byte  MetaspriteBank($6e, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
+;   .byte  MetaspriteBank($70, SPRITE_BANK_3), PALETTE, - 8 + Y_OFFSET, 16 + X_OFFSET
+;   .byte  MetaspriteBank($4c, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  0 + X_OFFSET
+;   .byte  MetaspriteBank($4e, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET,  8 + X_OFFSET
+;   .byte  MetaspriteBank($50, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 16 + X_OFFSET
+;   .byte  MetaspriteBank($52, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 24 + X_OFFSET
 
 .endif ; METASPRITE_BODY
 

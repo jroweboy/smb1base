@@ -226,7 +226,16 @@ MetaspriteBox "CHEEP_CHEEP", "SWIM_1", $2c, $2e
 MetaspriteBox "CHEEP_CHEEP", "SWIM_2", $2a, $2e
 
 
-
-MetaspriteReserve "BOWSER"
+; MetaspriteReserve "BOWSER_FRONT_MOUTH_OPEN"
+; MetaspriteReserve "BOWSER_FRONT_MOUTH_CLOSED"
+; MetaspriteReserve "BOWSER_REAR_WALK_1"
+; MetaspriteReserve "BOWSER_REAR_WALK_2"
+BOWSER_BANK = SPRITE_BANK_3
+BOWSER_PALETTE = $01
+BOWSER_Y_OFFSET = -8
+MetaspriteBox "BOWSER", "FRONT_MOUTH_OPEN", $10, $12, $30
+MetaspriteBox "BOWSER", "FRONT_MOUTH_CLOSED", $14, $16, $30
+MetaspriteBox "BOWSER", "REAR_WALK_1", $0c, $0e, $28, $2a
+MetaspriteBox "BOWSER", "REAR_WALK_2", $0c, $0e, $2c, $2e
 
 .endif
