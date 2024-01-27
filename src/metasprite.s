@@ -30,23 +30,6 @@ MetaspriteTableRightHi:
 
 .export DrawAllMetasprites
 .proc DrawAllMetasprites
-  ; jsr MoveAllSpritesOffscreen
-  ; If we are going through a pipe, we need to reserve
-  ; 16 sprites (8 for each player overlay)
-
-  ; Check to see if the leader is behind something.
-  ; If they are we want to draw them second
-;   lda Player_SprAttrib
-;   and #(1 << 5)
-;   beq :+ ; not behind the door
-;     lda #32
-; :
-;   ; if we are in a pipe transition, reserve enough for the sprite overlay
-;   ldy InPipeTransition
-;   beq :+
-;     clc 
-;     adc #8 * 4
-; :
 
 LoopCount = M0
 
@@ -54,10 +37,29 @@ LoopCount = M0
   ldy #0
   ldx ObjectMetasprite,y
   ; unless the player is currently flickering due to damage taken
-  beq :+
-    jsr DrawMetasprite
-  :
-
+  beq DoneDrawingPlayer
+    ; put the player in slot 0 always
+    lda CurrentOAMOffset
+    pha
+      lda PlayerOAMOffset
+      sta CurrentOAMOffset
+      jsr DrawMetasprite
+    pla
+    sta CurrentOAMOffset
+    ; Now clear out the 
+    ; X is the old OAM offset
+    cpx #4*4
+    beq DoneDrawingPlayer
+    lda #$f8
+    ClearLoop:
+      sta Sprite_Y_Position,x
+      inx
+      inx
+      inx
+      inx
+      cpx #4*4
+      bne ClearLoop
+DoneDrawingPlayer:
 
   lda #24 - 1 ; size of the different object update list
   sta LoopCount
@@ -138,13 +140,13 @@ FloateyNumberLoop:
   ; Clear sprites up to the offset
   lda #$f8
   ldx CurrentOAMOffset
-  ClearLoop:
+  :
     sta Sprite_Y_Position,x
     inx
     inx
     inx
     inx
-    bne ClearLoop
+    bne :-
   rts
 .endproc
 

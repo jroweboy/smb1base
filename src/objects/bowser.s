@@ -353,7 +353,7 @@ SFlmX:   sta R0                      ;store value here
 SetGfxF: jsr RelativeEnemyPosition   ;get new relative coordinates
          lda Enemy_State,x           ;if bowser's flame not in normal state,
          bne ExFl                    ;branch to leave
-         lda #$51                    ;otherwise, continue
+         lda #BOWSER_FLAME_TILE1     ;otherwise, continue
          sta R0                      ;write first tile number
          ldy #$02                    ;load attributes without vertical flip by default
          lda FrameCounter
@@ -370,6 +370,7 @@ DrawFlameLoop:
          lda R0 
          sta Sprite_Tilenumber,y    ;write current tile number into OAM data
          inc R0                     ;increment tile number to draw more bowser's flame
+         inc R0                     ;twice since its 8x16 mode now
          lda R1 
          sta Sprite_Attributes,y    ;write saved attributes into OAM data
          lda Enemy_Rel_XPos

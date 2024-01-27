@@ -99,6 +99,7 @@ GameCoreRoutine:
 
   lda #0
   sta PlayerOAMOffset
+  lda #4 * 4 ; save enough room to draw the player first later
   sta CurrentOAMOffset
 
   lda OperMode_Task          ;check major task of operating mode

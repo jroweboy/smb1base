@@ -550,13 +550,13 @@ MoveLiftPlatforms:
       lda Enemy_Y_Position,x   ;add whatever vertical speed is set to current
       adc Enemy_Y_Speed,x      ;vertical position plus carry to move up or down
       sta Enemy_Y_Position,x   ;and then leave
+ExLiftP:
       rts
 
 ChkSmallPlatCollision:
          lda PlatformCollisionFlag,x ;get bounding box counter saved in collision flag
          beq ExLiftP                 ;if none found, leave player position alone
          jmp PositionPlayerOnS_Plat  ;use to position player correctly
-ExLiftP: rts ; TODO check this RTS can be removed                         ;then leave
 
 
 
