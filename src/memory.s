@@ -416,8 +416,8 @@ BlockMetasprite:                .res  4
 MiscMetasprite:                 .res  9
 BubbleMetasprite:               .res  3
 
-; ObjectVerticalFlip:               .res  1
-; PlayerVerticalFlip     = ObjectMetasprite
+ObjectVerticalFlip:               .res  1
+PlayerVerticalFlip     = ObjectMetasprite
 EnemyVerticalFlip:                .res  6
 
 A_B_Buttons:                    .res  1

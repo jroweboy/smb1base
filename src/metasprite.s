@@ -188,17 +188,24 @@ DrawSprite:
   sta Ylo
   lda SprObject_Y_HighPos,y
   sta Yhi
-  lda SprObject_SprAttrib,y
+
+  cpy #7
+  bcs NotFlipped
+  lda ObjectVerticalFlip,y
+  beq NotFlipped
+    lda #OAM_FLIP_V
+    .byte $2c
+NotFlipped:
+  lda #0
+  ora SprObject_SprAttrib,y
   sta Atr
 
   jsr MetaspriteRenderLoop
 
   ldy OrigOffset
-  dey
-  bmi NotEnemy
-  cpy #8
+  cpy #7
   bcs NotEnemy
-    lda EnemyVerticalFlip,y
+    lda ObjectVerticalFlip,y
     beq NotVFlippedEnemy
       ldy #0
       ; reload the size. If its 8 or less then we don't need to do anything

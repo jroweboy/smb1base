@@ -107,13 +107,6 @@ ClrSndLoop:
 
 InitializeArea:
 
-  ; jroweboy added:
-  ; disable the screen and re-enable NMI so that clearing memory during the gameplay
-  ; doesn't cause 2 frames glitched graphics on level end in castles.
-  inc DisableScreenFlag
-  lda #0
-  sta NmiDisable
-
   ldy #<SecondaryMsgCounter                 ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
   ldx #FRAME_TIMER_COUNT
@@ -561,6 +554,9 @@ ExitMsgs:
   sta AreaNumber             ;otherwise initialize area number used as offset
   sta LevelNumber            ;and level number control to start at area 1
   sta OperMode_Task          ;initialize secondary mode of operation
+  ; jroweboy added:
+  ; disable the screen since loading a new area pointer will change CHR banks
+  inc DisableScreenFlag
   inc WorldNumber            ;increment world number to move onto the next world
   jsr LoadAreaPointer        ;get area address offset for the next area
   inc FetchNewGameTimerFlag  ;set flag to load game timer from header

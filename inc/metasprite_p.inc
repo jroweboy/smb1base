@@ -15,14 +15,14 @@ SPR_FLIP_H = %01000000 << 8
 SPR_FLIP_V = %10000000 << 8
 SPR_NO_PALETTE = %00100000 << 8
 
-.macro MetaspriteBoxBody Object, Animation, Direction, Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+.macro MetaspriteBoxBody Object, Animation, Direction, Bank, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 .local X1, X2, Y1, Y2, Size
 .local Tile1, Tile2, Tile3, Tile4
 .local Attr1, Attr2, Attr3, Attr4
 .local DrawSprite1, DrawSprite2, DrawSprite3, DrawSprite4
 
-X1 = 0
-X2 = 8
+X1 = 0+XOffset
+X2 = 8+XOffset
 Y1 = 8+YOffset
 Y2 = 24+YOffset
 Size .set 1
@@ -108,7 +108,7 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 .endmacro
 
 .macro MetaspriteBox Object, Animation, Spr1, Spr2, Spr3, Spr4
-.local Bank, Palette, YOffset, Mirror
+.local Bank, Palette, XOffset, YOffset, Mirror
 
 .if .defined(.ident( .sprintf("%s_%s_BANK", Object, Animation) ))
   Bank = .ident( .sprintf("%s_%s_BANK", Object, Animation) )
@@ -133,6 +133,14 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
   YOffset = 0
 .endif
 
+.if .defined(.ident( .sprintf("%s_%s_X_OFFSET", Object, Animation) ))
+  XOffset = <.ident( .sprintf("%s_%s_X_OFFSET", Object, Animation) )
+.elseif .defined(.ident( .sprintf("%s_X_OFFSET", Object) ))
+  XOffset = <.ident( .sprintf("%s_X_OFFSET", Object) )
+.else
+  XOffset = 0
+.endif
+
 .if .defined(.ident( .sprintf("%s_%s_NO_MIRROR", Object, Animation) ))
   Mirror = 0
 .elseif .defined(.ident( .sprintf("%s_NO_MIRROR", Object) ))
@@ -144,9 +152,9 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 .ifdef METASPRITE_BODY
 
 .if Mirror = 1
-MetaspriteBoxBody Object, Animation, "LEFT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+MetaspriteBoxBody Object, Animation, "LEFT", Bank, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 .endif
-MetaspriteBoxBody Object, Animation, "RIGHT", Bank, Palette, YOffset, Spr1, Spr2, Spr3, Spr4
+MetaspriteBoxBody Object, Animation, "RIGHT", Bank, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 
 .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 .if Mirror = 1

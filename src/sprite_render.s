@@ -115,52 +115,109 @@ SecondSprTilenum:
 HammerSprAttrib:
       .byte $03, $03, $c3, $c3
 
-DrawHammer:
-            ; ldy Misc_SprDataOffset,x    ;get misc object OAM data offset
-          AllocSpr 2
-            lda TimerControl
-            bne ForceHPose              ;if master timer control set, skip this part
-            lda Misc_State,x            ;otherwise get hammer's state
-            and #%01111111              ;mask out d7
-            cmp #$01                    ;check to see if set to 1 yet
-            beq GetHPose                ;if so, branch
-ForceHPose: ldx #$00                    ;reset offset here
-            beq RenderH                 ;do unconditional branch to rendering part
-GetHPose:   lda FrameCounter            ;get frame counter
-            lsr                         ;move d3-d2 to d1-d0
-            lsr
-            and #%00000011              ;mask out all but d1-d0 (changes every four frames)
-            tax                         ;use as timing offset
-RenderH:    lda Misc_Rel_YPos           ;get relative vertical coordinate
-            clc
-            adc FirstSprYPos,x          ;add first sprite vertical adder based on offset
-            sta Sprite_Y_Position,y     ;store as sprite Y coordinate for first sprite
-            clc
-            adc SecondSprYPos,x         ;add second sprite vertical adder based on offset
-            sta Sprite_Y_Position+4,y   ;store as sprite Y coordinate for second sprite
-            lda Misc_Rel_XPos           ;get relative horizontal coordinate
-            clc
-            adc FirstSprXPos,x          ;add first sprite horizontal adder based on offset
-            sta Sprite_X_Position,y     ;store as sprite X coordinate for first sprite
-            clc
-            adc SecondSprXPos,x         ;add second sprite horizontal adder based on offset
-            sta Sprite_X_Position+4,y   ;store as sprite X coordinate for second sprite
-            lda FirstSprTilenum,x
-            sta Sprite_Tilenumber,y     ;get and store tile number of first sprite
-            lda SecondSprTilenum,x
-            sta Sprite_Tilenumber+4,y   ;get and store tile number of second sprite
-            lda HammerSprAttrib,x
-            sta Sprite_Attributes,y     ;get and store attribute bytes for both
-            sta Sprite_Attributes+4,y   ;note in this case they use the same data
-            ldx ObjectOffset            ;get misc object offset
-            lda Misc_OffscreenBits
-            and #%11111100              ;check offscreen bits
-            beq NoHOffscr               ;if all bits clear, leave object alone
-            lda #$00
-            sta Misc_State,x            ;otherwise nullify misc object state
-            lda #$f8
-            jmp DumpTwoSpr              ;do sub to move hammer sprites offscreen
-NoHOffscr:  rts ; TODO check this RTS can be removed                         ;leave
+
+.proc DrawHammer
+  lda #0
+  sta Misc_SprAttrib,x
+  lda #1
+  sta Enemy_MovingDir + (Misc_SprAttrib - Enemy_SprAttrib),x
+  ldy #METASPRITE_HAMMER_FRAME_1
+  lda Misc_State,x            ;otherwise get hammer's state
+  and #%01111111              ;mask out d7
+  cmp #$01                    ;check to see if set to 1 yet
+  beq GetHPose                ;if so, branch
+ForceHPose: 
+    ; ldx #$00                    ;reset ÷ here
+    lda #0
+    beq RenderH                 ;do unconditional branch to rendering part
+GetHPose:
+    lda FrameCounter            ;get frame counter
+    lsr                         ;move d3-d2 to d1-d0
+    lsr
+    and #%00000011              ;mask out all but d1-d0 (changes every four frames)
+RenderH:
+  sta R2
+  ; if bit 0 is set, then use the horizontal hammer sprite
+  lsr
+  bcc CheckForVerticalFlip
+    ldy #METASPRITE_HAMMER_FRAME_2
+    ; lsr
+    ; bcc :+
+
+    ; :
+CheckForVerticalFlip:
+  ; lda R2
+  ; and #2
+  lsr
+  bcc WriteMetasprite
+    ; if bit 1 is also set, then apply vertical flip too
+    ; but if only bit 2 is set, apply the horizontal flag
+    lda R2
+    lsr
+    bcs :+
+      lda Misc_SprAttrib,x
+      ora #OAM_FLIP_H
+      sta Misc_SprAttrib,x
+    :
+    lda Misc_SprAttrib,x
+    ora #OAM_FLIP_V
+    sta Misc_SprAttrib,x
+
+    ; and use the sprite that faces the other way
+    lda #2
+    sta Enemy_MovingDir + (Misc_State - Enemy_State),x
+WriteMetasprite:
+  tya
+  sta MiscMetasprite,x
+  rts
+.endproc
+
+; DrawHammer:
+;             ; ldy Misc_SprDataOffset,x    ;get misc object OAM data offset
+;           AllocSpr 2
+;             lda TimerControl
+;             bne ForceHPose              ;if master timer control set, skip this part
+;             lda Misc_State,x            ;otherwise get hammer's state
+;             and #%01111111              ;mask out d7
+;             cmp #$01                    ;check to see if set to 1 yet
+;             beq GetHPose                ;if so, branch
+; ForceHPose: ldx #$00                    ;reset offset here
+;             beq RenderH                 ;do unconditional branch to rendering part
+; GetHPose:   lda FrameCounter            ;get frame counter
+;             lsr                         ;move d3-d2 to d1-d0
+;             lsr
+;             and #%00000011              ;mask out all but d1-d0 (changes every four frames)
+;             tax                         ;use as timing offset
+; RenderH:    lda Misc_Rel_YPos           ;get relative vertical coordinate
+;             clc
+;             adc FirstSprYPos,x          ;add first sprite vertical adder based on offset
+;             sta Sprite_Y_Position,y     ;store as sprite Y coordinate for first sprite
+;             clc
+;             adc SecondSprYPos,x         ;add second sprite vertical adder based on offset
+;             sta Sprite_Y_Position+4,y   ;store as sprite Y coordinate for second sprite
+;             lda Misc_Rel_XPos           ;get relative horizontal coordinate
+;             clc
+;             adc FirstSprXPos,x          ;add first sprite horizontal adder based on offset
+;             sta Sprite_X_Position,y     ;store as sprite X coordinate for first sprite
+;             clc
+;             adc SecondSprXPos,x         ;add second sprite horizontal adder based on offset
+;             sta Sprite_X_Position+4,y   ;store as sprite X coordinate for second sprite
+;             lda FirstSprTilenum,x
+;             sta Sprite_Tilenumber,y     ;get and store tile number of first sprite
+;             lda SecondSprTilenum,x
+;             sta Sprite_Tilenumber+4,y   ;get and store tile number of second sprite
+;             lda HammerSprAttrib,x
+;             sta Sprite_Attributes,y     ;get and store attribute bytes for both
+;             sta Sprite_Attributes+4,y   ;note in this case they use the same data
+;             ldx ObjectOffset            ;get misc object offset
+;             lda Misc_OffscreenBits
+;             and #%11111100              ;check offscreen bits
+;             beq NoHOffscr               ;if all bits clear, leave object alone
+;             lda #$00
+;             sta Misc_State,x            ;otherwise nullify misc object state
+;             lda #$f8
+;             jmp DumpTwoSpr              ;do sub to move hammer sprites offscreen
+; NoHOffscr:  rts ; TODO check this RTS can be removed                         ;leave
 
 ;-------------------------------------------------------------------------------------
 
@@ -284,23 +341,23 @@ EnemyGraphicsTable:
       .byte $fc, $fc, $b2, $b3, $b4, $b5  ;cheep-cheep frame 1         $48
       .byte $fc, $fc, $b6, $b3, $b7, $b5  ;            frame 2         $4e
       .byte $fc, $fc, $70, $71, $72, $73  ;goomba                      $54
-      .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down)
-      .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2
-      .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup)
-      .byte $fc, $fc, $6f, $6f, $6d, $6d  ;            frame 2
-      .byte $fc, $fc, $f4, $f4, $f5, $f5  ;buzzy beetle shell frame 1 (rightsideup)
-      .byte $fc, $fc, $f4, $f4, $f5, $f5  ;                   frame 2
-      .byte $fc, $fc, $f5, $f5, $f4, $f4  ;buzzy beetle shell frame 1 (upside-down)
-      .byte $fc, $fc, $f5, $f5, $f4, $f4  ;                   frame 2
-      .byte $fc, $fc, $fc, $fc, $ef, $ef  ;defeated goomba
-      .byte $b9, $b8, $bb, $ba, $bc, $bc  ;lakitu frame 1
-      .byte $fc, $fc, $bd, $bd, $bc, $bc  ;       frame 2
-      .byte $7a, $7b, $da, $db, $d8, $d8  ;princess
-      .byte $cd, $cd, $ce, $ce, $cf, $cf  ;mushroom retainer
-      .byte $7d, $7c, $d1, $8c, $d3, $d2  ;hammer bro frame 1
-      .byte $7d, $7c, $89, $88, $8b, $8a  ;           frame 2
-      .byte $d5, $d4, $e3, $e2, $d3, $d2  ;           frame 3
-      .byte $d5, $d4, $e3, $e2, $8b, $8a  ;           frame 4
+      .byte $fc, $fc, $6e, $6e, $6f, $6f  ;koopa shell frame 1 (upside-down) ; 5a
+      .byte $fc, $fc, $6d, $6d, $6f, $6f  ;            frame 2               ; 60
+      .byte $fc, $fc, $6f, $6f, $6e, $6e  ;koopa shell frame 1 (rightsideup) ; 66
+      .byte $fc, $fc, $6f, $6f, $6d, $6d  ;            frame 2               ; 6c
+      .byte $fc, $fc, $f4, $f4, $f5, $f5  ;buzzy beetle shell frame 1 (rightsideup) ; 72
+      .byte $fc, $fc, $f4, $f4, $f5, $f5  ;                   frame 2        ; 78
+      .byte $fc, $fc, $f5, $f5, $f4, $f4  ;buzzy beetle shell frame 1 (upside-down) ;7e
+      .byte $fc, $fc, $f5, $f5, $f4, $f4  ;                   frame 2        ; 84
+      .byte $fc, $fc, $fc, $fc, $ef, $ef  ;defeated goomba             8a
+      .byte $b9, $b8, $bb, $ba, $bc, $bc  ;lakitu frame 1              90
+      .byte $fc, $fc, $bd, $bd, $bc, $bc  ;       frame 2              96
+      .byte $7a, $7b, $da, $db, $d8, $d8  ;princess                    9c
+      .byte $cd, $cd, $ce, $ce, $cf, $cf  ;mushroom retainer           a2
+      .byte $7d, $7c, $d1, $8c, $d3, $d2  ;hammer bro frame 1          a8
+      .byte $7d, $7c, $89, $88, $8b, $8a  ;           frame 2          ae
+      .byte $d5, $d4, $e3, $e2, $d3, $d2  ;           frame 3          b4
+      .byte $d5, $d4, $e3, $e2, $8b, $8a  ;           frame 4          ba
       .byte $e5, $e5, $e6, $e6, $eb, $eb  ;piranha plant frame 1
       .byte $ec, $ec, $ed, $ed, $ee, $ee  ;              frame 2
       .byte $fc, $fc, $d0, $d0, $d7, $d7  ;podoboo
@@ -1053,7 +1110,6 @@ ProcessJumpingParatrooperInner:
 
 
 .proc ProcessBuzzyBeetle
-  
   ldy #METASPRITE_BUZZY_BEETLE_WALKING_1
   lda Enemy_State,x
   cmp #$02
@@ -1108,8 +1164,63 @@ WriteMetasprite:
   rts
 .endproc
 
-ProcessHammerBro:
-ProcessBlooper:
+.proc ProcessBlooper
+  ldy #METASPRITE_BLOOPER_SWIM_1
+  lda EnemyIntervalTimer,x
+  ; Greater than 5 means defeated
+  cmp #$05
+  bcs CheckDefeated
+    ; if the timer is set to 1, don't animate
+    cmp #1
+    beq CheckDefeated
+      ; Check if the timers are running
+      lda Enemy_State,x        ;check saved enemy state
+      and #%10100000      ;for d7 or d5, or check for timers stopped
+      ora TimerControl
+      bne CheckDefeated   ;if either condition true, branch
+        ldy #METASPRITE_BLOOPER_SWIM_2
+CheckDefeated:
+  ; d5 is set when the enemy is dead
+  lda Enemy_State,x
+  and #%00100000        ;for d5 set
+  beq WriteMetasprite
+    lda #1
+    sta EnemyVerticalFlip,x
+WriteMetasprite:
+  tya
+  sta EnemyMetasprite,x
+  rts
+.endproc
+
+.proc ProcessHammerBro
+  ldy #METASPRITE_HAMMER_BRO_WALK_1
+
+  lda Enemy_State,x
+  beq CheckToAnimateEnemy  ;branch if not in normal enemy state
+  and #%00001000
+  beq CheckDefeatedState   ;if d3 not set, branch further away
+    ldy #METASPRITE_HAMMER_BRO_THROW_1
+    ; bne CheckToAnimateEnemy  ;unconditional branch
+CheckToAnimateEnemy:
+  lda FrameCounter
+  and #$08
+  bne CheckDefeatedState
+      lda Local_ed                 ;check saved enemy state
+      and #%10100000          ;for d7 or d5, or check for timers stopped
+      ora TimerControl
+      bne CheckDefeatedState  ;if either condition true, branch
+        iny ; use the next frame of whatever action is selected
+CheckDefeatedState:
+  lda Enemy_State,x
+  and #%00100000        ;for d5 set
+  beq WriteMetasprite   ;branch if not set
+    lda #1
+    sta EnemyVerticalFlip,x
+WriteMetasprite:
+  tya
+  sta EnemyMetasprite,x
+  rts
+.endproc
 
 ProcessLakitu:
 ProcessSpiny:

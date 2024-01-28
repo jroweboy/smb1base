@@ -324,11 +324,20 @@ SetHPos:  dec Misc_State,x           ;decrement hammer's state
           sta Misc_Y_HighPos,x       ;set hammer's vertical high byte
           bne RunHSubs               ;unconditional branch to skip first routine
 RunAllH:  jsr PlayerHammerCollision  ;handle collisions
-RunHSubs: jsr GetMiscOffscreenBits   ;get offscreen information
+RunHSubs: 
+          jsr GetMiscOffscreenBits   ;get offscreen information
+          lda Misc_OffscreenBits
+          and #%11111100              ;check offscreen bits
+          beq NoHOffscr               ;if all bits clear, leave object alone
+            lda #$00
+            sta Misc_State,x            ;otherwise nullify misc object state
+            sta MiscMetasprite,x
+            rts
+NoHOffscr:
           jsr RelativeMiscPosition   ;get relative coordinates
           jsr GetMiscBoundBox        ;get bounding box coordinates
           jmp DrawHammer             ;draw the hammer
-          rts ; TODO check this RTS can be removed                        ;and we are done here
+          ; rts ; TODO check this RTS can be removed                        ;and we are done here
 
 
 ;-------------------------------------------------------------------------------------
@@ -512,17 +521,10 @@ TooFar:   jmp EraseEnemyObject    ;erase object if necessary
 ExScrnBd: rts ; TODO check this RTS can be removed                     ;leave
 
 .proc RelativeMiscPosition
-;   ldy #$02                ;set for misc object offsets
-;   jsr GetProperObjOffset  ;modify X to get proper misc object offset
-;   ldy #$06
-;   jmp RelWOfs             ;get the coordinates
-  lda Misc_Y_Position,x
-  sta Misc_Rel_YPos,x
-  lda Misc_X_Position,x
-  sec
-  sbc ScreenLeft_X_Pos
-  sta Misc_Rel_XPos,y
-  rts
+  ldy #$02                ;set for misc object offsets
+  jsr GetProperObjOffset  ;modify X to get proper misc object offset
+  ldy #$06
+  jmp RelWOfs             ;get the coordinates
 .endproc
 
 

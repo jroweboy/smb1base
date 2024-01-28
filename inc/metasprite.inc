@@ -226,10 +226,30 @@ MetaspriteBox "CHEEP_CHEEP", "SWIM_1", $2c, $2e
 MetaspriteBox "CHEEP_CHEEP", "SWIM_2", $2a, $2e
 
 
-; MetaspriteReserve "BOWSER_FRONT_MOUTH_OPEN"
-; MetaspriteReserve "BOWSER_FRONT_MOUTH_CLOSED"
-; MetaspriteReserve "BOWSER_REAR_WALK_1"
-; MetaspriteReserve "BOWSER_REAR_WALK_2"
+BLOOPER_BANK = SPRITE_BANK_3
+BLOOPER_PALETTE = $03
+BLOOPER_Y_OFFSET = -8
+BLOOPER_SWIM_2_Y_OFFSET = (-8 + 3) ; original code adds 3 px to the y position
+MetaspriteBox "BLOOPER", "SWIM_1", $1a, $1a | SPR_FLIP_H, $3a, $3a | SPR_FLIP_H
+MetaspriteBox "BLOOPER", "SWIM_2", $18, $18 | SPR_FLIP_H
+
+HAMMER_BANK = SPRITE_BANK_1
+HAMMER_FRAME_1_X_OFFSET = 4
+HAMMER_FRAME_1_Y_OFFSET = -8
+HAMMER_FRAME_2_X_OFFSET = 0
+HAMMER_FRAME_2_Y_OFFSET = -8
+HAMMER_PALETTE = $03
+MetaspriteBox "HAMMER", "FRAME_1", $1e
+MetaspriteBox "HAMMER", "FRAME_2", $00, $02
+
+HAMMER_BRO_BANK = SPRITE_BANK_3
+HAMMER_BRO_PALETTE = $01
+HAMMER_BRO_Y_OFFSET = -8
+MetaspriteBox "HAMMER_BRO", "WALK_1", $00, $02, $20, $22
+MetaspriteBox "HAMMER_BRO", "WALK_2", $08, $0a, $24, $26
+MetaspriteBox "HAMMER_BRO", "THROW_1", $04, $06, $20, $22
+MetaspriteBox "HAMMER_BRO", "THROW_2", $04, $06, $24, $26
+
 BOWSER_BANK = SPRITE_BANK_3
 BOWSER_PALETTE = $01
 BOWSER_Y_OFFSET = -8
@@ -239,6 +259,7 @@ MetaspriteBox "BOWSER", "REAR_WALK_1", $0c, $0e, $28, $2a
 MetaspriteBox "BOWSER", "REAR_WALK_2", $0c, $0e, $2c, $2e
 
 MetaspriteReserve "BOWSER_FLAME"
+
 
 PEACH_BANK = SPRITE_BANK_2
 PEACH_PALETTE = $02

@@ -941,6 +941,11 @@ PrcNextA:
   bcc NextArea              ;at least this number of coins, leave flag clear
   inc Hidden1UpFlag         ;otherwise set hidden 1-up box control flag
 NextArea:
+
+  ; jroweboy added:
+  ; disable the screen since loading a new area pointer will change CHR banks
+  inc DisableScreenFlag
+
   inc AreaNumber            ;increment area number used for address loader
   jsr LoadAreaPointer       ;get new level pointer
   inc FetchNewGameTimerFlag ;set flag to load new game timer
