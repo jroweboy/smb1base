@@ -112,6 +112,16 @@ MetaspritePlatformCloudLargeFrame2:
 ;   .byte  MetaspriteBank($50, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 16 + X_OFFSET
 ;   .byte  MetaspriteBank($52, SPRITE_BANK_3), PALETTE, -16 + Y_OFFSET, 24 + X_OFFSET
 
+Y_OFFSET .set -4
+X_OFFSET .set 0
+PALETTE  .set 2
+MetaspriteData "METASPRITE_BOWSER_FLAME", MetaspriteBowserFlame, MetaspriteBowserFlame
+MetaspriteBowserFlame:
+  .byte 3 * 4
+  .byte  MetaspriteBank($74, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  0 + X_OFFSET
+  .byte  MetaspriteBank($76, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
+  .byte  MetaspriteBank($78, SPRITE_BANK_3), PALETTE,   0 + Y_OFFSET, 16 + X_OFFSET
+
 .endif ; METASPRITE_BODY
 
 .endif ; METASPRITE_CUSTOM_INC

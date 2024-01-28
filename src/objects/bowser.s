@@ -4,7 +4,7 @@
 
 .import SpawnHammerObj, MoveVOffset, RemBridge
 
-.export InitBowserFlame, BridgeCollapse, KillAllEnemies
+.export InitBowserFlame, KillAllEnemies
 
 ; frenzy.s
 .export PutAtRightExtent
@@ -47,7 +47,7 @@ RunBowserFlame:
 
 ;-------------------------------------------------------------------------------------
 ;$04-$05 - used to store name table address in little endian order
-
+.export BridgeCollapse
 BridgeCollapse:
 
   ldx BowserFront_Offset    ;get enemy offset for bowser
@@ -320,9 +320,18 @@ ProcessBowserHalf:
   bcs BowserFront
     ; Drawing bowsers rear
     ldy #METASPRITE_BOWSER_REAR_WALK_1
-    bne WriteMetasprite
+    ; branch if d0 not set (control's bowser's feet)
+    lda BowserBodyControls
+    and #1
+    beq WriteMetasprite
+      ldy #METASPRITE_BOWSER_REAR_WALK_2
+      bne WriteMetasprite ; unconditional
 BowserFront:
     ldy #METASPRITE_BOWSER_FRONT_MOUTH_OPEN
+    ;branch if d7 not set (control's bowser's mouth)
+    lda BowserBodyControls
+    bpl WriteMetasprite
+      ldy #METASPRITE_BOWSER_FRONT_MOUTH_CLOSED
 WriteMetasprite:
   tya
   sta EnemyMetasprite,x
@@ -376,63 +385,26 @@ SFlmX:   sta R0                      ;store value here
          clc
          adc Enemy_Y_MoveForce,x     ;otherwise add value here to coordinate and store
          sta Enemy_Y_Position,x      ;as new vertical coordinate
-SetGfxF: jsr RelativeEnemyPosition   ;get new relative coordinates
-         lda Enemy_State,x           ;if bowser's flame not in normal state,
-         bne ExFl                    ;branch to leave
-         lda #BOWSER_FLAME_TILE1     ;otherwise, continue
-         sta R0                      ;write first tile number
-         ldy #$02                    ;load attributes without vertical flip by default
-         lda FrameCounter
-         and #%00000010              ;invert vertical flip bit every 2 frames
-         beq FlmeAt                  ;if d1 not set, write default value
-         ldy #$82                    ;otherwise write value with vertical flip bit set
-FlmeAt:  sty R1                      ;set bowser's flame sprite attributes here
-         AllocSpr 3
-         ldx #$00
-
-DrawFlameLoop:
-         lda Enemy_Rel_YPos         ;get Y relative coordinate of current enemy object
-         sta Sprite_Y_Position,y    ;write into Y coordinate of OAM data
-         lda R0 
-         sta Sprite_Tilenumber,y    ;write current tile number into OAM data
-         inc R0                     ;increment tile number to draw more bowser's flame
-         inc R0                     ;twice since its 8x16 mode now
-         lda R1 
-         sta Sprite_Attributes,y    ;write saved attributes into OAM data
-         lda Enemy_Rel_XPos
-         sta Sprite_X_Position,y    ;write X relative coordinate of current enemy object
-         clc
-         adc #$08
-         sta Enemy_Rel_XPos         ;then add eight to it and store
-         iny
-         iny
-         iny
-         iny                        ;increment Y four times to move onto the next OAM
-         inx                        ;move onto the next OAM, and branch if three
-         cpx #$03                   ;have not yet been done
-         bcc DrawFlameLoop
-         ldx ObjectOffset           ;reload original enemy offset
-         jsr GetEnemyOffscreenBits  ;get offscreen information
-         ldy CurrentOAMOffset
-         lda Enemy_OffscreenBits    ;get enemy object offscreen bits
-         lsr                        ;move d0 to carry and result to stack
-         lsr                        ;move d1 to carry and move bits back to stack
-         pha
-         bcc M2FOfs                 ;branch if carry not set again
-         lda #$f8                   ;otherwise move third sprite offscreen
-         sta Sprite_Y_Position-4,y
-M2FOfs:  pla                        ;get bits from stack again
-         lsr                        ;move d2 to carry and move bits back to stack again
-         pha
-         bcc M1FOfs                 ;branch if carry not set yet again
-         lda #$f8                   ;otherwise move second sprite offscreen
-         sta Sprite_Y_Position-8,y
-M1FOfs:  pla                        ;get bits from stack one last time
-         lsr                        ;move d3 to carry
-         bcc ExFlmeD                ;branch if carry not set one last time
-         lda #$f8
-         sta Sprite_Y_Position-12,y    ;otherwise move first sprite offscreen
+SetGfxF: 
+  lda Enemy_State,x
+  bne ExFlmeD
+    jmp DrawBowserFlame
 ExFlmeD: rts                        ;leave
+
+.proc DrawBowserFlame
+  ; implicit a == 0
+  sta Enemy_SprAttrib,x
+  lda FrameCounter
+  and #%00000010
+  beq :+
+    ; invert vertical flip bit every 2 frames
+    lda #OAM_FLIP_V
+    sta Enemy_SprAttrib,x
+  :
+  lda #METASPRITE_BOWSER_FLAME
+  sta EnemyMetasprite,x
+  rts
+.endproc
 
 ;--------------------------------
 

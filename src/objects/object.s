@@ -1,5 +1,6 @@
 .include "common.inc"
 .include "object.inc"
+.include "metasprite.inc"
 
 ; sprite_render.s
 .import EnemyGraphicsEngine, JCoinGfxHandler, DrawHammer, FloateyNumbersRoutine
@@ -393,10 +394,17 @@ FlmEx:
 
 ;--------------------------------
 .proc RunRetainerObj
-.import GetEnemyOffscreenBits, RelativeEnemyPosition, EnemyGfxHandler
-  jsr GetEnemyOffscreenBits
-  jsr RelativeEnemyPosition
-  jmp EnemyGfxHandler
+  lda WorldNumber
+  cmp #World8
+  bcs AfterWorld7
+    ldy #METASPRITE_TOAD_STANDING
+    bne WriteMetasprite
+AfterWorld7:
+  ldy #METASPRITE_PEACH_STANDING
+WriteMetasprite:
+  tya
+  sta EnemyMetasprite,x
+  rts
 .endproc
 
 ;--------------------------------

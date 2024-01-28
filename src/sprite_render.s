@@ -884,9 +884,9 @@ Noop:
   lda TimerControl
   bne Exit                    ; Just use the previous metasprite and leave if we aren't moving
     lda PiranhaPlant_Y_Speed,x
-    bmi DrawPiranha     ;if piranha plant moving upwards, branch
+    bmi DrawPiranha           ;if piranha plant moving upwards, branch
       lda EnemyFrameTimer,x
-      bne Exit     ;if timer for movement expired, branch
+      bne Exit                ;if timer for movement expired, branch
 DrawPiranha:
   ldy #METASPRITE_PIRANHA_MOUTH_OPEN
     lda FrameCounter

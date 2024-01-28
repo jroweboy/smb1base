@@ -176,7 +176,8 @@ BankInitValues:
 .proc NonMaskableInterrupt
   bit NmiDisable
   bpl ContinueNMI
-
+    inc NmiSkipped
+    rti
 ContinueNMI:
   pha
   phx

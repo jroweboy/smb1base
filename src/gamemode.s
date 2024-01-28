@@ -107,6 +107,13 @@ ClrSndLoop:
 
 InitializeArea:
 
+  ; jroweboy added:
+  ; disable the screen and re-enable NMI so that clearing memory during the gameplay
+  ; doesn't cause 2 frames glitched graphics on level end in castles.
+  inc DisableScreenFlag
+  lda #0
+  sta NmiDisable
+
   ldy #<SecondaryMsgCounter                 ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
   ldx #FRAME_TIMER_COUNT
@@ -387,6 +394,11 @@ DemoTimingData:
 
 .proc VictoryMode
 
+  lda #0
+  sta PlayerOAMOffset
+  lda #4 * 4 ; save enough room to draw the player first later
+  sta CurrentOAMOffset
+  
   jsr VictoryModeSubroutines  ;run victory mode subroutines
   lda OperMode_Task           ;get current task of victory mode
   beq AutoPlayer              ;if on bridge collapse, skip enemy processing
@@ -396,18 +408,25 @@ DemoTimingData:
   farcall EnemiesAndLoopsCore     ;and run enemy code
 AutoPlayer:
   jsr RelativePlayerPosition  ;get player's relative coordinates
-  farcall PlayerGfxHandler, jmp   ;draw the player, then leave
+  farcall PlayerGfxHandler    ;draw the player, then leave
+  
+  farcall DrawAllMetasprites, jmp
+
 .endproc
 
 .proc VictoryModeSubroutines
   lda OperMode_Task
   jsr JumpEngine
 
-  .word BridgeCollapse
-  .word SetupVictoryMode ; 
+  .word BridgeCollapseJmp
+  .word SetupVictoryMode
   .word PlayerVictoryWalk
   .word PrintVictoryMessages
   .word PlayerEndWorld
+.endproc
+
+.proc BridgeCollapseJmp
+  farcall BridgeCollapse, jmp
 .endproc
 
 ;-------------------------------------------------------------------------------------

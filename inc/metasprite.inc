@@ -238,4 +238,16 @@ MetaspriteBox "BOWSER", "FRONT_MOUTH_CLOSED", $14, $16, $30
 MetaspriteBox "BOWSER", "REAR_WALK_1", $0c, $0e, $28, $2a
 MetaspriteBox "BOWSER", "REAR_WALK_2", $0c, $0e, $2c, $2e
 
+MetaspriteReserve "BOWSER_FLAME"
+
+PEACH_BANK = SPRITE_BANK_2
+PEACH_PALETTE = $02
+PEACH_Y_OFFSET = -8
+MetaspriteBox "PEACH", "STANDING", $08, $0a, $28, $28 | SPR_FLIP_H
+TOAD_BANK = SPRITE_BANK_2
+TOAD_PALETTE = $02
+TOAD_Y_OFFSET = -8
+MetaspriteBox "TOAD", "STANDING", $3c, $3c | SPR_FLIP_H, $3e, $3e | SPR_FLIP_H
+
+
 .endif
