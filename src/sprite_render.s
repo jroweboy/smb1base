@@ -260,12 +260,16 @@ PowerUpGfxTable:
 .endproc
 
 .export EnemyGraphicsEngine
-EnemyGraphicsEngine:
+.proc EnemyGraphicsEngine
+  jsr RunEngine
+  jmp SprObjectOffscrChk
+
+RunEngine:
   lda Enemy_ID,x
   jsr JumpEngine
   ;only objects $00-$14 use this table
   .word ProcessGreenKoopa
-  .word Noop
+  .word ProcessDemotedKoopa
   .word ProcessBuzzyBeetle
   .word ProcessRedKoopa
   .word Noop
@@ -285,6 +289,7 @@ EnemyGraphicsEngine:
   .word ProcessSpiny
   .word Noop
   .word ProcessFlyingCheepCheep
+.endproc
 
 Noop:
   ; debug me! this shouldn't be hit!
@@ -344,6 +349,7 @@ Exit:
   rts
 .endproc
 
+ProcessDemotedKoopa:
 .proc ProcessRedKoopa
   lda Enemy_SprAttrib,x
   ora #OAM_PALLETE_2
