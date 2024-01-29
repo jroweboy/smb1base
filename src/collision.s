@@ -908,6 +908,10 @@ HurtBowser:
           ldy WorldNumber            ;use world number as offset
           lda BowserIdentities,y     ;get enemy identifier to replace bowser with
           sta Enemy_ID,x             ;set as new enemy identifier
+          ; edit: this is a way you could reload banks if you wanted to,
+          ; but it glitches other graphics, and i don't care enough to fix it.
+          ; so i just changed the secret identities instead
+          
           ; also change the bank so the sprite isn't glitched
           ; lda BowserIdentityBank,y
           ; cmp CurrentCHRBank+4

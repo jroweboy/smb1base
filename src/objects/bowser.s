@@ -300,10 +300,7 @@ CopyFToR:
 ExBGfxH:
   rts                      ;leave!
 
-ClearSecondHalfOfBoswer:
-  ldx DuplicateObj_Offset
-  lda #0
-  sta EnemyMetasprite,x
+ExitEarly:
   rts
 
 ProcessBowserHalf:
@@ -312,7 +309,7 @@ ProcessBowserHalf:
   jsr GetEnemyOffscreenBits
   jsr RelativeEnemyPosition
   lda Enemy_State,x
-  bne ClearSecondHalfOfBoswer ;if either enemy object not in normal state, branch to leave
+  bne ExitEarly ;if either enemy object not in normal state, branch to leave
   lda #$0a
   sta Enemy_BoundBoxCtrl,x  ;set bounding box size control
   jsr GetEnemyBoundBox      ;get bounding box coordinates
