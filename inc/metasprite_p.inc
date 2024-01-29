@@ -13,7 +13,13 @@ SPRITE_BANK_3 = $c0
 ; Custom values to signify that this sprite should be flipped in the metasprite
 SPR_FLIP_H = %01000000 << 8
 SPR_FLIP_V = %10000000 << 8
+; Can be used to force a sprite palette. If NO_PALETTE is set, then the palette value
+; from the object in the game will not be applied, and this value will be forced instead
 SPR_NO_PALETTE = %00100000 << 8
+SPR_PALETTE_0  = SPR_NO_PALETTE | %00000000 << 8
+SPR_PALETTE_1  = SPR_NO_PALETTE | %00000001 << 8
+SPR_PALETTE_2  = SPR_NO_PALETTE | %00000010 << 8
+SPR_PALETTE_3  = SPR_NO_PALETTE | %00000011 << 8
 
 .macro MetaspriteBoxBody Object, Animation, Direction, Bank, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 .local X1, X2, Y1, Y2, Size

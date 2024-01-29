@@ -234,7 +234,7 @@ JumpingCoinTiles:
 .proc DrawPowerUp
   ldx ObjectOffset
   ldy PowerUpType            ;get power-up type
-  beq SkipPaletteCycle
+  beq SkipPaletteCycle       ; Don't cycle the palettes for mushroom and 1-up
   cpy #3
   beq SkipPaletteCycle
     lda FrameCounter           ;get frame counter
