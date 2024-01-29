@@ -817,7 +817,7 @@ DecNumTimer:
       lda #Sfx_ExtraLife
       sta Square2SoundQueue        ;and play the 1-up sound
   LoadNumTiles:
-    ldx ScoreUpdateDigit,y        ;load point value here
+    ldx ScoreUpdateDigit-1,y        ;load point value here
     lda ScoreUpdateAmount-1,y     ;load again and this time
     sta DigitModifier,x          ;store as amount to add to the digit
     jmp AddToScore               ;update the score accordingly

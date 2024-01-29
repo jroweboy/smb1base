@@ -97,6 +97,7 @@ VineYPosAdder:
 
 .endproc
 
+.export SprObjectOffscrChk
 .proc SprObjectOffscrChk
   ldx ObjectOffset          ;get enemy buffer offset
   lda Enemy_OffscreenBits   ;check offscreen information

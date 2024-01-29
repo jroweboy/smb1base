@@ -416,6 +416,7 @@ RunNormalEnemies:
           jsr RelativeEnemyPosition
           jsr EnemyGraphicsEngine
           ; jsr EnemyGfxHandler
+          jsr SprObjectOffscrChk
           jsr GetEnemyBoundBox
           jsr EnemyToBGCollisionDet
           jsr EnemiesCollision
