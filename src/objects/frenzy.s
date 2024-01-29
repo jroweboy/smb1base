@@ -419,7 +419,7 @@ Fr12S:   lda #Spiny
          sta EnemyFrenzyBuffer      ;set spiny identifier in frenzy buffer
          ldy #$02
 LdLDa:   lda LakituDiffAdj,y        ;load values
-         sta a:R0,y                ;store in zero page
+         sta a:R1,y                ;store in zero page
          dey
          bpl LdLDa                  ;do this until all values are stired
          jsr PlayerLakituDiff       ;execute sub to set speed and create spinys
@@ -480,7 +480,7 @@ ChkPSpeed: lda R0
            cmp #$19                   ;if player not running, branch
            bcc ChkSpinyO
            lda ScrollAmount
-           cmp #$02                   ;if scroll speed below a certain amount, branch
+           cmp #$02                   ;if scroll speed below a certain amount, branchLakituDiffAdj
            bcc ChkSpinyO              ;to same place
            iny                        ;otherwise increment once more
 ChkSpinyO: lda Enemy_ID,x             ;check for spiny object
@@ -491,7 +491,7 @@ ChkSpinyO: lda Enemy_ID,x             ;check for spiny object
 ChkEmySpd: lda Enemy_Y_Speed,x        ;check vertical speed
            bne SubDifAdj              ;branch if nonzero
            ldy #$00                   ;otherwise reinit offset
-SubDifAdj: lda a:R0,y                 ;get one of three saved values from earlier
+SubDifAdj: lda a:R1,y                 ;get one of three saved values from earlier
            ldy R0                     ;get saved horizontal difference
 SPixelLak: sec                        ;subtract one for each pixel of horizontal difference
            sbc #$01                   ;from one of three saved values
