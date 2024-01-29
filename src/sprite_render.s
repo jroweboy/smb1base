@@ -122,12 +122,13 @@ HammerSprAttrib:
   lda #1
   sta Enemy_MovingDir + (Misc_SprAttrib - Enemy_SprAttrib),x
   ldy #METASPRITE_HAMMER_FRAME_1
-  lda Misc_State,x            ;otherwise get hammer's state
-  and #%01111111              ;mask out d7
-  cmp #$01                    ;check to see if set to 1 yet
-  beq GetHPose                ;if so, branch
-ForceHPose: 
-    ; ldx #$00                    ;reset ÷ here
+  lda TimerControl
+  bne ForceHPose
+    lda Misc_State,x            ;otherwise get hammer's state
+    and #%01111111              ;mask out d7
+    cmp #$01                    ;check to see if set to 1 yet
+    beq GetHPose                ;if so, branch
+ForceHPose:
     lda #0
     beq RenderH                 ;do unconditional branch to rendering part
 GetHPose:
@@ -141,13 +142,7 @@ RenderH:
   lsr
   bcc CheckForVerticalFlip
     ldy #METASPRITE_HAMMER_FRAME_2
-    ; lsr
-    ; bcc :+
-
-    ; :
 CheckForVerticalFlip:
-  ; lda R2
-  ; and #2
   lsr
   bcc WriteMetasprite
     ; if bit 1 is also set, then apply vertical flip too
@@ -1222,12 +1217,61 @@ WriteMetasprite:
   rts
 .endproc
 
-ProcessLakitu:
-ProcessSpiny:
-  lda #0
+.proc ProcessLakitu
+  ldy #METASPRITE_LAKITU_NORMAL
+  lda Enemy_State,x
+  and #%00100000            ;check for d5 set in enemy state
+  bne NoLakituOrFrenzy      ;branch if set
+    lda FrenzyEnemyTimer
+    cmp #$10
+    bcs NoLakituOrFrenzy
+      ; load second animation frame for lakitu
+      ldy #METASPRITE_LAKITU_THROWING
+NoLakituOrFrenzy:
+CheckDefeatedState:
+  lda Enemy_State,x     ;check saved enemy state
+  and #%00100000        ;for d5 set
+  beq WriteMetasprite   ;branch if not set
+    lda #1
+    sta EnemyVerticalFlip,x
+WriteMetasprite:
+  tya
   sta EnemyMetasprite,x
   rts
+.endproc
 
+.proc ProcessSpiny
+  lda Enemy_State,x
+  cmp #$05 ; Egg state
+  bne NotEgg
+    ; Manually set the egg to look to the left (vanilla does right?)
+    lda #1
+    sta Enemy_MovingDir,x
+    ldy #METASPRITE_SPINY_EGG_1
+    bne CheckToAnimateEnemy
+NotEgg:
+  ldy #METASPRITE_SPINY_WALK_1
+CheckToAnimateEnemy:
+  lda FrameCounter
+  and #$08
+  bne CheckDefeatedState
+      lda Local_ed                 ;check saved enemy state
+      and #%10100000          ;for d7 or d5, or check for timers stopped
+      ora TimerControl
+      bne CheckDefeatedState  ;if either condition true, branch
+        iny ; use the next frame of whatever action is selected
+
+CheckDefeatedState:
+  lda Enemy_State,x     ;check saved enemy state
+  and #%00100000        ;for d5 set
+  beq WriteMetasprite   ;branch if not set
+    lda #1
+    sta EnemyVerticalFlip,x
+WriteMetasprite:
+  tya
+  sta EnemyMetasprite,x
+  rts
+.endproc
 
 ; GreenKoopa            = $00
 ; BuzzyBeetle           = $02

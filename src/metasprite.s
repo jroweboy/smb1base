@@ -37,7 +37,7 @@ LoopCount = M0
   ldy #0
   ldx ObjectMetasprite,y
   ; unless the player is currently flickering due to damage taken
-  beq DoneDrawingPlayer
+  beq ClearOAMLoop
     ; put the player in slot 0 always
     lda CurrentOAMOffset
     pha
@@ -46,6 +46,7 @@ LoopCount = M0
       jsr DrawMetasprite
     pla
     sta CurrentOAMOffset
+  ClearOAMLoop:
     ; Now clear out the 
     ; X is the old OAM offset
     cpx #4*4
