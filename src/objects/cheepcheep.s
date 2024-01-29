@@ -82,19 +82,26 @@ YPDiff: cmp #$0f                  ;if difference between original vs. current ve
 ExSwCC: rts                       ;leave
 
 ;--------------------------------
-
+; NOTE: due to a bug in the vanilla code, this part is read out of bounds
+; so we keep the original values including the bytes that it might read
+; from the code.
 PRandomSubtracter:
-      .byte $f8, $a0, $70, $bd, $00
-
-FlyCCBPriority:
-      .byte $20, $20, $20, $00, $00
+      .byte $f8, $a0, $70, $bd
+      .byte $00, $20, $20, $20
+      .byte $00, $00, $b5, $1e
+      .byte $29, $20, $f0, $08
 
 MoveFlyingCheepCheep:
+        ; Added a check to see if the cheepcheep is below the screen since this
+        ; used to be done in the graphics handler.
+        lda Enemy_Y_HighPos,x
+        cmp #2
+        jcs EraseEnemyObject
         lda Enemy_State,x          ;check cheep-cheep's enemy state
         and #%00100000             ;for d5 set
         beq FlyCC                  ;branch to continue code if not set
-        lda #$00
-        sta Enemy_SprAttrib,x      ;otherwise clear sprite attributes
+        ; lda #$00
+        ; sta Enemy_SprAttrib,x      ;otherwise clear sprite attributes
         jmp MoveJ_EnemyVertically  ;and jump to move defeated cheep-cheep downwards
 FlyCC:  jsr MoveEnemyHorizontally  ;move cheep-cheep horizontally based on speed and force
         ldy #$0d                   ;set vertical movement amount
@@ -119,11 +126,5 @@ AddCCF: cmp #$08                   ;if result or two's compliment greater than e
         clc
         adc #$10                   ;otherwise add to it
         sta Enemy_Y_MoveForce,x
-        lsr                        ;move high nybble to low again
-        lsr
-        lsr
-        lsr
-        tay
-BPGet:  lda FlyCCBPriority,y       ;load bg priority data and store (this is very likely
-        sta Enemy_SprAttrib,x      ;broken or residual code, value is overwritten before
+BPGet:
         rts                        ;drawing it next frame), then leave

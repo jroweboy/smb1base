@@ -42,6 +42,11 @@
 ;-------------------------------------------------------------------------------------
 
 InitScreen:
+  lda Mirror_PPUMASK
+  and #%00011000
+  beq :+
+    rts
+  :
   jsr MoveAllSpritesOffscreen ;initialize all sprites including sprite #0
   jsr InitializeNameTables    ;and erase both name and attribute tables
   lda OperMode

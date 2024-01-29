@@ -502,18 +502,29 @@ WriteMetasprite:
 .endproc
 
 ProcessSwimmingCheepCheep:
+  lda #$01
+  .byte $2c
   ; fallthrough
 .proc ProcessFlyingCheepCheep
+  lda #$02
+  sta Enemy_SprAttrib,x
   ldy #METASPRITE_CHEEP_CHEEP_SWIM_1
   lda Enemy_State,x
   ; check for the animation bits
   and #%10100000
   ora TimerControl      ;or timer disable flag set
-  bne WriteMetasprite   ;if either condition true, do not animate goomba
+  bne CheckDefeated   ;if either condition true, do not animate goomba
     lda FrameCounter
     and #%00001000        ;check for every eighth frame
-    bne WriteMetasprite
+    bne CheckDefeated
       iny
+CheckDefeated:
+  ; d5 is set when the enemy is dead
+  lda Enemy_State,x
+  and #%00100000        ;for d5 set
+  beq WriteMetasprite
+    lda #1
+    sta EnemyVerticalFlip,x
 WriteMetasprite:
   tya
   sta EnemyMetasprite,x

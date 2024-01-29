@@ -176,7 +176,7 @@ __MEMORY_INC = 1
 
 .global NmiDisable
 .global NmiSkipped
-
+.global ShouldSkipDrawSprites
 
 .global IrqPPUCTRL
 .global IrqNextScanline

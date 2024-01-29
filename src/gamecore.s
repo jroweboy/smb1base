@@ -72,7 +72,12 @@ ProcELoop:
     jsr RunGameTimer           ;count down the game timer
   endfar
 
-  farcall DrawAllMetasprites
+  lda ShouldSkipDrawSprites
+  bne SkipDrawingCauseLagged
+    farcall DrawAllMetasprites
+SkipDrawingCauseLagged:
+  lda #0
+  sta ShouldSkipDrawSprites
 
   jsr ColorRotation          ;cycle one of the background colors
 

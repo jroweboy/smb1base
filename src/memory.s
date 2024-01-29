@@ -205,6 +205,7 @@ DigitModifier:                  .res 6
 
 NmiDisable:                     .res  1
 NmiSkipped:                     .res  1
+ShouldSkipDrawSprites:          .res  1
 IrqPPUCTRL:                     .res  1
 IrqNewScroll:                   .res  1
 IrqOldScroll:                   .res  1
@@ -217,10 +218,10 @@ IrqPointer                    = IrqPointerJmp + 1
 ReloadCHRBank:                  .res  1
 CurrentCHRBank:                 .res  6
 
-InPipeTransition:               .res  1
-PipeXPosition:                  .res  1
-PipeYPosition:                  .res  1
-PipeExitTimer:                  .res  1
+; InPipeTransition:               .res  1
+; PipeXPosition:                  .res  1
+; PipeYPosition:                  .res  1
+; PipeExitTimer:                  .res  1
 
 CurrentBank:                    .res  1
 BankShadow:                     .res  1

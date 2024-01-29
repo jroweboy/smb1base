@@ -121,6 +121,12 @@ MMC3Init:
 
   ; Now set the initial A bank
   BankPRGA #0
+  lda #0
+  sta CurrentBank
+  sta NmiSkipped
+  lda #7 | PRG_FIXED_8
+  sta BankShadow
+
   ; disable scanline counter, $6000 ram, and IRQ
   lda #0
   sta NMT_MIRROR
@@ -152,7 +158,15 @@ BankInitValues:
 .proc IdleLoop
   lda NmiDisable
   beq IdleLoop
-    jsr GameLoop
+; Detect if the last frame lagged and skip immediately to the next frame if we did so we don't
+; slow down if we lag.
+GoToNextFrameImmediately:
+    lda NmiSkipped
+    pha
+      jsr GameLoop
+    pla
+    cmp NmiSkipped
+    bne GoToNextFrameImmediately
   jmp IdleLoop
 .endproc
 
@@ -174,22 +188,36 @@ BankInitValues:
 .endproc
 
 .proc NonMaskableInterrupt
-  bit NmiDisable
-  bpl ContinueNMI
-    inc NmiSkipped
-    pha
-      ; lag frame, prevent the graphics from going bunk by still running
-      ; the irq
-      SetScanlineIRQ #$1f
-      lda #0
-      sta PPUSCROLL
-      sta PPUSCROLL
-    pla
-    rti
-ContinueNMI:
   pha
   phx
   phy
+  lda NmiDisable
+  bpl ContinueNMI
+    inc NmiSkipped
+    ; lag frame, prevent the graphics from going bunk by still running
+    ; the irq. also run audio to keep it sounding like we didn't lag
+    SetScanlineIRQ #$1f
+    lda Mirror_PPUCTRL
+    and #%11111110            ;alter name table address to be $2800
+    sta PPUCTRL              ;(essentially $2000) but save other bits
+    lda #0
+    sta PPUSCROLL
+    sta PPUSCROLL
+    lda CurrentBank
+    pha
+      BankPRGA #.bank(MUSIC)
+      jsr SoundEngine
+      lda #7 | PRG_FIXED_8
+      sta BANK_SELECT
+    pla
+    sta BANK_DATA
+    lda BankShadow
+    sta BANK_SELECT
+    ply
+    plx
+    pla
+    rti
+ContinueNMI:
   ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
   dec NmiDisable
   
@@ -274,7 +302,15 @@ SkipSprite0:
   and #%11111100
   sta PPUCTRL
 
-  farcall SoundEngine           ;play sound
+  ; play sound
+  lda CurrentBank
+  pha
+    BankPRGA #.bank(MUSIC)
+    jsr SoundEngine
+    lda #7 | PRG_FIXED_8
+    sta BANK_SELECT
+  pla
+  sta BANK_DATA
   
 .ifdef WORLD_HAX
 	dec DebugCooldown
@@ -288,6 +324,7 @@ SkipSprite0:
   lda SavedJoypadBits
 	and #B_Button
   beq :+
+  ; TODO don't farcall in nmi
   farcall PrcNextA
   jmp :++
   :
