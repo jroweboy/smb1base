@@ -58,7 +58,7 @@
     sta PPUADDR
 
     ; Restore new_x.
-    ; stx IrqNewScroll
+    stx IrqNewScroll
   plx
   pla
   rti
@@ -177,6 +177,14 @@ BankInitValues:
   bit NmiDisable
   bpl ContinueNMI
     inc NmiSkipped
+    pha
+      ; lag frame, prevent the graphics from going bunk by still running
+      ; the irq
+      SetScanlineIRQ #$1f
+      lda #0
+      sta PPUSCROLL
+      sta PPUSCROLL
+    pla
     rti
 ContinueNMI:
   pha
@@ -201,7 +209,8 @@ ScreenOff:
   sta PPUMASK
   ldx PPUSTATUS            ;reset flip-flop and reset scroll registers to zero
   lda #$00
-  jsr InitScroll
+  sta PPUSCROLL
+  sta PPUSCROLL
   sta OAMADDR          ;reset spr-ram address register
 
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents

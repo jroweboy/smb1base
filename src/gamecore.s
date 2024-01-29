@@ -125,63 +125,6 @@ ExitEng:
   rts                        ;and after all that, we're finally done!
 
 
-.proc DrawPipeOverlaySprite
-  ; if the player is fully in the pipe, move the overlay down with the sprite
-  lda #$fe
-  ; ldx #(0 << 5) | 0 ; debug show the overlay box
-  ldx #(1 << 5) | 2 ; put the overlay sprite in the BACKGROUND with palette 1
-.repeat 8 * 2, I
-  sta Sprite_Tilenumber + (I*4)
-  stx Sprite_Attributes + (I*4)
-.endrepeat
-  lda InPipeTransition
-  cmp #2
-  beq :+
-    lda Player_Rel_XPos
-    jmp SetX
-  :
-  lda PipeXPosition
-  sec
-  sbc ScreenLeft_X_Pos
-SetX:
-.repeat 4 * 2, I
-  sta Sprite_X_Position + (I*4)
-.endrepeat
-  clc
-  adc #8
-.repeat 4 * 2, I
-  sta Sprite_X_Position + (4 * 4 * 2) + (I*4)
-.endrepeat
-  ; and finally pick the lower of the two positions, the player or the pipe
-  lda Player_Y_HighPos
-  cmp #1
-  bne SetToBottomOfScreen
-
-  lda PipeYPosition
-  clc
-  adc #32
-  cmp Player_Y_Position
-  bcs UsePipePosition
-    lda Player_Y_Position
-    jmp DumpYPosition
-SetToBottomOfScreen:
-    lda #255-32
-    bne DumpYPosition ; unconditional
-UsePipePosition:
-  lda PipeYPosition
-DumpYPosition:
-.repeat 4 * 2, I
-    sta Sprite_Y_Position + (I * 4)
-    sta Sprite_Y_Position + (I * 4) + (4 * 4 * 2)
-.if I <> (4 * 2 - 1)
-    clc
-    adc #8
-.endif
-.endrepeat
-  rts
-
-.endproc
-
 ;-------------------------------------------------------------------------------------
 ;$02 - used to store offset to block buffer
 ;$06-$07 - used to store block buffer address

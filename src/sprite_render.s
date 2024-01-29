@@ -444,6 +444,7 @@ ProcessJumpingParatrooperInner:
 
 .proc ProcessPodoboo
   lda #METASPRITE_PODOBOO_UP
+  sta EnemyMetasprite,x
   ; The only real decision we have to make is
   ; if it died or its going down, flip it upside down
   ldy #0

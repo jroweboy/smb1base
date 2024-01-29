@@ -300,13 +300,19 @@ CopyFToR:
 ExBGfxH:
   rts                      ;leave!
 
+ClearSecondHalfOfBoswer:
+  ldx DuplicateObj_Offset
+  lda #0
+  sta EnemyMetasprite,x
+  rts
+
 ProcessBowserHalf:
   inc BowserGfxFlag         ;increment bowser's graphics flag, then run subroutines
   jsr ChooseBowserMetasprite
   jsr GetEnemyOffscreenBits
   jsr RelativeEnemyPosition
   lda Enemy_State,x
-  bne ExBGfxH               ;if either enemy object not in normal state, branch to leave
+  bne ClearSecondHalfOfBoswer ;if either enemy object not in normal state, branch to leave
   lda #$0a
   sta Enemy_BoundBoxCtrl,x  ;set bounding box size control
   jsr GetEnemyBoundBox      ;get bounding box coordinates
@@ -338,7 +344,13 @@ WriteMetasprite:
   and #%00100000
   beq BowserNotDefeated
     ; if bowser is defeated set the vertical flip flag
-    inc EnemyVerticalFlip,x
+    lda BowserGfxFlag
+    lsr
+    bcc :+
+      ; set a special vertical flip flag for bowsers front half since its weird
+      lda #$80
+    :
+    sta EnemyVerticalFlip,x
 BowserNotDefeated:
   rts
 .endproc

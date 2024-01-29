@@ -139,7 +139,8 @@ SkpFSte:  clc
           sta FirebarSpinState_High,x
 SetupGFB: sta Local_ef                     ;save high byte of spinning thing, modified or otherwise
           jsr RelativeEnemyPosition   ;get relative coordinates to screen
-          AllocSpr 1
+      ;     AllocSpr 1
+      ReserveSpr 1
       ;     jsr GetFirebarPosition      ;do a sub here (residual, too early to be used now)
       ;     ldy Enemy_SprDataOffset,x   ;get OAM data offset
           lda Enemy_Rel_YPos          ;get relative vertical coordinate
@@ -164,16 +165,19 @@ SetMFbar: sty Local_ed                     ;store maximum value for length of fi
 DrawFbar: lda Local_ef                     ;load high byte of spinstate
           jsr GetFirebarPosition      ;get fireball position data depending on firebar part
           jsr DrawFirebar_Collision   ;position it properly, draw it and do collision detection
-          lda R0                      ;check which firebar part
-          cmp #$04
-          bne NextFbar
-          lda OriginalOAMOffset
-          AllocSpr 5
-          sty R6
+      ;     lda R0                      ;check which firebar part
+      ;     cmp #$04
+      ;     bne NextFbar
+      ;     lda OriginalOAMOffset
+      ;     AllocSpr 6
+          
+      ;     sty R6
 NextFbar: inc R0                      ;move onto the next firebar part
           lda R0 
           cmp Local_ed                     ;if we end up at the maximum part, go on and leave
           bcc DrawFbar                ;otherwise go back and do another
+          ldy R6
+      UpdateOAMPosition 
 SkipFBar: rts
 
 DrawFirebar_Collision:

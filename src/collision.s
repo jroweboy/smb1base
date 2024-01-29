@@ -856,7 +856,27 @@ ExitFBallEnemy:
       rts
 
 BowserIdentities:
-      .byte Goomba, GreenKoopa, BuzzyBeetle, Spiny, Lakitu, Bloober, HammerBro, Bowser
+  .byte Goomba
+  .byte GreenKoopa
+  .byte BuzzyBeetle
+  ; These two aren't available in the bank, so just change it cause
+  ; i'm too lazy to redo everything just for this one small interaction
+  ; .byte Spiny
+  ; .byte Lakitu
+  .byte RedCheepCheep
+  .byte RetainerObject
+  .byte Bloober
+  .byte HammerBro
+  .byte Bowser
+; BowserIdentityBank:
+;   .byte CHR_SPR_CASTLE
+;   .byte CHR_SPR_CASTLE
+;   .byte CHR_SPR_CASTLE
+;   .byte CHR_SPR_GROUND
+;   .byte CHR_SPR_GROUND
+;   .byte CHR_SPR_CASTLE
+;   .byte CHR_SPR_CASTLE
+;   .byte CHR_SPR_CASTLE
 
 HandleEnemyFBallCol:
       jsr RelativeEnemyPosition  ;get relative coordinate of enemy
@@ -873,13 +893,13 @@ HandleEnemyFBallCol:
 ChkBuzzyBeetle:
       lda Enemy_ID,x
       cmp #BuzzyBeetle           ;check for buzzy beetle
-      beq ExHCF                  ;branch if found to leave (buzzy beetles fireproof)
+      jeq ExHCF                  ;branch if found to leave (buzzy beetles fireproof)
       cmp #Bowser                ;check for bowser one more time (necessary if d7 of flag was clear)
       bne ChkOtherEnemies        ;if not found, branch to check other enemies
 
 HurtBowser:
           dec BowserHitPoints        ;decrement bowser's hit points
-          bne ExHCF                  ;if bowser still has hit points, branch to leave
+          jne ExHCF                  ;if bowser still has hit points, branch to leave
           jsr InitVStf               ;otherwise do sub to init vertical speed and movement force
           sta Enemy_X_Speed,x        ;initialize horizontal speed
           sta EnemyFrenzyBuffer      ;init enemy frenzy buffer
@@ -888,6 +908,20 @@ HurtBowser:
           ldy WorldNumber            ;use world number as offset
           lda BowserIdentities,y     ;get enemy identifier to replace bowser with
           sta Enemy_ID,x             ;set as new enemy identifier
+          ; also change the bank so the sprite isn't glitched
+          ; lda BowserIdentityBank,y
+          ; cmp CurrentCHRBank+4
+          ; beq :+
+          ;   sta CurrentCHRBank+4
+          ;   sta CurrentCHRBank+5
+          ;   inc CurrentCHRBank+5
+          ;   inc ReloadCHRBank
+          ; :
+          
+          ; Clear out the rear of bowser
+          ldy DuplicateObj_Offset
+          lda #0
+          sta EnemyMetasprite,y
           lda #$20                   ;set A to use starting value for state
           cpy #$03                   ;check to see if using offset of 3 or more
           bcs SetDBSte               ;branch if so
@@ -1274,6 +1308,17 @@ HandleCoinMetatile:
   jmp GiveOneCoin       ;update coin amount and tally on the screen
 
 HandleAxeMetatile:
+
+  ; reload castle sprites if bowser identity changed it
+  ; lda #CHR_SPR_CASTLE
+  ; cmp CurrentCHRBank+4
+  ; beq :+
+  ;   sta CurrentCHRBank+4
+  ;   sta CurrentCHRBank+5
+  ;   inc CurrentCHRBank+5
+  ;   inc ReloadCHRBank
+  ; :
+
   lda #$00
   sta OperMode_Task   ;reset secondary mode
   lda #$02
