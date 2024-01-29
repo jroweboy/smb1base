@@ -593,6 +593,7 @@ KillELoop:
     cpy R0            ;if not found, branch
     bne :+
       sta EnemyMetasprite,x
+      sta EnemyVerticalFlip,x
       sta Enemy_Flag,x  ;if found, deactivate enemy object flag
   :
     dex               ;do this until all slots are checked
@@ -617,10 +618,10 @@ EraseEnemyObject:
   rts
 
 WorldAddrOffsets:
-      .byte World1Areas-AreaAddrOffsets, World2Areas-AreaAddrOffsets
-      .byte World3Areas-AreaAddrOffsets, World4Areas-AreaAddrOffsets
-      .byte World5Areas-AreaAddrOffsets, World6Areas-AreaAddrOffsets
-      .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
+  .byte World1Areas-AreaAddrOffsets, World2Areas-AreaAddrOffsets
+  .byte World3Areas-AreaAddrOffsets, World4Areas-AreaAddrOffsets
+  .byte World5Areas-AreaAddrOffsets, World6Areas-AreaAddrOffsets
+  .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
 
 AreaAddrOffsets:
 World1Areas: .byte $25, $29, $c0, $26, $60

@@ -29,6 +29,10 @@
 
 .export BBChk_E
 
+
+.export GetEnemyBoundBox, BoundingBoxCore, GetMiscBoundBox, LargePlatformBoundBox
+.export MoveJumpingEnemy, SmallPlatformBoundBox
+
 .segment "COLLISION"
 
 ;-------------------------------------------------------------------------------------
@@ -1900,3 +1904,177 @@ ChkUnderEnemy:
       inx ; jroweboy(inlined BlockBufferChk_Enemy)
       jmp BBChk_E  ;hop to it!
 
+
+;-------------------------------------------------------------------------------------
+;$00 - used to hold one of bitmasks, or offset
+;$01 - used for relative X coordinate, also used to store middle screen page location
+;$02 - used for relative Y coordinate, also used to store middle screen coordinate
+
+;this data added to relative coordinates of sprite objects
+;stored in order: left edge, top edge, right edge, bottom edge
+BoundBoxCtrlData:
+  .byte $02, $08, $0e, $20  ; big mario
+  .byte $03, $14, $0d, $20  ; small mario
+  .byte $02, $14, $0e, $20  ; big mario crouching
+  .byte $02, $09, $0e, $15
+  .byte $00, $00, $18, $06
+  .byte $00, $00, $20, $0d
+  .byte $00, $00, $30, $0d
+  .byte $00, $00, $08, $08
+  .byte $06, $04, $0a, $08
+  .byte $03, $0e, $0d, $14
+  .byte $00, $02, $10, $15
+  .byte $04, $04, $0c, $1c
+
+GetFireballBoundBox:
+      txa         ;add seven bytes to offset
+      clc         ;to use in routines as offset for fireball
+      adc #$07
+      tax
+      ldy #$02    ;set offset for relative coordinates
+      bne FBallB  ;unconditional branch
+
+GetMiscBoundBox:
+        txa                       ;add nine bytes to offset
+        clc                       ;to use in routines as offset for misc object
+        adc #$09
+        tax
+        ldy #$06                  ;set offset for relative coordinates
+FBallB: jsr BoundingBoxCore       ;get bounding box coordinates
+        jmp CheckRightScreenBBox  ;jump to handle any offscreen coordinates
+
+GetEnemyBoundBox:
+      ldy #$48                 ;store bitmask here for now
+      sty R0 
+      ldy #$44                 ;store another bitmask here for now and jump
+      jmp GetMaskedOffScrBits
+
+SmallPlatformBoundBox:
+      ldy #$08                 ;store bitmask here for now
+      sty R0 
+      ldy #$04                 ;store another bitmask here for now
+
+GetMaskedOffScrBits:
+        lda Enemy_X_Position,x      ;get enemy object position relative
+        sec                         ;to the left side of the screen
+        sbc ScreenLeft_X_Pos
+        sta R1                      ;store here
+        lda Enemy_PageLoc,x         ;subtract borrow from current page location
+        sbc ScreenLeft_PageLoc      ;of left side
+        bmi CMBits                  ;if enemy object is beyond left edge, branch
+        ora R1 
+        beq CMBits                  ;if precisely at the left edge, branch
+        ldy R0                      ;if to the right of left edge, use value in $00 for A
+CMBits: tya                         ;otherwise use contents of Y
+        and Enemy_OffscreenBits     ;preserve bitwise whatever's in here
+        sta EnemyOffscrBitsMasked,x ;save masked offscreen bits here
+        bne MoveBoundBoxOffscreen   ;if anything set here, branch
+        jmp SetupEOffsetFBBox       ;otherwise, do something else
+
+LargePlatformBoundBox:
+      inx                        ;increment X to get the proper offset
+      jsr GetXOffscreenBits      ;then jump directly to the sub for horizontal offscreen bits
+      dex                        ;decrement to return to original offset
+      cmp #$fe                   ;if completely offscreen, branch to put entire bounding
+      bcs MoveBoundBoxOffscreen  ;box offscreen, otherwise start getting coordinates
+
+SetupEOffsetFBBox:
+      txa                        ;add 1 to offset to properly address
+      clc                        ;the enemy object memory locations
+      adc #$01
+      tax
+      ldy #$01                   ;load 1 as offset here, same reason
+      jsr BoundingBoxCore        ;do a sub to get the coordinates of the bounding box
+      jmp CheckRightScreenBBox   ;jump to handle offscreen coordinates of bounding box
+
+MoveBoundBoxOffscreen:
+      txa                            ;multiply offset by 4
+      asl
+      asl
+      tay                            ;use as offset here
+      lda #$ff
+      sta EnemyBoundingBoxCoord,y    ;load value into four locations here and leave
+      sta EnemyBoundingBoxCoord+1,y
+      sta EnemyBoundingBoxCoord+2,y
+      sta EnemyBoundingBoxCoord+3,y
+      rts
+
+BoundingBoxCore:
+  stx R0                      ;save offset here
+  lda SprObject_Rel_YPos,y    ;store object coordinates relative to screen
+  sta R2                      ;vertically and horizontally, respectively
+  lda SprObject_Rel_XPos,y
+  sta R1 
+  txa                         ;multiply offset by four and save to stack
+  asl
+  asl
+  pha
+    tay                         ;use as offset for Y, X is left alone
+    lda SprObj_BoundBoxCtrl,x   ;load value here to be used as offset for X
+    asl                         ;multiply that by four and use as X
+    asl
+    tax
+    lda R1                      ;add the first number in the bounding box data to the
+    clc                         ;relative horizontal coordinate using enemy object offset
+    adc BoundBoxCtrlData,x      ;and store somewhere using same offset * 4
+    sta BoundingBox_UL_Corner,y ;store here
+    lda R1 
+    clc
+    adc BoundBoxCtrlData+2,x    ;add the third number in the bounding box data to the
+    sta BoundingBox_LR_Corner,y ;relative horizontal coordinate and store
+    inx                         ;increment both offsets
+    iny
+    lda R2                      ;add the second number to the relative vertical coordinate
+    clc                         ;using incremented offset and store using the other
+    adc BoundBoxCtrlData,x      ;incremented offset
+    sta BoundingBox_UL_Corner,y
+    lda R2 
+    clc
+    adc BoundBoxCtrlData+2,x    ;add the fourth number to the relative vertical coordinate
+    sta BoundingBox_LR_Corner,y ;and store
+  pla                         ;get original offset loaded into $00 * y from stack
+  tay                         ;use as Y
+  ldx R0                      ;get original offset and use as X again
+  rts
+
+CheckRightScreenBBox:
+       lda ScreenLeft_X_Pos       ;add 128 pixels to left side of screen
+       clc                        ;and store as horizontal coordinate of middle
+       adc #$80
+       sta R2 
+       lda ScreenLeft_PageLoc     ;add carry to page location of left side of screen
+       adc #$00                   ;and store as page location of middle
+       sta R1 
+       lda SprObject_X_Position,x ;get horizontal coordinate
+       cmp R2                     ;compare against middle horizontal coordinate
+       lda SprObject_PageLoc,x    ;get page location
+       sbc R1                     ;subtract from middle page location
+       bcc CheckLeftScreenBBox    ;if object is on the left side of the screen, branch
+       lda BoundingBox_DR_XPos,y  ;check right-side edge of bounding box for offscreen
+       bmi NoOfs                  ;coordinates, branch if still on the screen
+       lda #$ff                   ;load offscreen value here to use on one or both horizontal sides
+       ldx BoundingBox_UL_XPos,y  ;check left-side edge of bounding box for offscreen
+       bmi SORte                  ;coordinates, and branch if still on the screen
+       sta BoundingBox_UL_XPos,y  ;store offscreen value for left side
+SORte: sta BoundingBox_DR_XPos,y  ;store offscreen value for right side
+NoOfs: ldx ObjectOffset           ;get object offset and leave
+       rts
+
+CheckLeftScreenBBox:
+        lda BoundingBox_UL_XPos,y  ;check left-side edge of bounding box for offscreen
+        bpl NoOfs2                 ;coordinates, and branch if still on the screen
+        cmp #$a0                   ;check to see if left-side edge is in the middle of the
+        bcc NoOfs2                 ;screen or really offscreen, and branch if still on
+        lda #$00
+        ldx BoundingBox_DR_XPos,y  ;check right-side edge of bounding box for offscreen
+        bpl SOLft                  ;coordinates, branch if still onscreen
+        sta BoundingBox_DR_XPos,y  ;store offscreen value for right side
+SOLft:  sta BoundingBox_UL_XPos,y  ;store offscreen value for left side
+NoOfs2: ldx ObjectOffset           ;get object offset and leave
+        rts
+
+;--------------------------------
+
+MoveJumpingEnemy:
+      jsr MoveJ_EnemyVertically  ;do a sub to impose gravity on green paratroopa
+      jmp MoveEnemyHorizontally  ;jump to move enemy horizontally

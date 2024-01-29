@@ -305,7 +305,6 @@ ProcessBowserHalf:
   jsr ChooseBowserMetasprite
   jsr GetEnemyOffscreenBits
   jsr RelativeEnemyPosition
-  ; jsr RunRetainerObj        ;to get offscreen bits, relative position and draw bowser (finally!)
   lda Enemy_State,x
   bne ExBGfxH               ;if either enemy object not in normal state, branch to leave
   lda #$0a

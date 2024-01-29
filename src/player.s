@@ -14,7 +14,7 @@
 .import ContinueGame
 
 ; sprite_render.s
-.import DrawFireball, DrawExplosion_Fireball, DumpTwoSpr, DrawOneSpriteRow
+.import DrawExplosion_Fireball, DumpTwoSpr, DrawOneSpriteRow
 
 ; screen_render.s
 .import GetPlayerColors
@@ -205,7 +205,7 @@ PlayerSubs:
   jsr GetPlayerOffscreenBits  ;get player's offscreen bits
   jsr RelativePlayerPosition  ;get coordinates relative to the screen
   ldx #$00                    ;set offset for player object
-  farcall BoundingBoxCore     ;get player's bounding box coordinates
+  jsr BoundingBoxCore     ;get player's bounding box coordinates
   jsr PlayerBGCollision       ;do collision detection and process
   lda Player_Y_Position
   cmp #$40                    ;check to see if player is higher than 64th pixel

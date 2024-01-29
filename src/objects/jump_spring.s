@@ -1,6 +1,7 @@
 
 .include "common.inc"
 .include "object.inc"
+.include "metasprite.inc"
 
 .segment "OBJECT"
 
@@ -44,8 +45,10 @@ BounceJS:  cpy #$03                    ;check frame control offset again
            sta Player_Y_Speed          ;store jumpspring force as player's new vertical speed
            lda #$00
            sta JumpspringAnimCtrl      ;initialize jumpspring frame control
-DrawJSpr:  jsr RelativeEnemyPosition   ;get jumpspring's relative coordinates
-           jsr EnemyGfxHandler         ;draw jumpspring
+DrawJSpr:  
+            ; jsr RelativeEnemyPosition   ;get jumpspring's relative coordinates
+      ;      jsr EnemyGfxHandler         ;draw jumpspring
+           jsr DrawJumpSpring
            jsr OffscreenBoundsCheck    ;check to see if we need to kill it
            lda JumpspringAnimCtrl      ;if frame control at zero, don't bother
            beq ExJSpring               ;trying to animate it, just leave
@@ -55,3 +58,19 @@ DrawJSpr:  jsr RelativeEnemyPosition   ;get jumpspring's relative coordinates
            sta JumpspringTimer         ;otherwise initialize jumpspring timer
            inc JumpspringAnimCtrl      ;increment frame control to animate jumpspring
 ExJSpring: rts                         ;leave
+
+
+.proc DrawJumpSpring
+  ldy JumpspringAnimCtrl
+  lda JumpspringFrameOffsets,y
+  sta EnemyMetasprite,x 
+  rts
+
+JumpspringFrameOffsets:
+  .byte METASPRITE_JUMPSPRING_FRAME_1
+  .byte METASPRITE_JUMPSPRING_FRAME_2
+  .byte METASPRITE_JUMPSPRING_FRAME_3
+  .byte METASPRITE_JUMPSPRING_FRAME_2
+  .byte METASPRITE_JUMPSPRING_FRAME_1
+.endproc
+
