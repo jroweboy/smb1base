@@ -306,6 +306,7 @@ ExitEarly:
 ProcessBowserHalf:
   inc BowserGfxFlag         ;increment bowser's graphics flag, then run subroutines
   jsr ChooseBowserMetasprite
+  jsr SprObjectOffscrChk
   jsr GetEnemyOffscreenBits
   jsr RelativeEnemyPosition
   lda Enemy_State,x
