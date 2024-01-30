@@ -404,6 +404,17 @@ AfterWorld7:
 WriteMetasprite:
   tya
   sta EnemyMetasprite,x
+  lda Enemy_State,x
+  and #%00100000
+  beq Exit
+    ; Dead toads get flipped.
+    lda #1
+    sta EnemyVerticalFlip,x
+    jsr GetEnemyOffscreenBits
+    ; jsr RelativeEnemyPosition
+    jsr MoveNormalEnemy
+    jmp SprObjectOffscrChk
+Exit:
   rts
 .endproc
 
