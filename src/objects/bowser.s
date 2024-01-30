@@ -49,6 +49,16 @@ RunBowserFlame:
 ;$04-$05 - used to store name table address in little endian order
 .export BridgeCollapse
 BridgeCollapse:
+  ldx #BubbleMetasprite - EnemyMetasprite
+  :
+    lda EnemyMetasprite,x
+    cmp #Bowser
+    beq Skip
+    lda #0
+    sta EnemyMetasprite,x
+  Skip:
+    dex
+    bpl :-
 
   ldx BowserFront_Offset    ;get enemy offset for bowser
   lda Enemy_ID,x            ;check enemy object identifier for bowser
