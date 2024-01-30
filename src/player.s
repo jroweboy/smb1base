@@ -508,11 +508,21 @@ CntPl:
       ; if the player is swimming, every 8 frames switch metasprite to use the kick animation
       lda FrameCounter
       and #%00000100              ;check frame counter for d2 set (8 frames every
-      bne Exit                   ;eighth frame), and branch if set to leave
+      bne Exit                    ;eighth frame), and branch if set to leave
+        ; a bit hacky here, but we have two types of offsets. If its one of the glitchy frames, bump the metasprite by one, else
+        ; add our animation extent offset
         lda ObjectMetasprite
-        clc
-        adc #METASPRITE_BIG_MARIO_SWIMMING_1_HOLD - METASPRITE_BIG_MARIO_SWIMMING_1_KICK
-        sta ObjectMetasprite
+        cmp #METASPRITE_FIRE_MARIO_SWIMMING_STILL_1
+        beq GlitchySprite
+        cmp #METASPRITE_SMALL_FIRE_SWIMMING_STILL_1
+        beq GlitchySprite
+          clc
+          adc #SWIMMING_ANIMATION_FRAME_COUNT
+          sta ObjectMetasprite
+          bne Exit
+    GlitchySprite:
+      ; Go to the next frame of the glitch animation
+      inc ObjectMetasprite
 Exit:
   rts                         ;then leave
 
@@ -546,17 +556,27 @@ PlayerGfxProcessing:
     sty FireballThrowingTimer     ;initialize fireball throw timer
     bcs PlayerOffscreenChk        ;if animation frame timer => fireball throw timer skip to end
       sta FireballThrowingTimer     ;otherwise store animation timer into fireball throw timer
-      ; WORKAROUND instead of duplicating
+
+      ; Change the Mario sprite to the fire version
       lda ObjectMetasprite
       clc
       adc #FIRE_MARIO_OFFSET
       sta ObjectMetasprite
-  ldy #$04                      ;set to update four sprite rows by default
-  lda Player_X_Speed
-  ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
-  beq SUpdR                     ;if no speed or button press, branch using set value in Y
-    dey                         ;otherwise set to update only three sprite rows
+      
+      lda Player_X_Speed
+      ora Left_Right_Buttons        ;check for horizontal speed or left/right button press
+      bne SUpdR                     ;if no speed or button press, branch using set value in Y
+        ; Use the glitchy version of the sprite
+        lda PlayerSize
+        bne SmallFireMario
+          lda #METASPRITE_FIRE_MARIO_SWIMMING_STILL_1
+          bne SetFrame
+        SmallFireMario:
+          lda #METASPRITE_SMALL_FIRE_SWIMMING_STILL_1
+      SetFrame:
+        sta ObjectMetasprite
 SUpdR:
+
 PlayerOffscreenChk:
 
   ; Load the bank for the player if it changed
@@ -663,6 +683,11 @@ FIRE_MARIO_OFFSET = * - PlayerBankTableReal
 .byte CHR_SMALLMARIO  ; SMALL MARIO STANDING
 .byte CHR_MARIOACTION ; "BIG_MARIO", "GROW_INTERMEDIATE"
 .byte CHR_BIGMARIO    ; BIG MARIO STANDING
+
+.byte CHR_MARIOACTION ; "FIRE_MARIO_SWIMMING_STILL_1"
+.byte CHR_MARIOACTION ; "FIRE_MARIO_SWIMMING_STILL_2"
+.byte CHR_SMALLFIRE   ; "SMALL_FIRE_SWIMMING_STILL_1"
+.byte CHR_SMALLFIRE   ; "SMALL_FIRE_SWIMMING_STILL_2"
 
 HandleChangeSize:
   ldy PlayerAnimCtrl           ;get animation frame control
