@@ -237,8 +237,10 @@ BowserFrontFlip:
   lda Sprite_Y_Position-8,x
   clc
   adc #32
-  sta Sprite_Y_Position-8,x
-  sta Sprite_Y_Position-4,x
+  bcs Offscreen
+    sta Sprite_Y_Position-8,x
+    sta Sprite_Y_Position-4,x
+Offscreen:
   rts
 .endproc
 
