@@ -419,7 +419,6 @@ KillPlayer:
       stx Player_X_Speed   ;halt player's horizontal movement by initializing speed
       inx
       stx EventMusicQueue  ;set event music queue to death music
-      stx DeathMusicLoaded
       lda #$fc
       sta Player_Y_Speed   ;set new vertical speed
       lda #$0b             ;set subroutine to run on next frame
