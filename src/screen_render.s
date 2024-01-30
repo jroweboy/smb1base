@@ -230,6 +230,8 @@ NoReset:
   sta SprObject_SprAttrib
   lda IntermediatePlayerData+3
   sta SprObject_X_Position
+  lda ScreenLeft_PageLoc
+  sta SprObject_PageLoc
   lda #1
   sta SprObject_Y_HighPos
   rts
