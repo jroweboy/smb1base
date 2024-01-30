@@ -184,6 +184,7 @@ MetaspriteReserve .sprintf("%s_%s",Object, Animation)
 .ifdef METASPRITE_BODY
 .Local LL, LH, RL, RH, Id
 Id = .ident( .concat("METASPRITE_", Mspr) )
+.out .sprintf("METASPRITE_%s = $%02x (duplicate of %s)", Mspr, METASPRITES_COUNT, Name)
 
 LL = .ident(.sprintf("METASPRITE_LEFT_%d_LO", Id))
 LH = .ident(.sprintf("METASPRITE_LEFT_%d_HI", Id))
