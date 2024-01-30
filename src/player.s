@@ -485,94 +485,6 @@ SetPESub: lda #$07                    ;set to run player entrance subroutine
           sta GameEngineSubroutine    ;on the next frame of game engine
           rts
 
-;-------------------------------------------------------------------------------------
-;$00-$01 - used to hold tile numbers, $00 also used to hold upper extent of animation frames
-;$02 - vertical position
-;$03 - facing direction, used as horizontal flip control
-;$04 - attributes
-;$05 - horizontal position
-;$07 - number of rows to draw
-;these also used in IntermediatePlayerData
-
-; RenderPlayerSub:
-;   sta R7                       ;store number of rows of sprites to draw
-;   lda Player_Rel_XPos
-;   sta Player_Pos_ForScroll     ;store player's relative horizontal position
-;   sta R5                       ;store it here also
-;   lda Player_Rel_YPos
-;   sta R2                       ;store player's vertical position
-;   lda PlayerFacingDir
-;   sta R3                       ;store player's facing direction
-;   lda Player_SprAttrib
-;   sta R4                       ;store player's sprite attributes
-;   ldx PlayerGfxOffset          ;load graphics table offset
-;   ldy PlayerOAMOffset
-
-; DrawPlayerLoop:
-;     lda PlayerGraphicsTable,x    ;load player's left side
-;     sta R0 
-;     lda PlayerGraphicsTable+1,x  ;now load right side
-;     jsr DrawOneSpriteRow
-;     dec R7                       ;decrement rows of sprites to draw
-;     bne DrawPlayerLoop           ;do this until all rows are drawn  
-;   rts
-
-;tiles arranged in order, 2 tiles per row, top to bottom
-; SwimTileRepOffset     = PlayerGraphicsTable + $9e
-; PlayerKilledGraphicsOffset = $b0
-; PlayerStandGraphicsOffset = $c8
-
-; PlayerGraphicsTable:
-; ;; big player table
-; BigPlayerTable:
-; PlayerAnimWalking1 = * - BigPlayerTable
-; .byte $00, $01, $10, $11, $20, $21, $30, $31 ;walking frame 1   $00
-; PlayerAnimWalking2 = * - BigPlayerTable
-; .byte $02, $03, $12, $13, $22, $23, $32, $33 ;        frame 2
-; PlayerAnimWalking3 = * - BigPlayerTable
-; .byte $04, $05, $14, $15, $24, $25, $34, $35 ;        frame 3   $10
-; PlayerAnimSkidding = * - BigPlayerTable
-; .byte $08, $09, $18, $19, $28, $29, $38, $39;skidding
-; PlayerAnimJumping = * - BigPlayerTable
-; .byte $08, $09, $18, $19, $28, $29, $38, $39 ;jumping           $20
-; PlayerAnimSwimming1 = * - BigPlayerTable
-; .byte $02, $03, $0A, $0B, $1A, $1B, $2A, $2B ;swimming frame 1
-; PlayerAnimSwimming2 = * - BigPlayerTable
-; .byte $02, $03, $12, $13, $22, $1D, $2A, $2B ;         frame 2  $30
-; PlayerAnimSwimming3 = * - BigPlayerTable
-; .byte $02, $03, $12, $13, $0C, $0D, $2A, $2B ;         frame 3
-; PlayerAnimClimbing1 = * - BigPlayerTable
-; .byte $02, $03, $0A, $0B, $1A, $1B, $2C, $2D ;climbing frame 1  $40
-; PlayerAnimClimbing2 = * - BigPlayerTable
-; .byte $02, $03, $12, $13, $22, $23, $3C, $3D ;         frame 2
-; PlayerAnimCrouching = * - BigPlayerTable
-; .byte $FF, $FF, $02, $03, $3A, $3B, $06, $07 ;crouching         $50
-; PlayerAnimFireball = * - BigPlayerTable
-; .byte $02, $03, $0A, $0B, $1A, $1B, $32, $33 ;fireball throwing
-
-; ;; small player table
-; .byte $FF, $FF, $FF, $FF, $0E, $0F, $1E, $1F ;walking frame 1   $60
-; .byte $FF, $FF, $FF, $FF, $2E, $2F, $3E, $3F ;        frame 2
-; .byte $FF, $FF, $FF, $FF, $41, $2F, $44, $45 ;        frame 3   $70
-; .byte $FF, $FF, $FF, $FF, $3C, $3D, $4C, $4D ;skidding
-; .byte $FF, $FF, $FF, $FF, $0E, $40, $42, $43 ;jumping           $80
-; .byte $FF, $FF, $FF, $FF, $0E, $0F, $3A, $3B ;swimming frame 1
-; .byte $FF, $FF, $FF, $FF, $0E, $0F, $3A, $4B ;         frame 2  $90
-; .byte $FF, $FF, $FF, $FF, $0E, $0F, $2C, $2D ;         frame 3
-; .byte $FF, $FF, $FF, $FF, $0E, $0F, $58, $59 ;climbing frame 1  $a0
-; .byte $FF, $FF, $FF, $FF, $41, $2F, $5A, $5B ;         frame 2
-; .export PlayerAnimKilled
-; PlayerAnimKilled = * - BigPlayerTable
-; .byte $0E, $0F, $1E, $1F, $2E, $2F, $3E, $3F ;killed            $b0
-
-; ;; used by both player sizes
-; .byte $FF, $FF, $FF, $FF, $41, $2F, $49, $49 ;small player standing
-; .byte $FF, $FF, $00, $01, $46, $47, $48, $48 ;intermediate grow frame   $c0
-; PlayerAnimStanding = * - BigPlayerTable
-; .byte $00, $01, $16, $17, $26, $27, $36, $37 ;big player standing
-; .export PlayerAnimStanding
-; SwimKickTileNum:
-;   .byte $1c, $4A ; Big, Small
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store player's vertical offscreen bits
@@ -691,6 +603,7 @@ PlayerBankTableReal:
 .byte CHR_BIGMARIO ; "BIG_MARIO", "WALKING_3"
 .byte CHR_BIGMARIO ; "BIG_MARIO", "SKIDDING"
 .byte CHR_BIGMARIO ; "BIG_MARIO", "JUMPING"
+.byte CHR_BIGMARIO ; "BIG_MARIO", "CROUCHING"
 
 .byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_1_KICK"
 .byte CHR_MARIOACTION ; "BIG_MARIO", "SWIMMING_2_KICK"
@@ -706,6 +619,7 @@ FIRE_MARIO_OFFSET = * - PlayerBankTableReal
 .byte CHR_MARIOACTION ; "FIRE_MARIO", "WALKING_3"
 .byte CHR_MARIOACTION ; "FIRE_MARIO", "SKIDDING"
 .byte CHR_MARIOACTION ; "FIRE_MARIO", "JUMPING"
+.byte CHR_SMALLFIRE   ; "FIRE_MARIO", "CROUCHING"
 
 .byte CHR_MARIOACTION ; "FIRE_MARIO", "SWIMMING_1_KICK"
 .byte CHR_MARIOACTION ; "FIRE_MARIO", "SWIMMING_2_KICK"
@@ -714,7 +628,6 @@ FIRE_MARIO_OFFSET = * - PlayerBankTableReal
 .byte CHR_MARIOACTION ; "FIRE_MARIO", "SWIMMING_2_HOLD"
 .byte CHR_MARIOACTION ; "FIRE_MARIO", "SWIMMING_3_HOLD"
 
-.byte CHR_BIGMARIO ; "BIG_MARIO", "CROUCHING"
 .byte CHR_MARIOACTION ; "BIG_MARIO", "CLIMBING_1"
 .byte CHR_MARIOACTION ; "BIG_MARIO", "CLIMBING_2"
 

@@ -17,6 +17,7 @@ MetaspriteBox "BIG_MARIO", "WALKING_2", $08, $0a, $28, $2a
 MetaspriteBox "BIG_MARIO", "WALKING_3", $0c, $0e, $2c, $2e
 MetaspriteBox "BIG_MARIO", "SKIDDING",  $10, $12, $30, $32
 MetaspriteBox "BIG_MARIO", "JUMPING",   $14, $16, $34, $36
+MetaspriteBox "BIG_MARIO", "CROUCHING", $18, $1a, $38, $3a
 
 MetaspriteBox "BIG_MARIO", "SWIMMING_1_KICK", $00, $02, $20, $22
 MetaspriteBox "BIG_MARIO", "SWIMMING_2_KICK", $04, $06, $20, $26
@@ -35,6 +36,7 @@ MetaspriteBox "FIRE_MARIO", "WALKING_2", $00, $02, $30, $32 ; TODO
 MetaspriteBox "FIRE_MARIO", "WALKING_3", $00, $02, $14, $16
 MetaspriteBox "FIRE_MARIO", "SKIDDING",  $00, $02, $34, $36
 MetaspriteBox "FIRE_MARIO", "JUMPING",   $00, $02, $10, $12
+MetaspriteBox "FIRE_MARIO", "CROUCHING", $00, $02, $18, $1a
 
 MetaspriteBox "FIRE_MARIO", "SWIMMING_1_KICK", $00, $02, $20, $22
 MetaspriteBox "FIRE_MARIO", "SWIMMING_2_KICK", $04, $06, $20, $26
@@ -43,7 +45,6 @@ MetaspriteBox "FIRE_MARIO", "SWIMMING_1_HOLD", $00, $02, $24, $22
 MetaspriteBox "FIRE_MARIO", "SWIMMING_2_HOLD", $04, $06, $24, $26
 MetaspriteBox "FIRE_MARIO", "SWIMMING_3_HOLD", $04, $06, $2a, $22
 
-MetaspriteBox "BIG_MARIO", "CROUCHING",    $18, $1a, $38, $3a
 MetaspriteBox "BIG_MARIO", "CLIMBING_1",   $00, $02, $08, $0a
 MetaspriteBox "BIG_MARIO", "CLIMBING_2",   $04, $06, $0c, $0e
 
