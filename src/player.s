@@ -148,9 +148,6 @@ PlayerCtrlRoutine:
   ; prevent moving on death
   cmp #$0b
   beq SizeChk
-  ; or on damaged
-  cmp #$0a
-  beq SizeChk
     lda AreaType                ;are we in a water type area?
     bne SaveJoyp                ;if not, branch
       ldy Player_Y_HighPos
