@@ -502,6 +502,7 @@ CntPl:
 
   lda SwimmingFlag
   beq Exit
+    ; if the player is standing on the ground, don't animate the leg kicking.
     lda Player_State
     beq Exit
       ; if the player is swimming, every 8 frames switch metasprite to use the kick animation
