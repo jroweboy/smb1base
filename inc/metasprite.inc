@@ -100,6 +100,9 @@ MetaspriteDuplicate "SMALL_FIRE_SWIMMING_STILL_1", "FIRE_MARIO_STANDING"
 ; This second sprite is a unique one with the "Hold" foot sprite overwriting the walking sprite
 MetaspriteBox "SMALL_FIRE", "SWIMMING_STILL_2", $00, $02, $28, $2a
 
+; Keep this here to ensure that the 
+TOTAL_MARIO_METASPRITES = METASPRITE_SMALL_FIRE_SWIMMING_STILL_2 - METASPRITE_BIG_MARIO_STANDING + 1
+
 POWERUP_BANK = SPRITE_BANK_1
 ; POWERUP_Y_OFFSET = 8
 POWERUP_1UP_PALETTE = $01

@@ -688,6 +688,8 @@ FIRE_MARIO_OFFSET = * - PlayerBankTableReal
 .byte CHR_MARIOACTION ; "FIRE_MARIO_SWIMMING_STILL_2"
 .byte CHR_SMALLFIRE   ; "SMALL_FIRE_SWIMMING_STILL_1"
 .byte CHR_SMALLFIRE   ; "SMALL_FIRE_SWIMMING_STILL_2"
+TOTAL_MARIO_SPRITE_BANK = * - PlayerBankTableReal
+.assert TOTAL_MARIO_SPRITE_BANK = TOTAL_MARIO_METASPRITES, error, .sprintf("Total number of Mario Metasprites (%d) does not match the mario bank table (%d)! Update the bank table to match ", TOTAL_MARIO_METASPRITES, TOTAL_MARIO_SPRITE_BANK)
 
 HandleChangeSize:
   ldy PlayerAnimCtrl           ;get animation frame control
