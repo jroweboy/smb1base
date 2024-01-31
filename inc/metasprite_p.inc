@@ -23,7 +23,10 @@ SPR_PALETTE_1  = SPR_NO_PALETTE | %00000001 << 8
 SPR_PALETTE_2  = SPR_NO_PALETTE | %00000010 << 8
 SPR_PALETTE_3  = SPR_NO_PALETTE | %00000011 << 8
 
-.macro MetaspriteBoxBody Object, Animation, Direction, Bank, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
+
+.define MetaspriteVramOffset(b, vram) (((b) & %00111111) | vram | PATTERN_TABLE_1)
+
+.macro MetaspriteBoxBody Object, Animation, Direction, VramOffset, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 .local X1, X2, Y1, Y2, Size
 .local Tile1, Tile2, Tile3, Tile4
 .local Attr1, Attr2, Attr3, Attr4
@@ -40,22 +43,22 @@ DrawSprite3 .set 0
 DrawSprite4 .set 0
 
 DrawSprite1 .set 1
-Tile1 .set ((<Spr1) | Bank | PATTERN_TABLE_1)
+Tile1 .set MetaspriteVramOffset(<Spr1, VramOffset)
 
 .ifnblank Spr2
 DrawSprite2 .set 1
 Size .set 2
-Tile2 .set ((<Spr2) | Bank | PATTERN_TABLE_1)
+Tile2 .set MetaspriteVramOffset(<Spr2, VramOffset)
 .endif
 .ifnblank Spr3
 DrawSprite3 .set 1
 Size .set 3
-Tile3 .set ((<Spr3) | Bank | PATTERN_TABLE_1)
+Tile3 .set MetaspriteVramOffset(<Spr3, VramOffset)
 .endif
 .ifnblank Spr4
 DrawSprite4 .set 1
 Size .set 4
-Tile4 .set ((<Spr4) | Bank | PATTERN_TABLE_1)
+Tile4 .set MetaspriteVramOffset(<Spr4, VramOffset)
 .endif
 
 Attr1 .set (Palette | ((>Spr1) >> 8))
@@ -116,14 +119,21 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 .endmacro
 
 .macro MetaspriteBox Object, Animation, Spr1, Spr2, Spr3, Spr4
-.local Bank, Palette, XOffset, YOffset, Mirror
+.local VramOffset, Bank, Palette, XOffset, YOffset, Mirror
 
+.if .defined(.ident( .sprintf("%s_%s_VRAM_OFFSET", Object, Animation) ))
+  VramOffset = .ident( .sprintf("%s_%s_VRAM_OFFSET", Object, Animation) )
+.elseif .defined(.ident( .sprintf("%s_VRAM_OFFSET", Object) ))
+  VramOffset = .ident( .sprintf("%s_VRAM_OFFSET", Object) )
+.else
+  VramOffset = 0
+.endif
 .if .defined(.ident( .sprintf("%s_%s_BANK", Object, Animation) ))
   Bank = .ident( .sprintf("%s_%s_BANK", Object, Animation) )
 .elseif .defined(.ident( .sprintf("%s_BANK", Object) ))
   Bank = .ident( .sprintf("%s_BANK", Object) )
 .else
-  .error .sprintf("Could not define Metasprite without the bank. Please define either %s_BANK or %s_%s_BANK", Object, Object, Animation)
+  Bank = $ff
 .endif
 .if .defined(.ident( .sprintf("%s_%s_PALETTE", Object, Animation) ))
   Palette = .ident( .sprintf("%s_%s_PALETTE", Object, Animation) )
@@ -160,9 +170,9 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
 .ifdef METASPRITE_BODY
 
 .if Mirror = 1
-MetaspriteBoxBody Object, Animation, "LEFT", Bank, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
+MetaspriteBoxBody Object, Animation, "LEFT", VramOffset, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 .endif
-MetaspriteBoxBody Object, Animation, "RIGHT", Bank, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
+MetaspriteBoxBody Object, Animation, "RIGHT", VramOffset, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 
 .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
 .if Mirror = 1
@@ -175,6 +185,9 @@ MetaspriteBoxBody Object, Animation, "RIGHT", Bank, Palette, XOffset, YOffset, S
 
 .ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
 .ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
+
+.ident( .sprintf("METASPRITE_%d_BANK",  METASPRITES_COUNT) ) = Bank
+
 .endif
 
 MetaspriteReserve .sprintf("%s_%s",Object, Animation) 
@@ -200,10 +213,6 @@ RH = .ident(.sprintf("METASPRITE_RIGHT_%d_HI", Id))
 MetaspriteReserve Name
 .endmacro
 
-
-.macro MetaspriteVerticalFlip 
-
-.endmacro
 
 ;;;;
 ; Reserves a spot in the metasprite table for this named constant.
@@ -231,7 +240,5 @@ Id = .ident(Name)
 .endif
 
 .endmacro
-
-.define MetaspriteBank(b, bank) (((b) & %00111111) | bank | 1)
 
 .endif
