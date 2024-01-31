@@ -408,7 +408,7 @@ WriteMetasprite:
   and #%00100000
   beq Exit
     ; Dead toads get flipped.
-    lda #1
+    lda #MSPR_VERTICAL_FLIP
     sta EnemyVerticalFlip,x
     jsr GetEnemyOffscreenBits
     ; jsr RelativeEnemyPosition

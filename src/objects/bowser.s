@@ -356,7 +356,7 @@ WriteMetasprite:
     lsr
     bcc :+
       ; set a special vertical flip flag for bowsers front half since its weird
-      lda #$80
+      lda #MSPR_VERTICAL_FLIP
     :
     sta EnemyVerticalFlip,x
 BowserNotDefeated:

@@ -31,7 +31,7 @@ FIRE_MARIO_PALETTE = $00
 FIRE_MARIO_Y_OFFSET = -8
 MetaspriteBox "FIRE_MARIO", "STANDING",  $00, $02, $2c, $2e
 ; MetaspriteBox "BIG_MARIO", "FIRE_WALKING_1", $00, $02, $2c, $2e
-MetaspriteDuplicate "FIRE_MARIO_STANDING", "FIRE_MARIO_WALKING_1"
+MetaspriteDuplicate "FIRE_MARIO_WALKING_1", "FIRE_MARIO_STANDING"
 MetaspriteBox "FIRE_MARIO", "WALKING_2", $00, $02, $30, $32
 MetaspriteBox "FIRE_MARIO", "WALKING_3", $00, $02, $14, $16
 MetaspriteBox "FIRE_MARIO", "SKIDDING",  $00, $02, $34, $36
@@ -63,7 +63,7 @@ MetaspriteBox "SMALL_MARIO", "SWIMMING_2_KICK", $28, $2a
 MetaspriteBox "SMALL_MARIO", "SWIMMING_3_KICK", $30, $32
 MetaspriteBox "SMALL_MARIO", "SWIMMING_1_HOLD", $24, $26
 MetaspriteBox "SMALL_MARIO", "SWIMMING_2_HOLD", $2c, $2e
-MetaspriteDuplicate "SMALL_MARIO_SWIMMING_3_KICK", "SMALL_MARIO_SWIMMING_3_HOLD"
+MetaspriteDuplicate "SMALL_MARIO_SWIMMING_3_HOLD", "SMALL_MARIO_SWIMMING_3_KICK"
 
 SMALL_FIRE_BANK = SPRITE_BANK_0
 SMALL_FIRE_PALETTE = $00
@@ -81,22 +81,22 @@ MetaspriteBox "SMALL_FIRE", "SWIMMING_2_KICK", $00, $02, $30, $32
 MetaspriteBox "SMALL_FIRE", "SWIMMING_3_KICK", $00, $02, $34, $36
 MetaspriteBox "SMALL_FIRE", "SWIMMING_1_HOLD", $00, $02, $18, $1a
 MetaspriteBox "SMALL_FIRE", "SWIMMING_2_HOLD", $00, $02, $2c, $2e
-MetaspriteDuplicate "SMALL_FIRE_SWIMMING_3_KICK", "SMALL_FIRE_SWIMMING_3_HOLD"
+MetaspriteDuplicate "SMALL_FIRE_SWIMMING_3_HOLD", "SMALL_FIRE_SWIMMING_3_KICK"
 
 MetaspriteBox "SMALL_MARIO", "CLIMBING_1", $18, $1a
 MetaspriteBox "SMALL_MARIO", "CLIMBING_2", $38, $3a
 MetaspriteBox "SMALL_MARIO", "DEATH",      $34, $36
 
-MetaspriteDuplicate "SMALL_MARIO_STANDING", "SMALL_MARIO_GROW_STANDING"
+MetaspriteDuplicate "SMALL_MARIO_GROW_STANDING", "SMALL_MARIO_STANDING"
 MetaspriteBox "BIG_MARIO", "GROW_INTERMEDIATE", $18, $1a, $38, $3a
-MetaspriteDuplicate "BIG_MARIO_STANDING", "BIG_MARIO_GROW_STANDING"
+MetaspriteDuplicate "BIG_MARIO_GROW_STANDING", "BIG_MARIO_STANDING"
 
 ; Glitchy looking sprite used when mario fires a fireball with no momentum in the water.
-MetaspriteDuplicate "FIRE_MARIO_STANDING", "FIRE_MARIO_SWIMMING_STILL_1"
+MetaspriteDuplicate "FIRE_MARIO_SWIMMING_STILL_1", "FIRE_MARIO_STANDING"
 ; This second sprite is a unique one with the "Hold" foot sprite overwriting the walking sprite
 MetaspriteBox "FIRE_MARIO", "SWIMMING_STILL_2", $00, $02, $24, $2e
 ; Glitchy looking sprite used when mario fires a fireball with no momentum in the water.
-MetaspriteDuplicate "FIRE_MARIO_STANDING", "SMALL_FIRE_SWIMMING_STILL_1"
+MetaspriteDuplicate "SMALL_FIRE_SWIMMING_STILL_1", "FIRE_MARIO_STANDING"
 ; This second sprite is a unique one with the "Hold" foot sprite overwriting the walking sprite
 MetaspriteBox "SMALL_FIRE", "SWIMMING_STILL_2", $00, $02, $28, $2a
 

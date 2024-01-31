@@ -10,6 +10,8 @@ SPRITE_BANK_1 = $40
 SPRITE_BANK_2 = $80
 SPRITE_BANK_3 = $c0
 
+MSPR_VERTICAL_FLIP = %10000000
+
 ; Custom values to signify that this sprite should be flipped in the metasprite
 SPR_FLIP_H = %01000000 << 8
 SPR_FLIP_V = %10000000 << 8
@@ -178,7 +180,7 @@ MetaspriteBoxBody Object, Animation, "RIGHT", Bank, Palette, XOffset, YOffset, S
 MetaspriteReserve .sprintf("%s_%s",Object, Animation) 
 .endmacro
 
-.macro MetaspriteDuplicate Mspr, Name
+.macro MetaspriteDuplicate Name, Mspr
 .ifdef METASPRITE_BODY
 .Local LL, LH, RL, RH, Id
 Id = .ident( .concat("METASPRITE_", Mspr) )
@@ -195,6 +197,11 @@ RH = .ident(.sprintf("METASPRITE_RIGHT_%d_HI", Id))
 .endif
 
 MetaspriteReserve Name
+.endmacro
+
+
+.macro MetaspriteVerticalFlip 
+
 .endmacro
 
 ;;;;

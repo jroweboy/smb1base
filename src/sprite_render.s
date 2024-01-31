@@ -446,7 +446,7 @@ ProcessJumpingParatrooperInner:
   sta Enemy_SprAttrib,x                      ;set new sprite attributes
   lda #METASPRITE_BULLET_BILL
   sta EnemyMetasprite,x
-  rts
+  jmp SprObjectOffscrChk
 .endproc
 
 .proc ProcessPodoboo
@@ -530,7 +530,7 @@ CheckDefeated:
   lda Enemy_State,x
   and #%00100000        ;for d5 set
   beq WriteMetasprite
-    lda #1
+    lda #MSPR_VERTICAL_FLIP
     sta EnemyVerticalFlip,x
 WriteMetasprite:
   tya
@@ -558,7 +558,7 @@ CheckDefeated:
   lda Enemy_State,x
   and #%00100000        ;for d5 set
   beq WriteMetasprite
-    lda #1
+    lda #MSPR_VERTICAL_FLIP
     sta EnemyVerticalFlip,x
 WriteMetasprite:
   tya
@@ -588,7 +588,7 @@ CheckDefeatedState:
   lda Enemy_State,x
   and #%00100000        ;for d5 set
   beq WriteMetasprite   ;branch if not set
-    lda #1
+    lda #MSPR_VERTICAL_FLIP
     sta EnemyVerticalFlip,x
 WriteMetasprite:
   tya
@@ -611,7 +611,7 @@ CheckDefeatedState:
   lda Enemy_State,x     ;check saved enemy state
   and #%00100000        ;for d5 set
   beq WriteMetasprite   ;branch if not set
-    lda #1
+    lda #MSPR_VERTICAL_FLIP
     sta EnemyVerticalFlip,x
 WriteMetasprite:
   tya
@@ -644,7 +644,7 @@ CheckDefeatedState:
   lda Enemy_State,x     ;check saved enemy state
   and #%00100000        ;for d5 set
   beq WriteMetasprite   ;branch if not set
-    lda #1
+    lda #MSPR_VERTICAL_FLIP
     sta EnemyVerticalFlip,x
 WriteMetasprite:
   tya
