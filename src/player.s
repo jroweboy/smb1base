@@ -615,8 +615,13 @@ GrowAnimation = * - PlayerGfxTblOffsets
 
 PlayerBankTable = PlayerBankTableReal - METASPRITE_BIG_MARIO_STANDING
 PlayerBankTableReal:
-; TOTAL_MARIO_SPRITE_BANK = * - PlayerBankTableReal
-; .assert TOTAL_MARIO_SPRITE_BANK = TOTAL_MARIO_METASPRITES, error, .sprintf("Total number of Mario Metasprites (%d) does not match the mario bank table (%d)! Update the bank table to match ", TOTAL_MARIO_METASPRITES, TOTAL_MARIO_SPRITE_BANK)
+.repeat TOTAL_MARIO_METASPRITES+METASPRITE_BIG_MARIO_STANDING, I
+.if I >= METASPRITE_BIG_MARIO_STANDING
+  .byte .lobyte(.ident(.sprintf("METASPRITE_%d_BANK", I)))
+.endif
+.endrepeat
+TOTAL_MARIO_SPRITE_BANK = * - PlayerBankTableReal
+.assert TOTAL_MARIO_SPRITE_BANK = TOTAL_MARIO_METASPRITES, error, .sprintf("Total number of Mario Metasprites (%d) does not match the mario bank table (%d)! Update the bank table to match ", TOTAL_MARIO_METASPRITES, TOTAL_MARIO_SPRITE_BANK)
 
 HandleChangeSize:
   ldy PlayerAnimCtrl           ;get animation frame control

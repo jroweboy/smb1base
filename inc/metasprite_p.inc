@@ -167,6 +167,8 @@ Attr4 .set (Palette | ((>Spr4) >> 8))
   Mirror = 1
 .endif
 
+.ident( .sprintf("METASPRITE_%d_BANK",  METASPRITES_COUNT) ) = Bank
+
 .ifdef METASPRITE_BODY
 
 .if Mirror = 1
@@ -186,7 +188,6 @@ MetaspriteBoxBody Object, Animation, "RIGHT", VramOffset, Palette, XOffset, YOff
 .ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
 .ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_RIGHT", Object, Animation) ))
 
-.ident( .sprintf("METASPRITE_%d_BANK",  METASPRITES_COUNT) ) = Bank
 
 .endif
 
@@ -194,9 +195,12 @@ MetaspriteReserve .sprintf("%s_%s",Object, Animation)
 .endmacro
 
 .macro MetaspriteDuplicate Name, Mspr
-.ifdef METASPRITE_BODY
-.Local LL, LH, RL, RH, Id
+.Local LL, LH, RL, RH, Id, Bank
 Id = .ident( .concat("METASPRITE_", Mspr) )
+Bank = .ident( .sprintf("METASPRITE_%d_BANK", Id) )
+.ident( .sprintf("METASPRITE_%d_BANK",  METASPRITES_COUNT) ) = Bank
+
+.ifdef METASPRITE_BODY
 .out .sprintf("METASPRITE_%s = $%02x (duplicate of %s)", Mspr, METASPRITES_COUNT, Name)
 
 LL = .ident(.sprintf("METASPRITE_LEFT_%d_LO", Id))
@@ -208,6 +212,7 @@ RH = .ident(.sprintf("METASPRITE_RIGHT_%d_HI", Id))
 .ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = LH
 .ident( .sprintf("METASPRITE_RIGHT_%d_LO",  METASPRITES_COUNT) ) = RL
 .ident( .sprintf("METASPRITE_RIGHT_%d_HI",  METASPRITES_COUNT) ) = RH
+
 .endif
 
 MetaspriteReserve Name
