@@ -11,6 +11,8 @@ SPRITE_BANK_2 = $80
 SPRITE_BANK_3 = $c0
 
 MSPR_VERTICAL_FLIP = %10000000
+MSPR_OFFSET_MASK = %00111111
+.define MetaspriteOffset(b) 0+((b) & MSPR_OFFSET_MASK)
 
 ; Custom values to signify that this sprite should be flipped in the metasprite
 SPR_FLIP_H = %01000000 << 8

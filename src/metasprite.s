@@ -167,6 +167,8 @@ Xlo = R4
 Xhi = R5
 Ylo = R6
 Yhi = R7
+LoopCount = M0
+VFlip = M1
   
   lda PlayerFacingDir,y
   lsr
@@ -192,108 +194,149 @@ DrawSprite:
   lda SprObject_PageLoc,y
   sbc ScreenLeft_PageLoc
   sta Xhi
-  lda SprObject_Y_Position,y
-  sta Ylo
   lda SprObject_Y_HighPos,y
   sta Yhi
-
-  cpy #7
-  bcs NotFlipped
-  lda ObjectVerticalFlip,y
-  beq NotFlipped
-    lda #OAM_FLIP_V
-    .byte $2c
-NotFlipped:
+  
   lda #0
+  sta VFlip
+  cpy #7
+  bcs SkipVerticalFlipCheck
+    lda ObjectVerticalFlip,y
+    bpl NoVFlip
+      ; Object has a vertical flip attribute set
+      sta VFlip
+  NoVFlip:
+      ; Object has an added Y offset
+      ; The negative flag is bit 5 in our number, so sign extend the value
+      and #%00111111
+      cmp #%00100000
+      bcc PositiveYOffset
+        ora #%11000000
+        clc
+    PositiveYOffset:
+      adc SprObject_Y_Position,y
+      jmp SetYOffset
+SkipVerticalFlipCheck:
+    lda SprObject_Y_Position,y
+SetYOffset:
+  sta Ylo
+
+  lda VFlip
+  beq DontSetFlipBit
+    lda #OAM_FLIP_V
+    .byte $2c ; masks the next lda #0
+DontSetFlipBit:
+    lda #0
   ora SprObject_SprAttrib,y
   sta Atr
 
   jsr MetaspriteRenderLoop
 
-  ldy OrigOffset
-  cpy #7
-  bcs NotEnemy
-    ; Bit 7 is the vertical flip flag
-    ; Bit 6 is reserved for custom use later maybe i dunno
-    ; Bit 0-5 is the signed offset for the Y value
-    lda ObjectVerticalFlip,y
-    bne NotVFlippedEnemy
-      ; Use the lower 5 bits of the vertical flip flag as a Y offset
-      ; Check bit 5 to see if we have a negative offset
-      lsr
-      lsr
-      lsr 
-      lda ObjectVerticalFlip,y
-      and #%00011111
-      bcc NotNegativeOffset
-        ; the offset is negative, so negative the value
-        eor #$ff
-        adc #0
-    NotNegativeOffset:
-      sta Ylo
 
-      ; reload the size. If its 8 or less then we don't need to do anything
-      ldy #0
-      lda (Ptr),y
-      cmp #8 + 1
-      bcc NotVFlippedEnemy
-      cmp #12
-      beq Flip3
-        ; otherwise flip all 4 sprites
-        ; ; sprite has two columns, so flip the two columns
-        lda Sprite_Y_Position-12,x  ;load first or second row tiles
-        clc
-        adc Ylo
-        bcs OffBottomOfScreen
-        clc
-        adc #16
-        bcc SetYNow
-      OffBottomOfScreen:
-          lda #$f8
-      SetYNow:
-        sta Sprite_Y_Position-12,x
-        sta Sprite_Y_Position-16,x
-
-        lda Sprite_Y_Position-8,x  ;load second row tiles
-        sec
-        sbc #16
-        bcc OffTopOfScreen
-        clc
-        adc Ylo
-        bcc SetYNowAgain
-      OffTopOfScreen:
-          lda #$f8
-      SetYNowAgain:
-        sta Sprite_Y_Position-4,x
-        sta Sprite_Y_Position-8,x
-        rts
-    Flip3:
-      ; Custom flip code for bowser's front since he is weird.
+  lda VFlip
+  beq DontShiftPositions
+    ldy #0
+    lda (Ptr),y
+    cmp #8 + 1
+    bcc DontShiftPositions
+    cmp #12
+    beq Flip3
+      ; otherwise flip all 4 sprites
+      lda Sprite_Tilenumber-4,x     ;with first or second row tiles
+      pha                         ;and save tiles to the stack
+        lda Sprite_Tilenumber-8,x
+        pha
+          lda Sprite_Tilenumber-12,x  ;exchange third row tiles
+          sta Sprite_Tilenumber-4,x     ;with first or second row tiles
+          lda Sprite_Tilenumber-16,x
+          sta Sprite_Tilenumber-8,x
+        pla                         ;pull first or second row tiles from stack
+        sta Sprite_Tilenumber-16,x  ;and save in third row
+      pla
+      sta Sprite_Tilenumber-12,x
+      rts
+  Flip3:
+    ; Custom flip code for bowser's front since he is weird.
+    lda Sprite_Y_Position-4,x
+    pha
       lda Sprite_Y_Position-12,x
-      clc
-      adc #32
-      bcs Exit
-        sta Sprite_Y_Position-8,x
-        sta Sprite_Y_Position-4,x
-  NotVFlippedEnemy:
-NotEnemy:
-Exit:
+      sta Sprite_Y_Position-8,x
+      sta Sprite_Y_Position-4,x
+    pla
+    sta Sprite_Y_Position-12,x
+DontShiftPositions:
   rts
+
+;   ldy OrigOffset
+;   cpy #7
+;   bcs NotEnemy
+;     ; Bit 7 is the vertical flip flag
+;     ; Bit 6 is reserved for custom use later maybe i dunno
+;     ; Bit 0-5 is the signed offset for the Y value
+;     lda ObjectVerticalFlip,y
+;     bpl NotVFlippedEnemy
+;       ; Use the lower 5 bits of the vertical flip flag as a Y offset
+;       ; Check bit 5 to see if we have a negative offset
+;       asl
+;       asl
+;       asl
+;       lda ObjectVerticalFlip,y
+;       and #%00011111
+;       bcc NotNegativeOffset
+;         ; the offset is negative, so negative the value
+;         eor #$ff
+;         adc #0
+;     NotNegativeOffset:
+;       sta Ylo
+
+;       ; reload the size. If its 8 or less then we don't need to do anything
+;       ldy #0
+;       lda (Ptr),y
+;       cmp #8 + 1
+;       bcc NotVFlippedEnemy
+;       cmp #12
+;       beq Flip3
+;         ; otherwise flip all 4 sprites
+;         ; ; sprite has two columns, so flip the two columns
+;         lda Sprite_Y_Position-12,x  ;load first or second row tiles
+;         clc
+;         adc Ylo
+;         bcs OffTopOfScreen
+;         sec
+;         sbc #16
+;         bcs SetYNow
+;       OffTopOfScreen:
+;           lda #$f8
+;       SetYNow:
+;         sta Sprite_Y_Position-12,x
+;         sta Sprite_Y_Position-16,x
+
+;         lda Sprite_Y_Position-8,x  ;load first row tiles
+;         clc
+;         adc #16
+;         bcs OffBotOfScreen
+;         clc
+;         adc Ylo
+;         bcc SetYNowAgain
+;       OffBotOfScreen:
+;           lda #$f8
+;       SetYNowAgain:
+;         sta Sprite_Y_Position-4,x
+;         sta Sprite_Y_Position-8,x
+;         rts
+;     Flip3:
+;       ; Custom flip code for bowser's front since he is weird.
+;       lda Sprite_Y_Position-12,x
+;       clc
+;       adc #32
+;       bcs Exit
+;         sta Sprite_Y_Position-8,x
+;         sta Sprite_Y_Position-4,x
+;   NotVFlippedEnemy:
+; NotEnemy:
+; Exit:
 .endproc
 
-
-
-        ; pha                         ;and save tiles to the stack
-        ;   lda Sprite_Tilenumber-8,x
-        ;   pha
-        ;     lda Sprite_Tilenumber-12,x  ;exchange third row tiles
-        ;     sta Sprite_Tilenumber-4,x     ;with first or second row tiles
-        ;     lda Sprite_Tilenumber-16,x
-        ;     sta Sprite_Tilenumber-8,x
-        ;   pla                         ;pull first or second row tiles from stack
-        ;   sta Sprite_Tilenumber-16,x  ;and save in third row
-        ; pla
-        ; sta Sprite_Tilenumber-12,x
 .proc MetaspriteRenderLoop
 Ptr = R0
 OrigOffset = R2

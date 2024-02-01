@@ -222,9 +222,11 @@ MetaspriteBox "GOOMBA", "DEAD", $26, $26 | SPR_FLIP_H
 
 KOOPA_VRAM_OFFSET = SPRITE_BANK_2
 KOOPA_Y_OFFSET = -8
-KOOPA_SHELL_Y_OFFSET = 2
-KOOPA_SHELL_REVIVE_Y_OFFSET = 2
 KOOPA_PALETTE = $00 ; Don't set a palette here so we can do red or green koopa later
+; Koopa shell is offset by 2 pixels for the right side up animation. 
+; We account for this in the code by adding 2 with the vertical flip flag
+KOOPA_SHELL_Y_OFFSET = 0
+KOOPA_SHELL_REVIVE_Y_OFFSET = 0
 MetaspriteBox "KOOPA", "WALKING_1", $38, $12, $30, $32
 MetaspriteBox "KOOPA", "WALKING_2", $18, $16, $34, $36
 MetaspriteBox "KOOPA", "SHELL", $1a, $1a | SPR_FLIP_H
@@ -250,7 +252,8 @@ MetaspriteBox "PODOBOO", "UP", $0e, $0e | SPR_FLIP_H
 
 BUZZY_BEETLE_VRAM_OFFSET = SPRITE_BANK_2
 BUZZY_BEETLE_PALETTE = $03
-BUZZY_BEETLE_SHELL_Y_OFFSET = 2
+; See note about koopa shell for this offset
+BUZZY_BEETLE_SHELL_Y_OFFSET = 0
 MetaspriteBox "BUZZY_BEETLE", "WALKING_1", $00, $02
 MetaspriteBox "BUZZY_BEETLE", "WALKING_2", $04, $06
 MetaspriteBox "BUZZY_BEETLE", "SHELL", $20, $20 | SPR_FLIP_H

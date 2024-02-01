@@ -354,10 +354,11 @@ WriteMetasprite:
     ; if bowser is defeated set the vertical flip flag
     lda BowserGfxFlag
     lsr
-    bcc :+
-      ; set a special vertical flip flag for bowsers front half since its weird
-      lda #MSPR_VERTICAL_FLIP
-    :
+    lda #MetaspriteOffset{-8} | MSPR_VERTICAL_FLIP
+    bcs DontOffsetBowserFrontHalf
+      ; when the back side flips, it moves up 16px
+      lda #MetaspriteOffset{-24} | MSPR_VERTICAL_FLIP
+  DontOffsetBowserFrontHalf:
     sta EnemyVerticalFlip,x
 BowserNotDefeated:
   rts

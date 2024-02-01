@@ -368,6 +368,7 @@ ProcessDemotedKoopa:
   lda Enemy_State,x
   cmp #$02
   bcc CheckRightSideUpShell
+    ; Koopa is upside down, and so we don't apply the flip bits here.
     ldy #METASPRITE_KOOPA_SHELL
     ; fallthrough intentional. The original code does this too
 CheckRightSideUpShell:
@@ -378,9 +379,10 @@ CheckRightSideUpShell:
     ldy #METASPRITE_KOOPA_SHELL
     ; Shell is upside down in OAM, so flip the koopa right side up
     ; and then check for animation
-    lda Enemy_SprAttrib,x
-    ora #%10000000
-    sta Enemy_SprAttrib,x
+    ; We do need an offset, so turn on VFlip and set the offset 
+    ; Add 2 px down offset
+    lda #MetaspriteOffset{2} | MSPR_VERTICAL_FLIP
+    sta EnemyVerticalFlip,x
 NormalKoopaAnimation:
   lda Enemy_State,x
   ; check for the animation bits
@@ -487,9 +489,9 @@ CheckRightSideUpShell:
     ldy #METASPRITE_BUZZY_BEETLE_SHELL
     ; Shell is upside down in OAM, so flip the buzzy right side up
     ; and then check for animation
-    lda Enemy_SprAttrib,x
-    ora #%10000000
-    sta Enemy_SprAttrib,x
+    ; Add 2 px down offset
+    lda #MetaspriteOffset{2} | MSPR_VERTICAL_FLIP
+    sta EnemyVerticalFlip,x
     bne WriteMetasprite ; unconditional. we don't animate upside down buzzy
 NormalBuzzyAnimation:
   lda Enemy_State,x
