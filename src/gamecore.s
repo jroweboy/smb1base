@@ -114,18 +114,18 @@ UpdScrollVar:
   lda VRAM_Buffer_AddrCtrl
   cmp #$06                   ;if vram address controller set to 6 (one of two $0341s)
   beq ExitEng                ;then branch to leave
-  lda AreaParserTaskNum      ;otherwise check number of tasks
-  bne RunParser
-  lda ScrollThirtyTwo        ;get horizontal scroll in 0-31 or $00-$20 range
-  cmp #$20                   ;check to see if exceeded $21
-  bmi ExitEng                ;branch to leave if not
-  lda ScrollThirtyTwo
-  sbc #$20                   ;otherwise subtract $20 to set appropriately
-  sta ScrollThirtyTwo        ;and store
-  lda #$00                   ;reset vram buffer offset used in conjunction with
-  sta VRAM_Buffer2_Offset    ;level graphics buffer at $0341-$035f
-RunParser:
-  farcall AreaParserTaskHandler  ;update the name table with more level graphics
+    lda AreaParserTaskNum      ;otherwise check number of tasks
+    bne RunParser
+      lda ScrollThirtyTwo        ;get horizontal scroll in 0-31 or $00-$20 range
+      cmp #$20                   ;check to see if exceeded $21
+      bmi ExitEng                ;branch to leave if not
+        lda ScrollThirtyTwo
+        sbc #$20                   ;otherwise subtract $20 to set appropriately
+        sta ScrollThirtyTwo        ;and store
+        lda #$00                   ;reset vram buffer offset used in conjunction with
+        sta VRAM_Buffer2_Offset    ;level graphics buffer at $0341-$035f
+  RunParser:
+        farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
 ExitEng:
   rts                        ;and after all that, we're finally done!
 

@@ -222,149 +222,169 @@ TerrainRenderBits:
   .byte %11110001, %00011000 ;ceiling 1, middle 4, floor 2
   .byte %11111111, %00011111 ;completely solid top to bottom
 
-AreaParserCore:
-      lda BackloadingFlag       ;check to see if we are starting right of start
-      beq RenderSceneryTerrain  ;if not, go ahead and render background, foreground and terrain
-      jsr ProcessAreaData       ;otherwise skip ahead and load level data
-
 .import GetBlockBufferAddr, Bitmasks
+
+.proc AreaParserCore
+  lda BackloadingFlag       ;check to see if we are starting right of start
+  beq RenderSceneryTerrain  ;if not, go ahead and render background, foreground and terrain
+    jsr ProcessAreaData       ;otherwise skip ahead and load level data
 RenderSceneryTerrain:
-          ldx #$0c
-          lda #$00
-ClrMTBuf: sta MetatileBuffer,x       ;clear out metatile buffer
-          dex
-          bpl ClrMTBuf
-          ldy BackgroundScenery      ;do we need to render the background scenery?
-          beq RendFore               ;if not, skip to check the foreground
-          lda CurrentPageLoc         ;otherwise check for every third page
-ThirdP:   cmp #$03
-          bmi RendBack               ;if less than three we're there
+  ldx #$0c
+  lda #$00
+ClrMTBuf:
+  sta MetatileBuffer,x       ;clear out metatile buffer
+  dex
+  bpl ClrMTBuf
+    ldy BackgroundScenery      ;do we need to render the background scenery?
+    beq RendFore               ;if not, skip to check the foreground
+      lda CurrentPageLoc         ;otherwise check for every third page
+ThirdP:
+        cmp #$03
+        bmi RendBack               ;if less than three we're there
           sec
           sbc #$03                   ;if 3 or more, subtract 3 and 
-          bpl ThirdP                 ;do an unconditional branch
-RendBack: asl                        ;move results to higher nybble
-          asl
-          asl
-          asl
-          adc BSceneDataOffsets-1,y  ;add to it offset loaded from here
-          adc CurrentColumnPos       ;add to the result our current column position
-          tax
-          lda BackSceneryData,x      ;load data from sum of offsets
-          beq RendFore               ;if zero, no scenery for that part
-          pha
-          and #$0f                   ;save to stack and clear high nybble
-          sec
-          sbc #$01                   ;subtract one (because low nybble is $01-$0c)
-          sta R0                     ;save low nybble
-          asl                        ;multiply by three (shift to left and add result to old one)
-          adc R0                     ;note that since d7 was nulled, the carry flag is always clear
-          tax                        ;save as offset for background scenery metatile data
-          pla                        ;get high nybble from stack, move low
-          lsr
-          lsr
-          lsr
-          lsr
-          tay                        ;use as second offset (used to determine height)
-          lda #$03                   ;use previously saved memory location for counter
-          sta R0 
-SceLoop1: lda BackSceneryMetatiles,x ;load metatile data from offset of (lsb - 1) * 3
-          sta MetatileBuffer,y       ;store into buffer from offset of (msb / 16)
-          inx
-          iny
-          cpy #$0b                   ;if at this location, leave loop
-          beq RendFore
-          dec R0                     ;decrement until counter expires, barring exception
-          bne SceLoop1
-RendFore: ldx ForegroundScenery      ;check for foreground data needed or not
-          beq RendTerr               ;if not, skip this part
-          ldy FSceneDataOffsets-1,x  ;load offset from location offset by header value, then
-          ldx #$00                   ;reinit X
-SceLoop2: lda ForeSceneryData,y      ;load data until counter expires
-          beq NoFore                 ;do not store if zero found
-          sta MetatileBuffer,x
-NoFore:   iny
-          inx
-          cpx #$0d                   ;store up to end of metatile buffer
-          bne SceLoop2
-RendTerr: ldy AreaType               ;check world type for water level
-          bne TerMTile               ;if not water level, skip this part
-          lda WorldNumber            ;check world number, if not world number eight
-          cmp #World8                ;then skip this part
-          bne TerMTile
+        bpl ThirdP                 ;do an unconditional branch
+RendBack:
+      asl                        ;move results to higher nybble
+      asl
+      asl
+      asl
+      adc BSceneDataOffsets-1,y  ;add to it offset loaded from here
+      adc CurrentColumnPos       ;add to the result our current column position
+      tax
+      lda BackSceneryData,x      ;load data from sum of offsets
+      beq RendFore               ;if zero, no scenery for that part
+      pha
+        and #$0f                   ;save to stack and clear high nybble
+        sec
+        sbc #$01                   ;subtract one (because low nybble is $01-$0c)
+        sta R0                     ;save low nybble
+        asl                        ;multiply by three (shift to left and add result to old one)
+        adc R0                     ;note that since d7 was nulled, the carry flag is always clear
+        tax                        ;save as offset for background scenery metatile data
+      pla                        ;get high nybble from stack, move low
+      lsr
+      lsr
+      lsr
+      lsr
+      tay                        ;use as second offset (used to determine height)
+      lda #$03                   ;use previously saved memory location for counter
+      sta R0 
+SceLoop1:
+        lda BackSceneryMetatiles,x ;load metatile data from offset of (lsb - 1) * 3
+        sta MetatileBuffer,y       ;store into buffer from offset of (msb / 16)
+        inx
+        iny
+        cpy #$0b                   ;if at this location, leave loop
+        beq RendFore
+        dec R0                     ;decrement until counter expires, barring exception
+        bne SceLoop1
+RendFore:
+      ldx ForegroundScenery      ;check for foreground data needed or not
+      beq RendTerr               ;if not, skip this part
+        ldy FSceneDataOffsets-1,x  ;load offset from location offset by header value, then
+        ldx #$00                   ;reinit X
+SceLoop2:
+        lda ForeSceneryData,y      ;load data until counter expires
+        beq NoFore                 ;do not store if zero found
+        sta MetatileBuffer,x
+NoFore:
+        iny
+        inx
+        cpx #$0d                   ;store up to end of metatile buffer
+        bne SceLoop2
+RendTerr:
+      ldy AreaType               ;check world type for water level
+      bne TerMTile               ;if not water level, skip this part
+        lda WorldNumber            ;check world number, if not world number eight
+        cmp #World8                ;then skip this part
+        bne TerMTile
           lda #$62                   ;if set as water level and world number eight,
           jmp StoreMT                ;use castle wall metatile as terrain type
-TerMTile: lda TerrainMetatiles,y     ;otherwise get appropriate metatile for area type
-          ldy CloudTypeOverride      ;check for cloud type override
-          beq StoreMT                ;if not set, keep value otherwise
-          lda #$88                   ;use cloud block terrain
-StoreMT:  sta R7                     ;store value here
-          ldx #$00                   ;initialize X, use as metatile buffer offset
-          lda TerrainControl         ;use yet another value from the header
-          asl                        ;multiply by 2 and use as yet another offset
-          tay
-TerrLoop: lda TerrainRenderBits,y    ;get one of the terrain rendering bit data
-          sta R0 
-          iny                        ;increment Y and use as offset next time around
-          sty R1 
-          lda CloudTypeOverride      ;skip if value here is zero
-          beq NoCloud2
-          cpx #$00                   ;otherwise, check if we're doing the ceiling byte
-          beq NoCloud2
+TerMTile:
+      lda TerrainMetatiles,y     ;otherwise get appropriate metatile for area type
+      ldy CloudTypeOverride      ;check for cloud type override
+      beq StoreMT                ;if not set, keep value otherwise
+        lda #$88                   ;use cloud block terrain
+StoreMT:
+      sta R7                     ;store value here
+      ldx #$00                   ;initialize X, use as metatile buffer offset
+      lda TerrainControl         ;use yet another value from the header
+      asl                        ;multiply by 2 and use as yet another offset
+      tay
+TerrLoop:
+      lda TerrainRenderBits,y    ;get one of the terrain rendering bit data
+      sta R0 
+      iny                        ;increment Y and use as offset next time around
+      sty R1 
+      lda CloudTypeOverride      ;skip if value here is zero
+      beq NoCloud2
+        cpx #$00                   ;otherwise, check if we're doing the ceiling byte
+        beq NoCloud2
           lda R0                     ;if not, mask out all but d3
           and #%00001000
           sta R0 
-NoCloud2: ldy #$00                   ;start at beginning of bitmasks
-TerrBChk: lda Bitmasks,y             ;load bitmask, then perform AND on contents of first byte
-          bit R0 
-          beq NextTBit               ;if not set, skip this part (do not write terrain to buffer)
-          lda R7 
-          sta MetatileBuffer,x       ;load terrain type metatile number and store into buffer here
-NextTBit: inx                        ;continue until end of buffer
-          cpx #$0d
-          beq RendBBuf               ;if we're at the end, break out of this loop
-          lda AreaType               ;check world type for underground area
-          cmp #$02
-          bne EndUChk                ;if not underground, skip this part
+NoCloud2:
+      ldy #$00                   ;start at beginning of bitmasks
+TerrBChk:
+      lda Bitmasks,y             ;load bitmask, then perform AND on contents of first byte
+      bit R0 
+      beq NextTBit               ;if not set, skip this part (do not write terrain to buffer)
+        lda R7 
+        sta MetatileBuffer,x       ;load terrain type metatile number and store into buffer here
+NextTBit:
+      inx                        ;continue until end of buffer
+      cpx #$0d
+      beq RendBBuf               ;if we're at the end, break out of this loop
+        lda AreaType               ;check world type for underground area
+        cmp #$02
+        bne EndUChk                ;if not underground, skip this part
           cpx #$0b
           bne EndUChk                ;if we're at the bottom of the screen, override
-          lda #$54                   ;old terrain type with ground level terrain type
-          sta R7 
-EndUChk:  iny                        ;increment bitmasks offset in Y
-          cpy #$08
-          bne TerrBChk               ;if not all bits checked, loop back    
-          ldy R1 
-          bne TerrLoop               ;unconditional branch, use Y to load next byte
-RendBBuf: jsr ProcessAreaData        ;do the area data loading routine now
-          lda BlockBufferColumnPos
-          jsr GetBlockBufferAddr     ;get block buffer address from where we're at
-          ldx #$00
-          ldy #$00                   ;init index regs and start at beginning of smaller buffer
-ChkMTLow: sty R0 
-          lda MetatileBuffer,x       ;load stored metatile number
-          and #%11000000             ;mask out all but 2 MSB
-          asl
-          rol                        ;make %xx000000 into %000000xx
-          rol
-          tay                        ;use as offset in Y
-          lda MetatileBuffer,x       ;reload original unmasked value here
-          cmp BlockBuffLowBounds,y   ;check for certain values depending on bits set
-          bcs StrBlock               ;if equal or greater, branch
-          lda #$00                   ;if less, init value before storing
-StrBlock: ldy R0                     ;get offset for block buffer
-          sta (R6) ,y                ;store value into block buffer
-          tya
-          clc                        ;add 16 (move down one row) to offset
-          adc #$10
-          tay
-          inx                        ;increment column value
-          cpx #$0d
-          bcc ChkMTLow               ;continue until we pass last row, then leave
-          rts
+            lda #$54                   ;old terrain type with ground level terrain type
+            sta R7 
+EndUChk:
+    iny                        ;increment bitmasks offset in Y
+    cpy #$08
+    bne TerrBChk               ;if not all bits checked, loop back    
+      ldy R1 
+      bne TerrLoop               ;unconditional branch, use Y to load next byte
+RendBBuf:
+    jsr ProcessAreaData        ;do the area data loading routine now
+    lda BlockBufferColumnPos
+    jsr GetBlockBufferAddr     ;get block buffer address from where we're at
+    ldx #$00
+    ldy #$00                   ;init index regs and start at beginning of smaller buffer
+ChkMTLow:
+    sty R0 
+    lda MetatileBuffer,x       ;load stored metatile number
+    and #%11000000             ;mask out all but 2 MSB
+    asl
+    rol                        ;make %xx000000 into %000000xx
+    rol
+    tay                        ;use as offset in Y
+    lda MetatileBuffer,x       ;reload original unmasked value here
+    cmp BlockBuffLowBounds,y   ;check for certain values depending on bits set
+    bcs StrBlock               ;if equal or greater, branch
+      lda #$00                   ;if less, init value before storing
+StrBlock:
+    ldy R0                     ;get offset for block buffer
+    sta (R6),y                ;store value into block buffer
+    tya
+    clc                        ;add 16 (move down one row) to offset
+    adc #$10
+    tay
+    inx                        ;increment column value
+    cpx #$0d
+    bcc ChkMTLow               ;continue until we pass last row, then leave
+  rts
 
 ;numbers lower than these with the same attribute bits
 ;will not be stored in the block buffer
 BlockBuffLowBounds:
-      .byte $10, $51, $88, $c0
+  .byte $10, $51, $88, $c0
+
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store area object identifier
