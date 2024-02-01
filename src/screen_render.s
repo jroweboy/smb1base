@@ -1191,10 +1191,10 @@ DrawMTLoop: stx R1                       ;store init value of 0 or incremented o
             adc R2                       ;of the metatiles
             tay
             ldx R0                       ;use vram buffer offset from before as X
-            lda (R6) ,y
+            lda (R6),y
             sta VRAM_Buffer2+3,x         ;get first tile number (top left or top right) and store
             iny
-            lda (R6) ,y                  ;now get the second (bottom left or bottom right) and store
+            lda (R6),y                  ;now get the second (bottom left or bottom right) and store
             sta VRAM_Buffer2+4,x
             ldy R4                       ;get current attribute row
             lda R5                       ;get LSB of current column where we're at, and

@@ -185,7 +185,7 @@ BlockBufferCollision:
     sbc #$20                    ;subtract 32 pixels for the status bar
     sta R2                      ;store result here
     tay                         ;use as offset for block buffer
-    lda (R6), y                 ;check current content of block buffer
+    lda (R6),y                  ;check current content of block buffer
     sta R3                      ;and store here
     ldy R4                      ;get old contents of Y again
   pla                         ;pull A from stack

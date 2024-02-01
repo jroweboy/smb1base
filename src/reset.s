@@ -127,11 +127,13 @@ MMC3Init:
   lda #7 | PRG_FIXED_8
   sta BankShadow
 
-  ; disable scanline counter, $6000 ram, and IRQ
+  ; disable scanline counter, and IRQ
   lda #0
   sta NMT_MIRROR
-  sta RAM_PROTECT
   sta IRQDISABLE
+  ; enable on board WRAM
+  lda #%10000000
+  sta RAM_PROTECT
 FinializeMarioInit:
   cli
   lda #$a5                     ;set warm boot flag
@@ -388,12 +390,24 @@ SkipMainOper:
 ;$01 - vram buffer address table high
 
 .define VRAM_AddrTable \
-      VRAM_Buffer1, WaterPaletteData, GroundPaletteData, \
-      UndergroundPaletteData, CastlePaletteData, VRAM_Buffer1_Offset, \
-      VRAM_Buffer2, VRAM_Buffer2, BowserPaletteData, \
-      DaySnowPaletteData, NightSnowPaletteData, MushroomPaletteData, \
-      MarioThanksMessage, LuigiThanksMessage, MushroomRetainerSaved, \
-      PrincessSaved1, PrincessSaved2, WorldSelectMessage1, \
+      VRAM_Buffer1, \
+      WaterPaletteData, \
+      GroundPaletteData, \
+      UndergroundPaletteData, \
+      CastlePaletteData, \
+      VRAM_Buffer1_Offset, \
+      VRAM_Buffer2, \
+      VRAM_Buffer2, \
+      BowserPaletteData, \
+      DaySnowPaletteData, \
+      NightSnowPaletteData, \
+      MushroomPaletteData, \
+      MarioThanksMessage, \
+      LuigiThanksMessage, \
+      MushroomRetainerSaved, \
+      PrincessSaved1, \
+      PrincessSaved2, \
+      WorldSelectMessage1, \
       WorldSelectMessage2
 
 VRAM_AddrTable_Low: .lobytes VRAM_AddrTable
