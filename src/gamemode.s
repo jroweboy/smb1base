@@ -51,9 +51,10 @@ SecondaryGameSetup:
   lda #$00
   sta DisableScreenFlag     ;enable screen output
   tay
-ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
-  iny
-  bne ClearVRLoop
+ClearVRLoop:
+    sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
+    iny
+    bne ClearVRLoop
   sta GameTimerExpiredFlag  ;clear game timer exp flag
   sta DisableIntermediate   ;clear skip lives display flag
   sta BackloadingFlag       ;clear value here
@@ -103,6 +104,13 @@ ClrSndLoop:
   bpl ClrSndLoop
   lda #$18              ;set demo timer
   sta DemoTimer
+
+  lda #World8
+  sta WorldNumber
+  lda #4 - 1
+  sta AreaNumber
+  sta LevelNumber
+
   jsr LoadAreaPointer
 
 InitializeArea:
@@ -121,7 +129,7 @@ ClrTimersLoop:
     lda EntrancePage         ;otherwise use saved entry page number here
 StartPage:
   sta ScreenLeft_PageLoc   ;set as value here
-  sta CurrentPageLoc       ;also set as current page
+  ; sta CurrentPageLoc       ;also set as current page
   sta BackloadingFlag      ;set flag here if halfway page or saved entry page number found
   jsr GetScreenPosition    ;get pixel coordinates for screen borders
   ldy #$20                 ;if on odd numbered page, use $2480 as start of rendering
@@ -338,11 +346,17 @@ InitScores:
 ExitMenu:
   rts
 GoContinue:
-  sta WorldNumber             ;start both players at the first area
-  sta OffScr_WorldNumber      ;of the previously saved world number
-  ldx #$00                    ;note that on power-up using this function
-  stx AreaNumber              ;will make no difference
-  stx OffScr_AreaNumber   
+  ; sta WorldNumber             ;start both players at the first area
+  ; sta OffScr_WorldNumber      ;of the previously saved world number
+  ; ldx #$00                    ;note that on power-up using this function
+  ; stx AreaNumber              ;will make no difference
+  ; stx OffScr_AreaNumber
+  
+  lda #World8
+  sta AreaNumber
+  lda #4
+  sta LevelNumber
+
   rts
               
 WSelectBufferTemplate:

@@ -359,6 +359,7 @@ VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 .global Block_Buffer_1
 .global Block_Buffer_2
 .global BlockBufferColumnPos
+.global LevelBufferPageNumber
 .global MetatileBuffer
 .global HammerEnemyOffset
 .global JumpCoinMiscOffset
@@ -615,5 +616,22 @@ _WarmBootOffset = DisplayDigits
 _ColdBootOffset = WarmBootValidation
 
 .global WarmBootValidation
+
+; .segment "WRAM"
+
+LEVEL_PAGE_COUNT = 32
+LEVEL_PAGE_ENEMY_COUNT = 8
+; .struct Level
+;   Page .struct
+;     BlockBuffer   .byte 208
+;     EnemyId       .byte 8
+;     EnemyX        .byte 8
+;     EnemyY        .byte 8
+;     ExitPointer   .word
+;   .endstruct
+;   Padding       .byte 256 - .sizeof(Page)
+; .endstruct
+
+.global LevelBlockBuffer
 
 .endif ; __MEMORY_INC

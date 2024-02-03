@@ -160,15 +160,21 @@ BankInitValues:
 .proc IdleLoop
   lda NmiDisable
   beq IdleLoop
-; Detect if the last frame lagged and skip immediately to the next frame if we did so we don't
-; slow down if we lag.
-GoToNextFrameImmediately:
+NextFrame:
     lda NmiSkipped
     pha
       jsr GameLoop
     pla
     cmp NmiSkipped
     bne GoToNextFrameImmediately
+  jmp IdleLoop
+  
+GoToNextFrameImmediately:
+  ; if we are in gameplay detect if the last frame lagged and 
+  ; skip immediately to the next frame if we did so we don't slow down
+  lda OperMode
+  cmp #1
+  beq NextFrame
   jmp IdleLoop
 .endproc
 

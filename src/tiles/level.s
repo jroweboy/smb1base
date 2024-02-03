@@ -5,8 +5,9 @@
 .import RenderAttributeTables, RenderAreaGraphics
 .import InitializeMemory,GetScreenPosition
 .import WriteGameText
+.import GetBlockBufferAddr, Bitmasks
 
-.export AreaParserTaskHandler, GetAreaDataAddrs, ProcLoopCommand, AreaParserTaskLoop
+.export AreaParserTaskHandler, GetAreaDataAddrs, ProcLoopCommand, AreaParserTaskLoop, AreaPreloaderLoop
 
 .segment "LEVEL"
 
@@ -97,11 +98,11 @@ StoreStyle:
 
 
 AreaParserTaskLoop:
-    jsr AreaParserTaskHandler ;render column set of current area
-    lda AreaParserTaskNum     ;check number of tasks
-    bne AreaParserTaskLoop              ;if tasks still not all done, do another one
+  jsr AreaParserTaskHandler ;render column set of current area
+  lda AreaParserTaskNum     ;check number of tasks
+  bne AreaParserTaskLoop              ;if tasks still not all done, do another one
 SkipATRender:
-  rts
+    rts
 
 AreaParserTaskHandler:
   ldy AreaParserTaskNum     ;check number of tasks here
@@ -118,24 +119,181 @@ DoAPTasks:
 
 AreaParserTasks:
   jsr JumpEngine
-  .word IncrementColumnPos
+  ; .word IncrementColumnPos
+  .word DecrementColumnPos
   .word RenderAreaGraphics
   .word RenderAreaGraphics
-  .word AreaParserCore
-  .word IncrementColumnPos
+;   .word AreaParserCore
+  .word AreaParserLite
+  ; .word IncrementColumnPos
+  .word DecrementColumnPos
   .word RenderAreaGraphics
   .word RenderAreaGraphics
-  .word AreaParserCore
+;   .word AreaParserCore
+  .word AreaParserLite
+
+.proc AreaPreloaderLoop
+
+FirstLoop:
+    jsr AreaParserCore
+    jsr LoadLevelPointer
+    jsr CopyBufferToR6
+    ; Keep loading more and more until we reach the end.
+    jsr BumpNMTOffset
+    jsr BumpNMTOffset
+    jsr IncrementColumnPos
+    jsr ProcLoopCommand
+    ldy AreaDataOffset       ;get offset of area data pointer
+    lda (AreaData),y         ;get first byte of area object
+    cmp #$fd
+    bne FirstLoop
+
+FinishInitialLoad:
+  ; after we load all of the area data, we still have to finish the page,
+  ; plus one more page, so keep loading.
+
+  lda CurrentColumnPos
+  sta M0
+SecondLoop:
+    jsr AreaParserCore
+    jsr LoadLevelPointer
+    jsr CopyBufferToR6
+    ; Keep loading more and more until we reach the end.
+    jsr BumpNMTOffset
+    jsr BumpNMTOffset
+    jsr IncrementColumnPos
+    jsr ProcLoopCommand
+    lda CurrentColumnPos
+    cmp M0
+    bne SecondLoop
+    
+  ; One more loop to load until the end of the page?
+ThirdLoop:
+    jsr AreaParserCore
+    jsr LoadLevelPointer
+    jsr CopyBufferToR6
+    jsr BumpNMTOffset
+    jsr BumpNMTOffset
+    jsr IncrementColumnPos
+    jsr ProcLoopCommand
+    lda CurrentColumnPos
+    bne ThirdLoop
+
+  ; Rewind all of the positions by 1
+  jsr DecrementColumnPos
+  dec LevelBufferPageNumber
+  lda CurrentNTAddr_Low
+  dec CurrentNTAddr_Low
+  and #%00011111
+  bne Exit
+    lda #$9f                     ;if wraparound occurs, make sure low byte stays
+    sta CurrentNTAddr_Low        ;just under the status bar
+    lda CurrentNTAddr_High       ;and then invert d2 of the name table address high
+    eor #%00000100               ;to move onto the next appropriate name table
+    sta CurrentNTAddr_High
+Exit:
+  rts
+
+BumpNMTOffset:
+  inc CurrentNTAddr_Low        ;increment name table address low
+  lda CurrentNTAddr_Low        ;check current low byte
+  and #%00011111               ;if no wraparound, just skip this part
+  bne Exit2
+  lda #$80                     ;if wraparound occurs, make sure low byte stays
+  sta CurrentNTAddr_Low        ;just under the status bar
+  lda CurrentNTAddr_High       ;and then invert d2 of the name table address high
+  eor #%00000100               ;to move onto the next appropriate name table
+  sta CurrentNTAddr_High
+Exit2:
+  rts
+
+.endproc
+
+LazyLUTForLazyPeopleLo:
+.repeat 32, I ; LEVEL_PAGE_COUNT
+  .byte .lobyte(208 * I)
+.endrepeat
+LazyLUTForLazyPeopleHi:
+.repeat 32, I ; LEVEL_PAGE_COUNT
+  .byte (.hibyte(208 * I) + $60)
+.endrepeat
+
+.proc LoadLevelPointer
+  ldy LevelBufferPageNumber
+  lda LazyLUTForLazyPeopleLo,y
+  sta R6
+  lda LazyLUTForLazyPeopleHi,y
+  sta R7
+  lda BlockBufferColumnPos
+  and #$0f
+  clc 
+  adc R6
+  sta R6
+  rts
+.endproc
+
+.proc CopyBufferToR6
+  ldx #0
+  ldy #0
+  CopyFromLevelData:
+    ; Save data from the MetatileBuffer into the LevelBuffer
+    lda MetatileBuffer,x
+    sta (R6),y
+    tya
+    clc                        ;add 16 (move down one row) to offset
+    adc #$10
+    tay
+    inx
+    cpx #13 ; .sizeof(MetatileBuffer)
+    bcc CopyFromLevelData
+  rts
+.endproc
+
+.proc CopyR6ToBuffer
+  ldx #0
+  ldy #0
+  CopyFromLevelData:
+    ; Load from the expanded level data and write to the MetatileBuffer
+    lda (R6),y
+    sta MetatileBuffer,x
+    tya
+    clc                        ;add 16 (move down one row) to offset
+    adc #$10
+    tay
+    inx
+    cpx #13 ; .sizeof(MetatileBuffer)
+    bcc CopyFromLevelData
+  rts
+.endproc
 
 ;-------------------------------------------------------------------------------------
+
+.proc DecrementColumnPos
+
+  lda CurrentColumnPos
+  dec CurrentColumnPos     ;increment column where we're at
+  and #%00001111           ;mask out higher nybble
+  bne NoColWrap
+    lda #$0f
+    sta CurrentColumnPos     ;if no bits left set, wrap back to zero (0-f)
+    dec CurrentPageLoc       ;and increment page number where we're at
+    dec LevelBufferPageNumber
+NoColWrap:
+  dec BlockBufferColumnPos ;increment column offset where we're at
+  lda BlockBufferColumnPos
+  and #%00011111           ;mask out all but 5 LSB (0-1f)
+  sta BlockBufferColumnPos ;and save
+  rts
+.endproc
 
 IncrementColumnPos:
   inc CurrentColumnPos     ;increment column where we're at
   lda CurrentColumnPos
   and #%00001111           ;mask out higher nybble
   bne NoColWrap
-  sta CurrentColumnPos     ;if no bits left set, wrap back to zero (0-f)
-  inc CurrentPageLoc       ;and increment page number where we're at
+    sta CurrentColumnPos     ;if no bits left set, wrap back to zero (0-f)
+    inc CurrentPageLoc       ;and increment page number where we're at
+    inc LevelBufferPageNumber
 NoColWrap:
   inc BlockBufferColumnPos ;increment column offset where we're at
   lda BlockBufferColumnPos
@@ -143,86 +301,56 @@ NoColWrap:
   sta BlockBufferColumnPos ;and save
   rts
 
+
+.proc AreaParserLite
+
+  jsr LoadLevelPointer
+  jsr CopyR6ToBuffer
+
+  ; Now copy only the important tiles from the Metatile buffer to the Blockbuffer
+  lda BlockBufferColumnPos
+  jsr GetBlockBufferAddr     ;get block buffer address from where we're at
+
+  ldx #$00
+  ldy #$00                   ;init index regs and start at beginning of smaller buffer
+ChkMTLow:
+    sty R0 
+    lda MetatileBuffer,x       ;load stored metatile number
+    and #%11000000             ;mask out all but 2 MSB
+    asl
+    rol                        ;make %xx000000 into %000000xx
+    rol
+    tay                        ;use as offset in Y
+    lda MetatileBuffer,x       ;reload original unmasked value here
+    cmp BlockBuffLowBounds,y   ;check for certain values depending on bits set
+    bcs StrBlock               ;if equal or greater, branch
+      lda #$00                   ;if less, init value before storing
+StrBlock:
+    ldy R0                     ;get offset for block buffer
+    sta (R6),y                ;store value into block buffer
+    tya
+    clc                        ;add 16 (move down one row) to offset
+    adc #$10
+    tay
+    inx                        ;increment column value
+    cpx #$0d
+    bcc ChkMTLow               ;continue until we pass last row, then leave
+  rts
+
+
+;numbers lower than these with the same attribute bits
+;will not be stored in the block buffer
+BlockBuffLowBounds:
+  .byte $10, $51, $88, $c0
+
+.endproc
+
+
 ;-------------------------------------------------------------------------------------
 ;$00 - used as counter, store for low nybble for background, ceiling byte for terrain
 ;$01 - used to store floor byte for terrain
 ;$07 - used to store terrain metatile
 ;$06-$07 - used to store block buffer address
-
-BSceneDataOffsets:
-  .byte $00, $30, $60
-
-BackSceneryData:
-  .byte $93, $00, $00, $11, $12, $12, $13, $00 ;clouds
-  .byte $00, $51, $52, $53, $00, $00, $00, $00
-  .byte $00, $00, $01, $02, $02, $03, $00, $00
-  .byte $00, $00, $00, $00, $91, $92, $93, $00
-  .byte $00, $00, $00, $51, $52, $53, $41, $42
-  .byte $43, $00, $00, $00, $00, $00, $91, $92
-
-  .byte $97, $87, $88, $89, $99, $00, $00, $00 ;mountains and bushes
-  .byte $11, $12, $13, $a4, $a5, $a5, $a5, $a6
-  .byte $97, $98, $99, $01, $02, $03, $00, $a4
-  .byte $a5, $a6, $00, $11, $12, $12, $12, $13
-  .byte $00, $00, $00, $00, $01, $02, $02, $03
-  .byte $00, $a4, $a5, $a5, $a6, $00, $00, $00
-
-  .byte $11, $12, $12, $13, $00, $00, $00, $00 ;trees and fences
-  .byte $00, $00, $00, $9c, $00, $8b, $aa, $aa
-  .byte $aa, $aa, $11, $12, $13, $8b, $00, $9c
-  .byte $9c, $00, $00, $01, $02, $03, $11, $12
-  .byte $12, $13, $00, $00, $00, $00, $aa, $aa
-  .byte $9c, $aa, $00, $8b, $00, $01, $02, $03
-
-BackSceneryMetatiles:
-  .byte $80, $83, $00 ;cloud left
-  .byte $81, $84, $00 ;cloud middle
-  .byte $82, $85, $00 ;cloud right
-  .byte $02, $00, $00 ;bush left
-  .byte $03, $00, $00 ;bush middle
-  .byte $04, $00, $00 ;bush right
-  .byte $00, $05, $06 ;mountain left
-  .byte $07, $06, $0a ;mountain middle
-  .byte $00, $08, $09 ;mountain right
-  .byte $4d, $00, $00 ;fence
-  .byte $0d, $0f, $4e ;tall tree
-  .byte $0e, $4e, $4e ;short tree
-
-FSceneDataOffsets:
-  .byte $00, $0d, $1a
-
-ForeSceneryData:
-  .byte $86, $87, $87, $87, $87, $87, $87   ;in water
-  .byte $87, $87, $87, $87, $69, $69
-
-  .byte $00, $00, $00, $00, $00, $45, $47   ;wall
-  .byte $47, $47, $47, $47, $00, $00
-
-  .byte $00, $00, $00, $00, $00, $00, $00   ;over water
-  .byte $00, $00, $00, $00, $86, $87
-
-TerrainMetatiles:
-  .byte $69, $54, $52, $62
-
-TerrainRenderBits:
-  .byte %00000000, %00000000 ;no ceiling or floor
-  .byte %00000000, %00011000 ;no ceiling, floor 2
-  .byte %00000001, %00011000 ;ceiling 1, floor 2
-  .byte %00000111, %00011000 ;ceiling 3, floor 2
-  .byte %00001111, %00011000 ;ceiling 4, floor 2
-  .byte %11111111, %00011000 ;ceiling 8, floor 2
-  .byte %00000001, %00011111 ;ceiling 1, floor 5
-  .byte %00000111, %00011111 ;ceiling 3, floor 5
-  .byte %00001111, %00011111 ;ceiling 4, floor 5
-  .byte %10000001, %00011111 ;ceiling 1, floor 6
-  .byte %00000001, %00000000 ;ceiling 1, no floor
-  .byte %10001111, %00011111 ;ceiling 4, floor 6
-  .byte %11110001, %00011111 ;ceiling 1, floor 9
-  .byte %11111001, %00011000 ;ceiling 1, middle 5, floor 2
-  .byte %11110001, %00011000 ;ceiling 1, middle 4, floor 2
-  .byte %11111111, %00011111 ;completely solid top to bottom
-
-.import GetBlockBufferAddr, Bitmasks
 
 .proc AreaParserCore
   lda BackloadingFlag       ;check to see if we are starting right of start
@@ -351,39 +479,122 @@ EndUChk:
       bne TerrLoop               ;unconditional branch, use Y to load next byte
 RendBBuf:
     jsr ProcessAreaData        ;do the area data loading routine now
-    lda BlockBufferColumnPos
-    jsr GetBlockBufferAddr     ;get block buffer address from where we're at
-    ldx #$00
-    ldy #$00                   ;init index regs and start at beginning of smaller buffer
-ChkMTLow:
-    sty R0 
-    lda MetatileBuffer,x       ;load stored metatile number
-    and #%11000000             ;mask out all but 2 MSB
-    asl
-    rol                        ;make %xx000000 into %000000xx
-    rol
-    tay                        ;use as offset in Y
-    lda MetatileBuffer,x       ;reload original unmasked value here
-    cmp BlockBuffLowBounds,y   ;check for certain values depending on bits set
-    bcs StrBlock               ;if equal or greater, branch
-      lda #$00                   ;if less, init value before storing
-StrBlock:
-    ldy R0                     ;get offset for block buffer
-    sta (R6),y                ;store value into block buffer
-    tya
-    clc                        ;add 16 (move down one row) to offset
-    adc #$10
-    tay
-    inx                        ;increment column value
-    cpx #$0d
-    bcc ChkMTLow               ;continue until we pass last row, then leave
+;     lda BlockBufferColumnPos
+;     jsr GetBlockBufferAddr     ;get block buffer address from where we're at
+;     ldx #$00
+;     ldy #$00                   ;init index regs and start at beginning of smaller buffer
+; ChkMTLow:
+;     sty R0 
+;     lda MetatileBuffer,x       ;load stored metatile number
+;     and #%11000000             ;mask out all but 2 MSB
+;     asl
+;     rol                        ;make %xx000000 into %000000xx
+;     rol
+;     tay                        ;use as offset in Y
+;     lda MetatileBuffer,x       ;reload original unmasked value here
+;     cmp BlockBuffLowBounds,y   ;check for certain values depending on bits set
+;     bcs StrBlock               ;if equal or greater, branch
+;       lda #$00                   ;if less, init value before storing
+; StrBlock:
+;     ldy R0                     ;get offset for block buffer
+;     sta (R6),y                ;store value into block buffer
+;     tya
+;     clc                        ;add 16 (move down one row) to offset
+;     adc #$10
+;     tay
+;     inx                        ;increment column value
+;     cpx #$0d
+;     bcc ChkMTLow               ;continue until we pass last row, then leave
   rts
 
-;numbers lower than these with the same attribute bits
-;will not be stored in the block buffer
-BlockBuffLowBounds:
-  .byte $10, $51, $88, $c0
+; GetFullLevelBlockBuffer:
+;   pha                      ;take value of A, save
+;     lsr                      ;move high nybble to low
+;     lsr
+;     lsr
+;     lsr
+;     ora #>LevelPage
+;     lda BlockBufferAddr+2,y  ;of indirect here
+;     sta R7 
+;   pla
+;   and #%00001111           ;pull from stack, mask out high nybble
+;   clc
+;   adc BlockBufferAddr,y    ;add to low byte
+;   sta R6                   ;store here and leave
+;   rts
 
+BSceneDataOffsets:
+  .byte $00, $30, $60
+
+BackSceneryData:
+  .byte $93, $00, $00, $11, $12, $12, $13, $00 ;clouds
+  .byte $00, $51, $52, $53, $00, $00, $00, $00
+  .byte $00, $00, $01, $02, $02, $03, $00, $00
+  .byte $00, $00, $00, $00, $91, $92, $93, $00
+  .byte $00, $00, $00, $51, $52, $53, $41, $42
+  .byte $43, $00, $00, $00, $00, $00, $91, $92
+
+  .byte $97, $87, $88, $89, $99, $00, $00, $00 ;mountains and bushes
+  .byte $11, $12, $13, $a4, $a5, $a5, $a5, $a6
+  .byte $97, $98, $99, $01, $02, $03, $00, $a4
+  .byte $a5, $a6, $00, $11, $12, $12, $12, $13
+  .byte $00, $00, $00, $00, $01, $02, $02, $03
+  .byte $00, $a4, $a5, $a5, $a6, $00, $00, $00
+
+  .byte $11, $12, $12, $13, $00, $00, $00, $00 ;trees and fences
+  .byte $00, $00, $00, $9c, $00, $8b, $aa, $aa
+  .byte $aa, $aa, $11, $12, $13, $8b, $00, $9c
+  .byte $9c, $00, $00, $01, $02, $03, $11, $12
+  .byte $12, $13, $00, $00, $00, $00, $aa, $aa
+  .byte $9c, $aa, $00, $8b, $00, $01, $02, $03
+
+BackSceneryMetatiles:
+  .byte $80, $83, $00 ;cloud left
+  .byte $81, $84, $00 ;cloud middle
+  .byte $82, $85, $00 ;cloud right
+  .byte $02, $00, $00 ;bush left
+  .byte $03, $00, $00 ;bush middle
+  .byte $04, $00, $00 ;bush right
+  .byte $00, $05, $06 ;mountain left
+  .byte $07, $06, $0a ;mountain middle
+  .byte $00, $08, $09 ;mountain right
+  .byte $4d, $00, $00 ;fence
+  .byte $0d, $0f, $4e ;tall tree
+  .byte $0e, $4e, $4e ;short tree
+
+FSceneDataOffsets:
+  .byte $00, $0d, $1a
+
+ForeSceneryData:
+  .byte $86, $87, $87, $87, $87, $87, $87   ;in water
+  .byte $87, $87, $87, $87, $69, $69
+
+  .byte $00, $00, $00, $00, $00, $45, $47   ;wall
+  .byte $47, $47, $47, $47, $00, $00
+
+  .byte $00, $00, $00, $00, $00, $00, $00   ;over water
+  .byte $00, $00, $00, $00, $86, $87
+
+TerrainMetatiles:
+  .byte $69, $54, $52, $62
+
+TerrainRenderBits:
+  .byte %00000000, %00000000 ;no ceiling or floor
+  .byte %00000000, %00011000 ;no ceiling, floor 2
+  .byte %00000001, %00011000 ;ceiling 1, floor 2
+  .byte %00000111, %00011000 ;ceiling 3, floor 2
+  .byte %00001111, %00011000 ;ceiling 4, floor 2
+  .byte %11111111, %00011000 ;ceiling 8, floor 2
+  .byte %00000001, %00011111 ;ceiling 1, floor 5
+  .byte %00000111, %00011111 ;ceiling 3, floor 5
+  .byte %00001111, %00011111 ;ceiling 4, floor 5
+  .byte %10000001, %00011111 ;ceiling 1, floor 6
+  .byte %00000001, %00000000 ;ceiling 1, no floor
+  .byte %10001111, %00011111 ;ceiling 4, floor 6
+  .byte %11110001, %00011111 ;ceiling 1, floor 9
+  .byte %11111001, %00011000 ;ceiling 1, middle 5, floor 2
+  .byte %11110001, %00011000 ;ceiling 1, middle 4, floor 2
+  .byte %11111111, %00011111 ;completely solid top to bottom
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -451,11 +662,11 @@ ProcLoopb:  dex                      ;decrement buffer offset
 EndAParse:  rts
 
 IncAreaObjOffset:
-      inc AreaDataOffset    ;increment offset of level pointer
-      inc AreaDataOffset
-      lda #$00              ;reset page select
-      sta AreaObjectPageSel
-      rts
+  inc AreaDataOffset    ;increment offset of level pointer
+  inc AreaDataOffset
+  lda #$00              ;reset page select
+  sta AreaObjectPageSel
+  rts
 
 DecodeAreaData:
           lda AreaObjectLength,x     ;check current buffer flag
@@ -698,50 +909,51 @@ ExitAFrenzy: sta EnemyFrenzyQueue  ;store enemy into frenzy queue
 ;--------------------------------
 
 ChkLrgObjLength:
-        jsr GetLrgObjAttrib     ;get row location and size (length if branched to from here)
+  jsr GetLrgObjAttrib     ;get row location and size (length if branched to from here)
 
 ChkLrgObjFixedLength:
-        lda AreaObjectLength,x  ;check for set length counter
-        clc                     ;clear carry flag for not just starting
-        bpl LenSet              ;if counter not set, load it, otherwise leave alone
-        tya                     ;save length into length counter
-        sta AreaObjectLength,x
-        sec                     ;set carry flag if just starting
-LenSet: rts
+  lda AreaObjectLength,x  ;check for set length counter
+  clc                     ;clear carry flag for not just starting
+  bpl LenSet              ;if counter not set, load it, otherwise leave alone
+    tya                     ;save length into length counter
+    sta AreaObjectLength,x
+    sec                     ;set carry flag if just starting
+LenSet:
+  rts
 
 
 GetLrgObjAttrib:
-      ldy AreaObjOffsetBuffer,x ;get offset saved from area obj decoding routine
-      lda (AreaData),y          ;get first byte of level object
-      and #%00001111
-      sta R7                    ;save row location
-      iny
-      lda (AreaData),y          ;get next byte, save lower nybble (length or height)
-      and #%00001111            ;as Y, then leave
-      tay
-      rts
+  ldy AreaObjOffsetBuffer,x ;get offset saved from area obj decoding routine
+  lda (AreaData),y          ;get first byte of level object
+  and #%00001111
+  sta R7                    ;save row location
+  iny
+  lda (AreaData),y          ;get next byte, save lower nybble (length or height)
+  and #%00001111            ;as Y, then leave
+  tay
+  rts
 
 ;--------------------------------
 
 GetAreaObjXPosition:
-      lda CurrentColumnPos    ;multiply current offset where we're at by 16
-      asl                     ;to obtain horizontal pixel coordinate
-      asl
-      asl
-      asl
-      rts
+  lda CurrentColumnPos    ;multiply current offset where we're at by 16
+  asl                     ;to obtain horizontal pixel coordinate
+  asl
+  asl
+  asl
+  rts
 
 ;--------------------------------
 
 GetAreaObjYPosition:
-      lda R7   ;multiply value by 16
-      asl
-      asl      ;this will give us the proper vertical pixel coordinate
-      asl
-      asl
-      clc
-      adc #32  ;add 32 pixels for the status bar
-      rts
+  lda R7   ;multiply value by 16
+  asl
+  asl      ;this will give us the proper vertical pixel coordinate
+  asl
+  asl
+  clc
+  adc #32  ;add 32 pixels for the status bar
+  rts
 
 ;--------------------------------------------
 ; Enemy loading code
@@ -750,50 +962,56 @@ GetAreaObjYPosition:
 
 ;loop command data
 LoopCmdWorldNumber:
-      .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07, $07
+  .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07, $07
 
 LoopCmdPageNumber:
-      .byte $05, $09, $04, $05, $06, $08, $09, $0a, $06, $0b, $10
+  .byte $05, $09, $04, $05, $06, $08, $09, $0a, $06, $0b, $10
 
 LoopCmdYPosition:
-      .byte $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
+  .byte $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
 
 ExecGameLoopback:
-      lda Player_PageLoc        ;send player back four pages
-      sec
-      sbc #$04
-      sta Player_PageLoc
-      lda CurrentPageLoc        ;send current page back four pages
-      sec
-      sbc #$04
-      sta CurrentPageLoc
-      lda ScreenLeft_PageLoc    ;subtract four from page location
-      sec                       ;of screen's left border
-      sbc #$04
-      sta ScreenLeft_PageLoc
-      lda ScreenRight_PageLoc   ;do the same for the page location
-      sec                       ;of screen's right border
-      sbc #$04
-      sta ScreenRight_PageLoc
-      lda AreaObjectPageLoc     ;subtract four from page control
-      sec                       ;for area objects
-      sbc #$04
-      sta AreaObjectPageLoc
-      lda #$00                  ;initialize page select for both
-      sta EnemyObjectPageSel    ;area and enemy objects
-      sta AreaObjectPageSel
-      sta EnemyDataOffset       ;initialize enemy object data offset
-      sta EnemyObjectPageLoc    ;and enemy object page control
-      lda AreaDataOfsLoopback,y ;adjust area object offset based on
-      sta AreaDataOffset        ;which loop command we encountered
-      rts
+  lda Player_PageLoc        ;send player back four pages
+  sec
+  sbc #$04
+  sta Player_PageLoc
+  lda CurrentPageLoc        ;send current page back four pages
+  sec
+  sbc #$04
+  sta CurrentPageLoc
+  lda ScreenLeft_PageLoc    ;subtract four from page location
+  sec                       ;of screen's left border
+  sbc #$04
+  sta ScreenLeft_PageLoc
+  lda ScreenRight_PageLoc   ;do the same for the page location
+  sec                       ;of screen's right border
+  sbc #$04
+  sta ScreenRight_PageLoc
+  lda AreaObjectPageLoc     ;subtract four from page control
+  sec                       ;for area objects
+  sbc #$04
+  sta AreaObjectPageLoc
+  lda #$00                  ;initialize page select for both
+  sta EnemyObjectPageSel    ;area and enemy objects
+  sta AreaObjectPageSel
+  sta EnemyDataOffset       ;initialize enemy object data offset
+  sta EnemyObjectPageLoc    ;and enemy object page control
+  lda AreaDataOfsLoopback,y ;adjust area object offset based on
+  sta AreaDataOffset        ;which loop command we encountered
+  rts
 
 ;-------------------------------------------------------------------------------------
 
 AreaDataOfsLoopback:
-      .byte $12, $36, $0e, $0e, $0e, $32, $32, $32, $0a, $26, $40
+  .byte $12, $36, $0e, $0e, $0e, $32, $32, $32, $0a, $26, $40
 
-ProcLoopCommand:
+.proc ProcLoopCommand
+
+
+  rts
+.endproc
+
+ProcPreloadLoopCommand:
           lda LoopCommand           ;check if loop command was found
           beq ChkEnemyFrenzy
           lda CurrentColumnPos      ;check to see if we're still on the first page
@@ -841,56 +1059,56 @@ InitLCmd: lda #$00                  ;initialize loop command flag
 ChkEnemyFrenzy:
   lda EnemyFrenzyQueue  ;check for enemy object in frenzy queue
   beq ProcessEnemyData  ;if not, skip this part
-  sta Enemy_ID,x        ;store as enemy object identifier here
-  lda #$01
-  sta Enemy_Flag,x      ;activate enemy object flag
-  lda #$00
-  sta Enemy_State,x     ;initialize state and frenzy queue
-  sta EnemyFrenzyQueue
-  jmp InitEnemyObject   ;and then jump to deal with this enemy
+    sta Enemy_ID,x        ;store as enemy object identifier here
+    lda #$01
+    sta Enemy_Flag,x      ;activate enemy object flag
+    lda #$00
+    sta Enemy_State,x     ;initialize state and frenzy queue
+    sta EnemyFrenzyQueue
+    jmp InitEnemyObject   ;and then jump to deal with this enemy
 
 ;--------------------------------
 ;$06 - used to hold page location of extended right boundary
 ;$07 - used to hold high nybble of position of extended right boundary
 
 ProcessEnemyData:
-        ldy EnemyDataOffset      ;get offset of enemy object data
-        lda (EnemyData),y        ;load first byte
-        cmp #$ff                 ;check for EOD terminator
-        bne CheckEndofBuffer
-        jmp CheckFrenzyBuffer    ;if found, jump to check frenzy buffer, otherwise
+  ldy EnemyDataOffset      ;get offset of enemy object data
+  lda (EnemyData),y        ;load first byte
+  cmp #$ff                 ;check for EOD terminator
+  bne CheckEndofBuffer
+  jmp CheckFrenzyBuffer    ;if found, jump to check frenzy buffer, otherwise
 
 CheckEndofBuffer:
-        and #%00001111           ;check for special row $0e
-        cmp #$0e
-        beq CheckRightBounds     ;if found, branch, otherwise
-        cpx #$05                 ;check for end of buffer
-        bcc CheckRightBounds     ;if not at end of buffer, branch
-        iny
-        lda (EnemyData),y        ;check for specific value here
-        and #%00111111           ;not sure what this was intended for, exactly
-        cmp #$2e                 ;this part is quite possibly residual code
-        beq CheckRightBounds     ;but it has the effect of keeping enemies out of
-        rts                      ;the sixth slot
+  and #%00001111           ;check for special row $0e
+  cmp #$0e
+  beq CheckRightBounds     ;if found, branch, otherwise
+  cpx #$05                 ;check for end of buffer
+  bcc CheckRightBounds     ;if not at end of buffer, branch
+    iny
+    lda (EnemyData),y        ;check for specific value here
+    and #%00111111           ;not sure what this was intended for, exactly
+    cmp #$2e                 ;this part is quite possibly residual code
+    beq CheckRightBounds     ;but it has the effect of keeping enemies out of
+      rts                      ;the sixth slot
 
 CheckRightBounds:
-        lda ScreenRight_X_Pos    ;add 48 to pixel coordinate of right boundary
-        clc
-        adc #$30
-        and #%11110000           ;store high nybble
-        sta R7 
-        lda ScreenRight_PageLoc  ;add carry to page location of right boundary
-        adc #$00
-        sta R6                   ;store page location + carry
-        ldy EnemyDataOffset
-        iny
-        lda (EnemyData),y        ;if MSB of enemy object is clear, branch to check for row $0f
-        asl
-        bcc CheckPageCtrlRow
-        lda EnemyObjectPageSel   ;if page select already set, do not set again
-        bne CheckPageCtrlRow
-        inc EnemyObjectPageSel   ;otherwise, if MSB is set, set page select 
-        inc EnemyObjectPageLoc   ;and increment page control
+  lda ScreenRight_X_Pos    ;add 48 to pixel coordinate of right boundary
+  clc
+  adc #$30
+  and #%11110000           ;store high nybble
+  sta R7 
+  lda ScreenRight_PageLoc  ;add carry to page location of right boundary
+  adc #$00
+  sta R6                   ;store page location + carry
+  ldy EnemyDataOffset
+  iny
+  lda (EnemyData),y        ;if MSB of enemy object is clear, branch to check for row $0f
+  asl
+  bcc CheckPageCtrlRow
+    lda EnemyObjectPageSel   ;if page select already set, do not set again
+    bne CheckPageCtrlRow
+      inc EnemyObjectPageSel   ;otherwise, if MSB is set, set page select 
+      inc EnemyObjectPageLoc   ;and increment page control
 
 CheckPageCtrlRow:
   dey
@@ -907,7 +1125,7 @@ CheckPageCtrlRow:
   inc EnemyDataOffset      ;increment enemy object data offset 2 bytes
   inc EnemyDataOffset
   inc EnemyObjectPageSel   ;set page select for enemy object data and 
-  jmp ProcLoopCommand      ;jump back to process loop commands again
+  jmp ProcPreloadLoopCommand      ;jump back to process loop commands again
 
 PositionEnemyObj:
   lda EnemyObjectPageLoc   ;store page control as page location
@@ -1001,13 +1219,13 @@ ParseRow0e:
   lsr
   cmp WorldNumber          ;is it the same world number as we're on?
   bne NotUse               ;if not, do not use (this allows multiple uses
-  dey                      ;of the same area, like the underground bonus areas)
-  lda (EnemyData),y        ;otherwise, get second byte and use as offset
-  sta AreaPointer          ;to addresses for level and enemy object data
-  iny
-  lda (EnemyData),y        ;get third byte again, and this time mask out
-  and #%00011111           ;the 3 MSB from before, save as page number to be
-  sta EntrancePage         ;used upon entry to area, if area is entered
+    dey                      ;of the same area, like the underground bonus areas)
+    lda (EnemyData),y        ;otherwise, get second byte and use as offset
+    sta AreaPointer          ;to addresses for level and enemy object data
+    iny
+    lda (EnemyData),y        ;get third byte again, and this time mask out
+    and #%00011111           ;the 3 MSB from before, save as page number to be
+    sta EntrancePage         ;used upon entry to area, if area is entered
 NotUse:
   jmp Inc3B
 

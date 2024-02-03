@@ -245,10 +245,13 @@ Sprite_X_Position:              .res 1
 Block_Buffer_1:                 .res  208
 Block_Buffer_2:                 .res  208
 BlockBufferColumnPos:           .res  1
+; When rendering levels, we copy from the FullLevelColumn into the block buffer column
+; FullLevelColumnPos:             .res  2
+LevelBufferPageNumber:          .res  1
 MetatileBuffer:                 .res  13
 
 VRAM_Buffer1_Offset:            .res  1
-VRAM_Buffer1: .res 84 ; was 63 increase this amount since i'm burning it too quick
+VRAM_Buffer1:                   .res  84 ; was 63 increase this amount since i'm burning it too quick
 VRAM_Buffer2_Offset:            .res  1
 VRAM_Buffer2:                   .res  34 ; 26 for a column, 3 for address and size 
 
@@ -620,7 +623,7 @@ GroundMusicHeaderOfs:           .res  1  ; this is only one byte (original 3)
 AltRegContentFlag:              .res  1  ; jroweboy this is only one byte (original 12)
 
 
-    ; _WarmBootOffset:            .res  1   ; Warm boot offset
+; _WarmBootOffset:            .res  1   ; Warm boot offset
 
 ; each display has to be 6 ram values because the math routine
 DisplayDigits:                  .res  6
@@ -633,9 +636,17 @@ WorldSelectEnableFlag:          .res  1
 
 ContinueWorld:                  .res  1
 
-    ; _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
+; _ColdBootOffset:            .res  1   ; Cold boot offset, here and higher get nuked
     
 WarmBootValidation:             .res  1
 .ifdef WORLD_HAX
 DebugCooldown:                  .res  1
 .endif
+
+.segment "WRAM"
+.assert LevelBlockBuffer = $6000, error, "LevelBlockBuffer isn't aligned to $6000"
+LevelBlockBuffer: .res  208 * LEVEL_PAGE_COUNT
+EnemyId:          .res  LEVEL_PAGE_ENEMY_COUNT
+EnemyX:           .res  LEVEL_PAGE_ENEMY_COUNT
+EnemyY:           .res  LEVEL_PAGE_ENEMY_COUNT
+ExitPointer:      .res  2
