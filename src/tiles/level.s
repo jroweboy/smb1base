@@ -867,25 +867,26 @@ SetFore: sta ForegroundScenery     ;otherwise set new foreground scenery bits
 
 ;--------------------------------
 ScrollLockObject_Warp:
-         ldx #$04            ;load value of 4 for game text routine as default
-         lda WorldNumber     ;warp zone (4-3-2), then check world number
-         beq WarpNum
-         inx                 ;if world number > 1, increment for next warp zone (5)
-         ldy AreaType        ;check area type
-         dey
-         bne WarpNum         ;if ground area type, increment for last warp zone
-         inx                 ;(8-7-6) and move on
-WarpNum: txa
-         sta WarpZoneControl ;store number here to be used by warp zone routine
-         jsr WriteGameText   ;print text and warp zone numbers
-         lda #PiranhaPlant
-         jsr KillEnemies     ;load identifier for piranha plants and do sub
+  ldx #$04            ;load value of 4 for game text routine as default
+  lda WorldNumber     ;warp zone (4-3-2), then check world number
+  beq WarpNum
+    inx                 ;if world number > 1, increment for next warp zone (5)
+    ldy AreaType        ;check area type
+    dey
+    bne WarpNum         ;if ground area type, increment for last warp zone
+      inx                 ;(8-7-6) and move on
+WarpNum:
+  txa
+  sta WarpZoneControl ;store number here to be used by warp zone routine
+  jsr WriteGameText   ;print text and warp zone numbers
+  lda #PiranhaPlant
+  jsr KillEnemies     ;load identifier for piranha plants and do sub
 
 ScrollLockObject:
-      lda ScrollLock      ;invert scroll lock to turn it on
-      eor #%00000001
-      sta ScrollLock
-      rts
+  ; lda ScrollLock      ;invert scroll lock to turn it on
+  ; eor #%00000001
+  ; sta ScrollLock
+  rts
 
 
 ;--------------------------------

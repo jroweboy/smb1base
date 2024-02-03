@@ -28,7 +28,6 @@ _COMMON_DEFINE_SEGMENTS = 1
 ;-------------------------------------------------------------------------------------
 
 .proc GetScreenPosition
-
   lda ScreenLeft_X_Pos    ;get coordinate of screen's left boundary
   clc
   adc #$ff                ;add 255 pixels

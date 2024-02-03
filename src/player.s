@@ -1245,26 +1245,29 @@ ScrollHandler:
   sta Player_X_Scroll       ;save as new value here to impose force on scroll
   lda ScrollLock            ;check scroll lock flag
   bne InitScrlAmt           ;skip a bunch of code here if set
-  lda Player_Pos_ForScroll
-  cmp #$50                  ;check player's horizontal screen position
-  bcc InitScrlAmt           ;if less than 80 pixels to the right, branch
-  lda SideCollisionTimer    ;if timer related to player's side collision
-  bne InitScrlAmt           ;not expired, branch
-  ldy Player_X_Scroll       ;get value and decrement by one
-  dey                       ;if value originally set to zero or otherwise
-  bmi InitScrlAmt           ;negative for left movement, branch
-  iny
-  cpy #$02                  ;if value $01, branch and do not decrement
-  bcc ChkNearMid
-  dey                       ;otherwise decrement by one
-ChkNearMid:
-  lda Player_Pos_ForScroll
-  cmp #$70                  ;check player's horizontal screen position
-  bcc ScrollScreen          ;if less than 112 pixels to the right, branch
-    ldy Player_X_Scroll       ;otherwise get original value undecremented
-    ; fallthrough
+    lda Player_Pos_ForScroll
+    cmp #$100 - $50                  ;check player's horizontal screen position
+    bcs InitScrlAmt           ;if less than 80 pixels to the right, branch
+      lda SideCollisionTimer    ;if timer related to player's side collision
+      bne InitScrlAmt           ;not expired, branch
+        ldy Player_X_Scroll       ;get value and decrement by one
+        ; dey                       ;if value originally set to zero or otherwise
+        beq InitScrlAmt           ;negative for left movement, branch
+          ; iny
+          cpy #$ff                  ;if value $01, branch and do not decrement
+          bcc ChkNearMid
+            dey                       ;otherwise decrement by one
+  ChkNearMid:
+    lda Player_Pos_ForScroll
+    cmp #$100 - $70                  ;check player's horizontal screen position
+    bcs ScrollScreen          ;if less than 112 pixels to the right, branch
+      ldy Player_X_Scroll       ;otherwise get original value undecremented
+      ; fallthrough
 ScrollScreen:
   tya
+  eor #$ff
+  clc
+  adc #1
   sta ScrollAmount          ;save value here
   clc
   adc ScrollThirtyTwo       ;add to value already set here
@@ -1272,16 +1275,25 @@ ScrollScreen:
   tya
   clc
   adc ScreenLeft_X_Pos      ;add to left side coordinate
+  ; sec
+  ; sbc ScreenLeft_X_Pos      ;add to left side coordinate
   sta ScreenLeft_X_Pos      ;save as new left side coordinate
-  sta HorizontalScroll      ;save here also
+  
   lda ScreenLeft_PageLoc
   adc #$00                  ;add carry to page location for left
+  ; sbc #0                  ;add carry to page location for left
   sta ScreenLeft_PageLoc    ;side of the screen
   and #$01                  ;get LSB of page location
   sta R0                    ;save as temp variable for PPU register 1 mirror
+  lda ScreenLeft_X_Pos
+  ; eor #$ff
+  ; clc
+  ; adc #1
+  sta HorizontalScroll      ;save here also
   lda Mirror_PPUCTRL       ;get PPU register 1 mirror
   and #%11111110            ;save all bits except d0
   ora R0                    ;get saved bit here and save in PPU register 1
+  ; eor #%00000001
   sta Mirror_PPUCTRL       ;mirror to be used to set name table later
   jsr GetScreenPosition     ;figure out where the right side is
   jmp ChkPOffscr            ;skip this part

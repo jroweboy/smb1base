@@ -123,11 +123,13 @@ ClrTimersLoop:
     sta Timers,x             ;clear out memory between
     dex                      ;$0780 and $07a1
     bpl ClrTimersLoop
-  lda HalfwayPage
-  ldy AltEntranceControl   ;if AltEntranceControl not set, use halfway page, if any found
-  beq StartPage
-    lda EntrancePage         ;otherwise use saved entry page number here
-StartPage:
+  ; TODO fix alt entrance and halfway+
+;   lda HalfwayPage
+;   ldy AltEntranceControl   ;if AltEntranceControl not set, use halfway page, if any found
+;   beq StartPage
+;     lda EntrancePage         ;otherwise use saved entry page number here
+; StartPage:
+  lda CurrentPageLoc
   sta ScreenLeft_PageLoc   ;set as value here
   ; sta CurrentPageLoc       ;also set as current page
   sta BackloadingFlag      ;set flag here if halfway page or saved entry page number found

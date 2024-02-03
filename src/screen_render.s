@@ -1282,9 +1282,13 @@ RenderAttributeTables:
   ; sec                      ;subtract four 
   ; sbc #$04
   ; and #%00011111           ;mask out bits again and store
-  sta R1 
+  clc
+  adc #1
+  cmp #$20
+  and #%00011111           ;mask out bits again and store
+  sta R1
   lda CurrentNTAddr_High   ;get high byte and branch if borrow not set
-  bcs SetATHigh
+  bcc SetATHigh
     eor #%00000100           ;otherwise invert d2
 SetATHigh:
   and #%00000100           ;mask out all other bits
