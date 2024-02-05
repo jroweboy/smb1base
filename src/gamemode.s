@@ -41,6 +41,20 @@
 PrimaryGameSetup:
 .import GetAreaMusic
 
+
+  lda CurrentPageLoc
+  sta ScreenLeft_PageLoc   ;set as value here
+  and #1
+  sta R0
+
+  lda Mirror_PPUCTRL       ;get PPU register 1 mirror
+  and #%11111110            ;save all bits except d0
+  ora R0                    ;get saved bit here and save in PPU register 1
+  ; eor #%00000001
+  sta Mirror_PPUCTRL       ;mirror to be used to set name table later
+
+  jsr GetScreenPosition    ;get pixel coordinates for screen borders
+
   lda #$01
   sta FetchNewGameTimerFlag   ;set flag to load game timer from header
   sta PlayerSize              ;set player's size to small
@@ -129,7 +143,7 @@ ClrTimersLoop:
 ;   beq StartPage
 ;     lda EntrancePage         ;otherwise use saved entry page number here
 ; StartPage:
-  lda CurrentPageLoc
+  ; lda CurrentPageLoc
   sta ScreenLeft_PageLoc   ;set as value here
   ; sta CurrentPageLoc       ;also set as current page
   sta BackloadingFlag      ;set flag here if halfway page or saved entry page number found
@@ -153,6 +167,7 @@ SetInitNTHigh:
   lda #$0b                 ;set value for renderer to update 12 column sets
   sta ColumnSets           ;12 column sets = 24 metatile columns = 1 1/2 screens
   farcall GetAreaDataAddrs     ;get enemy and level addresses and load header
+
   lda PrimaryHardMode      ;check to see if primary hard mode has been activated
   bne SetSecHard           ;if so, activate the secondary no matter where we're at
     lda WorldNumber          ;otherwise check world number

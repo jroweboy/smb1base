@@ -181,7 +181,7 @@ ThirdLoop:
 
   ; Rewind all of the positions by 1
   jsr DecrementColumnPos
-  dec LevelBufferPageNumber
+;   dec LevelBufferPageNumber
   lda CurrentNTAddr_Low
   dec CurrentNTAddr_Low
   and #%00011111

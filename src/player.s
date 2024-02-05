@@ -1268,27 +1268,27 @@ ScrollScreen:
   eor #$ff
   clc
   adc #1
+  tay
   sta ScrollAmount          ;save value here
   clc
   adc ScrollThirtyTwo       ;add to value already set here
   sta ScrollThirtyTwo       ;save as new value here
   tya
-  clc
-  adc ScreenLeft_X_Pos      ;add to left side coordinate
-  ; sec
-  ; sbc ScreenLeft_X_Pos      ;add to left side coordinate
+  sta R0
+  ; clc
+  ; adc ScreenLeft_X_Pos      ;add to left side coordinate
+  lda ScreenLeft_X_Pos
+  sec
+  sbc R0                    ;add to left side coordinate
   sta ScreenLeft_X_Pos      ;save as new left side coordinate
   
   lda ScreenLeft_PageLoc
-  adc #$00                  ;add carry to page location for left
-  ; sbc #0                  ;add carry to page location for left
+  ; adc #$00                  ;add carry to page location for left
+  sbc #0                  ;add carry to page location for left
   sta ScreenLeft_PageLoc    ;side of the screen
   and #$01                  ;get LSB of page location
   sta R0                    ;save as temp variable for PPU register 1 mirror
   lda ScreenLeft_X_Pos
-  ; eor #$ff
-  ; clc
-  ; adc #1
   sta HorizontalScroll      ;save here also
   lda Mirror_PPUCTRL       ;get PPU register 1 mirror
   and #%11111110            ;save all bits except d0
