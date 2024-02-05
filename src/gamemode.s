@@ -41,8 +41,10 @@
 PrimaryGameSetup:
 .import GetAreaMusic
 
-
+  ; Load the current page information from the level loading data
   lda CurrentPageLoc
+  clc
+  adc #1
   sta ScreenLeft_PageLoc   ;set as value here
   and #1
   sta R0

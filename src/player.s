@@ -1252,11 +1252,13 @@ ScrollHandler:
       bne InitScrlAmt           ;not expired, branch
         ldy Player_X_Scroll       ;get value and decrement by one
         ; dey                       ;if value originally set to zero or otherwise
-        beq InitScrlAmt           ;negative for left movement, branch
+        ; if positive scroll amount skip scrolling
+        bpl InitScrlAmt
           ; iny
           cpy #$ff                  ;if value $01, branch and do not decrement
-          bcc ChkNearMid
-            dey                       ;otherwise decrement by one
+          bcs ChkNearMid
+            iny
+            ; dey                       ;otherwise decrement by one
   ChkNearMid:
     lda Player_Pos_ForScroll
     cmp #$100 - $70                  ;check player's horizontal screen position
