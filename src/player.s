@@ -36,6 +36,8 @@
 ; reset.s
 .export PrcNextA
 
+.export ChkPOffscr
+
 .segment "PLAYER"
 
 ;-------------------------------------------------------------------------------------
@@ -1302,6 +1304,7 @@ ScrollScreen:
 InitScrlAmt:
   lda #$00
   sta ScrollAmount          ;initialize value here
+
 ChkPOffscr:
   ldx #$00                  ;set X for player offset
   jsr GetXOffscreenBits     ;get horizontal offscreen bits for player

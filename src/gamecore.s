@@ -125,7 +125,12 @@ UpdScrollVar:
         lda #$00                   ;reset vram buffer offset used in conjunction with
         sta VRAM_Buffer2_Offset    ;level graphics buffer at $0341-$035f
   RunParser:
-        farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
+        lda OperMode
+        cmp #2 ; VictoryMode
+        beq ScrollingRight
+          farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
+        ScrollingRight:
+          farcall AreaParserTaskHandlerScrollRight, jmp
 ExitEng:
   rts                        ;and after all that, we're finally done!
 

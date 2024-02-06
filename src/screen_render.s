@@ -12,6 +12,8 @@
 .export WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
 .export RemBridge, GiveOneCoin, DrawMushroomIcon, WriteBlockMetatile
 
+.export RenderAreaGraphicsScrollRight, RenderAttributeTablesScrollRight
+
 .segment "RENDER"
 
 ;-------------------------------------------------------------------------------------
@@ -1166,7 +1168,7 @@ BlockGfxData:
 ;$06 - metatile graphics table address low
 ;$07 - metatile graphics table address high
 
-RenderAreaGraphics:
+.proc RenderAreaGraphics
   lda CurrentColumnPos         ;store LSB of where we're at
   and #$01
   sta R5 
@@ -1271,6 +1273,114 @@ SetAttrib:
   ; sta CurrentNTAddr_High
 ExitDrawM:
   jmp SetVRAMCtrl              ;jump to set buffer to $0341 and leave
+.endproc
+
+.proc RenderAreaGraphicsScrollRight
+  lda CurrentColumnPos         ;store LSB of where we're at
+  and #$01
+  sta R5 
+  ldy VRAM_Buffer2_Offset      ;store vram buffer offset
+  sty R0 
+  lda CurrentNTAddr_Low        ;get current name table address we're supposed to render
+  sta VRAM_Buffer2+1,y
+  lda CurrentNTAddr_High
+  sta VRAM_Buffer2,y
+  lda #26 | %10000000          ;store length byte of 26 here with d7 set
+  sta VRAM_Buffer2+2,y         ;to increment by 32 (in columns)
+  lda #$00                     ;init attribute row
+  sta R4 
+  tax
+DrawMTLoop:
+    stx R1                       ;store init value of 0 or incremented offset for buffer
+    lda MetatileBuffer,x         ;get first metatile number, and mask out all but 2 MSB
+    and #%11000000
+    sta R3                       ;store attribute table bits here
+    asl                          ;note that metatile format is:
+    rol                          ;%xx000000 - attribute table bits, 
+    rol                          ;%00xxxxxx - metatile number
+    tay                          ;rotate bits to d1-d0 and use as offset here
+    lda MetatileGraphics_Low,y   ;get address to graphics table from here
+    sta R6 
+    lda MetatileGraphics_High,y
+    sta R7 
+    lda MetatileBuffer,x         ;get metatile number again
+    asl                          ;multiply by 4 and use as tile offset
+    asl
+    sta R2 
+    lda AreaParserTaskNum        ;get current task number for level processing and
+    and #%00000001               ;mask out all but LSB, then invert LSB, multiply by 2
+    eor #%00000001               ;to get the correct column position in the metatile,
+    asl                          ;then add to the tile offset so we can draw either side
+    adc R2                       ;of the metatiles
+    tay
+    ldx R0                       ;use vram buffer offset from before as X
+    lda (R6),y
+    sta VRAM_Buffer2+3,x         ;get first tile number (top left or top right) and store
+    iny
+    lda (R6),y                   ;now get the second (bottom left or bottom right) and store
+    sta VRAM_Buffer2+4,x
+    ldy R4                       ;get current attribute row
+    lda R5                       ;get LSB of current column where we're at, and
+    bne RightCheck               ;branch if set (clear = left attrib, set = right)
+      lda R1                       ;get current row we're rendering
+      lsr                          ;branch if LSB set (clear = top left, set = bottom left)
+      bcs LLeft
+        rol R3                       ;rotate attribute bits 3 to the left
+        rol R3                       ;thus in d1-d0, for upper left square
+        rol R3 
+        jmp SetAttrib
+RightCheck:
+    lda R1                       ;get LSB of current row we're rendering
+    lsr                          ;branch if set (clear = top right, set = bottom right)
+    bcs NextMTRow
+      lsr R3                       ;shift attribute bits 4 to the right
+      lsr R3                       ;thus in d3-d2, for upper right square
+      lsr R3 
+      lsr R3 
+      jmp SetAttrib
+LLeft:
+    lsr R3                       ;shift attribute bits 2 to the right
+    lsr R3                       ;thus in d5-d4 for lower left square
+NextMTRow:
+    inc R4                       ;move onto next attribute row  
+SetAttrib:
+    lda AttributeBuffer,y        ;get previously saved bits from before
+    ora R3                       ;if any, and put new bits, if any, onto
+    sta AttributeBuffer,y        ;the old, and store
+    inc R0                       ;increment vram buffer offset by 2
+    inc R0 
+    ldx R1                       ;get current gfx buffer row, and check for
+    inx                          ;the bottom of the screen
+    cpx #$0d
+    bcc DrawMTLoop               ;if not there yet, loop back
+  ldy R0                       ;get current vram buffer offset, increment by 3
+  iny                          ;(for name table address and length bytes)
+  iny
+  iny
+  lda #$00
+  sta VRAM_Buffer2,y           ;put null terminator at end of data for name table
+  sty VRAM_Buffer2_Offset      ;store new buffer offset
+  ; lda CurrentNTAddr_Low
+  ; dec CurrentNTAddr_Low
+  ; and #%00011111
+  ; bne ExitDrawM
+  ;   lda #$9f                     ;if wraparound occurs, make sure low byte stays
+  ;   sta CurrentNTAddr_Low        ;just under the status bar
+  ;   lda CurrentNTAddr_High       ;and then invert d2 of the name table address high
+  ;   eor #%00000100               ;to move onto the next appropriate name table
+  ;   sta CurrentNTAddr_High
+  inc CurrentNTAddr_Low        ;increment name table address low
+  lda CurrentNTAddr_Low        ;check current low byte
+  and #%00011111               ;if no wraparound, just skip this part
+  bne ExitDrawM
+    lda #$80                     ;if wraparound occurs, make sure low byte stays
+    sta CurrentNTAddr_Low        ;just under the status bar
+    lda CurrentNTAddr_High       ;and then invert d2 of the name table address high
+    eor #%00000100               ;to move onto the next appropriate name table
+    sta CurrentNTAddr_High
+ExitDrawM:
+  jmp SetVRAMCtrl              ;jump to set buffer to $0341 and leave
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - temp attribute table address high (big endian order this time!)
@@ -1328,6 +1438,56 @@ SetVRAMCtrl:
   lda #$06
   sta VRAM_Buffer_AddrCtrl ;set buffer to $0341 and leave
   rts
+
+.proc RenderAttributeTablesScrollRight
+  lda CurrentNTAddr_Low    ;get low byte of next name table address
+  and #%00011111           ;to be written to, mask out all but 5 LSB,
+  sec                      ;subtract four 
+  sbc #$04
+  and #%00011111           ;mask out bits again and store
+  sta R1
+  lda CurrentNTAddr_High   ;get high byte and branch if borrow not set
+  bcc SetATHigh
+    eor #%00000100           ;otherwise invert d2
+SetATHigh:
+  and #%00000100           ;mask out all other bits
+  ora #$23                 ;add $2300 to the high byte and store
+  sta R0 
+  lda R1                   ;get low byte - 4, divide by 4, add offset for
+  lsr                      ;attribute table and store
+  lsr
+  adc #$c0                 ;we should now have the appropriate block of
+  sta R1                   ;attribute table in our temp address
+  ldx #$00
+  ldy VRAM_Buffer2_Offset  ;get buffer offset
+AttribLoop:
+    lda R0 
+    sta VRAM_Buffer2,y       ;store high byte of attribute table address
+    lda R1 
+    clc                      ;get low byte, add 8 because we want to start
+    adc #$08                 ;below the status bar, and store
+    sta VRAM_Buffer2+1,y
+    sta R1                   ;also store in temp again
+    lda AttributeBuffer,x    ;fetch current attribute table byte and store
+    sta VRAM_Buffer2+3,y     ;in the buffer
+    lda #$01
+    sta VRAM_Buffer2+2,y     ;store length of 1 in buffer
+    lsr
+    sta AttributeBuffer,x    ;clear current byte in attribute buffer
+    iny                      ;increment buffer offset by 4 bytes
+    iny
+    iny
+    iny
+    inx                      ;increment attribute offset and check to see
+    cpx #$07                 ;if we're at the end yet
+    bcc AttribLoop
+  sta VRAM_Buffer2,y       ;put null terminator at the end
+  sty VRAM_Buffer2_Offset  ;store offset in case we want to do any more
+SetVRAMCtrl:
+  lda #$06
+  sta VRAM_Buffer_AddrCtrl ;set buffer to $0341 and leave
+  rts
+.endproc
 
 ;-------------------------------------------------------------------------------------
 ;METATILE GRAPHICS TABLE

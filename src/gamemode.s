@@ -41,22 +41,6 @@
 PrimaryGameSetup:
 .import GetAreaMusic
 
-  ; Load the current page information from the level loading data
-  lda CurrentPageLoc
-  clc
-  adc #1
-  sta ScreenLeft_PageLoc   ;set as value here
-  and #1
-  sta R0
-
-  lda Mirror_PPUCTRL       ;get PPU register 1 mirror
-  and #%11111110            ;save all bits except d0
-  ora R0                    ;get saved bit here and save in PPU register 1
-  ; eor #%00000001
-  sta Mirror_PPUCTRL       ;mirror to be used to set name table later
-
-  jsr GetScreenPosition    ;get pixel coordinates for screen borders
-
   lda #$01
   sta FetchNewGameTimerFlag   ;set flag to load game timer from header
   sta PlayerSize              ;set player's size to small
@@ -84,6 +68,23 @@ ClearVRLoop:
   jsr GetAreaMusic          ;load proper music into queue
   inc Sprite0HitDetectFlag  ;set sprite #0 check flag
   inc OperMode_Task         ;increment to next task
+
+  ; Load the current page information from the level loading data
+  lda CurrentPageLoc
+  clc
+  adc #1
+  sta ScreenLeft_PageLoc   ;set as value here
+  and #1
+  sta R0
+
+  lda Mirror_PPUCTRL       ;get PPU register 1 mirror
+  and #%11111110            ;save all bits except d0
+  ora R0                    ;get saved bit here and save in PPU register 1
+  ; eor #%00000001
+  sta Mirror_PPUCTRL       ;mirror to be used to set name table later
+
+  jsr GetScreenPosition    ;get pixel coordinates for screen borders
+
   rts
 
 ;-------------------------------------------------------------------------------------
@@ -497,7 +498,8 @@ DontWalk:
   lda #$01                ;set 1 pixel per frame
   adc #$00                ;add carry from previous addition
   tay                     ;use as scroll amount
-  farcall ScrollScreen        ;do sub to scroll the screen
+  ; farcall ScrollScreen        ;do sub to scroll the screen
+  jsr ScrollScreenRight
   jsr UpdScrollVar        ;do another sub to update screen and scroll variables
   inc VictoryWalkControl  ;increment value to stay in this routine
 ExitVWalk:
@@ -509,6 +511,36 @@ ExitVWalk:
     inc OperMode_Task
 DontIncModeTask:
   rts
+.endproc
+
+.proc ScrollScreenRight
+  sta ScrollAmount          ;save value here
+  clc
+  adc ScrollThirtyTwo       ;add to value already set here
+  sta ScrollThirtyTwo       ;save as new value here
+  tya
+  sta R0
+  clc
+  adc ScreenLeft_X_Pos      ;add to left side coordinate
+  ; lda ScreenLeft_X_Pos
+  ; sec
+  ; sbc R0                    ;add to left side coordinate
+  sta ScreenLeft_X_Pos      ;save as new left side coordinate
+  
+  lda ScreenLeft_PageLoc
+  adc #$00                  ;add carry to page location for left
+  ; sbc #0                  ;add carry to page location for left
+  sta ScreenLeft_PageLoc    ;side of the screen
+  and #$01                  ;get LSB of page location
+  sta R0                    ;save as temp variable for PPU register 1 mirror
+  lda ScreenLeft_X_Pos
+  sta HorizontalScroll      ;save here also
+  lda Mirror_PPUCTRL        ;get PPU register 1 mirror
+  and #%11111110            ;save all bits except d0
+  ora R0                    ;get saved bit here and save in PPU register 1
+  sta Mirror_PPUCTRL        ;mirror to be used to set name table later
+  jsr GetScreenPosition     ;figure out where the right side is
+  jmp ChkPOffscr            ;skip this part
 .endproc
 
 ;-------------------------------------------------------------------------------------

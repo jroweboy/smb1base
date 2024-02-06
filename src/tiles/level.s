@@ -8,6 +8,7 @@
 .import GetBlockBufferAddr, Bitmasks
 
 .export AreaParserTaskHandler, GetAreaDataAddrs, ProcLoopCommand, AreaParserTaskLoop, AreaPreloaderLoop
+.export AreaParserTaskHandlerScrollRight
 
 .segment "LEVEL"
 
@@ -104,7 +105,7 @@ AreaParserTaskLoop:
 SkipATRender:
     rts
 
-AreaParserTaskHandler:
+.proc AreaParserTaskHandler
   ldy AreaParserTaskNum     ;check number of tasks here
   bne DoAPTasks             ;if already set, go ahead
     ldy #$08
@@ -131,6 +132,36 @@ AreaParserTasks:
   .word RenderAreaGraphics
 ;   .word AreaParserCore
   .word AreaParserLite
+.endproc
+
+.proc AreaParserTaskHandlerScrollRight
+  ldy AreaParserTaskNum     ;check number of tasks here
+  bne DoAPTasks             ;if already set, go ahead
+    ldy #$08
+    sty AreaParserTaskNum     ;otherwise, set eight by default
+DoAPTasks:
+  dey
+  tya
+  jsr AreaParserTasks
+  dec AreaParserTaskNum     ;if all tasks not complete do not
+  bne SkipATRender          ;render attribute table yet
+    jmp RenderAttributeTablesScrollRight
+
+AreaParserTasks:
+  jsr JumpEngine
+  .word IncrementColumnPos
+  ; .word DecrementColumnPos
+  .word RenderAreaGraphicsScrollRight
+  .word RenderAreaGraphicsScrollRight
+;   .word AreaParserCore
+  .word AreaParserLite
+  .word IncrementColumnPos
+  ; .word DecrementColumnPos
+  .word RenderAreaGraphicsScrollRight
+  .word RenderAreaGraphicsScrollRight
+;   .word AreaParserCore
+  .word AreaParserLite
+.endproc
 
 .proc AreaPreloaderLoop
 
