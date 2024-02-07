@@ -174,6 +174,9 @@ GoToNextFrameImmediately:
   ; skip immediately to the next frame if we did so we don't slow down
   lda OperMode
   cmp #1
+  bne IdleLoop
+  lda OperMode_Task
+  cmp #4
   beq NextFrame
   jmp IdleLoop
 .endproc
