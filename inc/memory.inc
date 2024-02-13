@@ -2,23 +2,30 @@
 .ifndef __MEMORY_INC
 __MEMORY_INC = 1
 
+; .macro RESERVE label, size
+; .global .ident(.string(label))
+; .ifdef _MEMORY_DEFINE_MEMORY
+; .bss
+; .ident(.string(label)): .res size
+; .endif
+; .endmacro
 .macro RESERVE label, size
 .global .ident(.string(label))
 .ifdef _MEMORY_DEFINE_MEMORY
-.bss
 .ident(.string(label)): .res size
 .endif
 .endmacro
+
 .macro RESERVEZP label, size
 .globalzp .ident(.string(label))
 .ifdef _MEMORY_DEFINE_MEMORY
-.zeropage
 .ident(.string(label)): .res size
 .endif
 .endmacro
 
-.global DebugCooldown
+.pushseg
 
+.zeropage
 RESERVEZP R0, 1
 RESERVEZP R1, 1
 RESERVEZP R2, 1
@@ -28,603 +35,602 @@ RESERVEZP R5, 1
 RESERVEZP R6, 1
 RESERVEZP R7, 1
 
-.globalzp NmiTemp
-.globalzp NmiR0
-.globalzp NmiR1
+RESERVEZP NmiR0, 1
+RESERVEZP NmiR1, 1
 
-.globalzp MainTemp
-.globalzp M0
-.globalzp M1
-.globalzp M2
-.globalzp M3
+RESERVEZP M0, 1
+RESERVEZP M1, 1
+RESERVEZP M2, 1
+RESERVEZP M3, 1
 
-.globalzp ObjectOffset
-.globalzp FrameCounter
+RESERVEZP ObjectOffset, 1
+RESERVEZP FrameCounter, 1
 
-; jroweboy moved to zp
-.globalzp SavedJoypadBits
-.globalzp SavedJoypad1Bits
-.globalzp SavedJoypad2Bits
-
-; moved to abs 
-.global A_B_Buttons
-.global Up_Down_Buttons
-.global Left_Right_Buttons
-.global PreviousA_B_Buttons
-
-.globalzp GameEngineSubroutine
-.globalzp Enemy_Flag
-.globalzp Enemy_ID
+RESERVEZP SavedJoypad1Bits, 1
+RESERVEZP SavedJoypad2Bits, 1
+SavedJoypadBits := SavedJoypad1Bits
 
 
-.globalzp Player_State
+RESERVEZP GameEngineSubroutine, 1
+RESERVEZP Enemy_Flag, 7
+RESERVEZP Enemy_ID, 7
 
-.globalzp Enemy_State
-.globalzp Fireball_State
-.globalzp Block_State
-.globalzp Misc_State
+RESERVEZP Player_State, 1
+RESERVEZP Enemy_State, 6
+RESERVEZP Fireball_State, 2
+RESERVEZP Block_State, 4
+RESERVEZP Misc_State, 9
 
+RESERVEZP PlayerFacingDir, 1
+RESERVEZP Enemy_MovingDir, 25
+RESERVEZP PowerUpType, 1
+RESERVEZP FireballBouncingFlag, 2
+RESERVEZP HammerBroJumpTimer, 9
+RESERVEZP Player_MovingDir, 1
 
-.globalzp PlayerFacingDir
-.globalzp PowerUpType
-.globalzp FireballBouncingFlag
-.globalzp HammerBroJumpTimer
-.globalzp Player_MovingDir
-.globalzp Enemy_MovingDir
+RESERVEZP Player_X_Speed, 1
+SprObject_X_Speed := Player_X_Speed
+RESERVEZP Enemy_X_Speed, 6
+LakituMoveSpeed := Enemy_X_Speed
+PiranhaPlant_Y_Speed := Enemy_X_Speed
+ExplosionGfxCounter := Enemy_X_Speed
+Jumpspring_FixedYPos := Enemy_X_Speed
+RedPTroopaCenterYPos := Enemy_X_Speed
+BlooperMoveSpeed := Enemy_X_Speed
+XMoveSecondaryCounter := Enemy_X_Speed
+CheepCheepMoveMFlag := Enemy_X_Speed
+FirebarSpinState_Low := Enemy_X_Speed
+YPlatformCenterYPos := Enemy_X_Speed
+RESERVEZP Fireball_X_Speed, 2
+RESERVEZP Block_X_Speed, 4
+RESERVEZP Misc_X_Speed, 9
 
+RESERVEZP Player_PageLoc, 1
+SprObject_PageLoc := Player_PageLoc
 
-.globalzp SprObject_X_Speed
-.globalzp Player_X_Speed
+RESERVEZP Enemy_PageLoc, 6
+RESERVEZP Fireball_PageLoc, 2
+RESERVEZP Block_PageLoc, 4
+RESERVEZP Misc_PageLoc, 9
+RESERVEZP Bubble_PageLoc, 3
 
-.globalzp Enemy_X_Speed
-.globalzp LakituMoveSpeed
-.globalzp PiranhaPlant_Y_Speed
-.globalzp ExplosionGfxCounter
-.globalzp Jumpspring_FixedYPos
-.globalzp RedPTroopaCenterYPos
-.globalzp BlooperMoveSpeed
-.globalzp XMoveSecondaryCounter
-.globalzp CheepCheepMoveMFlag
-.globalzp FirebarSpinState_Low
-.globalzp YPlatformCenterYPos
+RESERVEZP Player_X_Position, 1
+SprObject_X_Position := Player_X_Position
 
-.globalzp Fireball_X_Speed
-.globalzp Block_X_Speed
-.globalzp Misc_X_Speed
+RESERVEZP Enemy_X_Position, 6
+RESERVEZP Fireball_X_Position, 2
+RESERVEZP Block_X_Position, 4
+RESERVEZP Misc_X_Position, 9
+RESERVEZP Bubble_X_Position, 3
 
-.globalzp SprObject_PageLoc
-.globalzp Player_PageLoc
+RESERVEZP Player_Y_Speed, 1
+SprObject_Y_Speed := Player_Y_Speed
 
-.globalzp Enemy_PageLoc
-.globalzp Fireball_PageLoc
-.globalzp Block_PageLoc
-.globalzp Misc_PageLoc
-.globalzp Bubble_PageLoc
+RESERVEZP Enemy_Y_Speed, 6
+FirebarSpinState_High := Enemy_Y_Speed
+XMovePrimaryCounter := Enemy_Y_Speed
+BlooperMoveCounter := Enemy_Y_Speed
+LakituMoveDirection := Enemy_Y_Speed
+ExplosionTimerCounter := Enemy_Y_Speed
+PiranhaPlant_MoveFlag := Enemy_Y_Speed
 
+RESERVEZP Fireball_Y_Speed, 2
+RESERVEZP Block_Y_Speed, 4
+RESERVEZP Misc_Y_Speed, 9
 
-.globalzp SprObject_X_Position
-.globalzp Player_X_Position
+RESERVEZP Player_Y_HighPos, 1
+SprObject_Y_HighPos := Player_Y_HighPos
 
-.globalzp Enemy_X_Position
-.globalzp Fireball_X_Position
-.globalzp Block_X_Position
-.globalzp Misc_X_Position
-.globalzp Bubble_X_Position
+RESERVEZP Enemy_Y_HighPos, 6
+RESERVEZP Fireball_Y_HighPos, 2
+RESERVEZP Block_Y_HighPos, 4
+RESERVEZP Misc_Y_HighPos, 9
+RESERVEZP Bubble_Y_HighPos, 3
 
-.globalzp Player_Y_Speed
-.globalzp SprObject_Y_Speed
+RESERVEZP Player_Y_Position, 1
+SprObject_Y_Position := Player_Y_Position
 
-.globalzp FirebarSpinState_High
-.globalzp XMovePrimaryCounter
-.globalzp BlooperMoveCounter
-.globalzp Enemy_Y_Speed
-.globalzp LakituMoveDirection
-.globalzp ExplosionTimerCounter
-.globalzp PiranhaPlant_MoveFlag
+RESERVEZP Enemy_Y_Position, 6
+RESERVEZP Fireball_Y_Position, 2
+RESERVEZP Block_Y_Position, 4
+RESERVEZP Misc_Y_Position, 9
+RESERVEZP Bubble_Y_Position, 3
 
-.globalzp Fireball_Y_Speed
-.globalzp Block_Y_Speed
-.globalzp Misc_Y_Speed
+RESERVEZP AreaData, 2
+AreaDataLow := AreaData
+AreaDataHigh := AreaData+1
 
-.globalzp SprObject_Y_HighPos
-.globalzp Player_Y_HighPos
-
-.globalzp Enemy_Y_HighPos
-.globalzp Fireball_Y_HighPos
-.globalzp Block_Y_HighPos
-.globalzp Misc_Y_HighPos
-.globalzp Bubble_Y_HighPos
-
-.globalzp Player_Y_Position
-.globalzp SprObject_Y_Position
-
-.globalzp Enemy_Y_Position
-.globalzp Fireball_Y_Position
-.globalzp Block_Y_Position
-.globalzp Misc_Y_Position
-.globalzp Bubble_Y_Position
-
-.globalzp AreaData
-.globalzp AreaDataLow
-.globalzp AreaDataHigh
-
-.globalzp EnemyData
-.globalzp EnemyDataLow
-.globalzp EnemyDataHigh
+RESERVEZP EnemyData, 2
+EnemyDataLow := EnemyData
+EnemyDataHigh := EnemyData + 1
 
 
-.globalzp SpriteLocalTemp
-.globalzp Local_eb
-.globalzp Local_ec
-.globalzp Local_ed
-; .globalzp Local_ee ; jroweboy: unused?
-.globalzp Local_ef
+RESERVEZP SpriteLocalTemp, 4
+Local_eb := SpriteLocalTemp + 0
+Local_ec := SpriteLocalTemp + 1
+Local_ed := SpriteLocalTemp + 2
+; RESERVEZP Local_ee ; jroweboy: unused?
+Local_ef := SpriteLocalTemp + 3
 
-.globalzp MusicData
-.globalzp MusicDataLow
-.globalzp MusicDataHigh
-
-.global IrqNewScroll
-.global IrqPPUCTRL
+RESERVEZP MusicData, 2
+MusicDataLow := MusicData
+MusicDataHigh := MusicData+1
 
 ; .segment "STACK"
 
-.global PlayerNeckLength, PlayerNeckTemp
-; .global VerticalFlipFlag
-.global FlagpoleFNum_Y_Pos
-.global FlagpoleFNum_YMFDummy
-.global FlagpoleScore
+.segment "SHORTRAM"
 
-.global TempRam
+RESERVE NoteLenLookupTblOfs, 1
+RESERVE Square1SoundBuffer, 1
+RESERVE Square2SoundBuffer, 1
+RESERVE NoiseSoundBuffer, 1
+RESERVE AreaMusicBuffer, 1
 
-.global FloateyNum_Control
-.global FloateyNum_X_Pos
-.global FloateyNum_Y_Pos
+RESERVE MusicOffset_Square2, 1
+RESERVE MusicOffset_Square1, 1
+RESERVE MusicOffset_Triangle, 1
 
-.global ShellChainCounter
-.global FloateyNum_Timer
-.global DigitModifier
+RESERVE PauseSoundQueue, 1
+RESERVE AreaMusicQueue, 1
+RESERVE EventMusicQueue, 1
+RESERVE NoiseSoundQueue, 1
+RESERVE Square2SoundQueue, 1
+RESERVE Square1SoundQueue, 1
 
-.global NmiDisable
-.global NmiSkipped
-.global ShouldSkipDrawSprites
+RESERVE FlagpoleFNum_Y_Pos, 1
+RESERVE FlagpoleFNum_YMFDummy, 1
+RESERVE FlagpoleScore, 1
 
-.global IrqPPUCTRL
-.global IrqNextScanline
-.global CurrentA
-.global NextBank
-.global SwitchToMainIRQ
-.global IrqPointerJmp
-.global IrqPointer
-.global ReloadCHRBank
-.global CurrentCHRBank
-AreaChrBank = CurrentCHRBank
-PlayerChrBank = CurrentCHRBank + 2
-EnemyChrBank = CurrentCHRBank + 4
+RESERVE FloateyNum_Control, 7
+RESERVE FloateyNum_X_Pos, 7
+RESERVE FloateyNum_Y_Pos, 7
 
-.global NoteLenLookupTblOfs
-.global Square1SoundBuffer
-.global Square2SoundBuffer
-.global NoiseSoundBuffer
-.global AreaMusicBuffer
+RESERVE ShellChainCounter, 7
+RESERVE FloateyNum_Timer, 8
+RESERVE DigitModifier, 6
 
-.global MusicOffset_Square2
-.global MusicOffset_Square1
-.global MusicOffset_Triangle
-
-.global PauseSoundQueue
-.global AreaMusicQueue
-.global EventMusicQueue
-.global NoiseSoundQueue
-.global Square2SoundQueue
-.global Square1SoundQueue
 
 StackClear = DigitModifier+5
 
-.global IrqPointerJmp
-.global IrqPointer
 
+RESERVE IrqNewScroll, 1
+RESERVE IrqPPUCTRL, 1
+
+RESERVE NmiDisable, 1
+RESERVE NmiSkipped, 1
+RESERVE ShouldSkipDrawSprites, 1
+
+RESERVE IrqNextScanline, 1
+RESERVE CurrentA, 1
+RESERVE NextBank, 1
+RESERVE SwitchToMainIRQ, 1
+RESERVE IrqPointerJmp, 3
+IrqPointer := IrqPointerJmp + 1
+
+RESERVE ReloadCHRBank, 1
+RESERVE CurrentCHRBank, 6
+AreaChrBank := CurrentCHRBank
+PlayerChrBank := CurrentCHRBank + 2
+EnemyChrBank := CurrentCHRBank + 4
+
+
+
+RESERVE CurrentBank, 1
+RESERVE BankShadow, 1
+RESERVE TargetAddrJmp, 1
+RESERVE TargetAddress, 2
+RESERVE TargetAddrDummy, 1
+
+; CurrentBank:                    .res  1
+; BankShadow:                     .res  1
+; TargetAddrJmp:                  .res  1
+; TargetAddress:                  .res  2
+; TargetAddrDummy:                .res  1
 
 ; segment "BSS"
+.segment "OAM"
 
-.global Sprite_Y_Position
-.global Sprite_Data
-.global Sprite_Tilenumber
-.global Sprite_Attributes
-.global Sprite_X_Position
+RESERVE Sprite_Y_Position, 1
+RESERVE Sprite_Tilenumber, 1
+RESERVE Sprite_Attributes, 1
+RESERVE Sprite_X_Position, 1
+Sprite_Data := Sprite_Y_Position
 
-.global VRAM_Buffer1_Offset
-.global VRAM_Buffer1
-.global VRAM_Buffer2_Offset
-.global VRAM_Buffer2
+.segment "BSS"
+
+RESERVE Block_Buffer_1, 208
+RESERVE Block_Buffer_2, 208
+RESERVE BlockBufferColumnPos, 1
+RESERVE MetatileBuffer, 13
+
+RESERVE VRAM_Buffer1_Offset, 1
+RESERVE VRAM_Buffer1, 84
+RESERVE VRAM_Buffer2_Offset, 1
+RESERVE VRAM_Buffer2, 34
 VRAM_Buffer1_PtrOffset = 0
 VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 
-.global BowserBodyControls
-.global BowserFeetCounter
-.global BowserMovementSpeed
-.global BowserOrigXPos
-.global BowserFlameTimerCtrl
-.global BowserFront_Offset
-.global BridgeCollapseOffset
-.global BowserGfxFlag
+RESERVE BowserBodyControls, 1
+RESERVE BowserFeetCounter, 1
+RESERVE BowserMovementSpeed, 1
+RESERVE BowserOrigXPos, 1
+RESERVE BowserFlameTimerCtrl, 1
+RESERVE BowserFront_Offset, 1
+RESERVE BridgeCollapseOffset, 1
+RESERVE BowserGfxFlag, 1
 
-.global FirebarSpinSpeed
+RESERVE FirebarSpinSpeed, 16
 
+; moved to abs
+RESERVE A_B_Buttons, 1
+RESERVE Up_Down_Buttons, 1
+RESERVE Left_Right_Buttons, 1
+RESERVE PreviousA_B_Buttons, 1
 
-.global Vine_FlagOffset
-.global Vine_Height
-.global Vine_ObjOffset
-.global Vine_Start_Y_Position
+RESERVE Vine_FlagOffset, 1
+RESERVE Vine_Height, 1
+RESERVE Vine_ObjOffset, 3
+RESERVE Vine_Start_Y_Position, 3
 
-.global BalPlatformAlignment
-.global Platform_X_Scroll
+RESERVE BalPlatformAlignment, 1
+RESERVE Platform_X_Scroll, 1
 
-.global HammerThrowingTimer
-.global PlatformCollisionFlag
+RESERVE PlatformCollisionFlag, 11
+HammerThrowingTimer := PlatformCollisionFlag
 
-.global Player_Rel_XPos
-.global SprObject_Rel_XPos
+RESERVE Player_Rel_XPos, 1
+SprObject_Rel_XPos := Player_Rel_XPos
+RESERVE Enemy_Rel_XPos, 1
+RESERVE Fireball_Rel_XPos, 1
+RESERVE Bubble_Rel_XPos, 1
+RESERVE Block_Rel_XPos, 2
+RESERVE Misc_Rel_XPos, 5
 
-.global Enemy_Rel_XPos
-.global Fireball_Rel_XPos
-.global Bubble_Rel_XPos
-.global Block_Rel_XPos
-.global Misc_Rel_XPos
-.global SprObject_Rel_YPos
-.global Player_Rel_YPos
-.global Enemy_Rel_YPos
-.global Fireball_Rel_YPos
-.global Bubble_Rel_YPos
-.global Block_Rel_YPos
-.global Misc_Rel_YPos
+RESERVE Player_Rel_YPos, 1
+SprObject_Rel_YPos := Player_Rel_YPos
+RESERVE Enemy_Rel_YPos, 1
+RESERVE Fireball_Rel_YPos, 1
+RESERVE Bubble_Rel_YPos, 1
+RESERVE Block_Rel_YPos, 2
+RESERVE Misc_Rel_YPos, 5
 
-.global Player_SprAttrib
-.global SprObject_SprAttrib
-.global Enemy_SprAttrib
-.global Fireball_SprAttrib
-.global Block_SprAttrib
-.global Misc_SprAttrib
-.global Bubble_SprAttrib
+RESERVE Player_SprAttrib, 1
+SprObject_SprAttrib := Player_SprAttrib
+RESERVE Enemy_SprAttrib, 6
+RESERVE Fireball_SprAttrib, 2
+RESERVE Block_SprAttrib, 4
+RESERVE Misc_SprAttrib, 9
+RESERVE Bubble_SprAttrib, 3
 
-.global SprObject_OffscrBits
-.global Player_OffscreenBits
+RESERVE Player_OffscreenBits, 1
+SprObject_OffscrBits := Player_OffscreenBits
+RESERVE Enemy_OffscreenBits, 1
+RESERVE FBall_OffscreenBits, 1
+RESERVE Bubble_OffscreenBits, 1
+RESERVE Block_OffscreenBits, 2
+RESERVE Misc_OffscreenBits, 2
+RESERVE EnemyOffscrBitsMasked, 12
+RESERVE Block_Orig_YPos, 2
+RESERVE Block_BBuf_Low, 2
+RESERVE Block_Metatile, 2
+RESERVE Block_PageLoc2, 2
+RESERVE Block_RepFlag, 2
+RESERVE SprDataOffset_Ctrl, 2
+RESERVE Block_Orig_XPos, 8
+RESERVE AttributeBuffer, 7
 
-.global Enemy_OffscreenBits
-.global FBall_OffscreenBits
-.global Bubble_OffscreenBits
-.global Block_OffscreenBits
-.global Misc_OffscreenBits
-.global EnemyOffscrBitsMasked
-.global Block_Orig_YPos
-.global Block_BBuf_Low
-.global Block_Metatile
-.global Block_PageLoc2
-.global Block_RepFlag
-.global SprDataOffset_Ctrl
-.global Block_Orig_XPos
-.global AttributeBuffer
-.global SprObject_X_MoveForce
-
-.global Enemy_X_MoveForce
-.global YPlatformTopYPos
-.global RedPTroopaOrigXPos
-
-.global SprObject_YMoveForceFractional
-.global Player_YMoveForceFractional
-
-.global Enemy_YMoveForceFractional
-.global BowserFlamePRandomOfs
-.global PiranhaPlantUpYPos
-
-.global Bubble_YMoveForceFractional
-
-.global Player_Y_MoveForce
-.global SprObject_Y_MoveForce
-
-.global CheepCheepOrigYPos
-.global Enemy_Y_MoveForce
-.global PiranhaPlantDownYPos
-
-.global Block_Y_MoveForce
-.global MaximumLeftSpeed
-.global MaximumRightSpeed
-
-.global Whirlpool_Offset
-.global Cannon_Offset
-
-.global Whirlpool_PageLoc
-.global Cannon_PageLoc
-
-.global Cannon_X_Position
-.global Whirlpool_LeftExtent
-
-.global Whirlpool_Length
-.global Cannon_Y_Position
-
-.global Cannon_Timer
-.global Whirlpool_Flag
-
-.global BowserHitPoints
-.global StompChainCounter
-.global Player_CollisionBits
-.global Enemy_CollisionBits
-
-.global Player_BoundBoxCtrl
-.global SprObj_BoundBoxCtrl
-
-.global Enemy_BoundBoxCtrl
-.global Fireball_BoundBoxCtrl
-.global Misc_BoundBoxCtrl
-
-.global BoundingBox_UL_XPos
-.global BoundingBox_UL_Corner
-
-.global BoundingBox_UL_YPos
-
-.global BoundingBox_DR_XPos
-.global BoundingBox_LR_Corner
-
-.global BoundingBox_DR_YPos
-.global EnemyBoundingBoxCoord
-.global Block_Buffer_1
-.global Block_Buffer_2
-.global BlockBufferColumnPos
-.global MetatileBuffer
-.global HammerEnemyOffset
-.global JumpCoinMiscOffset
-.global BrickCoinTimerFlag
-.global Misc_Collision_Flag
-.global EnemyFrenzyBuffer
-.global SecondaryHardMode
-.global EnemyFrenzyQueue
-.global FireballCounter
-.global DuplicateObj_Offset
-.global LakituReappearTimer
-.global NumberofGroupEnemies
-.global ColorRotateOffset
-.global PlayerGfxOffset
-.global WarpZoneControl
-.global FireworksCounter
-.global MultiLoopCorrectCntr
-.global MultiLoopPassCntr
-.global JumpspringForce
-.global MaxRangeFromOrigin
-.global BitMFilter
-.global ChangeAreaTimer
-
-.global PlayerOAMOffset
-.global CurrentOAMOffset
-.global OriginalOAMOffset
-.global PlatformLastOAMOrder
-
-.global SpriteShuffleOffset
-.global SpriteShuffleTemp
-
-.global ObjectMetasprite
-.global PlayerMetasprite
-.global EnemyMetasprite
-.global FireballMetasprite
-.global BlockMetasprite
-.global MiscMetasprite
-.global BubbleMetasprite
-
-.global ObjectVerticalFlip
-.global EnemyVerticalFlip
-
-.global Player_X_Scroll
-.global Player_XSpeedAbsolute
-.global FrictionAdderHigh
-.global FrictionAdderLow
-.global RunningSpeed
-.global SwimmingFlag
-.global Player_X_MoveForce
-.global DiffToHaltJump
-.global JumpOrigin_Y_HighPos
-.global JumpOrigin_Y_Position
-.global VerticalForce
-.global VerticalForceDown
-.global PlayerChangeSizeFlag
-.global PlayerAnimTimerSet
-.global PlayerAnimCtrl
-.global JumpspringAnimCtrl
-.global FlagpoleCollisionYPos
-.global PlayerEntranceCtrl
-.global FireballThrowingTimer
-.global DeathMusicLoaded
-.global FlagpoleSoundQueue
-.global CrouchingFlag
-.global GameTimerSetting
-.global DisableCollisionDet
-.global DemoAction
-.global DemoActionTimer
-.global PrimaryMsgCounter
-
-.global ScreenEdge_PageLoc
-.global ScreenLeft_PageLoc
-
-.global ScreenRight_PageLoc
-
-.global ScreenEdge_X_Pos
-.global ScreenLeft_X_Pos
-
-.global ScreenRight_X_Pos
-.global ColumnSets
-.global AreaParserTaskNum
-.global CurrentNTAddr_High
-.global CurrentNTAddr_Low
-.global Sprite0HitDetectFlag
-.global ScrollLock
-.global CurrentPageLoc
-.global CurrentColumnPos
-.global TerrainControl
-.global BackloadingFlag
-.global BehindAreaParserFlag
-.global AreaObjectPageLoc
-.global AreaObjectPageSel
-.global AreaDataOffset
-.global AreaObjOffsetBuffer
-.global AreaObjectLength
-.global AreaStyle
-.global StaircaseControl
-.global AreaObjectHeight
-.global MushroomLedgeHalfLen
-.global EnemyDataOffset
-.global EnemyObjectPageLoc
-.global EnemyObjectPageSel
-.global ScreenRoutineTask
-.global ScrollThirtyTwo
-.global HorizontalScroll
-.global VerticalScroll
-.global ForegroundScenery
-.global BackgroundScenery
-.global CloudTypeOverride
-.global BackgroundColorCtrl
-.global LoopCommand
-.global StarFlagTaskControl
-.global TimerControl
-.global CoinTallyFor1Ups
-.global SecondaryMsgCounter
-
-.global InPipeTransition
-.global PipeXPosition
-.global PipeYPosition
-.global PipeExitTimer
-
-.global FirebarSpinDirection
-.global DestinationPageLoc
-.global VictoryWalkControl
-
-.global AreaType
-
-.global AreaAddrsLOffset
-.global AreaPointer
-.global EntrancePage
-.global AltEntranceControl
-.global CurrentPlayer
-.global PlayerSize
-.global Player_Pos_ForScroll
-.global PlayerStatus
-.global FetchNewGameTimerFlag
-.global JoypadOverride
-.global GameTimerExpiredFlag
-
-.global OnscreenPlayerInfo
-.global NumberofLives
-
-.global HalfwayPage
-.global LevelNumber
-.global Hidden1UpFlag
-.global CoinTally
-.global WorldNumber
-.global AreaNumber
-
-.global OffscreenPlayerInfo
-.global OffScr_NumberofLives
-
-.global OffScr_HalfwayPage
-.global OffScr_LevelNumber
-.global OffScr_Hidden1UpFlag
-.global OffScr_CoinTally
-.global OffScr_WorldNumber
-.global OffScr_AreaNumber
-.global ScrollFractional
-.global DisableIntermediate
-.global PrimaryHardMode
-.global WorldSelectNumber
-
-; $.global 0770
-
-.global OperMode
-.global OperMode_Task
-.global VRAM_Buffer_AddrCtrl
-.global DisableScreenFlag
-.global ScrollAmount
-.global GamePauseStatus
-.global GamePauseTimer
-.global Mirror_PPUCTRL
-.global Mirror_PPUMASK
-.global NumberOfPlayers
+RESERVE SprObject_X_MoveForce, 1
+RESERVE Enemy_X_MoveForce, 21
+YPlatformTopYPos := Enemy_X_MoveForce
+RedPTroopaOrigXPos := Enemy_X_MoveForce
 
 
-.global CurrentBank
-.global BankShadow
-.global TargetAddrJmp
-.global TargetAddress
+RESERVE Player_YMoveForceFractional, 1
+SprObject_YMoveForceFractional := Player_YMoveForceFractional
 
-.global IntervalTimerControl
+RESERVE Enemy_YMoveForceFractional, 21
+BowserFlamePRandomOfs := Enemy_YMoveForceFractional
+PiranhaPlantUpYPos := Enemy_YMoveForceFractional
 
-.global Timers
-.global SelectTimer
-.global PlayerAnimTimer
-.global JumpSwimTimer
-.global RunningTimer
-.global BlockBounceTimer
-.global SideCollisionTimer
-.global JumpspringTimer
-.global GameTimerCtrlTimer
-.global ClimbSideTimer
-.global EnemyFrameTimer
-.global FrenzyEnemyTimer
-.global BowserFireBreathTimer
-.global StompTimer
-.global AirBubbleTimer
+RESERVE Bubble_YMoveForceFractional, 7
+
+RESERVE Player_Y_MoveForce, 1
+SprObject_Y_MoveForce := Player_Y_MoveForce
+
+RESERVE Enemy_Y_MoveForce, 8
+CheepCheepOrigYPos := Enemy_Y_MoveForce
+PiranhaPlantDownYPos := Enemy_Y_MoveForce
+
+RESERVE Block_Y_MoveForce, 20
+RESERVE MaximumLeftSpeed, 1
+RESERVE MaximumRightSpeed, 1
+
+RESERVE Whirlpool_Offset, 1
+Cannon_Offset := Whirlpool_Offset
+
+RESERVE Whirlpool_PageLoc, 6
+Cannon_PageLoc := Whirlpool_PageLoc
+
+RESERVE Whirlpool_LeftExtent, 6
+Cannon_X_Position := Whirlpool_LeftExtent
+
+RESERVE Whirlpool_Length, 6
+Cannon_Y_Position := Whirlpool_Length
+
+RESERVE Whirlpool_Flag, 6
+Cannon_Timer := Whirlpool_Flag
+
+RESERVE BowserHitPoints, 1
+RESERVE StompChainCounter, 1
+RESERVE Player_CollisionBits, 1
+RESERVE Enemy_CollisionBits, 8
+
+RESERVE Player_BoundBoxCtrl, 1
+SprObj_BoundBoxCtrl := Player_BoundBoxCtrl
+
+RESERVE Enemy_BoundBoxCtrl, 6
+RESERVE Fireball_BoundBoxCtrl, 2
+RESERVE Misc_BoundBoxCtrl, 10
+
+RESERVE BoundingBox_UL_Corner, 1
+BoundingBox_UL_XPos := BoundingBox_UL_Corner
+RESERVE BoundingBox_UL_YPos, 1
+RESERVE BoundingBox_LR_Corner, 1
+BoundingBox_DR_XPos := BoundingBox_LR_Corner
+RESERVE BoundingBox_DR_YPos, 1
+RESERVE EnemyBoundingBoxCoord, 80
+RESERVE HammerEnemyOffset, 9
+RESERVE JumpCoinMiscOffset, 5
+RESERVE BrickCoinTimerFlag, 2
+RESERVE Misc_Collision_Flag, 13
+RESERVE EnemyFrenzyBuffer, 1
+RESERVE SecondaryHardMode, 1
+RESERVE EnemyFrenzyQueue, 1
+RESERVE FireballCounter, 1
+RESERVE DuplicateObj_Offset, 2
+RESERVE LakituReappearTimer, 2
+RESERVE NumberofGroupEnemies, 1
+RESERVE ColorRotateOffset, 1
+RESERVE PlayerGfxOffset, 1
+RESERVE WarpZoneControl, 1
+RESERVE FireworksCounter, 2
+RESERVE MultiLoopCorrectCntr, 1
+RESERVE MultiLoopPassCntr, 1
+RESERVE JumpspringForce, 1
+RESERVE MaxRangeFromOrigin, 1
+RESERVE BitMFilter, 1
+RESERVE ChangeAreaTimer, 2
+
+RESERVE PlayerOAMOffset, 1
+RESERVE CurrentOAMOffset, 1
+RESERVE OriginalOAMOffset, 1
+RESERVE SpriteShuffleOffset, 1
+
+RESERVE PlayerMetasprite, 1
+ObjectMetasprite := PlayerMetasprite
+RESERVE EnemyMetasprite, 6
+RESERVE FireballMetasprite, 2
+RESERVE BlockMetasprite, 4
+RESERVE MiscMetasprite, 9
+RESERVE BubbleMetasprite, 3
+
+RESERVE PlayerVerticalFlip, 1
+ObjectVerticalFlip := PlayerVerticalFlip
+RESERVE EnemyVerticalFlip, 6
+
+RESERVE Player_X_Scroll, 1
+RESERVE Player_XSpeedAbsolute, 1
+RESERVE FrictionAdderHigh, 1
+RESERVE FrictionAdderLow, 1
+RESERVE RunningSpeed, 1
+RESERVE SwimmingFlag, 1
+RESERVE Player_X_MoveForce, 1
+RESERVE DiffToHaltJump, 1
+RESERVE JumpOrigin_Y_HighPos, 1
+RESERVE JumpOrigin_Y_Position, 1
+RESERVE VerticalForce, 1
+RESERVE VerticalForceDown, 1
+RESERVE PlayerChangeSizeFlag, 1
+RESERVE PlayerAnimTimerSet, 1
+RESERVE PlayerAnimCtrl, 1
+RESERVE JumpspringAnimCtrl, 1
+RESERVE FlagpoleCollisionYPos, 1
+RESERVE PlayerEntranceCtrl, 1
+RESERVE FireballThrowingTimer, 1
+RESERVE DeathMusicLoaded, 1
+RESERVE FlagpoleSoundQueue, 1
+RESERVE CrouchingFlag, 1
+RESERVE GameTimerSetting, 1
+RESERVE DisableCollisionDet, 1
+RESERVE DemoAction, 1
+RESERVE DemoActionTimer, 1
+RESERVE PrimaryMsgCounter, 1
+
+ScreenEdge_PageLoc := ScreenLeft_PageLoc
+RESERVE ScreenLeft_PageLoc, 1
+RESERVE ScreenRight_PageLoc, 1
+
+ScreenEdge_X_Pos := ScreenLeft_X_Pos
+RESERVE ScreenLeft_X_Pos, 1
+RESERVE ScreenRight_X_Pos, 1
+
+RESERVE ColumnSets, 1
+RESERVE AreaParserTaskNum, 1
+RESERVE CurrentNTAddr_High, 1
+RESERVE CurrentNTAddr_Low, 1
+RESERVE Sprite0HitDetectFlag, 1
+RESERVE ScrollLock, 2
+RESERVE CurrentPageLoc, 1
+RESERVE CurrentColumnPos, 1
+RESERVE TerrainControl, 1
+RESERVE BackloadingFlag, 1
+RESERVE BehindAreaParserFlag, 1
+RESERVE AreaObjectPageLoc, 1
+RESERVE AreaObjectPageSel,1 
+RESERVE AreaDataOffset, 1
+RESERVE AreaObjOffsetBuffer, 3
+RESERVE AreaObjectLength, 3
+RESERVE AreaStyle, 1
+RESERVE StaircaseControl, 1
+RESERVE AreaObjectHeight, 1
+RESERVE MushroomLedgeHalfLen, 3
+RESERVE EnemyDataOffset, 1
+RESERVE EnemyObjectPageLoc, 1
+RESERVE EnemyObjectPageSel, 1
+RESERVE ScreenRoutineTask, 1
+RESERVE ScrollThirtyTwo, 2
+RESERVE HorizontalScroll, 1
+RESERVE VerticalScroll, 1
+RESERVE ForegroundScenery, 1
+RESERVE BackgroundScenery, 1
+RESERVE CloudTypeOverride, 1
+RESERVE BackgroundColorCtrl, 1
+RESERVE LoopCommand, 1
+RESERVE StarFlagTaskControl, 1
+RESERVE TimerControl, 1
+RESERVE CoinTallyFor1Ups, 1
+RESERVE SecondaryMsgCounter, 1
+
+FirebarSpinDirection := DestinationPageLoc
+RESERVE DestinationPageLoc, 1
+RESERVE VictoryWalkControl, 5
+
+; notes:
+; AreaType:
+; Water = 0
+; Ground = 1
+; UnderGround = 2
+; Castle = 3
+RESERVE AreaType, 1
+
+RESERVE AreaAddrsLOffset, 1
+RESERVE AreaPointer, 1
+RESERVE EntrancePage, 1
+RESERVE AltEntranceControl, 1
+RESERVE CurrentPlayer, 1 ; 0 = mario, 1 = luigi
+RESERVE PlayerSize, 1 ; 1 = small, 0 = big
+RESERVE Player_Pos_ForScroll, 1
+RESERVE PlayerStatus, 1 ; 0 = small, 1 = super, 2 = firey
+RESERVE FetchNewGameTimerFlag, 1
+RESERVE JoypadOverride, 1
+RESERVE GameTimerExpiredFlag, 1
+
+OnscreenPlayerInfo := NumberofLives
+RESERVE NumberofLives, 1
+RESERVE HalfwayPage, 1
+RESERVE LevelNumber, 1
+RESERVE Hidden1UpFlag, 1
+RESERVE CoinTally, 1
+RESERVE WorldNumber, 1
+RESERVE AreaNumber, 1
+
+OffscreenPlayerInfo := OffScr_NumberofLives
+RESERVE OffScr_NumberofLives, 1
+RESERVE OffScr_HalfwayPage, 1
+RESERVE OffScr_LevelNumber, 1
+RESERVE OffScr_Hidden1UpFlag, 1
+RESERVE OffScr_CoinTally, 1
+RESERVE OffScr_WorldNumber, 1
+RESERVE OffScr_AreaNumber, 1
+
+
+RESERVE ScrollFractional, 1
+RESERVE DisableIntermediate, 1
+RESERVE PrimaryHardMode, 1
+RESERVE WorldSelectNumber, 1
+
+; $RESERVE 0770
+; $0770: .proc InitializeGame leaves ram below here alone ( y = $6f )
+
+
+RESERVE OperMode, 2
+RESERVE OperMode_Task, 1
+RESERVE VRAM_Buffer_AddrCtrl, 1
+RESERVE DisableScreenFlag, 1
+RESERVE ScrollAmount, 1
+RESERVE GamePauseStatus, 1
+RESERVE GamePauseTimer, 1
+RESERVE Mirror_PPUCTRL, 1
+RESERVE Mirror_PPUMASK, 1
+RESERVE NumberOfPlayers, 1
+
+RESERVE IntervalTimerControl, 1
+
+Timers := SelectTimer
+RESERVE SelectTimer, 1
+RESERVE PlayerAnimTimer, 1
+RESERVE JumpSwimTimer, 1
+RESERVE RunningTimer, 1
+RESERVE BlockBounceTimer, 1
+RESERVE SideCollisionTimer, 1
+RESERVE JumpspringTimer, 1
+RESERVE GameTimerCtrlTimer, 2
+RESERVE ClimbSideTimer, 1
+RESERVE EnemyFrameTimer, 5
+RESERVE FrenzyEnemyTimer, 1
+RESERVE BowserFireBreathTimer, 1
+RESERVE StompTimer, 1
+RESERVE AirBubbleTimer, 3
 
 FRAME_TIMER_COUNT = AirBubbleTimer - Timers
 
-.global ScrollIntervalTimer
-.global EnemyIntervalTimer
-.global BrickCoinTimer
-.global InjuryTimer
-.global StarInvincibleTimer
-.global ScreenTimer
-.global WorldEndTimer
-.global DemoTimer
+RESERVE ScrollIntervalTimer, 1
+RESERVE EnemyIntervalTimer, 7
+RESERVE BrickCoinTimer, 1
+RESERVE InjuryTimer, 1
+RESERVE StarInvincibleTimer, 1
+RESERVE ScreenTimer, 1
+RESERVE WorldEndTimer, 1
+RESERVE DemoTimer, 1
 
 ALL_TIMER_COUNT = DemoTimer - Timers
 
-.global PseudoRandomBitReg
+RESERVE PseudoRandomBitReg, 9
 
-.global SoundMemory
-.global MusicOffset_Noise
-.global EventMusicBuffer
-.global PauseSoundBuffer
-.global Squ2_NoteLenBuffer
-.global Squ2_NoteLenCounter
-.global Squ2_EnvelopeDataCtrl
-.global Squ1_NoteLenCounter
-.global Squ1_EnvelopeDataCtrl
-.global Tri_NoteLenBuffer
-.global Tri_NoteLenCounter
-.global Noise_BeatLenCounter
-.global Squ1_SfxLenCounter
-.global Squ2_SfxLenCounter
-.global Sfx_SecondaryCounter
-.global Noise_SfxLenCounter
-.global DAC_Counter
-.global NoiseDataLoopbackOfs
-.global NoteLengthTblAdder
-.global AreaMusicBuffer_Alt
+SoundMemory := MusicOffset_Noise
+RESERVE MusicOffset_Noise, 1
+RESERVE EventMusicBuffer, 1
+RESERVE PauseSoundBuffer, 1
+RESERVE Squ2_NoteLenBuffer, 1
+RESERVE Squ2_NoteLenCounter, 1
+RESERVE Squ2_EnvelopeDataCtrl, 1
+RESERVE Squ1_NoteLenCounter, 1
+RESERVE Squ1_EnvelopeDataCtrl, 1
+RESERVE Tri_NoteLenBuffer, 1
+RESERVE Tri_NoteLenCounter, 1
+RESERVE Noise_BeatLenCounter, 1
+RESERVE Squ1_SfxLenCounter, 2
+RESERVE Squ2_SfxLenCounter, 1
+RESERVE Sfx_SecondaryCounter, 1
+RESERVE Noise_SfxLenCounter, 1
+RESERVE DAC_Counter, 1
+RESERVE NoiseDataLoopbackOfs, 1
+RESERVE NoteLengthTblAdder, 1
+RESERVE AreaMusicBuffer_Alt, 1
 
-.global PauseModeFlag
-.global GroundMusicHeaderOfs
-.global AltRegContentFlag
+RESERVE PauseModeFlag, 1
+RESERVE GroundMusicHeaderOfs, 1
+RESERVE AltRegContentFlag, 1
 
 _WarmBootOffset = DisplayDigits
 
-.global DisplayDigits
-.global TopScoreDisplay
+DisplayDigits := TopScoreDisplay
+RESERVE TopScoreDisplay, 6
+RESERVE PlayerScoreDisplay, 27
+ScoreAndCoinDisplay := PlayerScoreDisplay
+RESERVE GameTimerDisplay, 4
 
-.global PlayerScoreDisplay
-.global ScoreAndCoinDisplay
 
-.global GameTimerDisplay
-.global WorldSelectEnableFlag
+RESERVE WorldSelectEnableFlag, 1
 
-.global ContinueWorld
+RESERVE ContinueWorld, 1
 
 _ColdBootOffset = WarmBootValidation
 
-.global WarmBootValidation
+RESERVE DebugCooldown, 1
+
+RESERVE WarmBootValidation, 1
+
+.popseg
 
 .endif ; __MEMORY_INC
