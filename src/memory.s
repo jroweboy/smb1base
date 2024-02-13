@@ -1,18 +1,19 @@
 
+_MEMORY_DEFINE_MEMORY = 1
 .include "common.inc"
 
 .segment "ZEROPAGE"
 
 
-TempReg:                        .res  8 ; local  temp pointers and vars
-R0                             = TempReg
-R1                             = TempReg + 1
-R2                             = TempReg + 2
-R3                             = TempReg + 3
-R4                             = TempReg + 4
-R5                             = TempReg + 5
-R6                             = TempReg + 6
-R7                             = TempReg + 7
+; TempReg:                        .res  8 ; local  temp pointers and vars
+; R0                             = TempReg
+; R1                             = TempReg + 1
+; R2                             = TempReg + 2
+; R3                             = TempReg + 3
+; R4                             = TempReg + 4
+; R5                             = TempReg + 5
+; R6                             = TempReg + 6
+; R7                             = TempReg + 7
 
 ObjectOffset:                   .res  1
 FrameCounter:                   .res  1

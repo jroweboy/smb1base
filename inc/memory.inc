@@ -2,20 +2,31 @@
 .ifndef __MEMORY_INC
 __MEMORY_INC = 1
 
-; -------------------------------------------------------------------------------------------------------
-; ------------------------------R -------A --------M ----------------------------------------------------
-; -------------------------------------------------------------------------------------------------------
+.macro RESERVE label, size
+.global .ident(.string(label))
+.ifdef _MEMORY_DEFINE_MEMORY
+.bss
+.ident(.string(label)): .res size
+.endif
+.endmacro
+.macro RESERVEZP label, size
+.globalzp .ident(.string(label))
+.ifdef _MEMORY_DEFINE_MEMORY
+.zeropage
+.ident(.string(label)): .res size
+.endif
+.endmacro
+
 .global DebugCooldown
 
-.globalzp TempReg
-.globalzp R0
-.globalzp R1
-.globalzp R2
-.globalzp R3
-.globalzp R4
-.globalzp R5
-.globalzp R6
-.globalzp R7
+RESERVEZP R0, 1
+RESERVEZP R1, 1
+RESERVEZP R2, 1
+RESERVEZP R3, 1
+RESERVEZP R4, 1
+RESERVEZP R5, 1
+RESERVEZP R6, 1
+RESERVEZP R7, 1
 
 .globalzp NmiTemp
 .globalzp NmiR0
