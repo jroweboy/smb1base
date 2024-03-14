@@ -1,6 +1,6 @@
 
-_MEMORY_DEFINE_MEMORY = 1
-.include "common.inc"
+_MEMORY_DEFINE_MEMORY .set 1
+.include "memory.inc"
 
 .segment "ZEROPAGE"
 

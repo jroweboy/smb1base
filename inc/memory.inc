@@ -2,6 +2,8 @@
 .ifndef __MEMORY_INC
 __MEMORY_INC = 1
 
+.include "memory_p.inc"
+
 ; .macro RESERVE label, size
 ; .global .ident(.string(label))
 ; .ifdef _MEMORY_DEFINE_MEMORY
@@ -9,20 +11,6 @@ __MEMORY_INC = 1
 ; .ident(.string(label)): .res size
 ; .endif
 ; .endmacro
-.macro RESERVE label, size
-.global .ident(.string(label))
-.ifdef _MEMORY_DEFINE_MEMORY
-.ident(.string(label)): .res size
-.endif
-.endmacro
-
-.macro RESERVEZP label, size
-.globalzp .ident(.string(label))
-.ifdef _MEMORY_DEFINE_MEMORY
-.ident(.string(label)): .res size
-.endif
-.endmacro
-
 .pushseg
 
 .zeropage
@@ -207,19 +195,13 @@ RESERVE SwitchToMainIRQ, 1
 RESERVE IrqPointerJmp, 3
 IrqPointer := IrqPointerJmp + 1
 
-RESERVE ReloadCHRBank, 1
-RESERVE CurrentCHRBank, 6
-AreaChrBank := CurrentCHRBank
-PlayerChrBank := CurrentCHRBank + 2
-EnemyChrBank := CurrentCHRBank + 4
 
 
-
-RESERVE CurrentBank, 1
-RESERVE BankShadow, 1
-RESERVE TargetAddrJmp, 1
-RESERVE TargetAddress, 2
-RESERVE TargetAddrDummy, 1
+; RESERVE CurrentBank, 1
+; RESERVE BankShadow, 1
+; RESERVE TargetAddrJmp, 1
+; RESERVE TargetAddress, 2
+; RESERVE TargetAddrDummy, 1
 
 ; CurrentBank:                    .res  1
 ; BankShadow:                     .res  1

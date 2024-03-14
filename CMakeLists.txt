@@ -10,12 +10,9 @@ add_executable(${PROJECT_NAME}
   chr/bg_ground.chr
   chr/bg_underground.chr
   chr/bg_water.chr
-  chr/sprites_castle.chr
+  chr/sprites_enemies.chr
   chr/sprites_mario.chr
   chr/sprites_misc.chr
-  chr/sprites_overworld.chr
-  chr/sprites_underground.chr
-  chr/sprites_water.chr
 
   inc/charmap.inc
   inc/common.inc
@@ -26,7 +23,7 @@ add_executable(${PROJECT_NAME}
   inc/metasprite.inc
   inc/metasprite_custom.inc
   inc/metasprite_p.inc
-  inc/mmc3.inc
+  inc/mmc5.inc
   inc/nes2header.inc
   inc/object.inc
 
@@ -36,7 +33,7 @@ add_executable(${PROJECT_NAME}
   src/gamecore.s
   src/gamemode.s
   src/player.s
-  src/mmc3.s
+  src/mmc5.s
   src/memory.s
   src/metasprite.s
   src/music.s

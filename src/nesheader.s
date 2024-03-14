@@ -1,6 +1,6 @@
 .include "nes2header.inc"
 
-nes2mapper 4
+nes2mapper 5 ; mmc5
 nes2prg $10000
 nes2chr $10000
 nes2bram $2000

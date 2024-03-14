@@ -289,15 +289,6 @@ MetaspriteBox "HAMMER_BRO", "WALK_2", $08, $0a, $24, $26
 MetaspriteBox "HAMMER_BRO", "THROW_1", $04, $06, $20, $22
 MetaspriteBox "HAMMER_BRO", "THROW_2", $04, $06, $24, $26
 
-BOWSER_VRAM_OFFSET = SPRITE_BANK_3
-BOWSER_PALETTE = $01
-BOWSER_Y_OFFSET = -8
-MetaspriteBox "BOWSER", "FRONT_MOUTH_OPEN", $10, $12, $30
-MetaspriteBox "BOWSER", "FRONT_MOUTH_CLOSED", $14, $16, $30
-MetaspriteBox "BOWSER", "REAR_WALK_1", $0c, $0e, $28, $2a
-MetaspriteBox "BOWSER", "REAR_WALK_2", $0c, $0e, $2c, $2e
-
-MetaspriteReserve "BOWSER_FLAME"
 
 LAKITU_VRAM_OFFSET = SPRITE_BANK_3
 LAKITU_PALETTE = $01
@@ -324,15 +315,47 @@ MetaspriteBox "JUMPSPRING", "FRAME_1", $16, $16 | SPR_FLIP_H , $36, $36 | SPR_FL
 MetaspriteBox "JUMPSPRING", "FRAME_2", $38, $38 | SPR_FLIP_H
 MetaspriteBox "JUMPSPRING", "FRAME_3", $14, $14
 
+BOWSER_VRAM_OFFSET = SPRITE_BANK_4
+BOWSER_PALETTE = $01
+BOWSER_Y_OFFSET = -8
+MetaspriteBox "BOWSER", "FRONT_MOUTH_OPEN", $08, $0a, $28
+MetaspriteBox "BOWSER", "FRONT_MOUTH_CLOSED", $0c, $0e, $28
+MetaspriteBox "BOWSER", "REAR_WALK_1", $04, $06, $20, $22
+MetaspriteBox "BOWSER", "REAR_WALK_2", $04, $06, $24, $26
 
-PEACH_VRAM_OFFSET = SPRITE_BANK_2
+MetaspriteReserve "BOWSER_FLAME"
+
+PEACH_VRAM_OFFSET = SPRITE_BANK_4
 PEACH_PALETTE = $02
 PEACH_Y_OFFSET = -8
-MetaspriteBox "PEACH", "STANDING", $08, $0a, $28, $28 | SPR_FLIP_H
-TOAD_VRAM_OFFSET = SPRITE_BANK_2
+MetaspriteBox "PEACH", "STANDING", $14, $16, $34, $34 | SPR_FLIP_H
+TOAD_VRAM_OFFSET = SPRITE_BANK_4
 TOAD_PALETTE = $02
 TOAD_Y_OFFSET = -8
-MetaspriteBox "TOAD", "STANDING", $3c, $3c | SPR_FLIP_H, $3e, $3e | SPR_FLIP_H
+MetaspriteBox "TOAD", "STANDING", $10, $10 | SPR_FLIP_H, $12, $12 | SPR_FLIP_H
 
+
+; Extra sprite tiles that aren't using metasprites
+
+; These aren't actually sprite tiles, they are the replacement tile for
+; the rope when using a balance platform
+BALANCE_PLATFORM_ROPE_1 = $7d
+BALANCE_PLATFORM_ROPE_2 = $7e
+
+; Brick chunks have a really custom movement and making them a metasprite
+; wasn't worth the trouble for now.
+BRICK_CHUNK_TILE = MetaspriteVramOffset {$16}, {SPRITE_BANK_1}
+
+; Used by the "small platform" which is the elevator platforms
+; PLATFORM_GIRDER = $5b
+PLATFORM_GIRDER = MetaspriteVramOffset {$1a}, {SPRITE_BANK_1}
+
+; Vine drawing is probably possible to do as a metasprite but not worth the trouble
+VINE_TILE_1 = MetaspriteVramOffset {$28}, {SPRITE_BANK_3}
+VINE_TILE_2 = MetaspriteVramOffset {$2a}, {SPRITE_BANK_3}
+
+; Used when drawing firebars (not when shooting fireballs which are metasprites)
+FIREBALL_TILE1 = MetaspriteVramOffset {$3c}, {SPRITE_BANK_0}
+FIREBALL_TILE2 = MetaspriteVramOffset {$3e}, {SPRITE_BANK_0}
 
 .endif
