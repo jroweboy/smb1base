@@ -17,7 +17,8 @@
 
 .incbin "../chr/sprites_mario.chr"
 .incbin "../chr/sprites_misc.chr"
-.incbin "../chr/sprites_water.chr"
-.incbin "../chr/sprites_overworld.chr"
-.incbin "../chr/sprites_underground.chr"
-.incbin "../chr/sprites_castle.chr"
+.incbin "../chr/sprites_enemies.chr"
+; .incbin "../chr/sprites_water.chr"
+; .incbin "../chr/sprites_overworld.chr"
+; .incbin "../chr/sprites_underground.chr"
+; .incbin "../chr/sprites_castle.chr"

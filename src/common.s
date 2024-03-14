@@ -60,22 +60,33 @@ GetAreaType:
   lda AreaTypeBankMap,y
   cmp AreaChrBank
   beq :+
-    sta AreaChrBank
-    clc
-    adc #2
-    sta AreaChrBank+1
-    lda AreaTypeEnemyBankMap,y
-    sta EnemyChrBank
-    sta EnemyChrBank+1
-    inc EnemyChrBank+1
+    tax
+  .repeat 4,I
+    stx AreaChrBank+I
+  .if I <> 3
+    inx
+  .endif
+  .endrepeat
+    ; Reset the enemy chr banks too cause why not.
+    ldx #CHR_MISC
+  .repeat 7,I
+    stx CurrentCHRBank + I + 1
+  .if I <> 6
+    inx
+  .endif
+  .endrepeat
+    ; lda AreaTypeEnemyBankMap,y
+    ; sta EnemyChrBank
+    ; sta EnemyChrBank+1
+    ; inc EnemyChrBank+1
     inc ReloadCHRBank
   :
   lda AreaType
   rts
 AreaTypeBankMap:
   .byte CHR_BG_WATER, CHR_BG_GROUND, CHR_BG_UNDERGROUND, CHR_BG_CASTLE
-AreaTypeEnemyBankMap:
-  .byte CHR_SPR_WATER, CHR_SPR_GROUND, CHR_SPR_UNDERGROUND, CHR_SPR_CASTLE
+; AreaTypeEnemyBankMap:
+;   .byte CHR_SPR_WATER, CHR_SPR_GROUND, CHR_SPR_UNDERGROUND, CHR_SPR_CASTLE
 ; Water = 0
 ; Ground = 1
 ; UnderGround = 2

@@ -1,6 +1,7 @@
 
 .include "common.inc"
 .include "object.inc"
+.include "metasprite.inc"
 
 ; collision.s
 .import CheckPlayerVertical

@@ -39,7 +39,7 @@ labelled_segment TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE, METASPRITE
 .include "memory.inc"
 .include "constants.inc"
 .include "globals.inc"
-.include "mmc3.inc"
+.include "mmc5.inc"
 
 .macro ASSERT_PAGE label_
 	.assert >(label_) = >*, error, "Page crossing in timing sensitive code detected! If you see this error then you need to rearrange the code so this branch doesn't cross a page"

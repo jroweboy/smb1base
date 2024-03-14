@@ -2,7 +2,18 @@
 
 .global CurrentBank, NextBank
 .global TargetAddrJmp, TargetAddress
-.global FarCallCommon, FarCallInit
+.global FarCallCommon, FarCallInit, MapperInit
+
+.include "memory_p.inc"
+
+.pushseg
+.segment "SHORTRAM"
+RESERVE ReloadCHRBank, 1
+RESERVE CurrentCHRBank, 6
+AreaChrBank := CurrentCHRBank
+PlayerChrBank := CurrentCHRBank + 2
+EnemyChrBank := CurrentCHRBank + 4
+.popseg
 
 ; MMC3 registers / banking
 PRG_FIXED_8 = (1 << 6)
@@ -14,6 +25,10 @@ IRQLATCH    = $c000
 IRQRELOAD   = $c001
 IRQDISABLE  = $e000
 IRQENABLE   = $e001
+
+.macro MAPPER_IRQ_ACK
+  sta IRQDISABLE
+.endmacro
 
 .macro BankCHR0 bank
   _BANK_INNER bank, 0

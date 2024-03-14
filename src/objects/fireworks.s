@@ -48,14 +48,14 @@ FireworksSoundScore:
 
 ;--------------------------------
 
-StarFlagYPosAdder:
-  .byte $00, $00, $08, $08
+; StarFlagYPosAdder:
+;   .byte $00, $00, $08, $08
 
-StarFlagXPosAdder:
-  .byte $00, $08, $00, $08
+; StarFlagXPosAdder:
+;   .byte $00, $08, $00, $08
 
-StarFlagTileData:
-  .byte STAR_FLAG_TOP_LEFT, STAR_FLAG_TOP_RIGHT, STAR_FLAG_BOT_LEFT, STAR_FLAG_BOT_RIGHT
+; StarFlagTileData:
+;   .byte STAR_FLAG_TOP_LEFT, STAR_FLAG_TOP_RIGHT, STAR_FLAG_BOT_LEFT, STAR_FLAG_BOT_RIGHT
 
 RunStarFlagObj:
       lda #$00                 ;initialize enemy frenzy buffer
