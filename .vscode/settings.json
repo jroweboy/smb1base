@@ -1,4 +1,12 @@
 {
     "editor.tabSize": 2,
-    "terminal.integrated.showExitAlert": false
+    "terminal.integrated.showExitAlert": false,
+    "runOnSave.statusMessageTimeout": 3000,
+    "runOnSave.commands": [
+        {
+            "match": ".*\\.[sS]$",
+            "command": "workbench.action.tasks.build",
+            "runIn": "vscode"
+        }
+    ]
 }
