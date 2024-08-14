@@ -5,16 +5,6 @@
 .ifndef __COMMON_INC
 __COMMON_INC = 1
 
-;DEBUG FLAGS
-WORLD_HAX = 1
-
-.macpack longbranch
-.macpack generic
-
-.linecont on
-.feature force_range
-.autoimport     +
-
 ; Global Labels named after the segment that they appear in
 .macro labelled_segment s1,s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
 .ifblank s1
@@ -38,8 +28,6 @@ labelled_segment TITLE_DPCM, LOWCODE, DECODE, MUSIC_ENGINE, METASPRITE
 .include "charmap.inc"
 .include "memory.inc"
 .include "constants.inc"
-.include "globals.inc"
-.include "mmc5.inc"
 
 .macro ASSERT_PAGE label_
 	.assert >(label_) = >*, error, "Page crossing in timing sensitive code detected! If you see this error then you need to rearrange the code so this branch doesn't cross a page"

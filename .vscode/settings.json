@@ -1,19 +1,4 @@
 {
-    // If you change settings.json, call "Apply settings" from the menu.
-    "watch-run.targetList": [
-        {
-            "target": "/inc/*.inc",
-            "task": "compile"
-        },
-        {
-            "target": "/**/*.s",
-            "task": "compile"
-        },
-    ],
-    "files.autoSave": "afterDelay",
-    "cmake.parseBuildDiagnostics": false,
-    "cmake.enabledOutputParsers": [],
     "editor.tabSize": 2,
-    "terminal.integrated.showExitAlert": false,
-    "cmake.configureOnOpen": true
+    "terminal.integrated.showExitAlert": false
 }

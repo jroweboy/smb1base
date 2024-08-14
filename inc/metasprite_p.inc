@@ -198,7 +198,7 @@ MetaspriteBoxBody Object, Animation, "RIGHT", VramOffset, Palette, XOffset, YOff
 
 .endif
 
-MetaspriteReserve .sprintf("%s_%s",Object, Animation) 
+MetaspriteReserve .sprintf("%s_%s",Object, Animation)
 .endmacro
 
 .macro MetaspriteDuplicate Name, Mspr
