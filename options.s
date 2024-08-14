@@ -22,15 +22,20 @@ MAPPER_MMC5 = 1
 ;;;;;;;;;;;;;;;;;;;;;;
 ;; AUDIO
 
-; MUSIC
+; ---- MUSIC ----
+; Enable one of the follow music engines by uncommenting the one you want to use
+
 ; Use the original game audio engine for music
 USE_VANILLA_MUSIC = 1
-; Use the Famistudio engine for 
+
+; Use the Famistudio engine for music.
 ; USE_FAMISTUDIO_MUSIC = 1
 
-; SFX
+
+; ---- SFX ----
 ; Use the original SFX audio engine.
 USE_VANILLA_SFX = 1
+
 
 ; EXTRA
 ; If using famistudio or famitone engines and the MMC5 mapper, you can use the extra audio channels on the MMC5
