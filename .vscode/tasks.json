@@ -21,63 +21,6 @@
                 "isDefault": true
             },
             "problemMatcher": [
-                {
-                    "owner": "ca65",
-                    "applyTo": "allDocuments",
-                    "source": "CMake",
-                    "fileLocation": ["relative", "${workspaceFolder}"],
-                    "pattern": [
-                        {
-                            "regexp": "^CMake (.*) at ([^:]+):([0-9]+) ?([^:]*): ?(.*)$",
-                            "file": 2,
-                            "line": 3,
-                            "severity": 1
-                        },
-                        {
-                            "regexp": "^(.*)$",
-                            "message": 1,
-                            "loop": true
-                        },
-                    ]
-                },
-                {
-                    "owner": "ca65",
-                    "applyTo": "allDocuments",
-                    "source": "CMake",
-                    "fileLocation": "absolute",
-                    "pattern": [
-                        {
-                            "regexp": "^CMake (.*) at ([a-zA-Z]?:?.+):([0-9]+)",
-                            "file": 2,
-                            "line": 3,
-                            "severity": 1
-                        },
-                        {
-                            "regexp": "(.*)",
-                            "message": 1,
-                        },
-                        {
-                            "regexp": "(.*)",
-                            "message": 1,
-                        },
-                        {
-                            "regexp": "(.*)",
-                            "message": 1,
-                        },
-                        {
-                            "regexp": "(.*)",
-                            "message": 1,
-                        },
-                        {
-                            "regexp": "(.*)",
-                            "message": 1,
-                        },
-                        {
-                            "regexp": "(.*)",
-                            "message": 1,
-                        },
-                    ]
-                },
                 // {
                 //     "owner": "ca65",
                 //     "applyTo": "allDocuments",
@@ -137,6 +80,42 @@
                             "file": 1,
                             "line": 2,
                             "severity": 3,
+                            "message": 4
+                        }
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}"
+                    ],
+                    "source": "ld65",
+                    "pattern": [
+                        {
+                            "regexp": "^ld65: ?(.+): ?(.*) '(\\.\\/.+)', line ?([\\d]*)$",
+                            "file": 3,
+                            "line": 4,
+                            "severity": 1,
+                            "message": 2
+                        }
+                    ]
+                },
+                {
+                    "owner": "ca65",
+                    "applyTo": "allDocuments",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}"
+                    ],
+                    "source": "ld65",
+                    "pattern": [
+                        {
+                            "regexp": "^ld65:(.+): ?(.*): ?([\\d]+): ?(.*)$",
+                            "file": 2,
+                            "line": 3,
+                            "severity": 1,
                             "message": 4
                         }
                     ]

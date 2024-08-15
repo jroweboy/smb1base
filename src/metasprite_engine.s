@@ -182,7 +182,9 @@ MetaspriteBoxBody Object, Animation, "LEFT", VramOffset, Palette, XOffset, YOffs
 .endif
 MetaspriteBoxBody Object, Animation, "RIGHT", VramOffset, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 
+.if PRINT_METASPRITE_IDS
 .out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
+.endif
 .if Mirror = 1
 .ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
 .ident( .sprintf("METASPRITE_LEFT_%d_HI",  METASPRITES_COUNT) ) = .hibyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
@@ -207,7 +209,9 @@ Bank = .ident( .sprintf("METASPRITE_%d_BANK", Id) )
 .ident( .sprintf("METASPRITE_%d_BANK",  METASPRITES_COUNT) ) = Bank
 
 .ifdef METASPRITE_BODY
+.if PRINT_METASPRITE_IDS
 .out .sprintf("METASPRITE_%s = $%02x (duplicate of %s)", Mspr, METASPRITES_COUNT, Name)
+.endif
 
 LL = .ident(.sprintf("METASPRITE_LEFT_%d_LO", Id))
 LH = .ident(.sprintf("METASPRITE_LEFT_%d_HI", Id))
@@ -253,32 +257,6 @@ Id = .ident(Name)
 .endmacro
 
 
-MetaspriteTableLeftLo:
-.repeat METASPRITES_COUNT, I
-  .byte .ident(.sprintf("METASPRITE_LEFT_%d_LO", I))
-.endrepeat
-MetaspriteTableLeftHi:
-.repeat METASPRITES_COUNT, I
-  .byte .ident(.sprintf("METASPRITE_LEFT_%d_HI", I))
-.endrepeat
-
-MetaspriteTableRightLo:
-.repeat METASPRITES_COUNT, I
-  .byte .ident(.sprintf("METASPRITE_RIGHT_%d_LO", I))
-.endrepeat
-MetaspriteTableRightHi:
-.repeat METASPRITES_COUNT, I
-  .byte .ident(.sprintf("METASPRITE_RIGHT_%d_HI", I))
-.endrepeat
-
-MetaspriteVerticalFlipOffset:
-.repeat METASPRITES_COUNT, I
-
-.endrepeat
-MetaspriteVerticalFlipTableLo:
-
-
-.export DrawAllMetasprites
 .proc DrawAllMetasprites
 
 LoopCount = M0
@@ -401,7 +379,6 @@ FloateyNumberLoop:
   rts
 .endproc
 
-.export DrawMetasprite
 .proc DrawMetasprite
 Ptr = R0
 OrigOffset = R2

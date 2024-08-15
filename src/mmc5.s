@@ -2,16 +2,16 @@
 
 .pushseg
 
-.zeropage
-safecall_ptr: 2
+.segment "ZEROPAGE"
+safecall_ptr: .res 2
 
 .segment "SHORTRAM"
-safecall_a: 1
-safecall_x: 1
-safecall_y: 1
-CurrentBank: 1
-ReloadCHRBank: 1
-CurrentCHRBank: 12
+safecall_a: .res 1
+safecall_x: .res 1
+safecall_y: .res 1
+CurrentBank: .res 1
+ReloadCHRBank: .res 1
+CurrentCHRBank: .res 12
 AreaChrBank := CurrentCHRBank + 8
 PlayerChrBank := CurrentCHRBank + 0
 EnemyChrBank := CurrentCHRBank + 2
@@ -150,7 +150,6 @@ MMC5_CHR_BG_BANK_0C = MMC5_CHR_BANK_BASE + 11
 
 .macro farcall loc, usejmp
 .scope
-.import loc
 .assert .bank(loc) <> .bank(*), error, "Attempting to farcall to the same bank!"
 .assert .bank(loc) <> .bank(LOWCODE), error, "Attempting to farcall to the low bank!"
 .assert .bank(loc) <> .bank(FIXED), error, "Attempting to farcall to the fixed bank!"
@@ -169,7 +168,6 @@ MMC5_CHR_BG_BANK_0C = MMC5_CHR_BANK_BASE + 11
 
 .macro far loc
 .scope
-.import loc
 .assert .bank(loc) <> .bank(*), error, "Attempting to farcall to the same bank!"
 .assert .bank(loc) <> .bank(LOWCODE), error, "Attempting to farcall to the low bank!"
 .assert .bank(loc) <> .bank(FIXED), error, "Attempting to farcall to the fixed bank!"
@@ -192,6 +190,13 @@ MMC5_CHR_BG_BANK_0C = MMC5_CHR_BANK_BASE + 11
   sta MMC5_PRG_BANK_A
   lda safecall_a
 .endscope
+.endmacro
+
+.macro SwitchAreaCHR
+  .repeat 12, I
+    lda CurrentCHRBank + I
+    sta MMC5_CHR_BANK_BASE + I
+  .endrepeat
 .endmacro
 
 .segment "FIXED"

@@ -1,13 +1,4 @@
 
-.include "common.inc"
-
-
-.import PlayerEndWorld, PrcNextA
-.import MoveAllSpritesOffscreen, InitializeNameTables, WritePPUReg1
-.import OperModeExecutionTree, UpdateTopScore
-.import InitScroll, UpdateScreen, SoundEngine
-.import FarCallInit
-
 ;-------------------------------------------------------------------------------------
 ;INTERRUPT VECTORS
 
@@ -232,19 +223,7 @@ ScreenOff:
   jsr OAMandReadJoypad
   lda ReloadCHRBank
   beq :+
-    .repeat 12, I
-      lda CurrentCHRBank + I
-      sta MMC5_CHR_BANK_BASE + I
-    .endrepeat
-  ;   ldx #PRG_FIXED_8
-  ; .repeat 6, I
-  ;   stx BANK_SELECT
-  ;   lda CurrentCHRBank + I
-  ;   sta BANK_DATA
-  ; .if I <> 5
-  ;   inx
-  ; .endif
-  ; .endrepeat
+    SwitchAreaCHR ; defined by the mapper
     ldx #0
     stx ReloadCHRBank
   :
@@ -519,7 +498,6 @@ WorldSelectMessage2:
 ;$07 - RAM address high
 InitializeMemoryRAMLo = $06
 InitializeMemoryRAMHi = $07
-.export InitializeMemory, InitializeMemoryRAMLo, InitializeMemoryRAMHi
 .proc InitializeMemory
   ldx #$07          ;set initial high byte to $0700-$07ff
   lda #$00          ;set initial low byte to start of page (at $00 of page)

@@ -1,13 +1,4 @@
 
-.include "common.inc"
-.include "level.inc"
-
-.import RenderAttributeTables, RenderAreaGraphics
-.import InitializeMemory,GetScreenPosition
-.import WriteGameText
-
-.export AreaParserTaskHandler, GetAreaDataAddrs, ProcLoopCommand, AreaParserTaskLoop
-
 .segment "LEVEL"
 
 .proc GetAreaDataAddrs
@@ -221,8 +212,6 @@ TerrainRenderBits:
   .byte %11111001, %00011000 ;ceiling 1, middle 5, floor 2
   .byte %11110001, %00011000 ;ceiling 1, middle 4, floor 2
   .byte %11111111, %00011111 ;completely solid top to bottom
-
-.import GetBlockBufferAddr, Bitmasks
 
 .proc AreaParserCore
   lda BackloadingFlag       ;check to see if we are starting right of start

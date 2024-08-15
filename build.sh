@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
-cl65 --cpu none --no-target-lib -g -Oisr -v -vm -T \
+cl65 \
+  --cpu 6502x -t none --no-target-lib -g -Oisr -v -vm -T \
   -C smb1base.cfg \
   --ld-args --dbgfile,build/smb1base.dbg \
   -l build/smb1base.lst \

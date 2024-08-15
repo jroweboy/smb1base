@@ -98,6 +98,11 @@
 ;
 
 ; Reserve Metasprite 0 as the "unused" sprite. This sprite won't be drawn to the screen
+
+.segment "METASPRITE"
+
+METASPRITE_BODY = 1
+
 MetaspriteReserve "NULL"
 
 BIG_MARIO_VRAM_OFFSET = SPRITE_BANK_0
@@ -541,6 +546,34 @@ MetaspriteBowserFlame:
   .byte  MetaspriteVramOffset{$76}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
   .byte  MetaspriteVramOffset{$78}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET, 16 + X_OFFSET
 
-.endif ; METASPRITE_BODY
 
-.endif ; METASPRITE_CUSTOM_INC
+
+
+
+;;;;
+; Internal use
+; Generate the lookup tables for the metasprites used by the renderer.
+; All metasprites must be defined before this part
+
+MetaspriteTableLeftLo:
+.repeat METASPRITES_COUNT, I
+  .byte .ident(.sprintf("METASPRITE_LEFT_%d_LO", I))
+.endrepeat
+MetaspriteTableLeftHi:
+.repeat METASPRITES_COUNT, I
+  .byte .ident(.sprintf("METASPRITE_LEFT_%d_HI", I))
+.endrepeat
+
+MetaspriteTableRightLo:
+.repeat METASPRITES_COUNT, I
+  .byte .ident(.sprintf("METASPRITE_RIGHT_%d_LO", I))
+.endrepeat
+MetaspriteTableRightHi:
+.repeat METASPRITES_COUNT, I
+  .byte .ident(.sprintf("METASPRITE_RIGHT_%d_HI", I))
+.endrepeat
+
+
+
+
+

@@ -5,3 +5,4 @@ tools/Windows/emulator/*
 __pycache__/
 .DS_Store
 *.mp4
+*.o

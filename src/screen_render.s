@@ -1,16 +1,3 @@
-.include "common.inc"
-.include "metasprite.inc"
-
-.import AreaParserTaskHandler
-
-; player.s
-
-.export ScreenRoutines, FloateyNumbersCore
-.export RemoveCoin_Axe, DestroyBlockMetatile, GetPlayerColors, AddToScore
-.export MoveAllSpritesOffscreen, RenderAreaGraphics
-.export InitializeNameTables, UpdateTopScore, RenderAttributeTables
-.export WriteGameText, HandlePipeEntry, MoveVOffset, UpdateNumber
-.export RemBridge, GiveOneCoin, DrawMushroomIcon, WriteBlockMetatile
 
 .segment "RENDER"
 
@@ -259,7 +246,6 @@ PlayerInter:
   lda #0
   ldy #0
   ldx ObjectMetasprite
-  .import DrawMetasprite
   jsr DrawMetasprite
   endfar
   lda #$01                     ;lives display, then output lives display to buffer
@@ -410,12 +396,6 @@ endfar
   lda #$05                     ;set buffer transfer control to $0300,
   jmp SetVRAMAddr_B            ;increment task and exit
 
-
-.pushseg
-.segment "TITLE"
-TitleScreenData:
-.incbin "../chr/titlescreen.bin"
-.popseg
 ;-------------------------------------------------------------------------------------
 
 WriteTopScore:
@@ -468,7 +448,6 @@ MushroomIconData:
 ;$01 - vram buffer address table high
 
 WriteBufferToScreen:
-.export UpdateScreen, InitScroll
 
   sta PPUADDR           ;store high byte of vram address
   iny
@@ -673,7 +652,6 @@ GameTextOffsets:
   .byte TwoPlayerGameOver-GameText, OnePlayerGameOver-GameText
   .byte WarpZoneWelcome-GameText, WarpZoneWelcome-GameText
 
-.export SetupPipeTransitionOverlay
 .proc SetupPipeTransitionOverlay
 rts
 ;   sta InPipeTransition
@@ -906,7 +884,6 @@ StatusBarData:
 StatusBarOffset:
       .byte $06, $0c, $12, $18, $1e, $24
 
-.export PrintStatusBarNumbers
 .proc PrintStatusBarNumbers
   sta R0             ;store player-specific offset
   jsr OutputNumbers  ;use first nybble to print the coin display
@@ -962,7 +939,6 @@ ExitOutputN:
 .endproc
 
 ;-------------------------------------------------------------------------------------
-.export DigitsMathRoutine
 .proc DigitsMathRoutine
   lda OperMode              ;check mode of operation
   cmp #MODE_TITLESCREEN

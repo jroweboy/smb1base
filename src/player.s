@@ -1,41 +1,4 @@
 
-.include "common.inc"
-.include "player.inc"
-
-.include "metasprite.inc"
-
-; objects/object
-.import BoundingBoxCore
-
-; collision.s
-.import PlayerBGCollision, FireballBGCollision, FireballEnemyCollision
-
-; gamemode.s
-.import ContinueGame
-
-; sprite_render.s
-.import DrawExplosion_Fireball, DumpTwoSpr, DrawOneSpriteRow
-
-; screen_render.s
-.import GetPlayerColors
-
-; tiles/brick.s
-.import InitBlock_XY_Pos
-
-; objects/vine.s
-.import Setup_Vine
-
-.import SetupPipeTransitionOverlay
-
-; gamemode.s
-.export GameRoutines, PlayerCtrlRoutine, ScrollScreen
-
-; gamecore.s
-.export ResetPalStar
-
-; reset.s
-.export PrcNextA
-
 .segment "PLAYER"
 
 ;-------------------------------------------------------------------------------------
@@ -399,7 +362,7 @@ SetHalfway:
   sta HalfwayPage          ;store as halfway page for player
   jsr TransposePlayers     ;switch players around if 2-player game
 
-  jmp ContinueGame         ;continue the game
+  jmp RunGameOver::ContinueGame         ;continue the game
 .endproc
 
 
@@ -476,7 +439,6 @@ ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to ski
           farcall Setup_Vine              ;do a sub to grow vine
 ChkSwimE: ldy AreaType                ;if level not water-type,
           bne SetPESub                ;skip this subroutine
-          .import SetupBubble
           farcall SetupBubble             ;otherwise, execute sub to set up air bubbles
 SetPESub: lda #$07                    ;set to run player entrance subroutine
           sta GameEngineSubroutine    ;on the next frame of game engine

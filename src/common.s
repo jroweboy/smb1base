@@ -1,7 +1,4 @@
 
-_COMMON_DEFINE_SEGMENTS = 1
-.include "common.inc"
-
 .segment "LOWCODE"
 
 ;-------------------------------------------------------------------------------------
@@ -328,7 +325,6 @@ HighPosUnitData:
 ;--------------------------------
 
 .proc DividePDiff
-.export DividePDiff
 
   sta R5        ;store current value in A here
   lda R7        ;get pixel difference
@@ -652,7 +648,6 @@ MusicSelectData:
       .byte CloudMusic, PipeIntroMusic
 
 .proc GetAreaMusic
-.export GetAreaMusic
   lda OperMode           ;if in title screen mode, leave
   beq ExitGetM
   lda AltEntranceControl ;check for specific alternate mode of entry

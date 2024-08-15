@@ -1,8 +1,10 @@
 
+
 .pushseg
 
 .zeropage
 
+; Temporary values used by the vanilla code
 R0: .res 1
 R1: .res 1
 R2: .res 1
@@ -12,13 +14,13 @@ R5: .res 1
 R6: .res 1
 R7: .res 1
 
+; Temporary values used in NMI in vanilla
 NmiR0: .res 1
 NmiR1: .res 1
 
+; New temporaries that can be reused wherever
 M0: .res 1
 M1: .res 1
-M2: .res 1
-M3: .res 1
 
 ObjectOffset: .res 1
 FrameCounter: .res 1
@@ -437,7 +439,7 @@ TerrainControl: .res 1
 BackloadingFlag: .res 1
 BehindAreaParserFlag: .res 1
 AreaObjectPageLoc: .res 1
-AreaObjectPageSel: .res1 
+AreaObjectPageSel: .res 1 
 AreaDataOffset: .res 1
 AreaObjOffsetBuffer: .res 3
 AreaObjectLength: .res 3
@@ -478,10 +480,10 @@ AreaAddrsLOffset: .res 1
 AreaPointer: .res 1
 EntrancePage: .res 1
 AltEntranceControl: .res 1
-CurrentPlayer, 1 ; 0 = mario: .res 1 = luigi
-PlayerSize, 1 ; 1 = small: .res 0 = big
+CurrentPlayer: .res 1 ; 0 = mario: .res 1 = luigi
+PlayerSize: .res 1 ; 1 = small: .res 0 = big
 Player_Pos_ForScroll: .res 1
-PlayerStatus, 1 ; 0 = small, 1 = super: .res 2 = firey
+PlayerStatus: .res 1 ; 0 = small, 1 = super: .res 2 = firey
 FetchNewGameTimerFlag: .res 1
 JoypadOverride: .res 1
 GameTimerExpiredFlag: .res 1

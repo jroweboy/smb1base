@@ -11,17 +11,58 @@
 
 .include "options.s"
 
+
+.include "inc/nes2header.inc"
+
+;--------------------------------
+; NES2.0 header
+
+.if MAPPER_MMC5
+nes2mapper 5 ; mmc5
+.elseif MAPPER_MMC3
+nes2mapper 3 ; mmc3
+.endif
+nes2prg $10000
+nes2chr $10000
+nes2bram $2000
+nes2mirror 'V'
+nes2tv 'N'
+nes2end
+
+
+
+_COMMON_DEFINE_SEGMENTS = 1
 .include "inc/common.inc"
 
-.ifdef MAPPER_MMC5
+.include "inc/charmap.inc"
+.include "inc/constants.inc"
+.include "src/memory.s"
+
+.if MAPPER_MMC5
 .include "src/mmc5.s"
 .endif
-.ifdef MAPPER_MMC3
+.if MAPPER_MMC3
 .include "src/mmc3.s"
 .endif
 
 .include "src/metasprite_engine.s"
 .include "src/metasprite.s"
+
+.include "src/common.s"
+.include "src/collision.s"
+.include "src/level_tiles.s"
+.include "src/reset.s"
+.include "src/main.s"
+
+.include "src/player.s"
+.include "src/object.s"
+.include "src/screen_render.s"
+.include "src/sprite_render.s"
+
+
+.segment "AUDIO"
+
+.include "src/music.s"
 
 
 .segment "CHR"
@@ -31,7 +72,7 @@
 ; UnderGround = 2
 ; Castle = 3
 
-.ifdef MAPPER_MMC5
+.if MAPPER_MMC5
 .incbin "chr/mmc5/bg_water.chr"
 .incbin "chr/mmc5/bg_ground.chr"
 .incbin "chr/mmc5/bg_underground.chr"
@@ -40,9 +81,8 @@
 .incbin "chr/mmc5/sprites_mario.chr"
 .incbin "chr/mmc5/sprites_misc.chr"
 .incbin "chr/mmc5/sprites_enemies.chr"
-.endif
 
-.ifdef MAPPER_MMC3
+.else
 
 .incbin "chr/mmc5/bg_water.chr"
 .incbin "chr/mmc5/bg_ground.chr"
@@ -59,3 +99,8 @@
 
 .endif
 
+.pushseg
+.segment "TITLE"
+TitleScreenData:
+.incbin "chr/raw/titlescreen.bin"
+.popseg

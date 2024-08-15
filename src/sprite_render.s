@@ -1,18 +1,4 @@
 
-.include "common.inc"
-; .include "object.inc"
-.include "metasprite.inc"
-
-; screen_render.s
-.import AddToScore
-
-.export DrawSingleFireball, DrawSmallPlatform, DrawFireball
-.export DrawVine, DrawLargePlatform, DrawPowerUp
-.export JCoinGfxHandler, DrawHammer, DrawBrickChunks, DrawBlock
-.export FlagpoleGfxHandler
-
-.export DumpTwoSpr
-
 .segment "OBJECT"
 
 ;-------------------------------------------------------------------------------------
@@ -97,7 +83,6 @@ VineYPosAdder:
 
 .endproc
 
-.export SprObjectOffscrChk
 .proc SprObjectOffscrChk
   ldx ObjectOffset          ;get enemy buffer offset
   lda Enemy_OffscreenBits   ;check offscreen information
@@ -259,7 +244,6 @@ PowerUpGfxTable:
   .byte METASPRITE_POWERUP_1UP
 .endproc
 
-.export EnemyGraphicsEngine
 .proc EnemyGraphicsEngine
   jsr RunEngine
   jmp SprObjectOffscrChk
@@ -438,7 +422,6 @@ ProcessJumpingParatrooperInner:
   sta EnemyMetasprite,x
   rts
 
-.export ProcessBulletBill
 .proc ProcessBulletBill
   lda #BULLET_PALETTE
   ldy EnemyFrameTimer,x       ;get timer for enemy object
@@ -952,7 +935,6 @@ DumpSixSpr:
   sta Sprite_Data+20,y      ;dump A contents
   sta Sprite_Data+16,y      ;into third row sprites
 
-.export DumpFourSpr
 DumpFourSpr:
   sta Sprite_Data+12,y      ;into second row sprites
 

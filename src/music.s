@@ -1,10 +1,8 @@
-.include "common.inc"
 
 .segment "MUSIC"
 
 
 ;-------------------------------------------------------------------------------------
-.export SoundEngine
 SoundEngine:
          lda OperMode              ;are we in title screen mode?
          bne SndOn
