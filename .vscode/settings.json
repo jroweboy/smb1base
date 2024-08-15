@@ -4,9 +4,13 @@
     "runOnSave.statusMessageTimeout": 3000,
     "runOnSave.commands": [
         {
-            "match": ".*\\.([sS]|inc)$",
+            "match": ".*\\.([sS]|inc|h|c)$",
             "command": "workbench.action.tasks.build",
             "runIn": "vscode"
         }
+    ],
+    "clangd.fallbackFlags": [
+        "-I${workspaceFolder}/inc",
+        "-I${workspaceFolder}",
     ]
 }

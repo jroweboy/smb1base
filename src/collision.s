@@ -482,7 +482,11 @@ EnemyFacePlayer:
        jsr PlayerEnemyDiff    ;get horizontal difference between player and enemy
        bpl SFcRt              ;if enemy is to the right of player, do not increment
        iny                    ;otherwise, increment to set to move to the left
-SFcRt: sty Enemy_MovingDir,x  ;set moving direction here
+SFcRt: 
+       pha
+       tya
+       sta Enemy_MovingDir,x  ;set moving direction here
+       pla
        dey                    ;then decrement to use as a proper offset
        rts
 
@@ -1375,7 +1379,10 @@ ChkBBill: lda Enemy_ID,x
           beq NoCDirF
           cmp #BulletBill_FrenzyVar  ;check for bullet bill (frenzy variant)
           beq NoCDirF                ;branch if either found, direction does not change
-          sty Enemy_MovingDir,x      ;store as moving direction
+          pha
+          tya
+          sta Enemy_MovingDir,x      ;store as moving direction
+          pla
 NoCDirF:  dey                        ;decrement and use as offset
           lda EnemyBGCXSpdData,y     ;get proper horizontal speed
           sta Enemy_X_Speed,x        ;and store, then leave

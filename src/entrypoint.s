@@ -36,33 +36,33 @@ _COMMON_DEFINE_SEGMENTS = 1
 
 .include "inc/charmap.inc"
 .include "inc/constants.inc"
-.include "src/memory.s"
+.include "memory.s"
 
 .if MAPPER_MMC5
-.include "src/mmc5.s"
+.include "mmc5.s"
 .endif
 .if MAPPER_MMC3
-.include "src/mmc3.s"
+.include "mmc3.s"
 .endif
 
-.include "src/metasprite_engine.s"
-.include "src/metasprite.s"
+.include "metasprite_engine.s"
+.include "metasprite.s"
 
-.include "src/common.s"
-.include "src/collision.s"
-.include "src/level_tiles.s"
-.include "src/reset.s"
-.include "src/main.s"
+.include "common.s"
+.include "collision.s"
+.include "level_tiles.s"
+.include "reset.s"
+.include "game.s"
 
-.include "src/player.s"
-.include "src/object.s"
-.include "src/screen_render.s"
-.include "src/sprite_render.s"
+.include "player.s"
+.include "object.s"
+.include "screen_render.s"
+.include "sprite_render.s"
 
 
 .segment "AUDIO"
 
-.include "src/music.s"
+.include "music.s"
 
 
 .segment "CHR"

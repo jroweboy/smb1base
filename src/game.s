@@ -101,6 +101,8 @@ UpdScrollVar:
   RunParser:
         farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
 ExitEng:
+  .import _after_frame_callback
+  jsr _after_frame_callback
   rts                        ;and after all that, we're finally done!
 
 

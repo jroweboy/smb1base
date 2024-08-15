@@ -621,7 +621,10 @@ MoveWithXMCntrs:
          adc #$01
          sta XMoveSecondaryCounter,x
          ldy #$02                     ;load alternate value here
-XMRight: sty Enemy_MovingDir,x        ;store as moving direction
+XMRight: pha
+         tya
+         sta Enemy_MovingDir,x        ;store as moving direction
+         pla
          jsr MoveEnemyHorizontally
          sta R0                       ;save value obtained from sub here
          pla                          ;get secondary counter from stack
@@ -678,7 +681,10 @@ FBLeft: ldy #$02                   ;set left moving direction by default
         jsr PlayerEnemyDiff        ;get horizontal difference between player and bloober
         bpl SBMDir                 ;if enemy to the right of player, keep left
         dey                        ;otherwise decrement to set right moving direction
-SBMDir: sty Enemy_MovingDir,x      ;set moving direction of bloober, then continue on here
+SBMDir: pha
+        tya
+        sta Enemy_MovingDir,x      ;set moving direction of bloober, then continue on here
+        pla
 
 BlooberSwim:
        jsr ProcSwimmingB        ;execute sub to make bloober swim characteristically
@@ -1464,7 +1470,10 @@ SetSpSpd: jsr SmallBBox              ;set bounding box control, init attributes,
           cmp #$00                   ;of A were lost...branch here will never be taken for
           bmi SpinyRte               ;the same reason
           dey
-SpinyRte: sty Enemy_MovingDir,x      ;set moving direction to the right
+SpinyRte: pha
+          tya
+          sta Enemy_MovingDir,x      ;set moving direction to the right
+          pla
           lda #$fd
           sta Enemy_Y_Speed,x        ;set vertical speed to move upwards
           lda #$01
@@ -1743,7 +1752,10 @@ Shimmy:  sty Enemy_X_Speed,x       ;store horizontal speed
          bne SetShim               ;if not yet expired, skip to set moving direction
          lda #$f8
          sta Enemy_X_Speed,x       ;otherwise, make the hammer bro walk left towards player
-SetShim: sty Enemy_MovingDir,x     ;set moving direction
+SetShim: pha
+         tya
+         sta Enemy_MovingDir,x     ;set moving direction
+         pla
 
 MoveNormalEnemy:
        ldy #$00                   ;init Y to leave horizontal movement as-is 
@@ -1798,7 +1810,8 @@ ReviveStunned:
          and #$01                  ;get d0 of frame counter
          tay                       ;use as Y and increment for movement direction
          iny
-         sty Enemy_MovingDir,x     ;store as pseudorandom movement direction
+         tya
+         sta Enemy_MovingDir,x     ;store as pseudorandom movement direction
          dey                       ;decrement for use as pointer
          lda PrimaryHardMode       ;check primary hard mode flag
          beq SetRSpd               ;if not set, use pointer as-is
@@ -1876,7 +1889,10 @@ SetLSpd: sta LakituMoveSpeed,x      ;set movement speed returned from sub
          adc #$01
          sta LakituMoveSpeed,x      ;store as new moving speed
          iny                        ;increment moving direction to left
-SetLMov: sty Enemy_MovingDir,x      ;store moving direction
+SetLMov: pha
+         tya
+         sta Enemy_MovingDir,x      ;store moving direction
+         pla
          jmp MoveEnemyHorizontally  ;move lakitu horizontally
 
 PlayerLakituDiff:
@@ -2042,7 +2058,8 @@ BulletBillHandler:
            jsr PlayerEnemyDiff       ;get horizontal difference between player and bullet bill
            bmi SetupBB               ;if enemy to the left of player, branch
            iny                       ;otherwise increment to move left
-SetupBB:   sty Enemy_MovingDir,x     ;set bullet bill's moving direction
+SetupBB:   tya
+           sta Enemy_MovingDir,x     ;set bullet bill's moving direction
            dey                       ;decrement to use as offset
            lda BulletBillXSpdData,y  ;get horizontal speed based on moving direction
            sta Enemy_X_Speed,x       ;and store it
