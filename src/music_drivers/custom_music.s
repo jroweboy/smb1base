@@ -48,6 +48,11 @@ RESERVE PauseModeFlag, 1
 .proc AudioInit
   lda #0
   sta PauseModeFlag
+  sta EventMusicBuffer
+  sta AreaMusicBuffer
+  sta Square1SoundBuffer
+  sta Square2SoundBuffer
+  sta NoiseSoundBuffer
   MusicInit
   SFXInit
   rts
@@ -63,6 +68,7 @@ RESERVE PauseModeFlag, 1
 .if .not ::USE_VANILLA_MUSIC
   CustomMusicStop
 .endif
+  
 .if ::USE_VANILLA_MUSIC
   ldy #MusicMemoryEnd - MusicMemoryStart
 :   sta MusicMemoryStart,y     ;clear out memory used

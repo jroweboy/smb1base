@@ -40,13 +40,13 @@ RESERVE AltRegContentFlag, 1
 .endmacro
 
 .proc RunMusicUpdate
-        ;  lda OperMode              ;are we in title screen mode?
-        ;  bne SndOn
-        ;  sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
-        ;  rts
+  lda OperMode              ;are we in title screen mode?
+  bne SndOn
+    sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
+    rts
 SndOn:   
-         lda PauseModeFlag         ;is sound already in pause mode?
-         bne SkipSoundSubroutines
+  lda PauseModeFlag         ;is sound already in pause mode?
+  bne SkipSoundSubroutines
 
 RunSoundSubroutines:
   jsr MusicHandler       ;play music on all channels
