@@ -130,7 +130,7 @@ FAMISTUDIO_CFG_SFX_STREAMS = 3
 music_data:
 .include "audio/examples/famistudio/panic_at_the_mario_disco.s"
 sfx_data:
-.include "audio/examples/famistudio/panic_at_the_mario_disco_sfx.s"
+.include "audio/examples/famistudio/sfx.s"
 
 .segment "DPCM"
 .incbin "audio/examples/famistudio/panic_at_the_mario_disco.dmc"
