@@ -25,6 +25,9 @@ bool_option USE_VRC7_AUDIO
 bool_option USE_VANILLA_MUSIC
 bool_option USE_FAMISTUDIO_MUSIC
 
+bool_option USE_VANILLA_SFX
+bool_option USE_CUSTOM_ENGINE_SFX
+
 bool_option WORLD_HAX
 bool_option PRINT_METASPRITE_IDS
 

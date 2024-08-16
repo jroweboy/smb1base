@@ -146,16 +146,6 @@ MusicDataHigh := MusicData+1
 
 .segment "SHORTRAM"
 
-RESERVE NoteLenLookupTblOfs, 1
-RESERVE Square1SoundBuffer, 1
-RESERVE Square2SoundBuffer, 1
-RESERVE NoiseSoundBuffer, 1
-RESERVE AreaMusicBuffer, 1
-
-RESERVE MusicOffset_Square2, 1
-RESERVE MusicOffset_Square1, 1
-RESERVE MusicOffset_Triangle, 1
-
 RESERVE PauseSoundQueue, 1
 RESERVE AreaMusicQueue, 1
 RESERVE EventMusicQueue, 1
@@ -557,31 +547,6 @@ RESERVE DemoTimer, 1
 ALL_TIMER_COUNT = DemoTimer - Timers
 
 RESERVE PseudoRandomBitReg, 9
-
-SoundMemory := MusicOffset_Noise
-RESERVE MusicOffset_Noise, 1
-RESERVE EventMusicBuffer, 1
-RESERVE PauseSoundBuffer, 1
-RESERVE Squ2_NoteLenBuffer, 1
-RESERVE Squ2_NoteLenCounter, 1
-RESERVE Squ2_EnvelopeDataCtrl, 1
-RESERVE Squ1_NoteLenCounter, 1
-RESERVE Squ1_EnvelopeDataCtrl, 1
-RESERVE Tri_NoteLenBuffer, 1
-RESERVE Tri_NoteLenCounter, 1
-RESERVE Noise_BeatLenCounter, 1
-RESERVE Squ1_SfxLenCounter, 2
-RESERVE Squ2_SfxLenCounter, 1
-RESERVE Sfx_SecondaryCounter, 1
-RESERVE Noise_SfxLenCounter, 1
-RESERVE DAC_Counter, 1
-RESERVE NoiseDataLoopbackOfs, 1
-RESERVE NoteLengthTblAdder, 1
-RESERVE AreaMusicBuffer_Alt, 1
-
-RESERVE PauseModeFlag, 1
-RESERVE GroundMusicHeaderOfs, 1
-RESERVE AltRegContentFlag, 1
 
 _WarmBootOffset = DisplayDigits
 

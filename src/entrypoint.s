@@ -62,7 +62,7 @@ _COMMON_DEFINE_SEGMENTS = 1
 
 .segment "AUDIO"
 
-.include "music.s"
+.include "music_drivers/custom_music.s"
 
 
 .segment "CHR"

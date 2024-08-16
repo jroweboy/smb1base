@@ -230,18 +230,18 @@ InitScroll:
     lda #0
     sta PPUSCROLL
     sta PPUSCROLL
-    lda CurrentBank
-    pha
-      BankPRGA #.bank(MUSIC)
-      jsr SoundEngine
+    ; lda CurrentBank
+    ; pha
+      ; BankPRGA #.bank(MUSIC)
+      jsr ProcessAudio
     ;   lda #7 | PRG_FIXED_8
     ;   sta BANK_SELECT
     ; pla
     ; sta BANK_DATA
     ; lda BankShadow
     ; sta BANK_SELECT
-    pla
-    BankPRGA a
+    ; pla
+    ; BankPRGA a
 
     ply
     plx
@@ -334,9 +334,9 @@ SkipSprite0:
   ; pla
   ; sta BANK_DATA
 
-  BankPRGA #.bank(MUSIC)
-  jsr SoundEngine
-  BankPRGA CurrentBank
+  ; BankPRGA #.bank(MUSIC)
+  jsr ProcessAudio
+  ; BankPRGA CurrentBank
   
 .ifdef WORLD_HAX
 	dec DebugCooldown
