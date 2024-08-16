@@ -431,11 +431,16 @@ DrawSprite:
       and #%00111111
       cmp #%00100000
       bcc PositiveYOffset
+        ; subtracting a small negative offset here
         ora #%11000000
         clc
     PositiveYOffset:
       adc SprObject_Y_Position,y
-      jmp SetYOffset
+      bcc SetYOffset
+        ; If the carry is set, then we need to inc Yhi ... TODO
+        ; this probably doesn't handle underflow properly?
+        inc Yhi
+        bcs SetYOffset ; unconditional
 SkipVerticalFlipCheck:
     lda SprObject_Y_Position,y
 SetYOffset:
