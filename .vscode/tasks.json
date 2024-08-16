@@ -3,10 +3,23 @@
     "tasks": [
         {
             "label": "assemble",
-            "runOptions": {"instanceLimit": 1},
+            "runOptions": {
+                "instanceLimit": 1
+            },
             "type": "shell",
-            "command": "cmd",
-            "args": ["/c", "${workspaceFolder}\\build.bat"],
+            "windows": {
+                "command": "cmd",
+                "args": [
+                    "/c",
+                    "${workspaceFolder}\\build.bat"
+                ]
+            },
+            "osx": {
+                "command": "sh",
+                "args": [
+                    "${workspaceFolder}/build.sh"
+                ]
+            },
             "presentation": {
                 "echo": true,
                 "reveal": "never",
@@ -21,51 +34,6 @@
                 "isDefault": true
             },
             "problemMatcher": [
-                // {
-                //     "owner": "ca65",
-                //     "applyTo": "allDocuments",
-                //     "fileLocation": "absolute",
-                //     "source": "ca65",
-                //     "pattern": [
-                //         {
-                //             "regexp": "^([^.][^:]*):([0-9]+): ?([^:]*): ?(.*)$",
-                //             "file": 1,
-                //             "line": 2,
-                //             "severity": 3,
-                //             "message": 4
-                //         },
-                //     ]
-                // },
-                // {
-                //     "owner": "ca65",
-                //     "applyTo": "allDocuments",
-                //     "fileLocation": "absolute",
-                //     "source": "ca65",
-                //     "pattern": [
-                //         {
-                //             "regexp": "^([^:]*)\\(([0-9]+)\\): ?([^:]*): ?(.*)$",
-                //             "file": 1,
-                //             "line": 2,
-                //             "severity": 3,
-                //             "message": 4
-                //         },
-                //     ]
-                // },
-                // {
-                //     "owner": "ca65",
-                //     "applyTo": "allDocuments",
-                //     "fileLocation": "absolute",
-                //     "source": "ca65",
-                //     "pattern": [
-                //         {
-                //             "regexp": "^([a-zA-Z]?:?.+):([\\d]+): ?(\\w*): ?(.*)$",
-                //             "file": 1,
-                //             "line": 2,
-                //             "severity": 3,
-                //             "message": 4
-                //         }
-                //     ]
-                // },
                 {
                     "owner": "ca65",
                     "applyTo": "allDocuments",
