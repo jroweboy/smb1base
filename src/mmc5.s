@@ -220,6 +220,7 @@ MapperInit:
   lda #$80
   sta CurrentBank
   BankPRGA #0
+  BankPRGC #.bank(DPCM)
   BankPRG8 #.bank(LOWCODE)
   BankPRGE #.bank(FIXED)
 

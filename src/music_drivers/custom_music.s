@@ -4,6 +4,7 @@
 
 .pushseg
 .segment "SHORTRAM"
+RESERVE EventMusicBuffer, 1
 RESERVE AreaMusicBuffer, 1
 RESERVE Square1SoundBuffer, 1
 RESERVE Square2SoundBuffer, 1
@@ -30,26 +31,50 @@ RESERVE PauseModeFlag, 1
 
 .if .not ::USE_VANILLA_MUSIC
 .macro MusicPlayback
+  BankPRGA #.bank(music_data)
   jsr CustomMusicEngine
+  BankPRGA CurrentBank
 .endmacro
 .endif
 
 .if .not ::USE_VANILLA_SFX
 .macro SFXPlayback
+  BankPRGA #.bank(music_data)
   jsr CustomSfxEngine
+  BankPRGA CurrentBank
 .endmacro
 .endif
 
-
-.proc InitAudio
+.proc AudioInit
+  lda #0
+  sta PauseModeFlag
   MusicInit
   SFXInit
   rts
 .endproc
 
-.proc ProcessAudio
+.proc AudioUpdate
   MusicPlayback
   SFXPlayback
+  rts
+.endproc
+
+.proc AudioClear
+.if .not ::USE_VANILLA_MUSIC
+  CustomMusicStop
+.endif
+.if ::USE_VANILLA_MUSIC
+  ldy #MusicMemoryEnd - MusicMemoryStart
+:   sta MusicMemoryStart,y     ;clear out memory used
+    dey                   ;by the sound engines
+    bpl :-
+.endif
+.if ::USE_VANILLA_SFX
+  ldy #SFXMemoryEnd - SFXMemoryStart
+:   sta SFXMemoryStart,y     ;clear out memory used
+    dey                   ;by the sound engines
+    bpl :-
+.endif
   rts
 .endproc
 
@@ -78,20 +103,20 @@ TimerTick =   17
 Vine =        18
 
 
-Castleworld = $00 ; : Castleworld
-Cloud = $01 ; : Cloud
-Death = $02 ; : Death
-EnterPipe = $03 ; : Enter in a pipe
-GameOver = $04 ; : Game Over
-HurryUp = $05 ; : Hurry up
-InAnotherCastle = $06 ; : In an other castle
-Intermediate = $07 ; : Intermediate
-Overworld = $08 ; : Overworld
-Starman = $09 ; : Starman
-Underworld = $0a ; : Underworld
+Overworld = $00 ; : Overworld
+Underworld = $01 ; : Underworld
+Waterworld = $02 ; : Waterworld
+Castleworld = $03 ; : Castleworld
+Cloud = $04 ; : Cloud
+EnterPipe = $05 ; : Enter in a pipe
+Starman = $06 ; : Starman
+Death = $07 ; : Death
+GameOver = $08 ; : Game Over
+SavedPrincess = $09 ; : You saved the princess
+InAnotherCastle = $0a ; : In an other castle
 Victory = $0b ; : Victory
-Waterworld = $0c ; : Waterworld
-SavedPrincess = $0d ; : You saved the princess
+HurryUp = $0c ; : Hurry up
+Intermediate = $0d ; : Intermediate
 SilenceTrack = -1
 
 
@@ -143,10 +168,10 @@ NoiseSfxTable:
 
 .proc FindMostSigBit
   txa
-  ldy #8
+  ldy #$ff
   sec
   :
-    dey
+    iny
     rol
     bcc :-
   rts

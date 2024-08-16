@@ -523,11 +523,7 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
 InitializeGame:
   ldy #<WorldSelectNumber  ;clear all memory as in initialization procedure,
   jsr InitializeMemory     ;but this time, clear only as far as $076f
-  ldy #AreaMusicBuffer_Alt - SoundMemory
-ClrSndLoop:
-  sta SoundMemory,y     ;clear out memory used
-  dey                   ;by the sound engines
-  bpl ClrSndLoop
+  jsr AudioClear
   lda #$18              ;set demo timer
   sta DemoTimer
   jsr LoadAreaPointer

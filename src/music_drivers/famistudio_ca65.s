@@ -5649,6 +5649,10 @@ famistudio_advance_channel:
     jmp @read_byte
 
 @opcode_loop:
+
+.ifdef CustomMusicLoopCallback
+    jsr CustomMusicLoopCallback
+.endif
     lda (@channel_data_ptr),y
     sta @tmp_ptr_lo
     iny

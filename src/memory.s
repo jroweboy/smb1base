@@ -168,6 +168,7 @@ RESERVE DigitModifier, 6
 
 StackClear = DigitModifier+5
 
+; DON'T CLEAR PAST HERE
 
 RESERVE IrqNewScroll, 1
 RESERVE IrqPPUCTRL, 1
@@ -547,8 +548,6 @@ RESERVE DemoTimer, 1
 ALL_TIMER_COUNT = DemoTimer - Timers
 
 RESERVE PseudoRandomBitReg, 9
-
-_WarmBootOffset = DisplayDigits
 
 DisplayDigits := TopScoreDisplay
 RESERVE TopScoreDisplay, 6

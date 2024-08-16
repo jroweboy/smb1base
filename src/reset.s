@@ -109,8 +109,9 @@ FinializeMarioInit:
   lda #$a5                     ;set warm boot flag
   sta WarmBootValidation     
   sta PseudoRandomBitReg       ;set seed for pseudorandom register
-  lda #%00001111
-  sta SND_MASTERCTRL_REG       ;enable all sound channels except dmc
+  ; lda #%00001111
+  ; sta SND_MASTERCTRL_REG       ;enable all sound channels except dmc
+  jsr AudioInit
   lda #%00000110
   sta PPUMASK            ;turn off clipping for OAM and background
   farcall MoveAllSpritesOffscreen
@@ -233,7 +234,7 @@ InitScroll:
     ; lda CurrentBank
     ; pha
       ; BankPRGA #.bank(MUSIC)
-      jsr ProcessAudio
+      jsr AudioUpdate
     ;   lda #7 | PRG_FIXED_8
     ;   sta BANK_SELECT
     ; pla
@@ -335,7 +336,7 @@ SkipSprite0:
   ; sta BANK_DATA
 
   ; BankPRGA #.bank(MUSIC)
-  jsr ProcessAudio
+  jsr AudioUpdate
   ; BankPRGA CurrentBank
   
 .ifdef WORLD_HAX

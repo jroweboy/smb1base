@@ -22,7 +22,7 @@ nes2mapper 5 ; mmc5
 .elseif MAPPER_MMC3
 nes2mapper 3 ; mmc3
 .endif
-nes2prg $10000
+nes2prg $20000
 nes2chr $10000
 nes2bram $2000
 nes2mirror 'V'

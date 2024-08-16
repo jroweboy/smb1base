@@ -10,8 +10,8 @@ RESERVE MusicOffset_Triangle, 1
 RESERVE NoteLenLookupTblOfs, 1
 
 .segment "BSS"
+MusicMemoryStart = MusicOffset_Noise
 RESERVE MusicOffset_Noise, 1
-RESERVE EventMusicBuffer, 1
 RESERVE Squ2_NoteLenBuffer, 1
 RESERVE Squ2_NoteLenCounter, 1
 RESERVE Squ2_EnvelopeDataCtrl, 1
@@ -24,6 +24,7 @@ RESERVE DAC_Counter, 1
 RESERVE NoiseDataLoopbackOfs, 1
 RESERVE NoteLengthTblAdder, 1
 RESERVE AreaMusicBuffer_Alt, 1
+MusicMemoryEnd = AreaMusicBuffer_Alt + 1
 
 RESERVE GroundMusicHeaderOfs, 1
 RESERVE AltRegContentFlag, 1

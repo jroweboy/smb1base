@@ -4,12 +4,13 @@
 .pushseg
 
 .segment "BSS"
-SoundMemory := MusicOffset_Noise
+SFXMemoryStart = Squ1_SfxLenCounter
 RESERVE Squ1_SfxLenCounter, 2
 RESERVE Squ2_SfxLenCounter, 1
 RESERVE Sfx_SecondaryCounter, 1
 RESERVE Noise_SfxLenCounter, 1
 RESERVE PauseSoundBuffer, 1
+SFXMemoryEnd = PauseSoundBuffer + 1
 .popseg
 
 
