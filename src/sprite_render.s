@@ -348,6 +348,9 @@ ProcessDemotedKoopa:
   ; fallthrough
 .endproc
 .proc ProcessKoopa
+  ; Reinitialize the flip flag, we'll set it later if we need to flip
+  lda #0
+  sta EnemyVerticalFlip,x
   ldy #METASPRITE_KOOPA_WALKING_1
   lda Enemy_State,x
   cmp #$02
@@ -458,6 +461,9 @@ ProcessJumpingParatrooperInner:
 
 
 .proc ProcessBuzzyBeetle
+  ; Reinitialize the flip flag, we'll set it later if we need to flip
+  lda #0
+  sta EnemyVerticalFlip,x
   ldy #METASPRITE_BUZZY_BEETLE_WALKING_1
   lda Enemy_State,x
   cmp #$02
