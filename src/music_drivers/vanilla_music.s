@@ -44,7 +44,9 @@ RESERVE AltRegContentFlag, 1
   bne SndOn
     sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
     rts
-SndOn:   
+SndOn:
+  lda #$ff
+  sta JOYPAD_PORT2          ;disable irqs and set frame counter mode???
   lda PauseModeFlag         ;is sound already in pause mode?
   bne SkipSoundSubroutines
 
