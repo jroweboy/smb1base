@@ -15,7 +15,7 @@ SFXMemoryEnd = PauseSoundBuffer + 1
 
 
 .macro SFXInit
-
+  jsr AudioClear
 .endmacro
 
 .macro SFXPlayback

@@ -32,7 +32,7 @@ RESERVE AltRegContentFlag, 1
 .popseg
 
 .macro MusicInit
-
+  jsr AudioClear
 .endmacro
 
 .macro MusicPlayback

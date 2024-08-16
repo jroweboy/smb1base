@@ -198,9 +198,6 @@ InPause:
     ; CustomMusicPause Macro
     CustomMusicPause
 
-    ; SFXPlay #Pause Macro
-    CustomSFXPlay #Pause
-
     lda #0
     sta PauseSoundQueue
 
@@ -250,6 +247,7 @@ SkipToUpdate:
   rts
 .endproc
 
+.if USE_CUSTOM_ENGINE_SFX
 .proc CustomSfxEngine
   lda PauseModeFlag         ;is sound already in pause mode?
   bne InPause
@@ -321,6 +319,7 @@ SkipToUpdate:
   
   rts
 .endproc
+.endif ; USE_CUSTOM_ENGINE_SFX
 
 .endif
 
