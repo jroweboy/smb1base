@@ -104,7 +104,7 @@ InitATLoop:
   bne InitATLoop
   sta HorizontalScroll      ;reset scroll variables
   sta VerticalScroll
-  jmp InitScroll            ;initialize scroll registers to zero
+  jmp WriteBufferToScreen::InitScroll  ;initialize scroll registers to zero
 
 ;-------------------------------------------------------------------------------------
 
@@ -242,12 +242,10 @@ DisplayIntermediate:
   bne NoInter                  ;and jump to specific task, otherwise
 PlayerInter:
   jsr DrawPlayer_Intermediate  ;put player in appropriate place for
-  far METASPRITE
   lda #0
   ldy #0
   ldx ObjectMetasprite
-  jsr DrawMetasprite
-  endfar
+  farcall DrawMetasprite
   lda #$01                     ;lives display, then output lives display to buffer
 OutputInter:
   jsr WriteGameText
@@ -369,7 +367,7 @@ NoAltPal:
 DrawTitleScreen:
   lda OperMode                 ;are we in title screen mode?
   bne IncModeTask_B            ;if not, exit
-far TITLE
+; far TITLE
   lda #<TitleScreenData  ;load address $1ec0 into
   sta R2
   lda #>TitleScreenData
@@ -392,7 +390,7 @@ ChkHiByte:
   bne OutputTScr               ;if not, loop back and do another
   cpy #$32                     ;check if offset points past end of data
   bcc OutputTScr               ;if not, loop back and do another
-endfar
+; endfar
   lda #$05                     ;set buffer transfer control to $0300,
   jmp SetVRAMAddr_B            ;increment task and exit
 
@@ -442,72 +440,8 @@ MushroomIconData:
 .endproc
 
 
-
 ;-------------------------------------------------------------------------------------
-;$00 - vram buffer address table low
-;$01 - vram buffer address table high
-
-WriteBufferToScreen:
-
-  sta PPUADDR           ;store high byte of vram address
-  iny
-  lda (NmiR0),y               ;load next byte (second)
-  sta PPUADDR           ;store low byte of vram address
-  iny
-  lda (NmiR0),y               ;load next byte (third)
-  asl                       ;shift to left and save in stack
-  pha
-    lda Mirror_PPUCTRL     ;load mirror of $2000,
-    ora #%00000100            ;set ppu to increment by 32 by default
-    bcs SetupWrites           ;if d7 of third byte was clear, ppu will
-      and #%11111011            ;only increment by 1
-SetupWrites:
-    sta PPUCTRL         ;write contents of A to PPU register 1
-    sta Mirror_PPUCTRL       ;and its mirror
-  pla                       ;pull from stack and shift to left again
-  asl
-  bcc GetLength             ;if d6 of third byte was clear, do not repeat byte
-    ora #%00000010            ;otherwise set d1 and increment Y
-    iny
-GetLength:
-  lsr                       ;shift back to the right to get proper length
-  lsr                       ;note that d1 will now be in carry
-  tax
-OutputToVRAM:
-  bcs RepeatByte            ;if carry set, repeat loading the same byte
-    iny                       ;otherwise increment Y to load next byte
-RepeatByte:
-  lda (NmiR0), y               ;load more data from buffer and write to vram
-  sta PPUDATA
-  dex                       ;done writing?
-  bne OutputToVRAM
-  sec          
-  tya
-  adc NmiR0                    ;add end length plus one to the indirect at $00
-  sta NmiR0                    ;to allow this routine to read another set of updates
-  lda #$00
-  adc NmiR1 
-  sta NmiR1 
-  ; lda #$3f                  ;sets vram address to $3f00
-  ; sta PPUADDR
-  ; lda #$00
-  ; sta PPUADDR
-  ; sta PPUADDR           ;then reinitializes it for some reason
-  ; sta PPUADDR
-UpdateScreen:
-  ldx PPUSTATUS            ;reset flip-flop
-  ldy #$00                  ;load first byte from indirect as a pointer
-  lda (NmiR0),y  
-  bne WriteBufferToScreen   ;if byte is zero we have no further updates to make here
-InitScroll:
-  sta PPUSCROLL        ;store contents of A into scroll registers
-  sta PPUSCROLL        ;and end whatever subroutine led us here
-  rts
-
-
-;-------------------------------------------------------------------------------------
-
-WriteGameText:
+.proc WriteGameText
   pha                      ;save text number to stack
     asl
     tay                      ;multiply by 2 and use as offset
@@ -557,7 +491,6 @@ PutLives:
   iny
   sty VRAM_Buffer1+21      ;we're done here
   rts
-
 CheckPlayerName:
   lda NumberOfPlayers    ;check number of players
   beq ExitChkName        ;if only 1 player, leave
@@ -598,6 +531,9 @@ WarpNumLoop:
     bcc WarpNumLoop
   lda #$2c               ;load new buffer pointer at end of message
   jmp SetVRAMOffset
+
+
+.endproc
 
 GameText:
 TopStatusBarLine:
@@ -652,8 +588,9 @@ GameTextOffsets:
   .byte TwoPlayerGameOver-GameText, OnePlayerGameOver-GameText
   .byte WarpZoneWelcome-GameText, WarpZoneWelcome-GameText
 
+
 .proc SetupPipeTransitionOverlay
-rts
+  rts
 ;   sta InPipeTransition
 ;   beq ClearTransition
 ;   cmp #1
@@ -709,112 +646,6 @@ rts
 ;   rts
 .endproc
 
-.proc HandlePipeEntry
-  lda Up_Down_Buttons       ;check saved controller bits from earlier
-  and #%00000100            ;for pressing down
-  jeq ExPipeE               ;if not pressing down, branch to leave
-  lda R0
-  cmp #$11                  ;check right foot metatile for warp pipe right metatile
-  jne ExPipeE               ;branch to leave if not found
-  lda R1
-  cmp #$10                  ;check left foot metatile for warp pipe left metatile
-  jne ExPipeE               ;branch to leave if not found
-  lda #$30
-  sta ChangeAreaTimer       ;set timer for change of area
-  lda #$03
-  sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
-  lda #Sfx_PipeDown_Injury
-  sta Square1SoundQueue     ;load pipedown/injury sound
-  ; lda #1
-  ; jsr SetupPipeTransitionOverlay
-  ; lda Player_X_Position
-  ; sec
-  ; sbc ScreenLeft_X_Pos
-  ; sta PipeXPosition
-  ; lda Player_Y_Position
-  ; clc
-  ; adc #32
-  ; sta PipeYPosition
-  lda #%00100000
-  sta Player_SprAttrib      ;set background priority bit in player's attributes
-  lda WarpZoneControl       ;check warp zone control
-  beq ExPipeE               ;branch to leave if none found
-  and #%00000011            ;mask out all but 2 LSB
-  asl
-  asl                       ;multiply by four
-  tax                       ;save as offset to warp zone numbers (starts at left pipe)
-  lda Player_X_Position     ;get player's horizontal position
-  cmp #$60      
-  bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
-  inx                       ;otherwise increment for middle pipe
-  cmp #$a0      
-  bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
-  inx                       ;otherwise increment for last pipe
-GetWNum:
-  ldy WarpZoneNumbers,x     ;get warp zone numbers
-  dey                       ;decrement for use as world number
-  sty WorldNumber           ;store as world number and offset
-  ; TODO stop being bad
-  far LEVEL
-  ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
-  lda AreaAddrOffsets,x     ;get area offset based on world offset
-  sta AreaPointer           ;store area offset here to be used to change areas
-  endfar
-  lda #Silence
-  sta EventMusicQueue       ;silence music
-  lda #$00
-  sta EntrancePage          ;initialize starting page number
-  sta AreaNumber            ;initialize area number used for area address offset
-  sta LevelNumber           ;initialize level number used for world display
-  sta AltEntranceControl    ;initialize mode of entry
-  ; inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
-  ; inc FetchNewGameTimerFlag ;set flag to load new game timer
-ExPipeE:
-  rts                       ;leave!!!
-.endproc
-
-.proc FloateyNumbersCore
-  lda FloateyNum_Control,x     ;load control for floatey number
-  beq EndFloateyNumber         ;if zero, branch to leave
-    cmp #$0b                     ;if less than $0b, branch
-    bcc ChkNumTimer
-      lda #$0b                     ;otherwise set to $0b, thus keeping
-      sta FloateyNum_Control,x     ;it in range
-ChkNumTimer:
-    tay                          ;use as Y
-    lda FloateyNum_Timer,x       ;check value here
-    bne DecNumTimer              ;if nonzero, branch ahead
-      sta FloateyNum_Control,x     ;initialize floatey number control and leave
-EndFloateyNumber:
-  rts
-DecNumTimer:
-  dec FloateyNum_Timer,x       ;decrement value here
-  cmp #$2b                     ;if not reached a certain point, branch  
-  bne Exit
-    cpy #$0b                     ;check offset for $0b
-    bne LoadNumTiles             ;branch ahead if not found
-      inc NumberofLives            ;give player one extra life (1-up)
-      lda #Sfx_ExtraLife
-      sta Square2SoundQueue        ;and play the 1-up sound
-  LoadNumTiles:
-    ldx ScoreUpdateDigit-1,y        ;load point value here
-    lda ScoreUpdateAmount-1,y     ;load again and this time
-    sta DigitModifier,x          ;store as amount to add to the digit
-    jmp AddToScore               ;update the score accordingly
-Exit:
-  rts
-
-;high nybble is digit number, low nybble is number to
-;add to the digit of the player's score
-ScoreUpdateData:
-ScoreUpdateAmount:
-  .byte $01, $02, $04, $05, $08
-  .byte $01, $02, $04, $05, $08, $00
-ScoreUpdateDigit:
-  .byte $04, $04, $04, $04, $04
-  .byte $03, $03, $03, $03, $03, $00
-
-.endproc
 
 ;-------------------------------------------------------------------------------------
 GiveOneCoin:
@@ -866,114 +697,6 @@ ScoreOffsets:
 StatusBarNybbles:
   .byte $02, $13
 
-
-;-------------------------------------------------------------------------------------
-;$00 - used to store status bar nybbles
-;$02 - used as temp vram offset
-;$03 - used to store length of status bar number
-
-;status bar name table offset and length data
-StatusBarData:
-      .byte $f0, $06 ; top score display on title screen
-      .byte $62, $06 ; player score
-      .byte $62, $06
-      .byte $6d, $02 ; coin tally
-      .byte $6d, $02
-      .byte $7a, $03 ; game timer
-
-StatusBarOffset:
-      .byte $06, $0c, $12, $18, $1e, $24
-
-.proc PrintStatusBarNumbers
-  sta R0             ;store player-specific offset
-  jsr OutputNumbers  ;use first nybble to print the coin display
-  lda R0             ;move high nybble to low
-  lsr                ;and print to score display
-  lsr
-  lsr
-  lsr
-OutputNumbers:
-  clc                      ;add 1 to low nybble
-  adc #$01
-  and #%00001111           ;mask out high nybble
-  cmp #$06
-  bcs ExitOutputN
-  pha                      ;save incremented value to stack for now and
-    asl                      ;shift to left and use as offset
-    tay
-    ldx VRAM_Buffer1_Offset  ;get current buffer pointer
-    lda #$20                 ;put at top of screen by default
-    cpy #$00                 ;are we writing top score on title screen?
-    bne SetupNums
-    lda #$22                 ;if so, put further down on the screen
-SetupNums:
-    sta VRAM_Buffer1,x
-    lda StatusBarData,y      ;write low vram address and length of thing
-    sta VRAM_Buffer1+1,x     ;we're printing to the buffer
-    lda StatusBarData+1,y
-    sta VRAM_Buffer1+2,x
-    sta R3                   ;save length byte in counter
-    stx R2                   ;and buffer pointer elsewhere for now
-  pla                      ;pull original incremented value from stack
-  tax
-  lda StatusBarOffset,x    ;load offset to value we want to write
-  sec
-  sbc StatusBarData+1,y    ;subtract from length byte we read before
-  tay                      ;use value as offset to display digits
-  ldx R2 
-DigitPLoop:
-  lda DisplayDigits,y      ;write digits to the buffer
-  sta VRAM_Buffer1+3,x    
-  inx
-  iny
-  dec R3                   ;do this until all the digits are written
-  bne DigitPLoop
-  lda #$00                 ;put null terminator at end
-  sta VRAM_Buffer1+3,x
-  inx                      ;increment buffer pointer by 3
-  inx
-  inx
-  stx VRAM_Buffer1_Offset  ;store it in case we want to use it again
-ExitOutputN:
-  rts
-.endproc
-
-;-------------------------------------------------------------------------------------
-.proc DigitsMathRoutine
-  lda OperMode              ;check mode of operation
-  cmp #MODE_TITLESCREEN
-  beq EraseDMods            ;if in title screen mode, branch to lock score
-  ldx #$05
-AddModLoop:
-  lda DigitModifier,x       ;load digit amount to increment
-  clc
-  adc DisplayDigits,y       ;add to current digit
-  bmi BorrowOne             ;if result is a negative number, branch to subtract
-  cmp #10
-  bcs CarryOne              ;if digit greater than $09, branch to add
-StoreNewD:
-  sta DisplayDigits,y       ;store as new score or game timer digit
-  dey                       ;move onto next digits in score or game timer
-  dex                       ;and digit amounts to increment
-  bpl AddModLoop            ;loop back if we're not done yet
-EraseDMods:
-  lda #$00                  ;store zero here
-  ldx #$06                  ;start with the last digit
-EraseMLoop:
-  sta DigitModifier-1,x     ;initialize the digit amounts to increment
-  dex
-  bpl EraseMLoop            ;do this until they're all reset, then leave
-  rts
-BorrowOne:
-  dec DigitModifier-1,x     ;decrement the previous digit, then put $09 in
-  lda #$09                  ;the game timer digit we're currently on to "borrow
-  bne StoreNewD             ;the one", then do an unconditional branch back
-CarryOne:
-  sec                       ;subtract ten from our digit to make it a
-  sbc #10                   ;proper BCD number, then increment the digit
-  inc DigitModifier-1,x     ;preceding current digit to "carry the one" properly
-  jmp StoreNewD             ;go back to just after we branched here
-.endproc
 
 ;-------------------------------------------------------------------------------------
 .proc UpdateTopScore

@@ -105,18 +105,22 @@ DoAPTasks:
   jsr AreaParserTasks
   dec AreaParserTaskNum     ;if all tasks not complete do not
   bne SkipATRender          ;render attribute table yet
-    jmp RenderAttributeTables
+    farcall RenderAttributeTables, jmp
 
 AreaParserTasks:
   jsr JumpEngine
   .word IncrementColumnPos
-  .word RenderAreaGraphics
-  .word RenderAreaGraphics
+  .word FarCallRenderAreaGraphics
+  .word FarCallRenderAreaGraphics
   .word AreaParserCore
   .word IncrementColumnPos
-  .word RenderAreaGraphics
-  .word RenderAreaGraphics
+  .word FarCallRenderAreaGraphics
+  .word FarCallRenderAreaGraphics
   .word AreaParserCore
+
+.proc FarCallRenderAreaGraphics
+  farcall RenderAreaGraphics, jmp
+.endproc
 
 ;-------------------------------------------------------------------------------------
 
@@ -655,7 +659,7 @@ ScrollLockObject_Warp:
          inx                 ;(8-7-6) and move on
 WarpNum: txa
          sta WarpZoneControl ;store number here to be used by warp zone routine
-         jsr WriteGameText   ;print text and warp zone numbers
+         farcall WriteGameText   ;print text and warp zone numbers
          lda #PiranhaPlant
          jsr KillEnemies     ;load identifier for piranha plants and do sub
 
@@ -2022,7 +2026,6 @@ GetRow2: pha                        ;save metatile to stack for now
 
 ;-----------------------------------
 
-.segment "LOWCODE"
 
 ;--------------------------------
 ;$07 - used to save ID of brick object
@@ -2063,6 +2066,8 @@ GetAreaObjectID:
 ExitDecBlock:
   rts
 
+
+.segment "LOWCODE"
 
 ;--------------------------------
 
@@ -2162,7 +2167,7 @@ BrickShatter:
       sta Player_Y_Speed     ;set vertical speed for player
       lda #$05
       sta DigitModifier+5    ;set digit modifier to give player 50 points
-      jsr AddToScore         ;do sub to update the score
+      farcall AddToScore     ;do sub to update the score
       ldx SprDataOffset_Ctrl ;load control bit and leave
       rts
 
@@ -2182,7 +2187,7 @@ CheckTopOfBlock:
        bne TopEx               ;if not, branch to leave
        lda #$00
        sta (R6),y             ;otherwise put blank metatile where coin was
-       jsr RemoveCoin_Axe      ;write blank metatile to vram buffer
+       farcall RemoveCoin_Axe      ;write blank metatile to vram buffer
        ldx SprDataOffset_Ctrl  ;get control bit
        jmp SetupJumpCoin       ;create jumping coin object and update coin variables
 TopEx: rts ; TODO check this RTS can be removed                     ;leave!
@@ -2252,7 +2257,7 @@ JCoinC: lda #$fb
         sta Misc_State,y       ;set state for misc object
         sta Square2SoundQueue  ;load coin grab sound
         stx ObjectOffset       ;store current control bit as misc object offset 
-        jsr GiveOneCoin        ;update coin tally on the screen and coin amount variable
+        farcall GiveOneCoin        ;update coin tally on the screen and coin amount variable
         inc CoinTallyFor1Ups   ;increment coin tally used to activate 1-up block flag
         rts
 
@@ -2794,3 +2799,4 @@ NextStair: dec StaircaseControl      ;move onto next step (or first if starting)
            tay
            lda #$61                  ;now render solid block staircase
            jmp RenderUnderPart
+

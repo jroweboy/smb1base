@@ -413,7 +413,7 @@ SetStPos: lda PlayerStarting_X_Pos,y  ;load appropriate horizontal position
           sta Player_Y_Position       ;or value that overwrote $0710 as offset for vertical
           lda PlayerBGPriorityData,x
           sta Player_SprAttrib        ;set player sprite attributes using offset in X
-          jsr GetPlayerColors         ;get appropriate player palette
+          farcall GetPlayerColors         ;get appropriate player palette
           ldy GameTimerSetting        ;get timer control value from header
           beq ChkOverR                ;if set to zero, branch (do not use dummy byte for this)
           lda FetchNewGameTimerFlag   ;do we need to set the game timer? if not, use 

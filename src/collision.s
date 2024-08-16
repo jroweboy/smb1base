@@ -366,7 +366,7 @@ ForceInjury:
           sta InjuryTimer           ;set injured invincibility timer
           asl
           sta Square1SoundQueue     ;play pipedown/injury sound
-          jsr GetPlayerColors       ;change player's palette if necessary
+          farcall GetPlayerColors       ;change player's palette if necessary
           lda #$0a                  ;set subroutine to run on next frame
 SetKRout: ldy #$01                  ;set new player state
 SetPRout: sta GameEngineSubroutine  ;load new value to run subroutine on next frame
@@ -906,7 +906,7 @@ Shroom_Flower_PUp:
       ldx ObjectOffset    ;get enemy offset, not necessary
       lda #$02            ;set player status to fiery
       sta PlayerStatus
-      jsr GetPlayerColors ;run sub to change colors of player
+      farcall GetPlayerColors ;run sub to change colors of player
       ldx ObjectOffset    ;get enemy offset again, and again not necessary
       lda #$0c            ;set value to be used by subroutine tree (fiery)
       jmp UpToFiery       ;jump to set values accordingly
@@ -1213,7 +1213,7 @@ AreaChangeTimerData:
 HandleCoinMetatile:
   jsr ErACM             ;do sub to erase coin metatile from block buffer
   inc CoinTallyFor1Ups  ;increment coin tally used for 1-up blocks
-  jmp GiveOneCoin       ;update coin amount and tally on the screen
+  farcall GiveOneCoin, jmp       ;update coin amount and tally on the screen
 
 HandleAxeMetatile:
 
@@ -1237,8 +1237,72 @@ ErACM:
   ldy R2              ;load vertical high nybble offset for block buffer
   lda #$00            ;load blank metatile
   sta (R6),y          ;store to remove old contents from block buffer
-  jmp RemoveCoin_Axe  ;update the screen accordingly
+  farcall RemoveCoin_Axe, jmp  ;update the screen accordingly
 
+
+.proc HandlePipeEntry
+  lda Up_Down_Buttons       ;check saved controller bits from earlier
+  and #%00000100            ;for pressing down
+  beq ExPipeE               ;if not pressing down, branch to leave
+  lda R0
+  cmp #$11                  ;check right foot metatile for warp pipe right metatile
+  bne ExPipeE               ;branch to leave if not found
+  lda R1
+  cmp #$10                  ;check left foot metatile for warp pipe left metatile
+  bne ExPipeE               ;branch to leave if not found
+  lda #$30
+  sta ChangeAreaTimer       ;set timer for change of area
+  lda #$03
+  sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
+  lda #Sfx_PipeDown_Injury
+  sta Square1SoundQueue     ;load pipedown/injury sound
+  ; lda #1
+  ; jsr SetupPipeTransitionOverlay
+  ; lda Player_X_Position
+  ; sec
+  ; sbc ScreenLeft_X_Pos
+  ; sta PipeXPosition
+  ; lda Player_Y_Position
+  ; clc
+  ; adc #32
+  ; sta PipeYPosition
+  lda #%00100000
+  sta Player_SprAttrib      ;set background priority bit in player's attributes
+  lda WarpZoneControl       ;check warp zone control
+  beq ExPipeE               ;branch to leave if none found
+  and #%00000011            ;mask out all but 2 LSB
+  asl
+  asl                       ;multiply by four
+  tax                       ;save as offset to warp zone numbers (starts at left pipe)
+  lda Player_X_Position     ;get player's horizontal position
+  cmp #$60      
+  bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
+  inx                       ;otherwise increment for middle pipe
+  cmp #$a0      
+  bcc GetWNum               ;if player at middle, but not too far right, use offset and skip
+  inx                       ;otherwise increment for last pipe
+GetWNum:
+  ; TODO stop being bad and using a far call for this one thing
+  far RENDER
+  ldy WarpZoneNumbers,x     ;get warp zone numbers
+  endfar
+  dey                       ;decrement for use as world number
+  sty WorldNumber           ;store as world number and offset
+  ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
+  lda AreaAddrOffsets,x     ;get area offset based on world offset
+  sta AreaPointer           ;store area offset here to be used to change areas
+  lda #Silence
+  sta EventMusicQueue       ;silence music
+  lda #$00
+  sta EntrancePage          ;initialize starting page number
+  sta AreaNumber            ;initialize area number used for area address offset
+  sta LevelNumber           ;initialize level number used for world display
+  sta AltEntranceControl    ;initialize mode of entry
+  ; inc Hidden1UpFlag         ;set flag for hidden 1-up blocks
+  ; inc FetchNewGameTimerFlag ;set flag to load new game timer
+ExPipeE:
+  rts                       ;leave!!!
+.endproc
 
 ;--------------------------------
 
@@ -1719,7 +1783,7 @@ PlayerHeadCollision:
       lda #$12                 ;otherwise load breakable block object state
 :
     sta Block_State,x        ;store into block object buffer
-    jsr DestroyBlockMetatile ;store blank metatile in vram buffer to write to name table
+    farcall DestroyBlockMetatile ;store blank metatile in vram buffer to write to name table
     ldx SprDataOffset_Ctrl   ;load offset control bit
     lda R2                   ;get vertical high nybble offset used in block buffer routine
     sta Block_Orig_YPos,x    ;set as vertical coordinate for block object

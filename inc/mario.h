@@ -3,9 +3,9 @@
 #ifndef __MARIO_H
 #define __MARIO_H
 
+#include "internal/options.h"
 #include "internal/common_types.h"
 #include "internal/joypad.h"
-
 
 // Temporary values should not be expected to last from frame to frame.
 // They will likely be changed by other code after the function you are writing ends

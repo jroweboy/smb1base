@@ -861,9 +861,9 @@ RemoveBridge:
   ldy VRAM_Buffer1_Offset   ;increment vram buffer offset
   iny
   ldx #$0c                  ;set offset for tile data for sub to draw blank metatile
-  jsr RemBridge             ;do sub here to remove bowser's bridge metatiles
+  farcall RemBridge             ;do sub here to remove bowser's bridge metatiles
   ldx ObjectOffset          ;get enemy offset
-  jsr MoveVOffset           ;set new vram buffer offset
+  farcall MoveVOffset       ;set new vram buffer offset
   lda #Sfx_Blast            ;load the fireworks/gunfire sound into the square 2 sfx
   sta Square2SoundQueue     ;queue while at the same time loading the brick
   lda #Sfx_BrickShatter     ;shatter sound into the noise sfx queue thus
@@ -2957,7 +2957,7 @@ ELPGive: jsr DigitsMathRoutine  ;award 50 points per game timer interval
          asl
          asl
          ora #%00000100         ;add four to set nybble for game timer
-         jmp UpdateNumber       ;jump to print the new score and game timer
+         farcall UpdateNumber, jmp ;jump to print the new score and game timer
 
 RaiseFlagSetoffFWorks:
          lda Enemy_Y_Position,x  ;check star flag's vertical position

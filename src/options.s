@@ -15,11 +15,21 @@
 
 
 
-
-; Verify mapper selection
-
 bool_option MAPPER_MMC3
 bool_option MAPPER_MMC5
+bool_option ENABLE_C_CALLBACKS
+
+bool_option USE_MMC5_AUDIO
+bool_option USE_MMC5_FOR_VANILLA_SFX
+bool_option USE_VRC7_AUDIO
+bool_option USE_VANILLA_MUSIC
+bool_option USE_FAMISTUDIO_MUSIC
+
+bool_option WORLD_HAX
+bool_option PRINT_METASPRITE_IDS
+
+
+; Verify mapper selection
 
 .if MAPPER_MMC3 + MAPPER_MMC5 > 1
   ; Check that `MAPPER_MMC3` and `MAPPER_MMC5` aren't both uncommented and that only one of them are set to 1
@@ -35,12 +45,6 @@ bool_option MAPPER_MMC5
 
 ; verify audio options
 
-bool_option USE_MMC5_AUDIO
-bool_option USE_MMC5_FOR_VANILLA_SFX
-bool_option USE_VRC7_AUDIO
-bool_option USE_VANILLA_MUSIC
-bool_option USE_FAMISTUDIO_MUSIC
-
 .if (.not MAPPER_MMC5) .and USE_MMC5_AUDIO
   ; Either disable USE_MMC5_AUDIO or switch to using MAPPER_MMC5 for this feature to work
   .error "Cannot use MMC5 Audio channels if the mapper isn't MMC5"
@@ -54,8 +58,4 @@ bool_option USE_FAMISTUDIO_MUSIC
 .endif
 
 ; verify debug options
-
-bool_option WORLD_HAX
-bool_option PRINT_METASPRITE_IDS
-
 

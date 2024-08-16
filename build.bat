@@ -19,4 +19,4 @@ tools\Windows\cc65\bin\cl65 ^
   -m build\smb1base.map ^
   -o build\smb1base.nes ^
   !options! ^
-  ./src/entrypoint.s ./src/main.c
+   ./src/main.c ./src/entrypoint.s

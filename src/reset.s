@@ -113,8 +113,8 @@ FinializeMarioInit:
   sta SND_MASTERCTRL_REG       ;enable all sound channels except dmc
   lda #%00000110
   sta PPUMASK            ;turn off clipping for OAM and background
-  jsr MoveAllSpritesOffscreen
-  jsr InitializeNameTables     ;initialize both name tables
+  farcall MoveAllSpritesOffscreen
+  farcall InitializeNameTables     ;initialize both name tables
   inc DisableScreenFlag        ;set flag to disable screen output
   lda Mirror_PPUCTRL
   ora #%10100000               ;enable NMIs and 8x16 sprites
@@ -155,6 +155,64 @@ GoToNextFrameImmediately:
   sta NmiDisable
   rts
 .endproc
+
+
+;-------------------------------------------------------------------------------------
+;$00 - vram buffer address table low
+;$01 - vram buffer address table high
+
+.proc WriteBufferToScreen
+
+  sta PPUADDR           ;store high byte of vram address
+  iny
+  lda (NmiR0),y               ;load next byte (second)
+  sta PPUADDR           ;store low byte of vram address
+  iny
+  lda (NmiR0),y               ;load next byte (third)
+  asl                       ;shift to left and save in stack
+  pha
+    lda Mirror_PPUCTRL     ;load mirror of $2000,
+    ora #%00000100            ;set ppu to increment by 32 by default
+    bcs SetupWrites           ;if d7 of third byte was clear, ppu will
+      and #%11111011            ;only increment by 1
+SetupWrites:
+    sta PPUCTRL         ;write contents of A to PPU register 1
+    sta Mirror_PPUCTRL       ;and its mirror
+  pla                       ;pull from stack and shift to left again
+  asl
+  bcc GetLength             ;if d6 of third byte was clear, do not repeat byte
+    ora #%00000010            ;otherwise set d1 and increment Y
+    iny
+GetLength:
+  lsr                       ;shift back to the right to get proper length
+  lsr                       ;note that d1 will now be in carry
+  tax
+OutputToVRAM:
+  bcs RepeatByte            ;if carry set, repeat loading the same byte
+    iny                       ;otherwise increment Y to load next byte
+RepeatByte:
+  lda (NmiR0), y               ;load more data from buffer and write to vram
+  sta PPUDATA
+  dex                       ;done writing?
+  bne OutputToVRAM
+  sec          
+  tya
+  adc NmiR0                    ;add end length plus one to the indirect at $00
+  sta NmiR0                    ;to allow this routine to read another set of updates
+  lda #$00
+  adc NmiR1
+  sta NmiR1
+UpdateScreen:
+  ldx PPUSTATUS            ;reset flip-flop
+  ldy #$00                  ;load first byte from indirect as a pointer
+  lda (NmiR0),y  
+  bne WriteBufferToScreen   ;if byte is zero we have no further updates to make here
+InitScroll:
+  sta PPUSCROLL        ;store contents of A into scroll registers
+  sta PPUSCROLL        ;and end whatever subroutine led us here
+  rts
+.endproc
+
 
 .proc NonMaskableInterrupt
   pha
@@ -218,7 +276,7 @@ ScreenOff:
   sta NmiR0
   lda VRAM_AddrTable_High,x
   sta NmiR1
-  jsr UpdateScreen          ;update screen with buffer contents
+  jsr WriteBufferToScreen::UpdateScreen  ;update screen with buffer contents
 
   jsr OAMandReadJoypad
   lda ReloadCHRBank
@@ -301,7 +359,7 @@ SkipSprite0:
 .endif
 
   jsr PauseRoutine          ;handle pause
-  jsr UpdateTopScore
+  farcall UpdateTopScore
   lda GamePauseStatus       ;check for pause status
   lsr
   bcs PauseSkip
@@ -557,6 +615,7 @@ ClrPauseTimer: lda GamePauseStatus    ;clear timer flag if timer is at zero and 
 SetPause:      sta GamePauseStatus
 ExitPause:     rts
 .endproc
+
 
 
 ;;;;;;;;----------------------------------------

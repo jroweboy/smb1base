@@ -25,7 +25,7 @@ GameEngine:
 ProcELoop:
       stx ObjectOffset           ;put incremented offset in X as enemy object offset
       jsr EnemiesAndLoopsCore    ;process enemy objects
-      jsr FloateyNumbersCore  ;process floatey numbers
+      jsr FloateyNumbersCore     ;process floatey numbers
       inx
       cpx #$06                   ;do these two subroutines until the whole buffer is done
     bne ProcELoop
@@ -101,9 +101,12 @@ UpdScrollVar:
   RunParser:
         farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
 ExitEng:
+.if ENABLE_C_CALLBACKS
   .import _after_frame_callback
-  jsr _after_frame_callback
+  jmp _after_frame_callback
+.else
   rts                        ;and after all that, we're finally done!
+.endif
 
 
 ;-------------------------------------------------------------------------------------
@@ -126,7 +129,7 @@ UpdateLoop:
       tay
       lda Block_Metatile,x      ;get metatile to be written
       sta (R6),y                ;write it to the block buffer
-      jsr WriteBlockMetatile  ;do sub to replace metatile where block object is
+      farcall WriteBlockMetatile  ;do sub to replace metatile where block object is
       lda #$00
       sta Block_RepFlag,x       ;clear block object flag
 NextBUpd:
@@ -376,7 +379,7 @@ GiveFPScr: ldy FlagpoleScore         ;get score offset from earlier (when player
            lda FlagpoleScoreMods,y   ;get amount to award player points
            ldx FlagpoleScoreDigits,y ;get digit with which to award points
            sta DigitModifier,x       ;store in digit modifier
-           jsr AddToScore            ;do sub to award player points depending on height of collision
+           farcall AddToScore        ;do sub to award player points depending on height of collision
            lda #$05
            sta GameEngineSubroutine  ;set to run end-of-level subroutine on next frame
 FPGfx:     ;jsr GetEnemyOffscreenBits ;get offscreen information
@@ -455,9 +458,13 @@ ExitColorRot: rts                      ;leave
   jsr JumpEngine
 
   .word InitializeArea
-  .word ScreenRoutines
+  .word FarCallScreenRoutines
   .word SecondaryGameSetup
   .word GameCoreRoutine
+.endproc
+
+.proc FarCallScreenRoutines
+  farcall ScreenRoutines, jmp
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -508,7 +515,7 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   jsr JumpEngine
 
   .word InitializeGame
-  .word ScreenRoutines
+  .word FarCallScreenRoutines
   .word PrimaryGameSetup
   .word GameMenuRoutine
 .endproc
@@ -594,7 +601,7 @@ DoneInitArea:
   jsr JumpEngine
   
   .word SetupGameOver
-  .word ScreenRoutines
+  .word FarCallScreenRoutines
   .word RunGameOver
 .endproc
 
@@ -695,7 +702,7 @@ SelectBLogic:
   lda NumberOfPlayers         ;if no, must have been the select button, therefore
   eor #%00000001              ;change number of players and draw icon accordingly
   sta NumberOfPlayers
-  jsr DrawMushroomIcon
+  farcall DrawMushroomIcon
   jmp NullJoypad
 IncWorldSel:
   ldx WorldSelectNumber       ;increment world select number
@@ -847,8 +854,6 @@ AutoPlayer:
   stx DestinationPageLoc   ;store here
   lda #EndOfCastleMusic
   sta EventMusicQueue      ;play win castle music
-  ; jroweboy (just inline it its literally just one more byte)
-  ; jmp IncModeTask_B        ;jump to set next major task in victory mode
   inc OperMode_Task
   rts
 .endproc
@@ -993,4 +998,156 @@ EndChkBButton:
   jsr RunGameOver::TerminateGame          ;do sub to continue other player or end game
 EndExitTwo:
   rts                        ;leave
+.endproc
+
+.proc FloateyNumbersCore
+  lda FloateyNum_Control,x     ;load control for floatey number
+  beq EndFloateyNumber         ;if zero, branch to leave
+    cmp #$0b                     ;if less than $0b, branch
+    bcc ChkNumTimer
+      lda #$0b                     ;otherwise set to $0b, thus keeping
+      sta FloateyNum_Control,x     ;it in range
+ChkNumTimer:
+    tay                          ;use as Y
+    lda FloateyNum_Timer,x       ;check value here
+    bne DecNumTimer              ;if nonzero, branch ahead
+      sta FloateyNum_Control,x     ;initialize floatey number control and leave
+EndFloateyNumber:
+  rts
+DecNumTimer:
+  dec FloateyNum_Timer,x       ;decrement value here
+  cmp #$2b                     ;if not reached a certain point, branch  
+  bne Exit
+    cpy #$0b                     ;check offset for $0b
+    bne LoadNumTiles             ;branch ahead if not found
+      inc NumberofLives            ;give player one extra life (1-up)
+      lda #Sfx_ExtraLife
+      sta Square2SoundQueue        ;and play the 1-up sound
+  LoadNumTiles:
+    ldx ScoreUpdateDigit-1,y        ;load point value here
+    lda ScoreUpdateAmount-1,y     ;load again and this time
+    sta DigitModifier,x          ;store as amount to add to the digit
+    farcall AddToScore, jmp      ;update the score accordingly
+Exit:
+  rts
+
+;high nybble is digit number, low nybble is number to
+;add to the digit of the player's score
+ScoreUpdateData:
+ScoreUpdateAmount:
+  .byte $01, $02, $04, $05, $08
+  .byte $01, $02, $04, $05, $08, $00
+ScoreUpdateDigit:
+  .byte $04, $04, $04, $04, $04
+  .byte $03, $03, $03, $03, $03, $00
+
+.endproc
+
+;-------------------------------------------------------------------------------------
+.proc DigitsMathRoutine
+  lda OperMode              ;check mode of operation
+  cmp #MODE_TITLESCREEN
+  beq EraseDMods            ;if in title screen mode, branch to lock score
+  ldx #$05
+AddModLoop:
+  lda DigitModifier,x       ;load digit amount to increment
+  clc
+  adc DisplayDigits,y       ;add to current digit
+  bmi BorrowOne             ;if result is a negative number, branch to subtract
+  cmp #10
+  bcs CarryOne              ;if digit greater than $09, branch to add
+StoreNewD:
+  sta DisplayDigits,y       ;store as new score or game timer digit
+  dey                       ;move onto next digits in score or game timer
+  dex                       ;and digit amounts to increment
+  bpl AddModLoop            ;loop back if we're not done yet
+EraseDMods:
+  lda #$00                  ;store zero here
+  ldx #$06                  ;start with the last digit
+EraseMLoop:
+  sta DigitModifier-1,x     ;initialize the digit amounts to increment
+  dex
+  bpl EraseMLoop            ;do this until they're all reset, then leave
+  rts
+BorrowOne:
+  dec DigitModifier-1,x     ;decrement the previous digit, then put $09 in
+  lda #$09                  ;the game timer digit we're currently on to "borrow
+  bne StoreNewD             ;the one", then do an unconditional branch back
+CarryOne:
+  sec                       ;subtract ten from our digit to make it a
+  sbc #10                   ;proper BCD number, then increment the digit
+  inc DigitModifier-1,x     ;preceding current digit to "carry the one" properly
+  jmp StoreNewD             ;go back to just after we branched here
+.endproc
+
+.proc PrintStatusBarNumbers
+  sta R0             ;store player-specific offset
+  jsr OutputNumbers  ;use first nybble to print the coin display
+  lda R0             ;move high nybble to low
+  lsr                ;and print to score display
+  lsr
+  lsr
+  lsr
+OutputNumbers:
+  clc                      ;add 1 to low nybble
+  adc #$01
+  and #%00001111           ;mask out high nybble
+  cmp #$06
+  bcs ExitOutputN
+  pha                      ;save incremented value to stack for now and
+    asl                      ;shift to left and use as offset
+    tay
+    ldx VRAM_Buffer1_Offset  ;get current buffer pointer
+    lda #$20                 ;put at top of screen by default
+    cpy #$00                 ;are we writing top score on title screen?
+    bne SetupNums
+    lda #$22                 ;if so, put further down on the screen
+SetupNums:
+    sta VRAM_Buffer1,x
+    lda StatusBarData,y      ;write low vram address and length of thing
+    sta VRAM_Buffer1+1,x     ;we're printing to the buffer
+    lda StatusBarData+1,y
+    sta VRAM_Buffer1+2,x
+    sta R3                   ;save length byte in counter
+    stx R2                   ;and buffer pointer elsewhere for now
+  pla                      ;pull original incremented value from stack
+  tax
+  lda StatusBarOffset,x    ;load offset to value we want to write
+  sec
+  sbc StatusBarData+1,y    ;subtract from length byte we read before
+  tay                      ;use value as offset to display digits
+  ldx R2 
+DigitPLoop:
+  lda DisplayDigits,y      ;write digits to the buffer
+  sta VRAM_Buffer1+3,x    
+  inx
+  iny
+  dec R3                   ;do this until all the digits are written
+  bne DigitPLoop
+  lda #$00                 ;put null terminator at end
+  sta VRAM_Buffer1+3,x
+  inx                      ;increment buffer pointer by 3
+  inx
+  inx
+  stx VRAM_Buffer1_Offset  ;store it in case we want to use it again
+ExitOutputN:
+  rts
+  
+
+;-------------------------------------------------------------------------------------
+;$00 - used to store status bar nybbles
+;$02 - used as temp vram offset
+;$03 - used to store length of status bar number
+
+;status bar name table offset and length data
+StatusBarData:
+      .byte $f0, $06 ; top score display on title screen
+      .byte $62, $06 ; player score
+      .byte $62, $06
+      .byte $6d, $02 ; coin tally
+      .byte $6d, $02
+      .byte $7a, $03 ; game timer
+
+StatusBarOffset:
+      .byte $06, $0c, $12, $18, $1e, $24
 .endproc
