@@ -46,7 +46,7 @@ RESERVE AltRegContentFlag, 1
     rts
 SndOn:
   lda #$ff
-  sta JOYPAD_PORT2          ;disable irqs and set frame counter mode???
+  sta APU_FRAMECOUNTER      ;timer consistency
   lda PauseModeFlag         ;is sound already in pause mode?
   bne SkipSoundSubroutines
 

@@ -28,9 +28,7 @@ SFXMemoryEnd = PauseSoundBuffer + 1
          bne SndOn
          sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
          rts
-SndOn:   lda #$ff
-         sta JOYPAD_PORT2          ;disable irqs and set frame counter mode???
-         lda #$0f
+SndOn:   lda #$0f
          sta SND_MASTERCTRL_REG    ;enable first four channels
          lda PauseModeFlag         ;is sound already in pause mode?
          bne InPause
