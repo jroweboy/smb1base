@@ -24,17 +24,24 @@ SFXMemoryEnd = PauseSoundBuffer + 1
 
 ;-------------------------------------------------------------------------------------
 .proc SFXSoundEngine
-         lda OperMode              ;are we in title screen mode?
-         bne SndOn
-         sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
-         rts
-SndOn:   lda #$0f
-         sta SND_MASTERCTRL_REG    ;enable first four channels
-         lda PauseModeFlag         ;is sound already in pause mode?
-         bne InPause
-         lda PauseSoundQueue       ;if not, check pause sfx queue    
-         cmp #$01
-         bne RunSoundSubroutines   ;if queue is empty, skip pause mode routine
+  lda OperMode              ;are we in title screen mode?
+  bne SndOn
+    sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
+    rts
+SndOn:
+
+; if we are running vanilla music than this has already happened.
+.if .not ::USE_VANILLA_MUSIC
+  lda #$ff
+  sta APU_FRAMECOUNTER      ;disable irqs and set frame counter mode???
+  lda #$0f
+  sta SND_MASTERCTRL_REG    ;enable first four channels
+.endif
+  lda PauseModeFlag         ;is sound already in pause mode?
+  bne InPause
+    lda PauseSoundQueue       ;if not, check pause sfx queue    
+    cmp #$01
+    bne RunSoundSubroutines   ;if queue is empty, skip pause mode routine
 InPause: lda PauseSoundBuffer      ;check pause sfx buffer
          bne ContPau
          lda PauseSoundQueue       ;check pause queue
