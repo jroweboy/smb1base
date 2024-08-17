@@ -992,6 +992,11 @@ famistudio_exp_instrument_lo:     .res 1
 famistudio_exp_instrument_hi:     .res 1
 .endif
 
+; SMBStudio: Use famistudio_output_buf when using the vanilla SFX engine
+.if USE_VANILLA_SFX && (!FAMISTUDIO_CFG_SFX_SUPPORT)
+famistudio_output_buf:     .res 11
+.endif
+
 .if FAMISTUDIO_CFG_SFX_SUPPORT
 
 famistudio_output_buf:     .res 11
@@ -1246,7 +1251,8 @@ FAMISTUDIO_FDS_MOD_TABLE  = $4088
 FAMISTUDIO_FDS_VOL        = $4089
 FAMISTUDIO_FDS_ENV_SPEED  = $408A
 
-.if !FAMISTUDIO_CFG_SFX_SUPPORT
+
+.if (!USE_VANILLA_SFX) && (!FAMISTUDIO_CFG_SFX_SUPPORT)
     ; Output directly to APU
     FAMISTUDIO_ALIAS_PL1_VOL    = FAMISTUDIO_APU_PL1_VOL
     FAMISTUDIO_ALIAS_PL1_LO     = FAMISTUDIO_APU_PL1_LO
@@ -1341,6 +1347,7 @@ famistudio_init:
     sta famistudio_pulse2_prev
 
     lda #$0f ; Enable channels, stop DMC
+    ; sta SND_MASTERCTRL_REG_Mirror
     sta FAMISTUDIO_APU_SND_CHN
     lda #$80 ; Disable triangle length counter
     sta FAMISTUDIO_APU_TRI_LINEAR
@@ -2132,7 +2139,7 @@ famistudio_get_note_pitch_vrc6_saw:
         .endif
         ora #$80
     .else
-        .if (!.blank(pulse_prev)) && ((!FAMISTUDIO_CFG_SFX_SUPPORT) || (.blank(reg_sweep)))
+        .if (!.blank(pulse_prev)) && (((!FAMISTUDIO_CFG_SFX_SUPPORT) && (!::USE_VANILLA_SFX)) || (.blank(reg_sweep)))
             .if (!.blank(reg_sweep)) && FAMISTUDIO_CFG_SMOOTH_VIBRATO
                 famistudio_smooth_vibrato @pitch, pulse_prev, reg_hi, reg_lo, reg_sweep
             .else
@@ -2145,7 +2152,7 @@ famistudio_get_note_pitch_vrc6_saw:
 
 .endif ; idx = 3
 
-.if .blank(pulse_prev) || .blank(reg_sweep) || FAMISTUDIO_CFG_SFX_SUPPORT || (!FAMISTUDIO_CFG_SMOOTH_VIBRATO)
+.if .blank(pulse_prev) || .blank(reg_sweep) || FAMISTUDIO_CFG_SFX_SUPPORT || ::USE_VANILLA_SFX || (!FAMISTUDIO_CFG_SMOOTH_VIBRATO)
     sta reg_hi
 .endif
 
@@ -4232,8 +4239,23 @@ famistudio_update:
 ;----------------------------------------------------------------------------------------------------------------------
 @update_sound:
 
+; SMBStudio edit: Only update the sound channel if a vanilla SFX isn't playing already
+;     lda Square1SoundBuffer
+;     beq @UpdateSq1
+;         lda #$ff ; Previous pulse period MSB, to not write it when not changed
+;         sta famistudio_pulse1_prev
+;         jmp @SkipSq1
+; @UpdateSq1:
     famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, famistudio_pulse1_prev, FAMISTUDIO_ALIAS_PL1_HI, FAMISTUDIO_ALIAS_PL1_LO, FAMISTUDIO_ALIAS_PL1_VOL, FAMISTUDIO_APU_PL1_SWEEP
+; @SkipSq1:
+;     lda Square2SoundBuffer
+;     beq @UpdateSq2
+;         lda #$ff ; Previous pulse period MSB, to not write it when not changed
+;         sta famistudio_pulse2_prev
+;         jmp @SkipSq2
+; @UpdateSq2:
     famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, famistudio_pulse2_prev, FAMISTUDIO_ALIAS_PL2_HI, FAMISTUDIO_ALIAS_PL2_LO, FAMISTUDIO_ALIAS_PL2_VOL, FAMISTUDIO_APU_PL2_SWEEP
+; @SkipSq2:
     famistudio_update_channel_sound 2, FAMISTUDIO_CH2_ENVS, , FAMISTUDIO_ALIAS_TRI_HI, FAMISTUDIO_ALIAS_TRI_LO, FAMISTUDIO_ALIAS_TRI_LINEAR
     famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, , FAMISTUDIO_ALIAS_NOISE_LO, , FAMISTUDIO_ALIAS_NOISE_VOL
 
@@ -6391,6 +6413,7 @@ famistudio_advance_channel:
 famistudio_sample_stop:
 
     lda #%00001111
+    ; sta SND_MASTERCTRL_REG_Mirror
     sta FAMISTUDIO_APU_SND_CHN
     rts
 
@@ -6450,6 +6473,7 @@ sample_play:
 
 @stop_dpcm:
     lda #%00001111 ; Stop DPCM
+    ; sta SND_MASTERCTRL_REG_Mirror
     sta FAMISTUDIO_APU_SND_CHN
 
     ldy #0
@@ -6484,6 +6508,7 @@ sample_play:
 .endif
 
     lda #%00011111 ; Start DMC
+    ; sta SND_MASTERCTRL_REG_Mirror
     sta FAMISTUDIO_APU_SND_CHN
 
     rts

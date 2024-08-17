@@ -92,8 +92,11 @@ LoadEventMusic:
            sta EventMusicBuffer      ;copy event music queue contents to buffer
            cmp #DeathMusic           ;is it death music?
            bne NoStopSfx             ;if not, jump elsewhere
-           jsr StopSquare1Sfx        ;stop sfx in square 1 and 2
-           jsr StopSquare2Sfx        ;but clear only square 1's sfx buffer
+      ;      jsr StopSquare1Sfx        ;stop sfx in square 1 and 2
+      ;      jsr StopSquare2Sfx        ;but clear only square 1's sfx buffer
+            ldx #$00                ;initialize square 2's sound effects buffer
+            stx Square1SoundBuffer
+            stx Square2SoundBuffer
 NoStopSfx: ldx AreaMusicBuffer
            stx AreaMusicBuffer_Alt   ;save current area music buffer to be re-obtained later
            ldy #$00

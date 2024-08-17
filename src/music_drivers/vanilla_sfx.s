@@ -4,13 +4,20 @@
 .pushseg
 
 .segment "BSS"
-SFXMemoryStart = Squ1_SfxLenCounter
+SFXMemoryStart = *
 RESERVE Squ1_SfxLenCounter, 2
 RESERVE Squ2_SfxLenCounter, 1
 RESERVE Sfx_SecondaryCounter, 1
 RESERVE Noise_SfxLenCounter, 1
 RESERVE PauseSoundBuffer, 1
-SFXMemoryEnd = PauseSoundBuffer + 1
+; Replace writing registers directly with an output buffer to mix with the regular driver output.
+; RESERVE SfxOutputBuffer, 12
+
+; SND_SQUARE1_BUFFER      = SfxOutputBuffer
+; SND_SQUARE2_BUFFER      = SfxOutputBuffer + 4
+; SND_NOISE_BUFFER        = SfxOutputBuffer + 8
+SFXMemoryEnd = *
+
 .popseg
 
 
@@ -34,8 +41,12 @@ SndOn:
 .if .not ::USE_VANILLA_MUSIC
   lda #$ff
   sta APU_FRAMECOUNTER      ;disable irqs and set frame counter mode???
-  lda #$0f
-  sta SND_MASTERCTRL_REG    ;enable first four channels
+;   lda SND_MASTERCTRL_REG_Mirror
+;   ora #$0f
+;   sta SND_MASTERCTRL_REG_Mirror
+;   sta SND_MASTERCTRL_REG
+;   lda #$0f
+;   sta SND_MASTERCTRL_REG    ;enable first four channels
 .endif
   lda PauseModeFlag         ;is sound already in pause mode?
   bne InPause
@@ -129,10 +140,10 @@ Dump_Freq_Regs:
         tay
         lda FreqRegLookupTbl+1,y  ;use previous contents of A for sound reg offset
         beq NoTone                ;if zero, then do not load
-        sta SND_REGISTER+2,x      ;first byte goes into LSB of frequency divider
+        sta SND_SQUARE1_REG+2,x      ;first byte goes into LSB of frequency divider
         lda FreqRegLookupTbl,y    ;second byte goes into 3 MSB plus extra bit for 
         ora #%00001000            ;length counter
-        sta SND_REGISTER+3,x
+        sta SND_SQUARE1_REG+3,x
 NoTone: rts
 
 Dump_Sq2_Regs:
@@ -145,10 +156,6 @@ PlaySqu2Sfx:
 
 SetFreq_Squ2:
       ldx #$04               ;set frequency reg offset for square 2 sound channel
-      bne Dump_Freq_Regs     ;unconditional branch
-
-SetFreq_Tri:
-      ldx #$08               ;set frequency reg offset for triangle sound channel
       bne Dump_Freq_Regs     ;unconditional branch
 
 ;--------------------------------
@@ -302,10 +309,10 @@ DecrementSfx1Length:
 StopSquare1Sfx:
         ldx #$00                ;if end of sfx reached, clear buffer
         stx Square1SoundBuffer  ;and stop making the sfx
-        ldx #$0e
-        stx SND_MASTERCTRL_REG
-        ldx #$0f
-        stx SND_MASTERCTRL_REG
+        ; ldx #$0e
+        ; stx SND_MASTERCTRL_REG
+        ; ldx #$0f
+        ; stx SND_MASTERCTRL_REG
 ExSfx1: rts
 
 PlayPipeDownInj:  
@@ -405,10 +412,10 @@ EmptySfx2Buffer:
         stx Square2SoundBuffer
 
 StopSquare2Sfx:
-        ldx #$0d                ;stop playing the sfx
-        stx SND_MASTERCTRL_REG 
-        ldx #$0f
-        stx SND_MASTERCTRL_REG
+        ; ldx #$0d                ;stop playing the sfx
+        ; stx SND_MASTERCTRL_REG 
+        ; ldx #$0f
+        ; stx SND_MASTERCTRL_REG
 ExSfx2: rts
 
 Square2SfxHandler:

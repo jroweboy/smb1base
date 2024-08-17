@@ -8,7 +8,10 @@ RESERVE EventMusicBuffer, 1
 RESERVE AreaMusicBuffer, 1
 RESERVE Square1SoundBuffer, 1
 RESERVE Square2SoundBuffer, 1
+RESERVE TriangleSoundBuffer, 1 ; Newly added
 RESERVE NoiseSoundBuffer, 1
+; RESERVE SND_MASTERCTRL_REG_Mirror, 1
+RESERVE ReloadChannel, 2
 
 .segment "BSS"
 
@@ -61,6 +64,10 @@ RESERVE PauseModeFlag, 1
 .proc AudioUpdate
   MusicPlayback
   SFXPlayback
+.if ::USE_VANILLA_SFX && (!::USE_VANILLA_MUSIC)
+
+  CustomMusicMixAudio
+.endif
   rts
 .endproc
 
