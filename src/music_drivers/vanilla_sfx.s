@@ -22,7 +22,14 @@ SFXMemoryEnd = *
 
 
 .macro SFXInit
-  jsr AudioClear
+
+; .if ::USE_VANILLA_SFX
+  ldy #SFXMemoryEnd - SFXMemoryStart
+:   sta SFXMemoryStart,y     ;clear out memory used
+    dey                   ;by the sound engines
+    bpl :-
+; .endif
+
 .endmacro
 
 .macro SFXPlayback
@@ -33,7 +40,7 @@ SFXMemoryEnd = *
 .proc SFXSoundEngine
   lda OperMode              ;are we in title screen mode?
   bne SndOn
-    sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
+;     sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
     rts
 SndOn:
 

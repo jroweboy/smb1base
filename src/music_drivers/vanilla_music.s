@@ -23,7 +23,6 @@ RESERVE Noise_BeatLenCounter, 1
 RESERVE DAC_Counter, 1
 RESERVE NoiseDataLoopbackOfs, 1
 RESERVE NoteLengthTblAdder, 1
-RESERVE AreaMusicBuffer_Alt, 1
 MusicMemoryEnd = AreaMusicBuffer_Alt + 1
 
 RESERVE GroundMusicHeaderOfs, 1
@@ -32,7 +31,18 @@ RESERVE AltRegContentFlag, 1
 .popseg
 
 .macro MusicInit
-  jsr AudioClear
+
+  ldy #MusicMemoryEnd - MusicMemoryStart
+:   sta MusicMemoryStart,y     ;clear out memory used
+    dey                   ;by the sound engines
+    bpl :-
+
+.endmacro
+
+.macro MusicClear
+  lda #0
+  sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
+
 .endmacro
 
 .macro MusicPlayback
@@ -45,6 +55,8 @@ RESERVE AltRegContentFlag, 1
     sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
     rts
 SndOn:
+  lda #$0f
+  sta SND_MASTERCTRL_REG    ;enable first four channels
   lda #$ff
   sta APU_FRAMECOUNTER      ;timer consistency
   lda PauseModeFlag         ;is sound already in pause mode?
@@ -55,12 +67,8 @@ RunSoundSubroutines:
   lda #$00               ;clear the music queues
   sta AreaMusicQueue
   sta EventMusicQueue
+
 SkipSoundSubroutines:
-  ; lda #$00               ;clear the sound effects queues
-  ; sta Square1SoundQueue
-  ; sta Square2SoundQueue
-  ; sta NoiseSoundQueue
-  ; sta PauseSoundQueue
   ldy DAC_Counter        ;load some sort of counter 
   lda AreaMusicBuffer
   and #%00000011         ;check for specific music
@@ -109,9 +117,9 @@ NoStopSfx: ldx AreaMusicBuffer
            bne FindEventMusicHeader  ;unconditional branch
 
 LoadAreaMusic:
-         cmp #$04                  ;is it underground music?
-         bne NoStop1               ;no, do not stop square 1 sfx
-         jsr StopSquare1Sfx
+      ;    cmp #$04                  ;is it underground music?
+      ;    bne NoStop1               ;no, do not stop square 1 sfx
+      ;    jsr StopSquare1Sfx
 NoStop1: ldy #$10                  ;start counter used only by ground level music
 GMLoopB: sty GroundMusicHeaderOfs
 
@@ -431,6 +439,28 @@ LoadWaterEventMusEnvData:
         rts
 
 ;--------------------------------
+
+
+SetFreq_Squ1:
+      ldx #$00               ;set frequency reg offset for square 1 sound channel
+
+Dump_Freq_Regs:
+        tay
+        lda FreqRegLookupTbl+1,y  ;use previous contents of A for sound reg offset
+        beq NoTone                ;if zero, then do not load
+        sta SND_SQUARE1_REG+2,x      ;first byte goes into LSB of frequency divider
+        lda FreqRegLookupTbl,y    ;second byte goes into 3 MSB plus extra bit for 
+        ora #%00001000            ;length counter
+        sta SND_SQUARE1_REG+3,x
+NoTone: rts
+
+SetFreq_Squ2:
+      ldx #$04               ;set frequency reg offset for square 2 sound channel
+      bne Dump_Freq_Regs     ;unconditional branch
+
+SetFreq_Tri:
+      ldx #$08               ;set frequency reg offset for triangle sound channel
+      bne Dump_Freq_Regs     ;unconditional branch
 
 ;music header offsets
 MusicHeaderOffsetData = MusicHeaderData - 1

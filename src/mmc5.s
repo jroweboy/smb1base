@@ -225,13 +225,14 @@ MapperInit:
   BankPRGE #.bank(FIXED)
 
   ; now setup the CHR banks
+  ; To prevent graphics glitches, they must always be written in this order
   ldx #0
   :
     lda CHRBankInitValues,x
     sta CurrentCHRBank,x
     sta MMC5_CHR_BANK_BASE,x
     inx
-    cmp #12
+    cpx #12
     bcc :-
   rts
 CHRBankInitValues:

@@ -1,13 +1,19 @@
 .ifndef DRIVER_FAMISTUDIO_S
 .define DRIVER_FAMISTUDIO_S
 
-.macro MusicInit
+.pushseg
+.segment "SHORTRAM"
+RESERVE ReloadChannel, 2
+
+.popseg
+
+
+.macro DriverMusicInit
   BankPRGA #.bank(music_data)
   ldx #<music_data
   ldy #>music_data
   lda #0
   jsr famistudio_init
-  BankPRGA CurrentBank
 .if ::USE_VANILLA_SFX
   lda #1
   sta ReloadChannel+0
@@ -16,16 +22,15 @@
 .endmacro
 
 .if ::USE_CUSTOM_ENGINE_SFX
-.macro SFXInit
+.macro DriverSFXInit
   BankPRGA #.bank(sfx_data)
   ldx #<sfx_data
   ldy #>sfx_data
   jsr famistudio_sfx_init
-  BankPRGA CurrentBank
 .endmacro
 .endif
 
-.macro CustomMusicPlay song
+.macro DriverMusicPlay song
 .if .match(song, a)
   ; Nothing
 .elseif .match(song, x)
@@ -42,28 +47,27 @@
   jsr famistudio_music_play
 .endmacro
 
-.macro CustomMusicStop
+.macro DriverMusicStop
+  jsr famistudio_music_stop
+.endmacro
+
+.macro DriverMusicPause
   lda #1
   jsr famistudio_music_pause
 .endmacro
 
-.macro CustomMusicPause
-  lda #1
-  jsr famistudio_music_pause
-.endmacro
-
-.macro CustomMusicUnpause
+.macro DriverMusicUnpause
   lda #0
   jsr famistudio_music_pause
 .endmacro
 
-.macro CustomMusicUpdate
+.macro DriverMusicUpdate
   jsr famistudio_update
 .endmacro
 
 .if ::USE_CUSTOM_ENGINE_SFX
 
-.macro CustomSFXPlay sfx, chan
+.macro DriverSFXPlay sfx, chan
 .if .match(sfx, a)
   ; Nothing
 .elseif .match(sfx, x)
@@ -97,7 +101,7 @@ Channel = chan
   jsr famistudio_sfx_play
 .endmacro
 
-.macro CustomSFXUpdate
+.macro DriverSFXUpdate
 
 .endmacro
 
@@ -118,12 +122,6 @@ FAMISTUDIO_CFG_EXTERNAL = 1
 FAMISTUDIO_CFG_SFX_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_STREAMS = 3
 .endif
-
-.proc CustomMusicLoopCallback
-  lda #0
-  sta EventMusicBuffer
-  rts
-.endproc
 
 .include "famistudio_ca65.s"
 
@@ -147,40 +145,19 @@ sfx_data:
 
 .if USE_VANILLA_SFX
 
-.macro CustomMusicMixAudio
+.macro DriverMusicMixAudio
 .scope
   ; if bit 7 (paused) then don't mix any audio
-  lda famistudio_song_speed
-  bpl :+
-    rts
-  :
+  ; lda famistudio_song_speed
+  ; bpl :+
+  ;   rts
+  ; :
   ; load the data from the famistudio output buffer
   lda Square1SoundBuffer
   beq @music_pulse1_upd
     lda #1
     sta ReloadChannel+0
     jmp @no_pulse1_upd
-    ; lda SfxOutputBuffer      ; Pulse 1 volume
-    ; sta FAMISTUDIO_APU_PL1_VOL
-    ; lda SfxOutputBuffer+1    ; Pulse 1 Sweep
-    ; sta FAMISTUDIO_APU_PL1_SWEEP
-    ; lda SfxOutputBuffer+2    ; Pulse 1 period LSB
-    ; sta FAMISTUDIO_APU_PL1_LO
-    ; lda SfxOutputBuffer+3    ; Pulse 1 period MSB, only applied when changed
-    ; cmp famistudio_pulse1_prev
-    ; beq @no_pulse1_upd
-    ;   sta famistudio_pulse1_prev
-    ;   sta FAMISTUDIO_APU_PL1_HI
-    ;   jmp @no_pulse1_upd ; unconditional
-    ; .if ::FAMISTUDIO_CFG_SMOOTH_VIBRATO
-    ;     famistudio_smooth_vibrato SfxOutputBuffer+2, famistudio_pulse1_prev, FAMISTUDIO_APU_PL1_HI, FAMISTUDIO_APU_PL1_LO, FAMISTUDIO_APU_PL1_SWEEP
-    ; .else
-    ;     cmp famistudio_pulse1_prev
-    ;     beq @no_pulse1_upd
-    ;     sta famistudio_pulse1_prev
-    ;     sta FAMISTUDIO_APU_PL1_HI
-    ; .endif
-    ; bne @no_pulse1_upd ; unconditional
 
 @music_pulse1_upd:
     lda famistudio_output_buf      ; Pulse 1 volume
@@ -199,14 +176,6 @@ sfx_data:
         sta FAMISTUDIO_APU_PL1_HI
         lda #0
         sta ReloadChannel+0
-    ; .if ::FAMISTUDIO_CFG_SMOOTH_VIBRATO
-    ;     famistudio_smooth_vibrato famistudio_output_buf+1, famistudio_pulse1_prev, FAMISTUDIO_APU_PL1_HI, FAMISTUDIO_APU_PL1_LO, FAMISTUDIO_APU_PL1_SWEEP
-    ; .else
-    ;     cmp famistudio_pulse1_prev
-    ;     beq @no_pulse1_upd
-    ;     sta famistudio_pulse1_prev
-    ;     sta FAMISTUDIO_APU_PL1_HI
-    ; .endif
 
 @no_pulse1_upd:
   lda Square2SoundBuffer
@@ -214,24 +183,6 @@ sfx_data:
     lda #1
     sta ReloadChannel+1
     jmp @no_pulse2_upd
-    ; lda SfxOutputBuffer+4    ; Pulse 2 volume
-    ; sta FAMISTUDIO_APU_PL2_VOL
-    ; lda SfxOutputBuffer+5    ; Pulse 1 Sweep
-    ; sta FAMISTUDIO_APU_PL2_SWEEP
-    ; lda SfxOutputBuffer+6    ; Pulse 2 period LSB
-    ; sta FAMISTUDIO_APU_PL2_LO
-    ; lda SfxOutputBuffer+7    ; Pulse 2 period MSB, only applied when changed
-
-    ; .if ::FAMISTUDIO_CFG_SMOOTH_VIBRATO
-    ;     famistudio_smooth_vibrato SfxOutputBuffer+4, famistudio_pulse2_prev, FAMISTUDIO_APU_PL2_HI, FAMISTUDIO_APU_PL2_LO, FAMISTUDIO_APU_PL2_SWEEP
-    ; .else
-    ;     cmp famistudio_pulse2_prev
-    ;     beq @no_pulse2_upd
-    ;     sta famistudio_pulse2_prev
-    ;     sta FAMISTUDIO_APU_PL2_HI
-    ; .endif
-
-    ; bne @no_pulse2_upd ; unconditional
 
 @music_pulse2_upd:
     lda famistudio_output_buf+3    ; Pulse 2 volume
@@ -250,18 +201,8 @@ sfx_data:
         sta FAMISTUDIO_APU_PL2_HI
         lda #0
         sta ReloadChannel+1
-
-    ; .if ::FAMISTUDIO_CFG_SMOOTH_VIBRATO
-    ;     famistudio_smooth_vibrato famistudio_output_buf+4, famistudio_pulse2_prev, FAMISTUDIO_APU_PL2_HI, FAMISTUDIO_APU_PL2_LO, FAMISTUDIO_APU_PL2_SWEEP
-    ; .else
-    ;     cmp famistudio_pulse2_prev
-    ;     beq @no_pulse2_upd
-    ;     sta famistudio_pulse2_prev
-    ;     sta FAMISTUDIO_APU_PL2_HI
-    ; .endif
-
 @no_pulse2_upd:
-; No triangle used in vanilla sfx
+    ; No triangle used in vanilla sfx
     lda famistudio_output_buf+6    ; Triangle volume (plays or not)
     sta FAMISTUDIO_APU_TRI_LINEAR
     lda famistudio_output_buf+7    ; Triangle period LSB
@@ -270,12 +211,7 @@ sfx_data:
     sta FAMISTUDIO_APU_TRI_HI
 
   lda NoiseSoundBuffer
-  beq @music_noise_upd
-    ; lda SfxOutputBuffer+9    ; Noise volume
-    ; sta FAMISTUDIO_APU_NOISE_VOL
-    ; lda SfxOutputBuffer+10   ; Noise period
-    ; sta FAMISTUDIO_APU_NOISE_LO
-    jmp @no_noise_upd
+  bne @no_noise_upd
 @music_noise_upd:
     lda famistudio_output_buf+9    ; Noise volume
     sta FAMISTUDIO_APU_NOISE_VOL

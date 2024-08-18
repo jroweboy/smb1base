@@ -1,97 +1,33 @@
 
 .segment "FIXED"
 
-
 .pushseg
 .segment "SHORTRAM"
-RESERVE EventMusicBuffer, 1
-RESERVE AreaMusicBuffer, 1
-RESERVE Square1SoundBuffer, 1
-RESERVE Square2SoundBuffer, 1
-RESERVE TriangleSoundBuffer, 1 ; Newly added
-RESERVE NoiseSoundBuffer, 1
-; RESERVE SND_MASTERCTRL_REG_Mirror, 1
-RESERVE ReloadChannel, 2
-
-.segment "BSS"
-
-RESERVE PauseModeFlag, 1
-
+RESERVE MusicLooped, 1
 .popseg
 
+.macro MusicInit
+  DriverMusicInit
+  lda #0
+  sta MusicLooped
+.endmacro
 
-.if ::USE_VANILLA_MUSIC
-.include "vanilla_music.s"
-.endif
+.macro MusicClear
+  DriverMusicStop
+.endmacro
 
-.if ::USE_VANILLA_SFX
-.include "vanilla_sfx.s"
-.endif
-
-.if ::USE_FAMISTUDIO_MUSIC
-.include "driver_famistudio.s"
-.endif
-
-.if .not ::USE_VANILLA_MUSIC
 .macro MusicPlayback
   BankPRGA #.bank(music_data)
-  jsr CustomMusicEngine
-  BankPRGA CurrentBank
+  CustomMusicEngine
 .endmacro
-.endif
 
 .if .not ::USE_VANILLA_SFX
 .macro SFXPlayback
-  BankPRGA #.bank(music_data)
-  jsr CustomSfxEngine
-  BankPRGA CurrentBank
+  BankPRGA #.bank(sfx_data)
+  CustomSfxEngine
 .endmacro
 .endif
 
-.proc AudioInit
-  lda #0
-  sta PauseModeFlag
-  sta EventMusicBuffer
-  sta AreaMusicBuffer
-  sta Square1SoundBuffer
-  sta Square2SoundBuffer
-  sta NoiseSoundBuffer
-  MusicInit
-  SFXInit
-  rts
-.endproc
-
-.proc AudioUpdate
-  MusicPlayback
-  SFXPlayback
-.if ::USE_VANILLA_SFX && (!::USE_VANILLA_MUSIC)
-
-  CustomMusicMixAudio
-.endif
-  rts
-.endproc
-
-.proc AudioClear
-.if .not ::USE_VANILLA_MUSIC
-  CustomMusicStop
-.endif
-  
-.if ::USE_VANILLA_MUSIC
-  ldy #MusicMemoryEnd - MusicMemoryStart
-:   sta MusicMemoryStart,y     ;clear out memory used
-    dey                   ;by the sound engines
-    bpl :-
-.endif
-.if ::USE_VANILLA_SFX
-  ldy #SFXMemoryEnd - SFXMemoryStart
-:   sta SFXMemoryStart,y     ;clear out memory used
-    dey                   ;by the sound engines
-    bpl :-
-.endif
-  rts
-.endproc
-
-.if .not USE_VANILLA_MUSIC
 
 ; Data used to convert from the SMB1 queue to a regular driver
 
@@ -134,9 +70,9 @@ SilenceTrack = -1
 
 
 AreaMusicLUT:
-  .byte SilenceTrack, Starman, EnterPipe, Cloud, SilenceTrack, Underworld, Waterworld, Overworld
+  .byte SilenceTrack, Starman, EnterPipe, Cloud, Castleworld, Underworld, Waterworld, Overworld
 EventMusicLUT:
-  .byte SilenceTrack, Castleworld, Victory, Waterworld, InAnotherCastle, SavedPrincess, Intermediate, Death
+  .byte SilenceTrack, HurryUp, Victory, Waterworld, InAnotherCastle, SavedPrincess, GameOver, Death
 
 Sq2SfxTable:
   .byte BowserFall
@@ -191,36 +127,55 @@ NoiseSfxTable:
 .endproc
 
 
-.proc CustomMusicEngine
+.macro CustomMusicEngine
+.scope
   lda PauseModeFlag         ;is sound already in pause mode?
   bne InPause
     lda PauseSoundQueue       ;if not, check pause sfx queue
     beq RunSoundSubroutines   ;if queue is empty, skip pause mode routine
 InPause:
 
-    ; Check if the Pause is just starting to change
-    lda GamePauseTimer
-    cmp #$2b
-    bne SkipToUpdate
+  ; Check if the Pause is just starting to change
+  lda GamePauseTimer
+  cmp #$2b
+  jne SkipToUpdate
     lda PauseSoundQueue       ;check pause queue
     cmp #2
     beq UnPause
-    lda #Pause
-    sta PauseModeFlag         ;pause mode to interrupt game sounds
-    
-    ; CustomMusicPause Macro
-    CustomMusicPause
+      lda #Pause
+      sta PauseModeFlag         ;pause mode to interrupt game sounds
+      
+      ; DriverMusicPause Macro
+      DriverMusicPause
 
-    lda #0
-    sta PauseSoundQueue
-
-    jmp SkipToUpdate
+      lda #0
+      sta PauseSoundQueue
+      jmp SkipToUpdate
 UnPause:
+  ; DriverMusicUnpause Macro
+  DriverMusicUnpause
+  jmp RunSoundSubroutines
 
-  ; CustomMusicUnpause Macro
-  CustomMusicUnpause
+MusicLoopBack:
+  lda #0
+  sta EventMusicBuffer
+  ldx AreaMusicBuffer_Alt
+  stx AreaMusicBuffer
+  jmp FindAreaMusic
 
 RunSoundSubroutines:
+  ; First check if the music has just looped
+  lda MusicLooped
+  beq NotTRO
+    lda #0
+    sta MusicLooped
+    lda EventMusicBuffer     ;check secondary buffer for time running out music
+    cmp #TimeRunningOutMusic
+    bne NotTRO
+      ; It was a hurry up time warning, so restart the alt music
+      lda AreaMusicBuffer_Alt  ;load previously saved contents of primary buffer
+      bne MusicLoopBack        ;and start playing the song again if there is one
+NotTRO:
   lda EventMusicQueue
   ora AreaMusicQueue
   beq SkipToUpdate
@@ -229,39 +184,51 @@ RunSoundSubroutines:
       lda #0
       sta AreaMusicQueue
       stx AreaMusicBuffer
+FindAreaMusic:
       jsr FindMostSigBit
       lda AreaMusicLUT, y
 SkipAreaProcessing:
     ldx EventMusicQueue
     beq PlayNewSong
+      lda AreaMusicBuffer
+      sta AreaMusicBuffer_Alt   ;save current area music buffer to be re-obtained later
       ; Music from EventMusicQueue will override the AreaMusicQueue
       stx EventMusicBuffer
       lda #0
+      sta AreaMusicBuffer
       sta EventMusicQueue
       jsr FindMostSigBit
       lda EventMusicLUT, y
 PlayNewSong:
   cmp #SilenceTrack
   beq StopMusic
-    ; Macro CustomMusicStop a
-    CustomMusicPlay a
+    ; pha 
+    ;   ; Macro DriverMusicStop
+    ;   DriverMusicStop
+
+    ;   ; Macro DriverMusicUpdate
+    ;   DriverMusicUpdate
+    ; pla
+    ; Macro DriverMusicPlay a
+    DriverMusicPlay a
     jmp SkipToUpdate
 StopMusic:
-  ; Macro CustomMusicStop
-  CustomMusicStop
+  ; Macro DriverMusicStop
+  DriverMusicStop
 
-  jmp SkipAreaProcessing
+;   jmp SkipAreaProcessing
 
 SkipToUpdate:
 
-  ; Macro CustomMusicUpdate
-  CustomMusicUpdate
-  
-  rts
-.endproc
+  ; Macro DriverMusicUpdate
+  DriverMusicUpdate
+
+.endscope
+.endmacro
 
 .if USE_CUSTOM_ENGINE_SFX
-.proc CustomSfxEngine
+.macro CustomSfxEngine
+.scope
   lda PauseModeFlag         ;is sound already in pause mode?
   bne InPause
     lda PauseSoundQueue       ;if not, check pause sfx queue
@@ -276,8 +243,8 @@ InPause:
     lda #Pause
     sta PauseModeFlag         ;pause mode to interrupt game sounds
   
-    ; CustomSFXPlay #Pause Macro
-    CustomSFXPlay #Pause
+    ; DriverSFXPlay #Pause Macro
+    DriverSFXPlay #Pause
 
     jmp SkipToUpdate
 UnPause:
@@ -285,19 +252,16 @@ UnPause:
   sta PauseModeFlag
   sta PauseSoundQueue
 
-  ; CustomSFXPlay #Pause Macro
-  CustomSFXPlay #Pause
+  ; DriverSFXPlay #Pause Macro
+  DriverSFXPlay #Pause
 RunSoundSubroutines:
   ; Now check for sound effects
   ldx Square2SoundQueue
   beq :+
     jsr FindMostSigBit
     lda Sq2SfxTable,y
-    ; CustomSFXPlay a, 0 Macro
-    CustomSFXPlay a, 0
-    ; ldx NextSFXChannel
-    ; jsr famistudio_sfx_play
-    ; jsr BumpSFXChannel
+    ; DriverSFXPlay a, 0 Macro
+    DriverSFXPlay a, 0
     lda #0
     sta Square2SoundQueue
   :
@@ -305,11 +269,8 @@ RunSoundSubroutines:
   beq :+
     jsr FindMostSigBit
     lda Sq1SfxTable,y
-    ; CustomSFXPlay a, 1 Macro
-    CustomSFXPlay a, 1
-    ; ldx NextSFXChannel
-    ; jsr famistudio_sfx_play
-    ; jsr BumpSFXChannel
+    ; DriverSFXPlay a, 1 Macro
+    DriverSFXPlay a, 1
     lda #0
     sta Square1SoundQueue
   :
@@ -317,22 +278,15 @@ RunSoundSubroutines:
   beq :+
     jsr FindMostSigBit
     lda NoiseSfxTable,y
-    ; CustomSFXPlay a, 2 Macro
-    CustomSFXPlay a, 2
-    ; ldx NextSFXChannel
-    ; jsr famistudio_sfx_play
-    ; jsr BumpSFXChannel
+    ; DriverSFXPlay a, 2 Macro
+    DriverSFXPlay a, 2
     lda #0
     sta NoiseSoundQueue
   :
   
 SkipToUpdate:
+  DriverSFXUpdate
 
-  CustomSFXUpdate
-  
-  rts
-.endproc
+.endscope
+.endmacro
 .endif ; USE_CUSTOM_ENGINE_SFX
-
-.endif
-

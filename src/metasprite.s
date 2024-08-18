@@ -342,9 +342,9 @@ BULLET_VRAM_OFFSET = SPRITE_BANK_2
 BULLET_PALETTE = $03
 MetaspriteBox "BULLET", "BILL", $1c, $1e
 
-PODOBOO_VRAM_OFFSET = SPRITE_BANK_2
+PODOBOO_VRAM_OFFSET = SPRITE_BANK_4
 PODOBOO_PALETTE = $02
-MetaspriteBox "PODOBOO", "UP", $0e, $0e | SPR_FLIP_H
+MetaspriteBox "PODOBOO", "UP", $18, $18 | SPR_FLIP_H
 
 
 BUZZY_BEETLE_VRAM_OFFSET = SPRITE_BANK_2
@@ -542,9 +542,9 @@ PALETTE  .set 2
 MetaspriteData "METASPRITE_BOWSER_FLAME", MetaspriteBowserFlame, MetaspriteBowserFlame
 MetaspriteBowserFlame:
   .byte 3 * 4
-  .byte  MetaspriteVramOffset{$74}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET,  0 + X_OFFSET
-  .byte  MetaspriteVramOffset{$76}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
-  .byte  MetaspriteVramOffset{$78}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET, 16 + X_OFFSET
+  .byte  MetaspriteVramOffset{$2d}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET,  0 + X_OFFSET
+  .byte  MetaspriteVramOffset{$2f}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET,  8 + X_OFFSET
+  .byte  MetaspriteVramOffset{$31}, {SPRITE_BANK_4}, PALETTE,   0 + Y_OFFSET, 16 + X_OFFSET
 
 
 

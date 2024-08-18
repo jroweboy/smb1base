@@ -5671,7 +5671,7 @@ famistudio_advance_channel:
     jmp @read_byte
 
 @opcode_loop:
-
+; SMBStudio, add hook for music loop detection
 .ifdef CustomMusicLoopCallback
     jsr CustomMusicLoopCallback
 .endif
