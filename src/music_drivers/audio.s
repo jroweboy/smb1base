@@ -24,14 +24,15 @@ RESERVE PauseModeFlag, 1
 
 .if ::USE_VANILLA_MUSIC
 .include "vanilla_music.s"
-.endif
+
+.else
 
 .if ::USE_VANILLA_SFX
 .include "vanilla_sfx.s"
 .endif
 
-.if ::USE_FAMISTUDIO_MUSIC
 
+.if ::USE_FAMISTUDIO_MUSIC
 .proc CustomMusicLoopCallback
   lda #1
   sta MusicLooped
@@ -39,6 +40,8 @@ RESERVE PauseModeFlag, 1
 .endproc
 .include "driver_famistudio.s"
 .include "custom_music.s"
+.endif
+
 .endif
 
 
