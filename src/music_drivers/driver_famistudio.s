@@ -22,7 +22,7 @@ RESERVE ReloadChannel, 2
 .endmacro
 
 .if ::USE_CUSTOM_ENGINE_SFX
-.macro DriverSFXInit
+.macro SFXInit
   BankPRGA #.bank(sfx_data)
   ldx #<sfx_data
   ldy #>sfx_data
@@ -129,8 +129,11 @@ FAMISTUDIO_CFG_SFX_STREAMS = 3
 .segment "MUSIC"
 music_data:
 .include "audio/examples/famistudio/panic_at_the_mario_disco.s"
+
+.if USE_CUSTOM_ENGINE_SFX
 sfx_data:
-.include "audio/examples/famistudio/sfx.s"
+.include "audio/examples/famistudio/panic_at_the_mario_disco_sfx.s"
+.endif
 
 .segment "DPCM"
 .incbin "audio/examples/famistudio/panic_at_the_mario_disco.dmc"

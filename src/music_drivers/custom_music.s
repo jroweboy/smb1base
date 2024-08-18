@@ -31,27 +31,6 @@ RESERVE MusicLooped, 1
 
 ; Data used to convert from the SMB1 queue to a regular driver
 
-BrickBreak =  0
-FireBreath =  1
-Coin =        2
-SpawnPup =    3
-Vine =        4
-Blast =       5
-GrowUp =      6
-OneUp =       7
-BigJump =     8
-Bump =        9
-Stomp_Swim =  10
-EnemySmack =  11
-Injure_Pipe = 12
-Fireball =    13
-Flagpole =    14
-SmallJump =   15
-TimerTick =   16
-BowserFall =  17
-Pause =       18
-
-
 Overworld = $00 ; : Overworld
 Underworld = $01 ; : Underworld
 Waterworld = $02 ; : Waterworld
@@ -73,6 +52,27 @@ AreaMusicLUT:
   .byte SilenceTrack, Starman, EnterPipe, Cloud, Castleworld, Underworld, Waterworld, Overworld
 EventMusicLUT:
   .byte SilenceTrack, HurryUp, Victory, Waterworld, InAnotherCastle, SavedPrincess, GameOver, Death
+
+
+OneUp =       0
+BigJump =     1
+Blast =       2
+BowserFall =  3
+BrickBreak =  4
+Bump =        5
+Coin =        6
+EnemySmack =  7
+Stomp_Swim =  8
+FireBreath =  9
+Fireball =    10
+Flagpole =    11
+GrowUp =      12
+SpawnPup =    13
+Injure_Pipe = 14
+Pause =       15
+SmallJump =   16
+TimerTick =   17
+Vine =        18
 
 Sq2SfxTable:
   .byte BowserFall

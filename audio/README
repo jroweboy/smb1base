@@ -1,0 +1,7 @@
+
+
+TODO: figure out how this should work.
+
+The basic idea is users should edit the provided project files in the folder for their audio driver
+and then it should spit out the need configuration for the drivers for them
+
