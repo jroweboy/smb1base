@@ -53,6 +53,131 @@ AreaMusicLUT:
 EventMusicLUT:
   .byte SilenceTrack, HurryUp, Victory, Waterworld, InAnotherCastle, SavedPrincess, GameOver, Death
 
+; LeadingBitLookup:
+; .repeat 256,I
+; HI_BIT .set 8
+; .repeat 8, J
+; .if HI_BIT = 8 .and (I & (1 << (7 - J))) <> 0
+; HI_BIT .set J
+; .endif
+; .endrepeat
+;   .byte HI_BIT
+; .endrepeat
+
+.proc FindMostSigBit
+  txa
+  ldy #$ff
+  sec
+  :
+    iny
+    rol
+    bcc :-
+  rts
+.endproc
+
+
+.macro CustomMusicEngine
+.scope
+  lda PauseModeFlag         ;is sound already in pause mode?
+  bne InPause
+    lda PauseSoundQueue       ;if not, check pause sfx queue
+    beq RunSoundSubroutines   ;if queue is empty, skip pause mode routine
+InPause:
+
+  ; Check if the Pause is just starting to change
+  lda GamePauseTimer
+  cmp #$2b
+  jne SkipToUpdate
+    lda PauseSoundQueue       ;check pause queue
+    cmp #2
+    beq UnPause
+      lda #0
+      sta PauseSoundQueue
+      lda #Pause
+      sta PauseModeFlag         ;pause mode to interrupt game sounds
+      
+      ; DriverMusicPause Macro
+      DriverMusicPause
+    .if ::USE_CUSTOM_ENGINE_SFX
+      DriverSFXPlay #Pause
+    .endif
+      jmp SkipToUpdate
+UnPause:
+  ; DriverMusicUnpause Macro
+  lda #0
+  sta PauseModeFlag
+  sta PauseSoundQueue
+  DriverMusicUnpause
+.if ::USE_CUSTOM_ENGINE_SFX
+  DriverSFXPlay #Pause
+.endif
+  jmp RunSoundSubroutines
+
+MusicLoopBack:
+  DriverSpeedUpAudio
+  ldx AreaMusicBuffer_Alt
+  stx AreaMusicBuffer
+  jmp FindAreaMusic
+
+RunSoundSubroutines:
+  ; First check if the music has just looped
+  lda MusicLooped
+  beq NotTRO
+    lda EventMusicBuffer
+    ldx #0
+    stx EventMusicBuffer
+    stx MusicLooped
+    cmp #TimeRunningOutMusic
+    bne NotTRO
+      ; It was a hurry up time warning, so restart the alt music
+      lda AreaMusicBuffer_Alt  ;load previously saved contents of primary buffer
+      bne MusicLoopBack        ;and start playing the song again if there is one
+NotTRO:
+  lda EventMusicQueue
+  ora AreaMusicQueue
+  beq SkipToUpdate
+    ldx AreaMusicQueue
+    beq SkipAreaProcessing
+      lda #0
+      sta AreaMusicQueue
+      stx AreaMusicBuffer
+FindAreaMusic:
+      jsr FindMostSigBit
+      lda AreaMusicLUT, y
+SkipAreaProcessing:
+    ldx EventMusicQueue
+    beq PlayNewSong
+      lda AreaMusicBuffer
+      sta AreaMusicBuffer_Alt   ;save current area music buffer to be re-obtained later
+      ; Music from EventMusicQueue will override the AreaMusicQueue
+      stx EventMusicBuffer
+      lda #0
+      sta AreaMusicBuffer
+      sta EventMusicQueue
+      jsr FindMostSigBit
+      lda EventMusicLUT, y
+PlayNewSong:
+  cmp #SilenceTrack
+  beq StopMusic
+    ; Macro DriverMusicPlay a
+    DriverMusicPlay a
+    jmp SkipToUpdate
+StopMusic:
+  ; Macro DriverMusicStop
+  DriverMusicStop
+
+;   jmp SkipAreaProcessing
+
+SkipToUpdate:
+
+  ; Macro DriverMusicUpdate
+  DriverMusicUpdate
+
+.endscope
+.endmacro
+
+.if USE_CUSTOM_ENGINE_SFX
+
 
 OneUp =       0
 BigJump =     1
@@ -102,158 +227,14 @@ NoiseSfxTable:
   .byte $00        
   .byte Pause      
   .byte FireBreath 
-  .byte BrickBreak 
-
-; LeadingBitLookup:
-; .repeat 256,I
-; HI_BIT .set 8
-; .repeat 8, J
-; .if HI_BIT = 8 .and (I & (1 << (7 - J))) <> 0
-; HI_BIT .set J
-; .endif
-; .endrepeat
-;   .byte HI_BIT
-; .endrepeat
-
-.proc FindMostSigBit
-  txa
-  ldy #$ff
-  sec
-  :
-    iny
-    rol
-    bcc :-
-  rts
-.endproc
+  .byte BrickBreak
 
 
-.macro CustomMusicEngine
-.scope
-  lda PauseModeFlag         ;is sound already in pause mode?
-  bne InPause
-    lda PauseSoundQueue       ;if not, check pause sfx queue
-    beq RunSoundSubroutines   ;if queue is empty, skip pause mode routine
-InPause:
-
-  ; Check if the Pause is just starting to change
-  lda GamePauseTimer
-  cmp #$2b
-  jne SkipToUpdate
-    lda PauseSoundQueue       ;check pause queue
-    cmp #2
-    beq UnPause
-      lda #Pause
-      sta PauseModeFlag         ;pause mode to interrupt game sounds
-      
-      ; DriverMusicPause Macro
-      DriverMusicPause
-
-      lda #0
-      sta PauseSoundQueue
-      jmp SkipToUpdate
-UnPause:
-  ; DriverMusicUnpause Macro
-  DriverMusicUnpause
-  jmp RunSoundSubroutines
-
-MusicLoopBack:
-  DriverSpeedUpAudio
-  ldx AreaMusicBuffer_Alt
-  stx AreaMusicBuffer
-  jmp FindAreaMusic
-
-RunSoundSubroutines:
-  ; First check if the music has just looped
-  lda MusicLooped
-  beq NotTRO
-    lda EventMusicBuffer
-    ldx #0
-    stx EventMusicBuffer
-    stx MusicLooped
-    cmp #TimeRunningOutMusic
-    bne NotTRO
-      ; It was a hurry up time warning, so restart the alt music
-      lda AreaMusicBuffer_Alt  ;load previously saved contents of primary buffer
-      bne MusicLoopBack        ;and start playing the song again if there is one
-NotTRO:
-  lda EventMusicQueue
-  ora AreaMusicQueue
-  beq SkipToUpdate
-    ldx AreaMusicQueue
-    beq SkipAreaProcessing
-      lda #0
-      sta AreaMusicQueue
-      stx AreaMusicBuffer
-FindAreaMusic:
-      jsr FindMostSigBit
-      lda AreaMusicLUT, y
-SkipAreaProcessing:
-    ldx EventMusicQueue
-    beq PlayNewSong
-      lda AreaMusicBuffer
-      sta AreaMusicBuffer_Alt   ;save current area music buffer to be re-obtained later
-      ; Music from EventMusicQueue will override the AreaMusicQueue
-      stx EventMusicBuffer
-      lda #0
-      sta AreaMusicBuffer
-      sta EventMusicQueue
-      jsr FindMostSigBit
-      lda EventMusicLUT, y
-PlayNewSong:
-  cmp #SilenceTrack
-  beq StopMusic
-    ; pha 
-    ;   ; Macro DriverMusicStop
-    ;   DriverMusicStop
-
-    ;   ; Macro DriverMusicUpdate
-    ;   DriverMusicUpdate
-    ; pla
-    ; Macro DriverMusicPlay a
-    DriverMusicPlay a
-    jmp SkipToUpdate
-StopMusic:
-  ; Macro DriverMusicStop
-  DriverMusicStop
-
-;   jmp SkipAreaProcessing
-
-SkipToUpdate:
-
-  ; Macro DriverMusicUpdate
-  DriverMusicUpdate
-
-.endscope
-.endmacro
-
-.if USE_CUSTOM_ENGINE_SFX
 .macro CustomSfxEngine
 .scope
   lda PauseModeFlag         ;is sound already in pause mode?
-  bne InPause
-    lda PauseSoundQueue       ;if not, check pause sfx queue
-    beq RunSoundSubroutines   ;if queue is empty, skip pause mode routine
-InPause:
-    lda GamePauseTimer
-    cmp #$2b
-    jne SkipToUpdate
-    lda PauseSoundQueue       ;check pause queue
-    cmp #2
-    beq UnPause
-    lda #Pause
-    sta PauseModeFlag         ;pause mode to interrupt game sounds
-  
-    ; DriverSFXPlay #Pause Macro
-    DriverSFXPlay #Pause
+  jne SkipToUpdate
 
-    jmp SkipToUpdate
-UnPause:
-  lda #0
-  sta PauseModeFlag
-  sta PauseSoundQueue
-
-  ; DriverSFXPlay #Pause Macro
-  DriverSFXPlay #Pause
 RunSoundSubroutines:
   ; Now check for sound effects
   ldx Square2SoundQueue
