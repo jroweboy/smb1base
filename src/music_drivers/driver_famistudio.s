@@ -65,6 +65,10 @@ RESERVE ReloadChannel, 2
   jsr famistudio_update
 .endmacro
 
+.macro DriverSpeedUpAudio
+  ; TODO figure this out if we want to support it
+.endmacro
+
 .if ::USE_CUSTOM_ENGINE_SFX
 
 .macro DriverSFXPlay sfx, chan

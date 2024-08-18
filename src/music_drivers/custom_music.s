@@ -157,8 +157,7 @@ UnPause:
   jmp RunSoundSubroutines
 
 MusicLoopBack:
-  lda #0
-  sta EventMusicBuffer
+  DriverSpeedUpAudio
   ldx AreaMusicBuffer_Alt
   stx AreaMusicBuffer
   jmp FindAreaMusic
@@ -167,9 +166,10 @@ RunSoundSubroutines:
   ; First check if the music has just looped
   lda MusicLooped
   beq NotTRO
-    lda #0
-    sta MusicLooped
-    lda EventMusicBuffer     ;check secondary buffer for time running out music
+    lda EventMusicBuffer
+    ldx #0
+    stx EventMusicBuffer
+    stx MusicLooped
     cmp #TimeRunningOutMusic
     bne NotTRO
       ; It was a hurry up time warning, so restart the alt music
