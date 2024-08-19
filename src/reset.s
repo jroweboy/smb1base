@@ -32,14 +32,17 @@
     ldx IrqNewScroll
     sta IrqNewScroll
 
+.if ::MAPPER_MMC3
     ; stall for 39 cpu cycles
-    ; lda #$4a ;hides 'LSR A'
-    ; bne *-1
+    lda #$4a ;hides 'LSR A'
+    bne *-1
+.elseif ::MAPPER_MMC5
     ; stall for 14 CPU cycles
     php
     plp
     php
     plp
+.endif
 
     ; ((Y & $F8) << 2) | (X >> 3) in A for $2006 later.
     txa

@@ -4,7 +4,7 @@
 
 .pushseg
 .segment "SHORTRAM"
-TargetAddrJmp: .res 3
+TargetAddrJmp: .res 4 ; 3 ; increased to 4 to jsr/rts for debugging
 TargetAddress := TargetAddrJmp + 1
 CurrentBank: .res 1
 BankShadow: .res 1

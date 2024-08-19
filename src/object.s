@@ -897,7 +897,7 @@ RunBowser:
   beq BowserControl
   lda Enemy_Y_Position,x  ;otherwise check vertical position
   cmp #$e0                ;if above a certain point, branch to move defeated bowser
-  bcc MoveD_Bowser        ;otherwise proceed to KillAllEnemies
+  jcc MoveD_Bowser        ;otherwise proceed to KillAllEnemies
 
 KillAllEnemies:
   ldx #$04              ;start with last enemy slot
