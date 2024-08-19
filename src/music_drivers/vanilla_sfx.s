@@ -44,17 +44,10 @@ SFXMemoryEnd = *
     rts
 SndOn:
 
-; if we are running vanilla music than this has already happened.
-.if .not ::USE_VANILLA_MUSIC
+  ; We need to clock the counters each frame to keep audio synced
   lda #$ff
   sta APU_FRAMECOUNTER      ;disable irqs and set frame counter mode???
-;   lda SND_MASTERCTRL_REG_Mirror
-;   ora #$0f
-;   sta SND_MASTERCTRL_REG_Mirror
-;   sta SND_MASTERCTRL_REG
-;   lda #$0f
-;   sta SND_MASTERCTRL_REG    ;enable first four channels
-.endif
+
   lda PauseModeFlag         ;is sound already in pause mode?
   bne InPause
     lda PauseSoundQueue       ;if not, check pause sfx queue    
@@ -64,15 +57,16 @@ InPause: lda PauseSoundBuffer      ;check pause sfx buffer
          bne ContPau
          lda PauseSoundQueue       ;check pause queue
          beq SkipSoundSubroutines
+         ; Play the ding dong sound for pausing
          sta PauseSoundBuffer      ;if queue full, store in buffer and activate
-         sta PauseModeFlag         ;pause mode to interrupt game sounds
-         lda #$00                  ;disable sound and clear sfx buffers
-         sta SND_MASTERCTRL_REG
          sta Square1SoundBuffer
+        ;  sta PauseModeFlag         ;pause mode to interrupt game sounds
+         lda #$00                  ;disable sound and clear sfx buffers
+        ;  sta SND_MASTERCTRL_REG
          sta Square2SoundBuffer
          sta NoiseSoundBuffer
-         lda #$0f
-         sta SND_MASTERCTRL_REG    ;enable sound again
+        ;  lda #$0f
+        ;  sta SND_MASTERCTRL_REG    ;enable sound again
          lda #$2a                  ;store length of sound in pause counter
          sta Squ1_SfxLenCounter
 PTone1F: lda #$44                  ;play first tone
@@ -90,13 +84,13 @@ PTRegC:  ldx #$84
          jsr PlaySqu1Sfx
 DecPauC: dec Squ1_SfxLenCounter    ;decrement pause sfx counter
          bne SkipSoundSubroutines
-         lda #$00                  ;disable sound if in pause mode and
-         sta SND_MASTERCTRL_REG    ;not currently playing the pause sfx
-         lda PauseSoundBuffer      ;if no longer playing pause sfx, check to see
-         cmp #$02                  ;if we need to be playing sound again
-         bne SkipPIn
-         lda #$00                  ;clear pause mode to allow game sounds again
-         sta PauseModeFlag
+        ;  lda #$00                  ;disable sound if in pause mode and
+        ;  sta SND_MASTERCTRL_REG    ;not currently playing the pause sfx
+        ;  lda PauseSoundBuffer      ;if no longer playing pause sfx, check to see
+        ;  cmp #$02                  ;if we need to be playing sound again
+        ;  bne SkipPIn
+;          lda #$00                  ;clear pause mode to allow game sounds again
+;          sta PauseModeFlag
 SkipPIn: lda #$00                  ;clear pause sfx buffer
          sta PauseSoundBuffer
          beq SkipSoundSubroutines
@@ -115,7 +109,7 @@ SkipSoundSubroutines:
           sta Square1SoundQueue
           sta Square2SoundQueue
           sta NoiseSoundQueue
-          sta PauseSoundQueue
+          ; sta PauseSoundQueue
 ;           ldy DAC_Counter        ;load some sort of counter 
 ;           lda AreaMusicBuffer
 ;           and #%00000011         ;check for specific music

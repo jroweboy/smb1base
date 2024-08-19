@@ -82,35 +82,49 @@ EventMusicLUT:
   bne InPause
     lda PauseSoundQueue       ;if not, check pause sfx queue
     beq RunSoundSubroutines   ;if queue is empty, skip pause mode routine
+    bne PerformPause
 InPause:
-
   ; Check if the Pause is just starting to change
   lda GamePauseTimer
+  cmp #1
+  beq FinishedPauseTimer
   cmp #$2b
   jne SkipToUpdate
+PerformPause:
     lda PauseSoundQueue       ;check pause queue
     cmp #2
     beq UnPause
-      lda #0
-      sta PauseSoundQueue
-      lda #Pause
-      sta PauseModeFlag         ;pause mode to interrupt game sounds
-      
       ; DriverMusicPause Macro
       DriverMusicPause
-    .if ::USE_CUSTOM_ENGINE_SFX
+      
+      lda #0
+      sta PauseSoundQueue
+      lda #1
+      sta PauseModeFlag         ;pause mode to interrupt game sounds
+.if ::USE_CUSTOM_ENGINE_SFX
       DriverSFXPlay #Pause
-    .endif
+.endif
       jmp SkipToUpdate
 UnPause:
-  ; DriverMusicUnpause Macro
   lda #0
-  sta PauseModeFlag
+  ; sta PauseModeFlag
   sta PauseSoundQueue
-  DriverMusicUnpause
-.if ::USE_CUSTOM_ENGINE_SFX
-  DriverSFXPlay #Pause
-.endif
+  .if ::USE_CUSTOM_ENGINE_SFX
+    DriverSFXPlay #Pause
+  .endif
+
+  jmp RunSoundSubroutines
+FinishedPauseTimer:
+  lda PauseModeFlag
+  beq FirstTimePause
+SecondTimePause:
+    lda #0
+    sta PauseModeFlag ; unpause
+    ; DriverMusicUnpause Macro
+    DriverMusicUnpause
+    jmp RunSoundSubroutines
+FirstTimePause:
+
   jmp RunSoundSubroutines
 
 MusicLoopBack:
