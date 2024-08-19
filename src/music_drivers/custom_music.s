@@ -116,6 +116,7 @@ UnPause:
   jmp RunSoundSubroutines
 FinishedPauseTimer:
   lda PauseModeFlag
+  cmp #1
   beq FirstTimePause
 SecondTimePause:
     lda #0
@@ -124,7 +125,7 @@ SecondTimePause:
     DriverMusicUnpause
     jmp RunSoundSubroutines
 FirstTimePause:
-
+  inc PauseModeFlag
   jmp RunSoundSubroutines
 
 MusicLoopBack:

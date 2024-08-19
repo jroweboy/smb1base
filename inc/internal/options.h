@@ -13,9 +13,6 @@
 #ifndef USE_MMC5_AUDIO
   #define USE_MMC5_AUDIO 0
 #endif
-#ifndef USE_MMC5_FOR_VANILLA_SFX
-  #define USE_MMC5_FOR_VANILLA_SFX 0
-#endif
 #ifndef USE_VRC7_AUDIO
   #define USE_VRC7_AUDIO 0
 #endif
