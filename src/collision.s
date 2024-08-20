@@ -1243,13 +1243,13 @@ ErACM:
 .proc HandlePipeEntry
   lda Up_Down_Buttons       ;check saved controller bits from earlier
   and #%00000100            ;for pressing down
-  beq ExPipeE               ;if not pressing down, branch to leave
+  beq RTSOpCode               ;if not pressing down, branch to leave
   lda R0
   cmp #$11                  ;check right foot metatile for warp pipe right metatile
-  bne ExPipeE               ;branch to leave if not found
+  bne RTSOpCode               ;branch to leave if not found
   lda R1
   cmp #$10                  ;check left foot metatile for warp pipe left metatile
-  bne ExPipeE               ;branch to leave if not found
+  bne RTSOpCode               ;branch to leave if not found
   lda #$30
   sta ChangeAreaTimer       ;set timer for change of area
   lda #$03
@@ -1275,6 +1275,7 @@ ErACM:
   asl                       ;multiply by four
   tax                       ;save as offset to warp zone numbers (starts at left pipe)
   lda Player_X_Position     ;get player's horizontal position
+RTSOpCode = * + 1
   cmp #$60      
   bcc GetWNum               ;if player at left, not near middle, use offset and skip ahead
   inx                       ;otherwise increment for middle pipe

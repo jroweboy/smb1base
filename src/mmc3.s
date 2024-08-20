@@ -4,9 +4,10 @@
 
 .pushseg
 .segment "SHORTRAM"
-TargetAddrJmp: .res 4 ; 3 ; increased to 4 to jsr/rts for debugging
-TargetAddress := TargetAddrJmp + 1
+; TargetAddrJmp: .res 4 ; 3 ; increased to 4 to jsr/rts for debugging
+; TargetAddress := TargetAddrJmp + 1
 CurrentBank: .res 1
+safecall_a: .res 1
 BankShadow: .res 1
 ReloadCHRBank: .res 1
 CurrentCHRBank: .res 6
@@ -26,17 +27,6 @@ IRQRELOAD   = $c001
 IRQDISABLE  = $e000
 IRQENABLE   = $e001
 
-.macro SwitchAreaCHR
-    ldx #PRG_FIXED_8
-  .repeat 6, I
-    stx BANK_SELECT
-    lda CurrentCHRBank + I
-    sta BANK_DATA
-  .if I <> 5
-    inx
-  .endif
-  .endrepeat
-.endmacro
 
 .macro MAPPER_IRQ_ACK
   sta IRQDISABLE
@@ -103,17 +93,54 @@ IRQENABLE   = $e001
 .endscope
 .endmacro
 
+.macro SwitchAreaCHR
+    ldx #PRG_FIXED_8
+  .repeat 6, I
+    stx BANK_SELECT
+    lda CurrentCHRBank + I
+    sta BANK_DATA
+  .if I <> 5
+    inx
+  .endif
+  .endrepeat
+.endmacro
+
+.macro LoadAreaTypeCHR
+  lda AreaTypeBankMap,y
+  cmp AreaChrBank
+  beq :+
+    tax
+    stx AreaChrBank+0
+    inx
+    inx
+    stx AreaChrBank+1
+    ; Reset the enemy chr banks too cause why not.
+    ldx AreaTypeEnemyBankMap,y
+    stx EnemyChrBank+0
+    inx
+    stx EnemyChrBank+1
+    inc ReloadCHRBank
+  :
+  lda AreaType
+  rts
+AreaTypeBankMap:
+  .byte CHR_BG_WATER, CHR_BG_GROUND, CHR_BG_UNDERGROUND, CHR_BG_CASTLE
+AreaTypeEnemyBankMap:
+  .byte CHR_SPR_WATER, CHR_SPR_GROUND, CHR_SPR_UNDERGROUND, CHR_SPR_CASTLE
+
+.endmacro
+
 .macro farcall loc, usejmp
 .scope
 .assert .bank(loc) <> .bank(*), error, "Attempting to farcall to the same bank!"
 .assert .bank(loc) <> .bank(LOWCODE), error, "Attempting to farcall to the low bank!"
 .assert .bank(loc) <> .bank(FIXED), error, "Attempting to farcall to the fixed bank!"
-  lda #<loc
-  sta TargetAddress
-  lda #>loc
-  sta TargetAddress+1
-  lda #.lobyte(.bank(loc))
-  sta NextBank
+  SMC_StoreValue SafecallA, a
+  lda #.lobyte(loc)
+  SMC_StoreLowByte FarcallJmpTarget, a
+  lda #.hibyte(loc)
+  SMC_StoreHighByte FarcallJmpTarget, a
+  lda #.bank(loc)
 .ifblank usejmp
   jsr FarCallCommon
 .else
@@ -122,26 +149,35 @@ IRQENABLE   = $e001
 .endscope
 .endmacro
 
-.macro far function
+.macro far loc
 .scope
-.ident(.concat("farblock_", .string(function))):
+.assert .bank(*) = .bank(FIXED) || .bank(*) = .bank(LOWCODE), error, "Cannot use far to read data when not in the fixed bank"
+.assert .bank(loc) <> .bank(*), error, "Attempting to farcall to the same bank!"
+.assert .bank(loc) <> .bank(LOWCODE), error, "Attempting to farcall to the low bank!"
+.assert .bank(loc) <> .bank(FIXED), error, "Attempting to farcall to the fixed bank!"
+
+.ident(.concat("farblock_", .string(loc))):
+  sta safecall_a
   lda CurrentBank
   pha
     lda #7 | PRG_FIXED_8
     sta BankShadow
     sta BANK_SELECT
-    lda #.bank(function)
+    lda #.bank(loc)
     sta BANK_DATA
     sta CurrentBank
+    lda safecall_a
 .endmacro
 
 .macro endfar
+    sta safecall_a
     lda #7 | PRG_FIXED_8
     sta BankShadow
     sta BANK_SELECT
   pla
   sta BANK_DATA
   sta CurrentBank
+  lda safecall_a
 .endscope
 .endmacro
 
@@ -172,8 +208,6 @@ BankInitValues:
   .byte CHR_BG_GROUND, CHR_BG_GROUND+2, CHR_SMALLMARIO, CHR_MISC, CHR_SPR_GROUND, CHR_SPR_GROUND+1
 
 MapperInit:
-  ; setup the jmp instruction for the FarBank Target
-  jsr FarCallInit
   ldx #5
   CHRBankInitLoop:
     txa
@@ -186,12 +220,23 @@ MapperInit:
     bpl CHRBankInitLoop
 
   ; Now set the initial A bank
-  BankPRGA #0
-  lda #0
+  BankPRGA #.bank(PLAYER)
+  lda #.bank(PLAYER)
   sta CurrentBank
+  lda #0
   sta NmiSkipped
   lda #7 | PRG_FIXED_8
   sta BankShadow
+  ; fallthrough
+FarcallInit:
+.import __SMCCODE_SIZE__, __SMCCODE_LOAD__, __SMCCODE_RUN__ 
+  ; Copy the Self Modifying Code for super fast farcall bank switches
+  ldx #__SMCCODE_SIZE__ - 1
+  :
+    lda __SMCCODE_LOAD__,x
+    sta __SMCCODE_RUN__,x
+    dex
+    bpl :-
 
   ; disable scanline counter, and IRQ
   lda #0
@@ -201,35 +246,33 @@ MapperInit:
   lda #%10000000
   sta RAM_PROTECT
 
-; Profiler friendly version of the farcall that does jsr rts instead
-; Switch this back before release.
-FarCallInit:
-  lda #$20 ; #$4c
-  sta TargetAddrJmp
-  lda #$60
-  sta TargetAddress+2
   rts
 
-; FarCallInit:
-;   lda #$4c
-;   sta TargetAddrJmp
-;   rts
+.segment "SMCCODE"
+SMCCODE:
 
-; x = bank to switch to
+; Put the bank switching routine into RAM for fastest farcalls
+
+.include "smc.inc"
+
 FarCallCommon:
+  SMC_StoreValue NextBank, a
   lda CurrentBank
   pha
     lda #7 | PRG_FIXED_8
     sta BankShadow
     sta BANK_SELECT
-    lda NextBank
-    sta BANK_DATA
+    SMC NextBank, { lda #SMC_Value }
     sta CurrentBank
-    jsr TargetAddrJmp
+    sta BANK_DATA
+    SMC SafecallA, { lda #SMC_Value }
+    SMC FarcallJmpTarget, { jsr SMC_AbsAdr }
+    SMC_StoreValue SafereturnA, a
     lda #7 | PRG_FIXED_8
     sta BankShadow
     sta BANK_SELECT
   pla
-  sta BANK_DATA
   sta CurrentBank
+  sta BANK_DATA
+  SMC SafereturnA, { lda #SMC_Value }
   rts

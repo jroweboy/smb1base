@@ -155,6 +155,33 @@ MMC5_CHR_BG_BANK_0C = MMC5_CHR_BANK_BASE + 11
   .endrepeat
 .endmacro
 
+.macro LoadAreaTypeCHR
+  lda AreaTypeBankMap,y
+  cmp AreaChrBank
+  beq :+
+    tax
+  .repeat 4,I
+    stx AreaChrBank+I
+  .if I <> 3
+    inx
+  .endif
+  .endrepeat
+    ldx #CHR_MISC
+  .repeat 7,I
+    stx CurrentCHRBank + I + 1
+  .if I <> 6
+    inx
+  .endif
+  .endrepeat
+    inc ReloadCHRBank
+  :
+  lda AreaType
+  rts
+
+AreaTypeBankMap:
+  .byte CHR_BG_WATER, CHR_BG_GROUND, CHR_BG_UNDERGROUND, CHR_BG_CASTLE
+.endmacro
+
 .segment "FIXED"
 
 MapperInit:
@@ -272,19 +299,6 @@ SMCCODE:
 .include "smc.inc"
 
 FarCallCommon:
-  ; Save the values of A/X/Y so we can use them later
-  ; SMC_StoreValue SafecallX, x
-  ; ; SMC_StoreValue SafecallY, y
-  ; tax
-
-  ; lda FARCALL_LO, x
-  ; SMC_StoreLowByte GotoTarget, a
-  ; lda FARCALL_HI, x
-  ; SMC_StoreHighByte GotoTarget, a
-  ; lda FARCALL_BK, x
-  ; sta MMC5_PRG_BANK_A
-  ; SMC_StoreValue SavedBank, a
-  ; pha
   SMC_StoreValue NextBank, a
   lda CurrentBank
   pha
@@ -294,115 +308,8 @@ FarCallCommon:
     SMC SafecallA, { lda #SMC_Value }
     SMC FarcallJmpTarget, { jsr SMC_AbsAdr }
     SMC_StoreValue SafereturnA, a
-    ; SMC SavedBank, { lda #SMC_Value }
   pla
   sta CurrentBank
   BankPRGA a
   SMC SafereturnA, { lda #SMC_Value }
   rts
-
-
-; FarCallCommon:
-;   sta safecall_a  ; 3  -  3
-;   stx safecall_x  ; 3  -  6
-;   sty safecall_y  ; 3  -  9
-
-;   ; copy stack ptr to x
-;   tsx             ; 2  -  11
-;   ; Read the return address and write it to our ptr
-;   lda $100 + 1, x ; 4  -  15
-;   sta safecall_ptr ; 3 -  18
-;   ; and also add 3 to it so that we can skip over the 3 bytes
-;   ; that we use to store the data
-;   clc              ; 2 -  20
-;   adc #3           ; 2 -  22
-;   sta $100 + 1, x  ; 4 -  27
-;   ; Now read the high byte of the return address and 
-;   lda $100 + 2, x  ; 4 -  31
-;   sta safecall_ptr+1 ; 3 - 34
-;   adc #0           ; 2 - 36
-;   sta $100 + 2, x  ; 4 - 40
-
-;   lda CurrentBank
-;   pha
-;     jsr @DoFarCall
-
-;     ; Now restore the previous bank
-;     sta safecall_a
-
-;   ; Pull what page our bank used to be in and switch back
-;   pla
-;   sta CurrentBank
-;   sta MMC5_PRG_BANK_A
-
-;   ; Load A
-;   lda safecall_a
-;   rts
-
-; @DoFarCall:
-;   ; read the high byte of the destination and write it to the stack
-;   ldy #1
-;   lda (safecall_ptr),y
-;   pha
-;   iny
-;   ; and the low byte
-;   lda (safecall_ptr),y
-;   pha
-;   iny
-;   ; and the bank byte
-;   lda (safecall_ptr),y
-;   sta CurrentBank
-;   sta MMC5_PRG_BANK_A
-;   lda safecall_a
-;   ldx safecall_x
-;   ldy safecall_y
-;   ; return to jmp to the target address
-;   rts
-
-; FarJmpCommon:
-;   sta safecall_a  ; 3  -  3
-;   stx safecall_x  ; 3  -  6
-;   sty safecall_y  ; 3  -  9
-
-;   pla
-;   sta safecall_ptr ; 3 -  18
-;   ; Now read the high byte of the return address and 
-;   pla
-;   sta safecall_ptr+1 ; 3 - 34
-
-;   lda CurrentBank
-;   pha
-;     jsr @DoFarCall
-
-;     ; Now restore the previous bank
-;     sta safecall_a
-
-;   ; Pull what page our bank used to be in and switch back
-;   pla
-;   sta CurrentBank
-;   sta MMC5_PRG_BANK_A
-
-;   ; Load A
-;   lda safecall_a
-;   rts
-
-; @DoFarCall:
-;   ; read the high byte of the destination and write it to the stack
-;   ldy #1
-;   lda (safecall_ptr),y
-;   pha
-;   iny
-;   ; and the low byte
-;   lda (safecall_ptr),y
-;   pha
-;   iny
-;   ; and the bank byte
-;   lda (safecall_ptr),y
-;   sta CurrentBank
-;   sta MMC5_PRG_BANK_A
-
-;   lda safecall_a
-;   ldx safecall_x
-;   ldy safecall_y
-;   ; return to jmp to the target address
-;   rts
