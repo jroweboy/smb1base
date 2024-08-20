@@ -24,6 +24,7 @@ labelled_segment s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd
 
 labelled_segment OBJECT, PLAYER, MUSIC, LEVEL, CODE, COLLISION, RENDER, FIXED, TITLE, TITLE_MUSIC
 labelled_segment DPCM, LOWCODE, DECODE, MUSIC_ENGINE, METASPRITE
+labelled_segment FARCALL_HI, FARCALL_LO, FARCALL_BK
 
 .macro ASSERT_PAGE label_
 	.assert >(label_) = >*, error, "Page crossing in timing sensitive code detected! If you see this error then you need to rearrange the code so this branch doesn't cross a page"

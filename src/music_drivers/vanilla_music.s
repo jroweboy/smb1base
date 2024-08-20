@@ -41,7 +41,7 @@ RESERVE AltRegContentFlag, 1
 
 
 .macro MusicInit
-  ldy #MUSIC_MEMORY_END - MUSIC_MEMORY_START
+  ldy #MUSIC_MEMORY_END - MUSIC_MEMORY_START - 1
 :   sta MUSIC_MEMORY_START,y     ;clear out memory used
     dey                   ;by the sound engines
     bpl :-
@@ -53,7 +53,7 @@ RESERVE AltRegContentFlag, 1
 
 .macro MusicClear
 
-  ldy #MUSIC_MEMORY_END - MUSIC_MEMORY_START
+  ldy #MUSIC_MEMORY_END - MUSIC_MEMORY_START - 1
 :   sta MUSIC_MEMORY_START,y     ;clear out memory used
     dey                   ;by the sound engines
     bpl :-

@@ -65,6 +65,21 @@ _COMMON_DEFINE_SEGMENTS = 1
 .include "music_drivers/audio.s"
 
 
+; .segment "FIXED"
+
+; FarcallTableLo:
+; .repeat ::_FARCALL_COUNT, I
+;   .byte .ident(.sprintf("_LEFT_%d_LO", I))
+; .endrepeat
+; FarcallTableHi:
+; .repeat ::_FARCALL_COUNT, I
+;   .byte .ident(.sprintf("METASPRITE_LEFT_%d_LO", I))
+; .endrepeat
+; FarcallTableBank:
+; .repeat ::_FARCALL_COUNT, I
+;   .byte .ident(.sprintf("METASPRITE_LEFT_%d_LO", I))
+; .endrepeat
+
 .segment "CHR"
 
 ; Water = 0

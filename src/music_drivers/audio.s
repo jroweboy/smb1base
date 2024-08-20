@@ -48,7 +48,7 @@ RESERVE PauseModeFlag, 1
 .proc AudioInit
   lda #0
   sta PauseModeFlag
-  ldy #AUDIO_RAM_END - AUDIO_RAM_START
+  ldy #AUDIO_RAM_END - AUDIO_RAM_START - 1
 :   sta AUDIO_RAM_START,y     ;clear out memory used
     dey                       ;by the sound engines
     bpl :-

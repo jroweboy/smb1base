@@ -195,6 +195,8 @@ ProcessTiles:
     rts                         ;leave
 
 DrawFloateyNumber_Coin:
+  lda #0
+  sta Misc_SprAttrib,x
   lda FrameCounter          ;get frame counter
   lsr                       ;divide by 2
   bcs @NotRsNum             ;branch if d0 not set to raise number every other frame
