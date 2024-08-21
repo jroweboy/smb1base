@@ -1,6 +1,8 @@
 
 #include "inc/mario.h"
 
+#include "title.c"
+
 #if ENABLE_C_CALLBACKS
 
 void after_frame_callback() {

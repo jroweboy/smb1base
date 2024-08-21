@@ -375,17 +375,29 @@ FloateyNumberLoop:
   Skip:
     dex
     bpl FloateyNumberLoop
-  
+
   ; Clear sprites up to the offset
+  ; Calculate CurrentOAMOffset / 4 * 3 and add that to the OAM clear to jump
+  ; the middle of the clear routine based on how many we need to clear
+  lda CurrentOAMOffset
+  lsr 
+  sta M0
+  lsr 
+  ; clc - always cleared
+  adc M0
+  ; clc - always cleared
+  adc #<OAMClear
+  sta M0
+  lda #>OAMClear
+  adc #0
+  sta M1
   lda #$f8
-  ldx CurrentOAMOffset
-  :
-    sta Sprite_Y_Position,x
-    inx
-    inx
-    inx
-    inx
-    bne :-
+  jmp (M0)
+
+OAMClear:
+.repeat 64, I
+    sta Sprite_Y_Position + I*4 ; write 248 into OAM data's Y coordinate
+.endrepeat
   rts
 .endproc
 
