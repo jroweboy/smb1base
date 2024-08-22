@@ -32,17 +32,25 @@
     ldx IrqNewScroll
     sta IrqNewScroll
 
+DELAY_BASE = 15
 .if ::MAPPER_MMC3
-    ; stall for 39 cpu cycles
-    lda #$4a ;hides 'LSR A'
-    bne *-1
+  lda #40 - DELAY_BASE
 .elseif ::MAPPER_MMC5
-    ; stall for 14 CPU cycles
-    php
-    plp
-    php
-    plp
+  lda #15 - DELAY_BASE
 .endif
+
+; 15—270 cycles of delay: delay=A+15; 0 ≤ A ≤ 255)
+DelayACycles:
+        sec     
+@L:     sbc #5  
+        bcs @L  ;  6 6 6 6 6  FB FC FD FE FF
+        adc #3  ;  2 2 2 2 2  FE FF 00 01 02
+        bcc @4  ;  3 3 2 2 2  FE FF 00 01 02
+        lsr     ;  - - 2 2 2  -- -- 00 00 01
+        beq @5  ;  - - 3 3 2  -- -- 00 00 01
+@4:     lsr     ;  2 2 - - 2  7F 7F -- -- 00
+@5:     bcs @6  ;  2 3 2 3 2  7F 7F 00 00 00
+@6:
 
     ; ((Y & $F8) << 2) | (X >> 3) in A for $2006 later.
     txa
@@ -62,6 +70,7 @@
   pla
   rti
 .endproc
+
 
 ;-------------------------------------------------------------------------------------
 
@@ -640,7 +649,38 @@ cproc farcall_trampoline
   ora #MMC5_PRG_ROM
   jmp FarCallCommon
 endcproc
+.endif
 
+.if DEBUG_ADD_EXTRA_LAG
+;;;;;;;;;;;;;;;;;;;;;;;;
+; Delays X*256+A clocks + overhead
+; Clobbers A,X. Preserves Y.
+; Depends on delay_a_25_clocks within short branch distance
+; Time: X*256+A+30 clocks (including JSR)
+;;;;;;;;;;;;;;;;;;;;;;;;
+:      sbc #7    ; carry set by CMP
+delay_256x_a_30_clocks_b:
+       cmp #7    ; 2  2  2  2  2  2  2   00 01 02 03 04 05 06   0 0 0 0 0 0 0
+       bcs :-    ; 2  2  2  2  2  2  2   00 01 02 03 04 05 06   0 0 0 0 0 0 0
+       lsr       ; 2  2  2  2  2  2  2   00 00 01 01 02 02 03   0 1 0 1 0 1 0
+       bcs @2    ; 2  3  2  3  2  3  2   00 00 01 01 02 02 03   0 1 0 1 0 1 0
+@2:    beq @6    ; 3  3  2  2  2  2  2   00 00 01 01 02 02 03   0 1 0 1 0 1 0
+       lsr       ;       2  2  2  2  2         00 00 01 01 01       1 1 0 0 1
+       beq @do_x ;       3  3  2  2  2         00 00 01 01 01       1 1 0 0 1
+       bcc @do_x ;             3  3  2               01 01 01           0 0 1
+@6:    bne @do_x ; 2  2              3   00 00             01   0 1         0
+@do_x: txa       ;2
+       beq @rts  ;3
+       ;4 cycles done. Must consume 256 cycles; 252 cycles remain.
+       nop       ;2
+       tya       ;2
+        ldy #48  ;2
+@l:     dey      ;2*48
+        bne @l   ;3*48
+       tay       ;2-1
+       dex       ;2
+       jmp @do_x ;3
+@rts:  rts
 .endif
 
 ;;;;;;;;----------------------------------------

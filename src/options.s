@@ -20,7 +20,27 @@
   .endif
 .endmacro
 
+.macro num_option name
+.local Opt
 
+Opt = .ident(.string(name))
+  .if .not .defined(Opt)
+    Opt .set 0
+    ; Check if its numeric
+    ; match only checks that the types are the same between the two tokens.
+  .elseif .not ( Opt - Opt = 0 )
+    ; if you get this error then you've set a numeric config option to something other than a number
+    .error .sprintf("Number Option `%s` was set to a non numeric value %d", .string(name), .ident(.string(name)))
+    .fatal "Invalid Options selected"
+  .endif
+  .ifdef PRINT_OPTIONS_FOR_C
+    .if PRINT_OPTIONS_FOR_C
+      .out .sprintf("#ifndef %s", .string(name))
+      .out .sprintf("  #define %s 0", .string(name))
+      .out "#endif"
+    .endif
+  .endif
+.endmacro
 
 bool_option MAPPER_MMC3
 bool_option MAPPER_MMC5
@@ -37,7 +57,7 @@ bool_option USE_CUSTOM_ENGINE_SFX
 
 bool_option WORLD_HAX
 bool_option PRINT_METASPRITE_IDS
-
+num_option DEBUG_ADD_EXTRA_LAG
 
 ; Verify mapper selection
 
