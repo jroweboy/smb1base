@@ -346,26 +346,30 @@ SkipSprite0:
   
 .if ::WORLD_HAX
 	dec DebugCooldown
-	bpl :++
-	inc DebugCooldown
-	lda SavedJoypadBits
-	and #Select_Button
-	beq :++
-  lda #10
-	sta DebugCooldown
-  lda SavedJoypadBits
-	and #B_Button
-  beq :+
-  ; TODO don't farcall in nmi
-  farcall PrcNextA
-  jmp :++
-  :
-	jsr PlayerEndWorld
-	:
+	bpl OnCooldown
+    inc DebugCooldown
+    lda SavedJoypadBits
+    and #Select_Button
+    beq OnCooldown
+      lda #10
+      sta DebugCooldown
+      lda SavedJoypadBits
+      and #B_Button
+      beq NextWorld
+        ; TODO don't farcall in nmi
+        BankPRGA #.bank(PrcNextA)
+        jsr PrcNextA
+        jmp OnCooldown
+    NextWorld:
+      jsr PlayerEndWorld
+OnCooldown:
 .endif
 
   jsr PauseRoutine          ;handle pause
-  farcall UpdateTopScore
+
+  BankPRGA #.bank(UpdateTopScore)
+  jsr UpdateTopScore
+
   lda GamePauseStatus       ;check for pause status
   lsr
   bcs PauseSkip
@@ -408,8 +412,11 @@ RotPRandomBit:
     bne RotPRandomBit
 SkipMainOper:
 
-  ; lda BankShadow
-  ; sta BANK_SELECT
+  BankPRGA CurrentBank
+.if ::MAPPER_MMC3
+  lda BankShadow
+  sta BANK_SELECT
+.endif
   ply
   plx
   pla
