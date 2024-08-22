@@ -374,6 +374,11 @@ RESERVE CurrentOAMOffset, 1
 RESERVE OriginalOAMOffset, 1
 RESERVE SpriteShuffleOffset, 1
 
+; Variables for the laggy bros hack
+RESERVE UsingWifi, 1
+RESERVE LagSpikeCooldown, 1
+RESERVE CurrentPing, 2
+
 RESERVE PlayerMetasprite, 1
 ObjectMetasprite := PlayerMetasprite
 RESERVE EnemyMetasprite, 6

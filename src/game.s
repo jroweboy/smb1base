@@ -232,15 +232,16 @@ UpdScrollVar:
         farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
 ExitEng:
 
-.if DEBUG_ADD_EXTRA_LAG
+; .if DEBUG_ADD_EXTRA_LAG
   ; lda SavedJoypadBits
   ; and #Select_Button
   ; bne :+
-    lda #<DEBUG_ADD_EXTRA_LAG
-    ldx #>DEBUG_ADD_EXTRA_LAG
+    
+    lda CurrentPing
+    ldx CurrentPing+1
     jsr delay_256x_a_30_clocks_b
   ; :
-.endif
+; .endif
 
 .if ENABLE_C_CODE
   .import _after_frame_callback

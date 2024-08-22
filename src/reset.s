@@ -533,7 +533,7 @@ cproc farcall_trampoline
 endcproc
 .endif
 
-.if DEBUG_ADD_EXTRA_LAG
+; .if DEBUG_ADD_EXTRA_LAG
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ; Delays X*256+A clocks + overhead
 ; Clobbers A,X. Preserves Y.
@@ -563,7 +563,7 @@ delay_256x_a_30_clocks_b:
        dex       ;2
        jmp @do_x ;3
 @rts:  rts
-.endif
+; .endif
 
 ;;;;;;;;----------------------------------------
 .segment "OAMALIGNED"
