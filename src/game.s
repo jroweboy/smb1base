@@ -22,6 +22,23 @@ GoToNextFrameImmediately:
 .proc GameLoop
   jsr PauseRoutine          ;handle pause
 
+  ldx #$00
+  ldy #$07
+  lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
+  and #%00000010            ;mask out all but d1
+  sta R0                    ;save here
+  lda PseudoRandomBitReg+1  ;get second memory location
+  and #%00000010            ;mask out all but d1
+  eor R0                    ;perform exclusive-OR on d1 from first and second bytes
+  clc                       ;if neither or both are set, carry will be clear
+  beq RotPRandomBit
+  sec                       ;if one or the other is set, carry will be set
+RotPRandomBit:
+    ror PseudoRandomBitReg,x  ;rotate carry into d7, and rotate last bit into carry
+    inx                       ;increment to next byte
+    dey                       ;decrement for loop
+    bne RotPRandomBit
+
   ; BankPRGA #.bank(UpdateTopScore)
   farcall UpdateTopScore
   lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
@@ -50,38 +67,20 @@ GoToNextFrameImmediately:
 NoDecTimers:
     inc FrameCounter          ;increment frame counter
 
-PauseSkip:
-  ldx #$00
-  ldy #$07
-  lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
-  and #%00000010            ;mask out all but d1
-  sta R0                    ;save here
-  lda PseudoRandomBitReg+1  ;get second memory location
-  and #%00000010            ;mask out all but d1
-  eor R0                    ;perform exclusive-OR on d1 from first and second bytes
-  clc                       ;if neither or both are set, carry will be clear
-  beq RotPRandomBit
-  sec                       ;if one or the other is set, carry will be set
-RotPRandomBit:
-    ror PseudoRandomBitReg,x  ;rotate carry into d7, and rotate last bit into carry
-    inx                       ;increment to next byte
-    dey                       ;decrement for loop
-    bne RotPRandomBit
-
 .if ::DEBUG_DISPLAY_VISUAL_FRAMETIME
     lda Mirror_PPUMASK
     ora #%00100000
     sta PPUMASK
 .endif
-    jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
-
+    ; otherwise do one of many, many possible subroutines
+    jsr OperModeExecutionTree
 .if ::DEBUG_DISPLAY_VISUAL_FRAMETIME
     lda Mirror_PPUMASK
     and #%11011111
     sta PPUMASK
 .endif
 
-Paused:
+PauseSkip:
   lda #0
   sta NmiDisable
   rts
