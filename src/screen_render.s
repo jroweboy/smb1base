@@ -647,9 +647,10 @@ GameTextOffsets:
 ;-------------------------------------------------------------------------------------
 GiveOneCoin:
   lda #$01               ;set digit modifier to add 1 coin
-  sta DigitModifier+5    ;to the current player's coin tally
+  sta DigitModifier+1    ;to the current player's coin tally
   ldx CurrentPlayer      ;get current player on the screen
   ldy CoinTallyOffsets,x ;get offset for player's coin tally
+  ldx #PlayerCoinLastIndex
   jsr DigitsMathRoutine  ;update the coin tally
   inc CoinTally          ;increment onscreen player's coin amount
   lda CoinTally
@@ -668,6 +669,7 @@ CoinPoints:
 AddToScore:
   ldx CurrentPlayer      ;get current player
   ldy ScoreOffsets,x     ;get offset for player's score
+  ldx #PlayerScoreLastIndex
   jsr DigitsMathRoutine  ;update the score internally with value in digit modifier
 
 GetSBNybbles:
@@ -686,10 +688,12 @@ NoZSup:
   rts
       
 CoinTallyOffsets:
-  .byte $17, $1d
+  .byte (Player1CoinDisplay + PlayerCoinLastIndex - DisplayDigits)
+  .byte (Player2CoinDisplay + PlayerCoinLastIndex - DisplayDigits)
 
 ScoreOffsets:
-  .byte $0b, $11
+  .byte (Player1ScoreDisplay + PlayerScoreLastIndex - DisplayDigits)
+  .byte (Player2ScoreDisplay + PlayerScoreLastIndex - DisplayDigits)
 
 StatusBarNybbles:
   .byte $02, $13
@@ -697,11 +701,11 @@ StatusBarNybbles:
 
 ;-------------------------------------------------------------------------------------
 .proc UpdateTopScore
-  ldx #$05          ;start with mario's score
+  ldx #5                 ;start with mario's score
   jsr TopScoreCheck
-  ldx #$0b          ;now do luigi's score
+  ldx #5 + 6             ;now do luigi's score
 TopScoreCheck:
-  ldy #$05                 ;start with the lowest digit
+  ldy #5                 ;start with the lowest digit
   sec           
 GetScoreDiff:
   lda PlayerScoreDisplay,x ;subtract each player digit from each high score digit

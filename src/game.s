@@ -380,7 +380,8 @@ ResGTCtrl:
   sta GameTimerCtrlTimer
   ldy #(GameTimerDisplay + 2 - DisplayDigits) ;set offset for last digit
   lda #-1                    ;set value to decrement game timer digit
-  sta DigitModifier+5
+  sta DigitModifier + GameTimerLastIndex
+  ldx #GameTimerLastIndex
   jsr DigitsMathRoutine      ;do sub to decrement game timer slowly
   lda #$a4                   ;set status nybbles to update game timer display
   jmp PrintStatusBarNumbers  ;do sub to update the display
@@ -913,7 +914,7 @@ StartWorld1:
   lda #$00
   sta OperMode_Task           ;set game mode here, and clear demo timer
   sta DemoTimer
-  ldx #$17
+  ldx #6 + 6 + 2 + 2 - 1      ; for each of the scores
   lda #$00
 InitScores:
   sta ScoreAndCoinDisplay,x   ;clear player scores and coin displays
@@ -1208,7 +1209,7 @@ ScoreUpdateDigit:
   lda OperMode              ;check mode of operation
   cmp #MODE_TITLESCREEN
   beq EraseDMods            ;if in title screen mode, branch to lock score
-  ldx #$05
+; ldx #$05
 AddModLoop:
   lda DigitModifier,x       ;load digit amount to increment
   clc
@@ -1301,13 +1302,18 @@ ExitOutputN:
 
 ;status bar name table offset and length data
 StatusBarData:
-      .byte $f0, $06 ; top score display on title screen
-      .byte $62, $06 ; player score
-      .byte $62, $06
-      .byte $6d, $02 ; coin tally
-      .byte $6d, $02
-      .byte $7a, $03 ; game timer
+  .byte $f0, $06 ; top score display on title screen
+  .byte $62, $06 ; player score
+  .byte $62, $06
+  .byte $6d, $02 ; coin tally
+  .byte $6d, $02
+  .byte $7a, $03 ; game timer
 
 StatusBarOffset:
-      .byte $06, $0c, $12, $18, $1e, $24
+  .byte TopScoreDisplay + TopScoreLastIndex - DisplayDigits + 1
+  .byte Player1ScoreDisplay + PlayerScoreLastIndex - DisplayDigits + 1
+  .byte Player2ScoreDisplay + PlayerScoreLastIndex - DisplayDigits + 1
+  .byte Player1CoinDisplay + PlayerCoinLastIndex - DisplayDigits + 1
+  .byte Player2CoinDisplay + PlayerCoinLastIndex - DisplayDigits + 1
+  .byte GameTimerDisplay + GameTimerLastIndex - DisplayDigits + 1
 .endproc

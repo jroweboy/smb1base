@@ -553,12 +553,21 @@ ALL_TIMER_COUNT = DemoTimer - Timers
 
 RESERVE PseudoRandomBitReg, 9
 
-DisplayDigits := TopScoreDisplay
 RESERVE TopScoreDisplay, 6
-RESERVE PlayerScoreDisplay, 27
-ScoreAndCoinDisplay := PlayerScoreDisplay
-RESERVE GameTimerDisplay, 4
+RESERVE Player1ScoreDisplay, 6
+RESERVE Player2ScoreDisplay, 6
+RESERVE Player1CoinDisplay, 2
+RESERVE Player2CoinDisplay, 2
+RESERVE GameTimerDisplay, 3
 
+DisplayDigits := TopScoreDisplay
+PlayerScoreDisplay := Player1ScoreDisplay
+ScoreAndCoinDisplay := Player1ScoreDisplay
+
+TopScoreLastIndex = 5
+PlayerScoreLastIndex = 5
+PlayerCoinLastIndex = 1
+GameTimerLastIndex = 2
 
 RESERVE WorldSelectEnableFlag, 1
 
