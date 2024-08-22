@@ -55,9 +55,10 @@ bool_option USE_FAMISTUDIO_MUSIC
 bool_option USE_VANILLA_SFX
 bool_option USE_CUSTOM_ENGINE_SFX
 
-bool_option WORLD_HAX
+bool_option DEBUG_WORLD_SELECT
 bool_option PRINT_METASPRITE_IDS
 num_option DEBUG_ADD_EXTRA_LAG
+bool_option DEBUG_DISPLAY_VISUAL_FRAMETIME
 
 ; Verify mapper selection
 

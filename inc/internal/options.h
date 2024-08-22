@@ -22,8 +22,8 @@
 #ifndef USE_FAMISTUDIO_MUSIC
   #define USE_FAMISTUDIO_MUSIC 0
 #endif
-#ifndef WORLD_HAX
-  #define WORLD_HAX 0
+#ifndef DEBUG_WORLD_SELECT
+  #define DEBUG_WORLD_SELECT 0
 #endif
 #ifndef PRINT_METASPRITE_IDS
   #define PRINT_METASPRITE_IDS 0

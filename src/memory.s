@@ -565,7 +565,7 @@ RESERVE ContinueWorld, 1
 
 _ColdBootOffset = WarmBootValidation
 
-.if WORLD_HAX
+.if DEBUG_WORLD_SELECT
 RESERVE DebugCooldown, 1
 .endif
 

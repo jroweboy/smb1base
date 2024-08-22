@@ -154,17 +154,44 @@ GoToNextFrameImmediately:
 .endproc
 
 .proc GameLoop
+  ; Run RNG during main loop instead
+  ldx #$00
+  ldy #$07
+  lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
+  and #%00000010            ;mask out all but d1
+  sta NmiR0                   ;save here
+  lda PseudoRandomBitReg+1  ;get second memory location
+  and #%00000010            ;mask out all but d1
+  eor NmiR0                   ;perform exclusive-OR on d1 from first and second bytes
+  clc                       ;if neither or both are set, carry will be clear
+  beq RotPRandomBit
+  sec                       ;if one or the other is set, carry will be set
+RotPRandomBit:
+    ror PseudoRandomBitReg,x  ;rotate carry into d7, and rotate last bit into carry
+    inx                       ;increment to next byte
+    dey                       ;decrement for loop
+    bne RotPRandomBit
+
   lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
   lsr
-  bcs :+
-    ; lda Mirror_PPUMASK
-    ; ora #%00100000
-    ; sta PPUMASK
+  bcs Paused
+    ; Only increment the frame counter when we 
+    inc FrameCounter          ;increment frame counter
+
+.if ::DEBUG_DISPLAY_VISUAL_FRAMETIME
+    lda Mirror_PPUMASK
+    ora #%00100000
+    sta PPUMASK
+.endif
     jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
-:
-  ; lda Mirror_PPUMASK
-  ; and #%11011111
-  ; sta PPUMASK
+
+.if ::DEBUG_DISPLAY_VISUAL_FRAMETIME
+    lda Mirror_PPUMASK
+    and #%11011111
+    sta PPUMASK
+.endif
+
+Paused:
   lda #0
   sta NmiDisable
   rts
@@ -292,7 +319,6 @@ ScreenOff:
     stx ReloadCHRBank
   :
 
-  
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
   cpx #$06
@@ -318,11 +344,7 @@ InitBuffer:
     SetScanlineIRQ #$1f
     ; cli just in case NMI runs late
     cli
-    
-    ; lda GamePauseStatus       ;if in pause mode, do not bother with sprites at all
-    ; lsr
-    ; bcs SkipSprite0
-    ;   jsr MoveAllSpritesOffscreen
+
 SkipSprite0:
   lda Mirror_PPUCTRL
   sta IrqPPUCTRL
@@ -330,21 +352,9 @@ SkipSprite0:
   and #%11111100
   sta PPUCTRL
 
-  ; play sound
-  ; lda CurrentBank
-  ; pha
-  ;   BankPRGA #.bank(MUSIC)
-  ;   jsr SoundEngine
-  ;   lda #7 | PRG_FIXED_8
-  ;   sta BANK_SELECT
-  ; pla
-  ; sta BANK_DATA
-
-  ; BankPRGA #.bank(MUSIC)
   jsr AudioUpdate
-  ; BankPRGA CurrentBank
   
-.if ::WORLD_HAX
+.if ::DEBUG_WORLD_SELECT
 	dec DebugCooldown
 	bpl OnCooldown
     inc DebugCooldown
@@ -392,25 +402,7 @@ OnCooldown:
         dex                       ;move onto next timer
         bpl DecTimersLoop         ;do this until all timers are dealt with
 NoDecTimers:
-  inc FrameCounter          ;increment frame counter
 PauseSkip:
-  ldx #$00
-  ldy #$07
-  lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
-  and #%00000010            ;mask out all but d1
-  sta NmiR0                   ;save here
-  lda PseudoRandomBitReg+1  ;get second memory location
-  and #%00000010            ;mask out all but d1
-  eor NmiR0                   ;perform exclusive-OR on d1 from first and second bytes
-  clc                       ;if neither or both are set, carry will be clear
-  beq RotPRandomBit
-  sec                       ;if one or the other is set, carry will be set
-RotPRandomBit:
-    ror PseudoRandomBitReg,x  ;rotate carry into d7, and rotate last bit into carry
-    inx                       ;increment to next byte
-    dey                       ;decrement for loop
-    bne RotPRandomBit
-SkipMainOper:
 
   BankPRGA CurrentBank
 .if ::MAPPER_MMC3

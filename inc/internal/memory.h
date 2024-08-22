@@ -566,7 +566,7 @@ extern u8 WorldSelectEnableFlag;
 extern u8 ContinueWorld;
 
 
-#if WORLD_HAX
+#if DEBUG_WORLD_SELECT
 extern u8 DebugCooldown;
 #endif
 
