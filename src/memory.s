@@ -176,6 +176,7 @@ RESERVE IrqPPUCTRL, 1
 RESERVE NmiDisable, 1
 RESERVE NmiSkipped, 1
 RESERVE ShouldSkipDrawSprites, 1
+RESERVE FramesSinceLastSpriteDraw, 1
 
 RESERVE IrqNextScanline, 1
 RESERVE CurrentA, 1

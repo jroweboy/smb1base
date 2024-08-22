@@ -315,11 +315,6 @@ SkipSprite0:
 OnCooldown:
 .endif
 
-  jsr PauseRoutine          ;handle pause
-
-  BankPRGA #.bank(UpdateTopScore)
-  jsr UpdateTopScore
-
   BankPRGA CurrentBank
 .if ::MAPPER_MMC3
   lda BankShadow

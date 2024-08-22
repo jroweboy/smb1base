@@ -20,29 +20,13 @@ GoToNextFrameImmediately:
 .endproc
 
 .proc GameLoop
-  ; Run RNG during main loop instead
-  ldx #$00
-  ldy #$07
-  lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
-  and #%00000010            ;mask out all but d1
-  sta NmiR0                   ;save here
-  lda PseudoRandomBitReg+1  ;get second memory location
-  and #%00000010            ;mask out all but d1
-  eor NmiR0                   ;perform exclusive-OR on d1 from first and second bytes
-  clc                       ;if neither or both are set, carry will be clear
-  beq RotPRandomBit
-  sec                       ;if one or the other is set, carry will be set
-RotPRandomBit:
-    ror PseudoRandomBitReg,x  ;rotate carry into d7, and rotate last bit into carry
-    inx                       ;increment to next byte
-    dey                       ;decrement for loop
-    bne RotPRandomBit
+  jsr PauseRoutine          ;handle pause
 
+  ; BankPRGA #.bank(UpdateTopScore)
+  farcall UpdateTopScore
   lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
   lsr
-  bcs Paused
-    ; Only increment the frame counter during the frame time
-    inc FrameCounter          ;increment frame counter
+  bcs PauseSkip
 
     ; Move the timers ahead by a frame as well
     lda TimerControl          ;if master timer control not set, decrement
@@ -64,6 +48,25 @@ RotPRandomBit:
         dex                       ;move onto next timer
         bpl DecTimersLoop         ;do this until all timers are dealt with
 NoDecTimers:
+    inc FrameCounter          ;increment frame counter
+
+PauseSkip:
+  ldx #$00
+  ldy #$07
+  lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
+  and #%00000010            ;mask out all but d1
+  sta R0                    ;save here
+  lda PseudoRandomBitReg+1  ;get second memory location
+  and #%00000010            ;mask out all but d1
+  eor R0                    ;perform exclusive-OR on d1 from first and second bytes
+  clc                       ;if neither or both are set, carry will be clear
+  beq RotPRandomBit
+  sec                       ;if one or the other is set, carry will be set
+RotPRandomBit:
+    ror PseudoRandomBitReg,x  ;rotate carry into d7, and rotate last bit into carry
+    inx                       ;increment to next byte
+    dey                       ;decrement for loop
+    bne RotPRandomBit
 
 .if ::DEBUG_DISPLAY_VISUAL_FRAMETIME
     lda Mirror_PPUMASK
@@ -166,9 +169,18 @@ ProcELoop:
   endfar
 
   lda ShouldSkipDrawSprites
-  bne SkipDrawingCauseLagged
+  beq NoLagSoDraw
+  lda FramesSinceLastSpriteDraw
+  cmp #13 ; Force a draw every 13 frames (~5fps) so its not too broken at extreme lag
+  bcc SkipDrawingCauseLagged
+NoLagSoDraw:
     farcall DrawAllMetasprites
+    lda #0
+    sta FramesSinceLastSpriteDraw
+    beq DoneDrawing
 SkipDrawingCauseLagged:
+    inc FramesSinceLastSpriteDraw
+DoneDrawing:
   lda #0
   sta ShouldSkipDrawSprites
 
