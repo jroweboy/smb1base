@@ -21,14 +21,11 @@
 .endmacro
 
 .macro num_option name
-.local Opt
-
-Opt = .ident(.string(name))
-  .if .not .defined(Opt)
-    Opt .set 0
+  .if .not .defined(.ident(.string(name)))
+    .ident(.string(name)) .set 0
     ; Check if its numeric
     ; match only checks that the types are the same between the two tokens.
-  .elseif .not ( Opt - Opt = 0 )
+  .else
     ; if you get this error then you've set a numeric config option to something other than a number
     .error .sprintf("Number Option `%s` was set to a non numeric value %d", .string(name), .ident(.string(name)))
     .fatal "Invalid Options selected"
