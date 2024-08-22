@@ -144,13 +144,16 @@ FinializeMarioInit:
 ; Detect if the last frame lagged and skip immediately to the next frame if we did so we don't
 ; slow down if we lag.
 GoToNextFrameImmediately:
-    lda NmiSkipped
-    pha
-      jsr GameLoop
-    pla
-    cmp NmiSkipped
-    bne GoToNextFrameImmediately
-  jmp IdleLoop
+  lda NmiSkipped
+  pha
+    jsr GameLoop
+  pla
+  cmp NmiSkipped
+  beq IdleLoop
+  ; We lagged this frame, so skip sprites next frame for faster processing
+  lda #1
+  sta ShouldSkipDrawSprites
+  jmp GoToNextFrameImmediately
 .endproc
 
 .proc GameLoop
