@@ -2,6 +2,7 @@
 .segment "CODE"
 
 ;-------------------------------------------------------------------------------------
+clabel GameCoreRoutine
 GameCoreRoutine:
   ldx CurrentPlayer          ;get which player is on the screen
   lda SavedJoypadBits,x      ;use appropriate player's controller bits
@@ -9,8 +10,8 @@ GameCoreRoutine:
   
   farcall GameRoutines           ;execute one of many possible subs
 
-  lda #0
-  sta PlayerOAMOffset
+  ; lda #0
+  ; sta PlayerOAMOffset
   lda #4 * 4 ; save enough room to draw the player first later
   sta CurrentOAMOffset
 
@@ -101,7 +102,7 @@ UpdScrollVar:
   RunParser:
         farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
 ExitEng:
-.if ENABLE_C_CALLBACKS
+.if ENABLE_C_CODE
   .import _after_frame_callback
   jmp _after_frame_callback
 .else
@@ -510,6 +511,28 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
 
 ;-------------------------------------------------------------------------------------
 
+.if USE_CUSTOM_TITLESCREEN
+.proc TitleScreenMode
+  lda OperMode_Task
+  jsr JumpEngine
+
+  .word InitializeGame
+  .word FarCallTitleScreenSetup
+  .word PrimaryGameSetup
+  .word FarCallGameMenu
+
+.import _title_screen_setup
+FarCallTitleScreenSetup:
+  farcall _title_screen_setup, jmp
+  ; jmp _title_screen_setup
+
+.import _title_screen_menu
+FarCallGameMenu:
+  farcall _title_screen_menu, jmp
+  ; jmp _title_screen_menu
+
+.endproc
+.else
 .proc TitleScreenMode
   lda OperMode_Task
   jsr JumpEngine
@@ -519,6 +542,7 @@ ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   .word PrimaryGameSetup
   .word GameMenuRoutine
 .endproc
+.endif
 
 InitializeGame:
   ldy #<WorldSelectNumber  ;clear all memory as in initialization procedure,
@@ -764,16 +788,16 @@ GoContinue:
   stx AreaNumber              ;will make no difference
   stx OffScr_AreaNumber   
   rts
-              
+.endproc
+clabel WSelectBufferTemplate
 WSelectBufferTemplate:
       .byte $04, $20, $73, $01, $00, $00
 
-.endproc
 
 
 ;-------------------------------------------------------------------------------------
 
-.proc DemoEngine
+cproc DemoEngine
   ldx DemoAction         ;load current demo action
   lda DemoActionTimer    ;load current action timer
   bne DoAction           ;if timer still counting down, skip
@@ -807,8 +831,8 @@ DemoTimingData:
 
 .proc VictoryMode
 
-  lda #0
-  sta PlayerOAMOffset
+  ; lda #0
+  ; sta PlayerOAMOffset
   lda #4 * 4 ; save enough room to draw the player first later
   sta CurrentOAMOffset
   

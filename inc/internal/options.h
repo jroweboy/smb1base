@@ -31,13 +31,18 @@
 
 #ifdef __NES__
 
-#ifndef ENABLE_C_CALLBACKS
-  #define ENABLE_C_CALLBACKS 0
+#ifndef ENABLE_C_CODE
+  #define ENABLE_C_CODE 0
+#endif
+#ifndef USE_CUSTOM_TITLESCREEN
+  #define USE_CUSTOM_TITLESCREEN 0
 #endif
 
-#else // Enable C callbacks for code editors
+#else
 
-#define ENABLE_C_CALLBACKS 1
+// This is just here to make things look nicer for code editors
+#define ENABLE_C_CODE 1
+#define USE_CUSTOM_TITLESCREEN 1
 
 #endif
 

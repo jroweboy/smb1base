@@ -10,6 +10,7 @@
         }
     ],
     "clangd.fallbackFlags": [
+        "-I${workspaceFolder}/tools/Windows/cc65/include",
         "-I${workspaceFolder}/inc",
         "-I${workspaceFolder}",
     ]

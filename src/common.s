@@ -37,6 +37,7 @@
 .endproc
 
 ;-------------------------------------------------------------------------------------
+clabel LoadAreaPointer
 LoadAreaPointer:
   ; jroweboy inlined FindAreaPointer
   ldy WorldNumber        ;load offset from world variable

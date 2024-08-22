@@ -184,6 +184,9 @@ RESERVE SwitchToMainIRQ, 1
 RESERVE IrqPointerJmp, 3
 IrqPointer := IrqPointerJmp + 1
 
+.if ENABLE_C_CODE
+RESERVE CStack, $20
+.endif
 
 ; segment "BSS"
 .segment "OAM"
@@ -365,7 +368,7 @@ RESERVE MaxRangeFromOrigin, 1
 RESERVE BitMFilter, 1
 RESERVE ChangeAreaTimer, 2
 
-RESERVE PlayerOAMOffset, 1
+; RESERVE PlayerOAMOffset, 1
 RESERVE CurrentOAMOffset, 1
 RESERVE OriginalOAMOffset, 1
 RESERVE SpriteShuffleOffset, 1
@@ -562,7 +565,7 @@ RESERVE ContinueWorld, 1
 
 _ColdBootOffset = WarmBootValidation
 
-.ifdef WORLD_HAX
+.if WORLD_HAX
 RESERVE DebugCooldown, 1
 .endif
 

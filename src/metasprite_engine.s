@@ -193,7 +193,7 @@ MetaspriteBoxBody Object, Animation, "LEFT", VramOffset, Palette, XOffset, YOffs
 MetaspriteBoxBody Object, Animation, "RIGHT", VramOffset, Palette, XOffset, YOffset, Spr1, Spr2, Spr3, Spr4
 
 .if PRINT_METASPRITE_IDS
-.out .sprintf("METASPRITE_%s_%s = $%02x", Object, Animation, METASPRITES_COUNT)
+.out .sprintf("#define METASPRITE_%s_%s 0x%02x", Object, Animation, METASPRITES_COUNT)
 .endif
 .if Mirror = 1
 .ident( .sprintf("METASPRITE_LEFT_%d_LO",  METASPRITES_COUNT) ) = .lobyte(.ident( .sprintf("MetaspriteData_%s_%s_LEFT", Object, Animation) ))
@@ -220,7 +220,7 @@ Bank = .ident( .sprintf("METASPRITE_%d_BANK", Id) )
 
 .ifdef METASPRITE_BODY
 .if PRINT_METASPRITE_IDS
-.out .sprintf("METASPRITE_%s = $%02x (duplicate of %s)", Mspr, METASPRITES_COUNT, Name)
+.out .sprintf("#define METASPRITE_%s 0x%02x // (duplicate of %s)", Name, METASPRITES_COUNT, Mspr)
 .endif
 
 LL = .ident(.sprintf("METASPRITE_LEFT_%d_LO", Id))
@@ -272,32 +272,24 @@ Id = .ident(Name)
 LoopCount = M0
 
   ; draw the player first so it doesn't ever flicker
+  ; first clear out the sprites that are reserved for the player
+  lda #$f8
+  sta Sprite_Y_Position + 0
+  sta Sprite_Y_Position + 4
+  sta Sprite_Y_Position + 8
+  sta Sprite_Y_Position + 12
   ldy #0
   ldx ObjectMetasprite,y
   ; unless the player is currently flickering due to damage taken
-  beq ClearOAMLoop
+  beq DoneDrawingPlayer
     ; put the player in slot 0 always
     lda CurrentOAMOffset
     pha
-      lda PlayerOAMOffset
+      lda #0
       sta CurrentOAMOffset
       jsr DrawMetasprite
     pla
     sta CurrentOAMOffset
-  ClearOAMLoop:
-    ; Now clear out the 
-    ; X is the old OAM offset
-    cpx #4*4
-    beq DoneDrawingPlayer
-    lda #$f8
-    ClearLoop:
-      sta Sprite_Y_Position,x
-      inx
-      inx
-      inx
-      inx
-      cpx #4*4
-      bne ClearLoop
 DoneDrawingPlayer:
 
   lda #24 - 1 ; size of the different object update list
@@ -393,17 +385,22 @@ FloateyNumberLoop:
   sta M1
   lda #$f8
   jmp (M0)
+.endproc
 
+MoveAllSpritesOffscreen:
+  ldy #0
+  sty CurrentOAMOffset
+  lda #$f8
 OAMClear:
 .repeat 64, I
     sta Sprite_Y_Position + I*4 ; write 248 into OAM data's Y coordinate
 .endrepeat
   rts
-.endproc
+
 
 .proc DrawMetasprite
 Ptr = R0
-OrigOffset = R2
+; OrigOffset = R2
 Atr = R3
 Xlo = R4
 Xhi = R5
@@ -427,7 +424,7 @@ VFlip = M1
     sta Ptr+1
 DrawSprite:
 
-  sty OrigOffset
+  ; sty OrigOffset
 
   lda SprObject_X_Position,y
   sec
@@ -518,7 +515,7 @@ DontShiftPositions:
 
 .proc MetaspriteRenderLoop
 Ptr = R0
-OrigOffset = R2
+; OrigOffset = R2
 Atr = R3
 Xlo = R4
 Xhi = R5
@@ -627,7 +624,7 @@ NoPaletteBitMask:
 ; ;-------------------------------------------------------------------------------------
 .proc FloateyNumberRender
 Ptr = R0
-OrigOffset = R2
+; OrigOffset = R2
 Atr = R3
 Xlo = R4
 Xhi = R5

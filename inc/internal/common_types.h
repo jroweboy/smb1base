@@ -2,7 +2,7 @@
 #ifndef __COMMON_TYPES_H
 #define __COMMON_TYPES_H
 
-#include <stdbool.h>
+// #include <stdbool.h>
 #include <stdint.h>
 
 typedef uint8_t   u8;
@@ -15,7 +15,29 @@ typedef int32_t   s32;
 
 // Common useful macros
 
+void farcall_trampoline(void);
+
 #define _MACRO_STRINGIFY(a) #a
+
+#define PUSHSEG(a) \
+  _Pragma(_MACRO_STRINGIFY(code-name (push, #a );)); \
+  _Pragma(_MACRO_STRINGIFY(data-name (push, #a );)); \
+  _Pragma(_MACRO_STRINGIFY(rodata-name (push, #a );));
+
+
+#define POPSEG() \
+  _Pragma(_MACRO_STRINGIFY(code-name (pop);)); \
+  _Pragma(_MACRO_STRINGIFY(data-name (pop);)); \
+  _Pragma(_MACRO_STRINGIFY(rodata-name (pop);));
+
+#define WRAPPED(func_decl) \
+  _Pragma(_MACRO_STRINGIFY(wrapped-call (push, farcall_trampoline, bank);));\
+  func_decl; \
+  _Pragma(_MACRO_STRINGIFY(wrapped-call (pop);));\
+
+
+#define DISABLE_NMI() NmiDisable = 0xff;
+#define ENABLE_NMI() NmiDisable = 0x00;
 
 #define _MACRO_ZP_1(a)      _Pragma (_MACRO_STRINGIFY(zpsym ( #a );));
 #define _MACRO_ZP_2(a,b)    _MACRO_ZP_1(a) _MACRO_ZP_1 (b)

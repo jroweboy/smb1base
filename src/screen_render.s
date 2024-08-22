@@ -1,6 +1,21 @@
 
 .segment "RENDER"
 
+clabel InitScreen
+clabel SetupIntermediate
+clabel WriteTopStatusLine
+clabel WriteBottomStatusLine
+clabel DisplayTimeUp
+clabel ResetSpritesAndScreenTimer
+clabel DisplayIntermediate
+clabel AreaParserTaskControl
+clabel GetAreaPalette
+clabel GetBackgroundColor
+clabel GetAlternatePalette1
+clabel DrawTitleScreen
+clabel ClearBuffersDrawIcon
+clabel WriteTopScore
+
 ;-------------------------------------------------------------------------------------
 
 .proc ScreenRoutines
@@ -27,14 +42,13 @@
 
 
 ;-------------------------------------------------------------------------------------
-
 InitScreen:
   lda Mirror_PPUMASK
   and #%00011000
   beq :+
     rts
   :
-  jsr MoveAllSpritesOffscreen ;initialize all sprites including sprite #0
+  farcall MoveAllSpritesOffscreen ;initialize all sprites including sprite #0
   jsr InitializeNameTables    ;and erase both name and attribute tables
   lda OperMode
   beq NextSubtask             ;if mode still 0, do not load
@@ -52,22 +66,6 @@ NextSubtask:
 AreaPalette:
   .byte $01, $02, $03, $04
 
-
-
-;-------------------------------------------------------------------------------------
-; MoveSpritesOffscreen:
-;   lda #$f8
-;   bne MoveSpriteOffscreenUnrolledWrites + 3
-MoveAllSpritesOffscreen:
-  lda #$f8
-MoveSpriteOffscreenUnrolledWrites:
-.repeat 64, I
-    sta Sprite_Y_Position + I*4 ;write 248 into OAM data's Y coordinate
-.endrepeat
-  ; original game uses y for looping, so keep it zero to be paranoid
-  ldy #0
-  sty CurrentOAMOffset
-  rts
 
 ;-------------------------------------------------------------------------------------
 InitializeNameTables:
@@ -104,7 +102,7 @@ InitATLoop:
   bne InitATLoop
   sta HorizontalScroll      ;reset scroll variables
   sta VerticalScroll
-  jmp WriteBufferToScreen::InitScroll  ;initialize scroll registers to zero
+  jmp InitScroll  ;initialize scroll registers to zero
 
 ;-------------------------------------------------------------------------------------
 
@@ -133,7 +131,6 @@ SetupIntermediate:
   jmp IncSubtask           ;then move onto the next task
 
 ;-------------------------------------------------------------------------------------
-
 WriteBottomStatusLine:
 
   jsr GetSBNybbles        ;write player's score and coin tally to screen
@@ -164,23 +161,10 @@ WriteBottomStatusLine:
 
 ;-------------------------------------------------------------------------------------
 
-DisplayTimeUp:
-  lda GameTimerExpiredFlag  ;if game timer not expired, increment task
-  beq NoTimeUp              ;control 2 tasks forward, otherwise, stay here
-  lda #$00
-  sta GameTimerExpiredFlag  ;reset timer expiration flag
-  lda #$02                  ;output time-up screen to buffer
-  jmp OutputInter
-NoTimeUp:
-  inc ScreenRoutineTask     ;increment control task 2 tasks forward
-  jmp IncSubtask
-
-;-------------------------------------------------------------------------------------
-
 ResetSpritesAndScreenTimer:
   lda ScreenTimer             ;check if screen timer has expired
   bne NoReset                 ;if not, branch to leave
-  jsr MoveAllSpritesOffscreen ;otherwise reset sprites now
+  farcall MoveAllSpritesOffscreen ;otherwise reset sprites now
 
 ResetScreenTimer:
   lda #$07                    ;reset timer again
@@ -228,7 +212,7 @@ IntermediatePlayerData:
 .endproc
 
 
-DisplayIntermediate:
+.proc DisplayIntermediate
   lda OperMode                 ;check primary mode of operation
   beq NoInter                  ;if in title screen mode, skip this
   cmp #MODE_GAMEOVER           ;are we in game over mode?
@@ -263,7 +247,20 @@ NoInter:
   lda #$08                     ;set for specific task and leave
   sta ScreenRoutineTask
   rts
+.endproc
 
+;-------------------------------------------------------------------------------------
+
+DisplayTimeUp:
+  lda GameTimerExpiredFlag  ;if game timer not expired, increment task
+  beq NoTimeUp              ;control 2 tasks forward, otherwise, stay here
+  lda #$00
+  sta GameTimerExpiredFlag  ;reset timer expiration flag
+  lda #$02                  ;output time-up screen to buffer
+  jmp DisplayIntermediate::OutputInter
+NoTimeUp:
+  inc ScreenRoutineTask     ;increment control task 2 tasks forward
+  jmp IncSubtask
 
 ;-------------------------------------------------------------------------------------
 
@@ -420,7 +417,7 @@ IncSubtask:
 
 ;-------------------------------------------------------------------------------------
 
-.proc DrawMushroomIcon
+cproc DrawMushroomIcon
   ldy #$07                ;read eight bytes to be read by transfer routine
 IconDataRead:
   lda MushroomIconData,y  ;note that the default position is set for a
@@ -441,7 +438,7 @@ MushroomIconData:
 
 
 ;-------------------------------------------------------------------------------------
-.proc WriteGameText
+cproc WriteGameText
   pha                      ;save text number to stack
     asl
     tay                      ;multiply by 2 and use as offset
@@ -533,7 +530,7 @@ WarpNumLoop:
   jmp SetVRAMOffset
 
 
-.endproc
+endcproc
 
 GameText:
 TopStatusBarLine:

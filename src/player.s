@@ -1394,36 +1394,36 @@ GetGfxOffsetAdder:
 SzOfs:
   rts             ;go back
 
-ChkForPlayerAttrib:
-  ldy PlayerOAMOffset         ;get sprite data offset
-  lda GameEngineSubroutine
-  cmp #$0b                    ;if executing specific game engine routine,
-  beq KilledAtt               ;branch to change third and fourth row OAM attributes
-  lda PlayerGfxOffset         ;get graphics table offset
-  cmp #$50
-  beq C_S_IGAtt               ;if crouch offset, either standing offset,
-  cmp #$b8                    ;or intermediate growing offset,
-  beq C_S_IGAtt               ;go ahead and execute code to change 
-  cmp #$c0                    ;fourth row OAM attributes only
-  beq C_S_IGAtt
-  cmp #$c8
-  bne ExPlyrAt                ;if none of these, branch to leave
-KilledAtt:
-  lda Sprite_Attributes+16,y
-  and #%00111111              ;mask out horizontal and vertical flip bits
-  sta Sprite_Attributes+16,y  ;for third row sprites and save
-  lda Sprite_Attributes+20,y
-  and #%00111111  
-  ora #%01000000              ;set horizontal flip bit for second
-  sta Sprite_Attributes+20,y  ;sprite in the third row
-C_S_IGAtt:
-  lda Sprite_Attributes+24,y
-  and #%00111111              ;mask out horizontal and vertical flip bits
-  sta Sprite_Attributes+24,y  ;for fourth row sprites and save
-  lda Sprite_Attributes+28,y
-  and #%00111111
-  ora #%01000000              ;set horizontal flip bit for second
-  sta Sprite_Attributes+28,y  ;sprite in the fourth row
+; ChkForPlayerAttrib:
+;   ldy PlayerOAMOffset         ;get sprite data offset
+;   lda GameEngineSubroutine
+;   cmp #$0b                    ;if executing specific game engine routine,
+;   beq KilledAtt               ;branch to change third and fourth row OAM attributes
+;   lda PlayerGfxOffset         ;get graphics table offset
+;   cmp #$50
+;   beq C_S_IGAtt               ;if crouch offset, either standing offset,
+;   cmp #$b8                    ;or intermediate growing offset,
+;   beq C_S_IGAtt               ;go ahead and execute code to change 
+;   cmp #$c0                    ;fourth row OAM attributes only
+;   beq C_S_IGAtt
+;   cmp #$c8
+;   bne ExPlyrAt                ;if none of these, branch to leave
+; KilledAtt:
+;   lda Sprite_Attributes+16,y
+;   and #%00111111              ;mask out horizontal and vertical flip bits
+;   sta Sprite_Attributes+16,y  ;for third row sprites and save
+;   lda Sprite_Attributes+20,y
+;   and #%00111111  
+;   ora #%01000000              ;set horizontal flip bit for second
+;   sta Sprite_Attributes+20,y  ;sprite in the third row
+; C_S_IGAtt:
+;   lda Sprite_Attributes+24,y
+;   and #%00111111              ;mask out horizontal and vertical flip bits
+;   sta Sprite_Attributes+24,y  ;for fourth row sprites and save
+;   lda Sprite_Attributes+28,y
+;   and #%00111111
+;   ora #%01000000              ;set horizontal flip bit for second
+;   sta Sprite_Attributes+28,y  ;sprite in the fourth row
 ExPlyrAt:
   rts                         ;leave
 

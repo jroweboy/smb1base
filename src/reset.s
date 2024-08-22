@@ -124,6 +124,7 @@ FinializeMarioInit:
   ora #%10100000               ;enable NMIs and 8x16 sprites
   sta PPUCTRL              ;write contents of A to PPU register 1
   sta Mirror_PPUCTRL       ;and its mirror
+
   ; do a jsr to the main loop so we can profile it separately
   jsr IdleLoop
 .endproc
@@ -165,8 +166,9 @@ GoToNextFrameImmediately:
 ;$00 - vram buffer address table low
 ;$01 - vram buffer address table high
 
-.proc WriteBufferToScreen
+clabel UpdateScreen
 
+WriteBufferToScreen:
   sta PPUADDR           ;store high byte of vram address
   iny
   lda (NmiR0),y               ;load next byte (second)
@@ -215,7 +217,6 @@ InitScroll:
   sta PPUSCROLL        ;store contents of A into scroll registers
   sta PPUSCROLL        ;and end whatever subroutine led us here
   rts
-.endproc
 
 
 .proc NonMaskableInterrupt
@@ -227,26 +228,18 @@ InitScroll:
     inc NmiSkipped
     ; lag frame, prevent the graphics from going bunk by still running
     ; the irq. also run audio to keep it sounding like we didn't lag
-    SetScanlineIRQ #$1f
-    lda Mirror_PPUCTRL
-    and #%11111110            ;alter name table address to be $2800
-    sta PPUCTRL              ;(essentially $2000) but save other bits
-    lda #0
-    sta PPUSCROLL
-    sta PPUSCROLL
-    ; lda CurrentBank
-    ; pha
-      ; BankPRGA #.bank(MUSIC)
-      jsr AudioUpdate
-    ;   lda #7 | PRG_FIXED_8
-    ;   sta BANK_SELECT
-    ; pla
-    ; sta BANK_DATA
-    ; lda BankShadow
-    ; sta BANK_SELECT
-    ; pla
-    ; BankPRGA a
-
+    ; Unless the screen is off, then we don't care
+    lda DisableScreenFlag
+    bne :+
+      SetScanlineIRQ #$1f
+      lda Mirror_PPUCTRL
+      and #%11111110            ;alter name table address to be $2800
+      sta PPUCTRL              ;(essentially $2000) but save other bits
+      lda #0
+      sta PPUSCROLL
+      sta PPUSCROLL
+    :
+    jsr AudioUpdate
     ply
     plx
     pla
@@ -280,7 +273,7 @@ ScreenOff:
   sta NmiR0
   lda VRAM_AddrTable_High,x
   sta NmiR1
-  jsr WriteBufferToScreen::UpdateScreen  ;update screen with buffer contents
+  jsr UpdateScreen  ;update screen with buffer contents
 
   jsr OAMandReadJoypad
   lda ReloadCHRBank
@@ -342,7 +335,7 @@ SkipSprite0:
   jsr AudioUpdate
   ; BankPRGA CurrentBank
   
-.ifdef WORLD_HAX
+.if ::WORLD_HAX
 	dec DebugCooldown
 	bpl :++
 	inc DebugCooldown
@@ -413,6 +406,8 @@ SkipMainOper:
   pla
   rti                       ;we are done until the next frame!
 
+.endproc
+
 ;-------------------------------------------------------------------------------------
 ;$00 - vram buffer address table low, also used for pseudorandom bit
 ;$01 - vram buffer address table high
@@ -438,9 +433,12 @@ SkipMainOper:
       WorldSelectMessage1, \
       WorldSelectMessage2
 
+clabel VRAM_AddrTable_Low
+clabel VRAM_AddrTable_High
 VRAM_AddrTable_Low: .lobytes VRAM_AddrTable
 VRAM_AddrTable_High: .hibytes VRAM_AddrTable
 
+clabel VRAM_Buffer_Offset
 VRAM_Buffer_Offset:
   .byte VRAM_Buffer1_PtrOffset, VRAM_Buffer2_PtrOffset
 
@@ -552,8 +550,6 @@ WorldSelectMessage2:
   .byte "TO SELECT A WORLD"
   .byte $00
 
-.endproc
-
 ;-------------------------------------------------------------------------------------
 
 ;$06 - RAM address low
@@ -581,6 +577,17 @@ SkipByte:
       bne InitByteLoop
     dex               ;go onto the next page
     bpl InitPageLoop  ;do this until all pages of memory have been erased
+    
+.if ::ENABLE_C_CODE
+; Reset the stack pointer for C code. Shame we lose the stack ...
+; TODO Might wanna investigate a new InitMemory function
+.import sp
+  lda #<CStack
+  sta sp
+  lda #>CStack
+  sta sp+1
+.endif
+  lda #0
   rts
 .endproc
 
@@ -620,7 +627,21 @@ SetPause:      sta GamePauseStatus
 ExitPause:     rts
 .endproc
 
+.if ENABLE_C_CODE
+.importzp ptr4, tmp4
+; This allows c code to reuse the farcall mechanism
+cproc farcall_trampoline
+  SMC_StoreValue SafecallA, a
+  lda ptr4
+  SMC_StoreLowByte FarcallJmpTarget, a
+  lda ptr4+1
+  SMC_StoreHighByte FarcallJmpTarget, a
+  lda tmp4
+  ora #MMC5_PRG_ROM
+  jmp FarCallCommon
+endcproc
 
+.endif
 
 ;;;;;;;;----------------------------------------
 .segment "OAMALIGNED"

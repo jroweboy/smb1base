@@ -11,13 +11,21 @@
     .error .sprintf("Boolean Option `%s` was set to a value other than 0 or 1", .string(name))
     .fatal "Invalid Options selected"
   .endif
+  .ifdef PRINT_OPTIONS_FOR_C
+    .if PRINT_OPTIONS_FOR_C
+      .out .sprintf("#ifndef %s", .string(name))
+      .out .sprintf("  #define %s 0", .string(name))
+      .out "#endif"
+    .endif
+  .endif
 .endmacro
 
 
 
 bool_option MAPPER_MMC3
 bool_option MAPPER_MMC5
-bool_option ENABLE_C_CALLBACKS
+bool_option ENABLE_C_CODE
+bool_option USE_CUSTOM_TITLESCREEN
 
 bool_option USE_MMC5_AUDIO
 bool_option USE_VRC7_AUDIO
