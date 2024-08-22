@@ -92,7 +92,7 @@ void title_screen_menu() {
     for (i = 0; i < 0x17; ++i) {
       PlayerScoreDisplay[i] = 0;
     }
-    return;
+    return; 
   }
 
   // ChkSelect

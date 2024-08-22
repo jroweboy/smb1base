@@ -1,6 +1,124 @@
 
 .segment "CODE"
 
+.proc IdleLoop
+  lda NmiDisable
+  beq IdleLoop
+; Detect if the last frame lagged and skip immediately to the next frame if we did so we don't
+; slow down if we lag.
+GoToNextFrameImmediately:
+  lda NmiSkipped
+  pha
+    jsr GameLoop
+  pla
+  cmp NmiSkipped
+  beq IdleLoop
+  ; We lagged this frame, so skip sprites next frame for faster processing
+  lda #1
+  sta ShouldSkipDrawSprites
+  jmp GoToNextFrameImmediately
+.endproc
+
+.proc GameLoop
+  ; Run RNG during main loop instead
+  ldx #$00
+  ldy #$07
+  lda PseudoRandomBitReg    ;get first memory location of LSFR bytes
+  and #%00000010            ;mask out all but d1
+  sta NmiR0                   ;save here
+  lda PseudoRandomBitReg+1  ;get second memory location
+  and #%00000010            ;mask out all but d1
+  eor NmiR0                   ;perform exclusive-OR on d1 from first and second bytes
+  clc                       ;if neither or both are set, carry will be clear
+  beq RotPRandomBit
+  sec                       ;if one or the other is set, carry will be set
+RotPRandomBit:
+    ror PseudoRandomBitReg,x  ;rotate carry into d7, and rotate last bit into carry
+    inx                       ;increment to next byte
+    dey                       ;decrement for loop
+    bne RotPRandomBit
+
+  lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
+  lsr
+  bcs Paused
+    ; Only increment the frame counter during the frame time
+    inc FrameCounter          ;increment frame counter
+
+    ; Move the timers ahead by a frame as well
+    lda TimerControl          ;if master timer control not set, decrement
+    beq DecTimers             ;all frame and interval timers
+      dec TimerControl
+    bne NoDecTimers
+    DecTimers:
+      ldx #FRAME_TIMER_COUNT    ;load end offset for end of frame timers
+      dec IntervalTimerControl  ;decrement interval timer control,
+      bpl DecTimersLoop         ;if not expired, only frame timers will decrement
+      lda #$14
+      sta IntervalTimerControl  ;if control for interval timers expired,
+      ldx #ALL_TIMER_COUNT      ;interval timers will decrement along with frame timers
+    DecTimersLoop:
+        lda Timers,x              ;check current timer
+        beq SkipExpTimer          ;if current timer expired, branch to skip,
+          dec Timers,x              ;otherwise decrement the current timer
+      SkipExpTimer:
+        dex                       ;move onto next timer
+        bpl DecTimersLoop         ;do this until all timers are dealt with
+NoDecTimers:
+
+.if ::DEBUG_DISPLAY_VISUAL_FRAMETIME
+    lda Mirror_PPUMASK
+    ora #%00100000
+    sta PPUMASK
+.endif
+    jsr OperModeExecutionTree ;otherwise do one of many, many possible subroutines
+
+.if ::DEBUG_DISPLAY_VISUAL_FRAMETIME
+    lda Mirror_PPUMASK
+    and #%11011111
+    sta PPUMASK
+.endif
+
+Paused:
+  lda #0
+  sta NmiDisable
+  rts
+.endproc
+
+;-------------------------------------------------------------------------------------
+.proc PauseRoutine
+               lda OperMode           ;are we in victory mode?
+               cmp #MODE_VICTORY  ;if so, go ahead
+               beq ChkPauseTimer
+               cmp #MODE_GAMEPLAY     ;are we in game mode?
+               bne ExitPause          ;if not, leave
+               lda OperMode_Task      ;if we are in game mode, are we running game engine?
+               cmp #$03
+               bne ExitPause          ;if not, leave
+ChkPauseTimer: lda GamePauseTimer     ;check if pause timer is still counting down
+               beq ChkStart
+               dec GamePauseTimer     ;if so, decrement and leave
+               rts
+ChkStart:      lda SavedJoypad1Bits   ;check to see if start is pressed
+               and #Start_Button      ;on controller 1
+               beq ClrPauseTimer
+               lda GamePauseStatus    ;check to see if timer flag is set
+               and #%10000000         ;and if so, do not reset timer
+               bne ExitPause
+               lda #$2b               ;set pause timer
+               sta GamePauseTimer
+               lda GamePauseStatus
+               tay
+               iny                    ;set pause sfx queue for next pause mode
+               sty PauseSoundQueue
+               eor #%00000001         ;invert d0 and set d7
+               ora #%10000000
+               bne SetPause           ;unconditional branch
+ClrPauseTimer: lda GamePauseStatus    ;clear timer flag if timer is at zero and start button
+               and #%01111111         ;is not pressed
+SetPause:      sta GamePauseStatus
+ExitPause:     rts
+.endproc
+
 ;-------------------------------------------------------------------------------------
 clabel GameCoreRoutine
 GameCoreRoutine:
