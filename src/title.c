@@ -89,8 +89,13 @@ void title_screen_menu() {
     OperMode_Task = 0;
     DemoTimer = 0;
     // Clear out the score displays as well
-    for (i = 0; i < 0x17; ++i) {
-      PlayerScoreDisplay[i] = 0;
+    for (i = 0; i < 
+        (sizeof(Player1ScoreDisplay)
+          + sizeof(Player2ScoreDisplay)
+          + sizeof(Player1CoinDisplay)
+          + sizeof(Player2CoinDisplay)
+          + sizeof(GameTimerDisplay)); ++i) {
+      Player1ScoreDisplay[i] = 0;
     }
     return; 
   }

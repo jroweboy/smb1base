@@ -557,8 +557,11 @@ extern u8 AltRegContentFlag;
 
 
 extern u8 TopScoreDisplay[6];
-extern u8 PlayerScoreDisplay[27];
-extern u8 GameTimerDisplay[4];
+extern u8 Player1ScoreDisplay[6];
+extern u8 Player2ScoreDisplay[6];
+extern u8 Player1CoinDisplay[2];
+extern u8 Player2CoinDisplay[2];
+extern u8 GameTimerDisplay[3];
 
 
 extern u8 WorldSelectEnableFlag;

@@ -508,7 +508,7 @@ SkipByte:
 .if ::ENABLE_C_CODE
 ; Reset the stack pointer for C code. Shame we lose the stack ...
 ; TODO Might wanna investigate a new InitMemory function
-.import sp
+.importzp sp
   lda #<CStack
   sta sp
   lda #>CStack
