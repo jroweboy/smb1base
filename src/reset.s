@@ -194,6 +194,15 @@ InitScroll:
   sta PPUSCROLL        ;and end whatever subroutine led us here
   rts
 
+.proc BankSwitchCHR
+  lda ReloadCHRBank
+  beq :+
+    SwitchAreaCHR ; defined by the mapper
+    ldx #0
+    stx ReloadCHRBank
+  :
+  rts
+.endproc
 
 .proc NonMaskableInterrupt
   pha
@@ -215,6 +224,8 @@ InitScroll:
       sta PPUSCROLL
       sta PPUSCROLL
     :
+    ; Force the area/player sprite banks to switch even during lag frames
+    jsr BankSwitchCHR
     jsr AudioUpdate
     ply
     plx
@@ -252,12 +263,9 @@ ScreenOff:
   jsr UpdateScreen  ;update screen with buffer contents
 
   jsr OAMandReadJoypad
-  lda ReloadCHRBank
-  beq :+
-    SwitchAreaCHR ; defined by the mapper
-    ldx #0
-    stx ReloadCHRBank
-  :
+
+  ; If the main thread requested a CHR bank switch, do it before the timing window passes
+  jsr BankSwitchCHR
 
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341

@@ -285,6 +285,15 @@ LoopCount = M0
     ; put the player in slot 0 always
     lda CurrentOAMOffset
     pha
+      
+      ; Load the bank for the player if it changed
+      lda PlayerBankTable,x
+      cmp PlayerChrBank
+      beq :+
+        sta PlayerChrBank
+        inc ReloadCHRBank
+      :
+
       lda #0
       sta CurrentOAMOffset
       jsr DrawMetasprite

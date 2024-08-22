@@ -541,14 +541,6 @@ SUpdR:
 
 PlayerOffscreenChk:
 
-  ; Load the bank for the player if it changed
-  ldy ObjectMetasprite
-  lda PlayerBankTable,y
-  cmp PlayerChrBank
-  beq :+
-    sta PlayerChrBank
-    inc ReloadCHRBank
-  :
   lda Player_Rel_XPos
   sta Player_Pos_ForScroll
   rts                           ;then we are done!
@@ -573,17 +565,6 @@ PlayerGfxTblOffsets:
   .byte METASPRITE_SMALL_MARIO_DEATH
 GrowAnimation = * - PlayerGfxTblOffsets
   .byte METASPRITE_SMALL_MARIO_GROW_STANDING
-
-
-PlayerBankTable = PlayerBankTableReal - METASPRITE_BIG_MARIO_STANDING
-PlayerBankTableReal:
-.repeat TOTAL_MARIO_METASPRITES+METASPRITE_BIG_MARIO_STANDING, I
-.if I >= METASPRITE_BIG_MARIO_STANDING
-  .byte .lobyte(.ident(.sprintf("METASPRITE_%d_BANK", I)))
-.endif
-.endrepeat
-TOTAL_MARIO_SPRITE_BANK = * - PlayerBankTableReal
-.assert TOTAL_MARIO_SPRITE_BANK = TOTAL_MARIO_METASPRITES, error, .sprintf("Total number of Mario Metasprites (%d) does not match the mario bank table (%d)! Update the bank table to match ", TOTAL_MARIO_METASPRITES, TOTAL_MARIO_SPRITE_BANK)
 
 HandleChangeSize:
   ldy PlayerAnimCtrl           ;get animation frame control
