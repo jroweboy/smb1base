@@ -424,7 +424,7 @@ IconDataRead:
     sta VRAM_Buffer1-1,y    ;1-player game
     dey
   bpl IconDataRead
-  lda NumberOfPlayers     ;check number of players
+  lda EnableWifi     ;check number of players
   beq ExitIcon            ;if set to 1-player game, we're done
     lda #$24                ;otherwise, load blank tile in 1-player position
     sta VRAM_Buffer1+3

@@ -185,6 +185,9 @@ RESERVE SwitchToMainIRQ, 1
 RESERVE IrqPointerJmp, 3
 IrqPointer := IrqPointerJmp + 1
 
+RESERVE EnableWifi, 1
+RESERVE ServerIndex, 1
+
 .if ENABLE_C_CODE
 RESERVE CStack, $20
 .endif
@@ -375,9 +378,13 @@ RESERVE OriginalOAMOffset, 1
 RESERVE SpriteShuffleOffset, 1
 
 ; Variables for the laggy bros hack
-RESERVE UsingWifi, 1
+RESERVE CalcPingCooldown, 1
 RESERVE LagSpikeCooldown, 1
+RESERVE BasePing, 2
 RESERVE CurrentPing, 2
+RESERVE PingFlux, 2
+RESERVE FrameDelayAmount, 2
+RESERVE seed, 4
 
 RESERVE PlayerMetasprite, 1
 ObjectMetasprite := PlayerMetasprite

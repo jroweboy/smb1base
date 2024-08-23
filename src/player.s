@@ -418,12 +418,13 @@ SetStPos: lda PlayerStarting_X_Pos,y  ;load appropriate horizontal position
           beq ChkOverR                ;if set to zero, branch (do not use dummy byte for this)
           lda FetchNewGameTimerFlag   ;do we need to set the game timer? if not, use 
           beq ChkOverR                ;old game timer setting
-          lda GameTimerData,y         ;if game timer is set and game timer flag is also set,
-          sta GameTimerDisplay        ;use value of game timer control for first digit of game timer
-          lda #$01
-          sta GameTimerDisplay+2      ;set last digit of game timer to 1
-          lsr
-          sta GameTimerDisplay+1      ;set second digit of game timer
+          ; lda GameTimerData,y         ;if game timer is set and game timer flag is also set,
+          ; sta GameTimerDisplay        ;use value of game timer control for first digit of game timer
+          ; lda #$01
+          ; sta GameTimerDisplay+2      ;set last digit of game timer to 1
+          ; lsr
+          ; sta GameTimerDisplay+1      ;set second digit of game timer
+          lda #0
           sta FetchNewGameTimerFlag   ;clear flag for game timer reset
           sta StarInvincibleTimer     ;clear star mario timer
 ChkOverR: ldy JoypadOverride          ;if controller bits not set, branch to skip this part

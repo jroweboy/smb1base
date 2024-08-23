@@ -238,8 +238,8 @@ ExitEng:
   ; and #Select_Button
   ; bne :+
     
-    lda CurrentPing
-    ldx CurrentPing+1
+    lda FrameDelayAmount
+    ldx FrameDelayAmount+1
     jsr delay_256x_a_30_clocks_b
   ; :
 ; .endif
@@ -760,7 +760,13 @@ DoneInitArea:
   lda #$01                 ;disable screen output
   sta DisableScreenFlag
   inc OperMode_Task        ;increment one of the modes
+  
+.if ENABLE_C_CODE
+  .import _init_area_callback
+  jmp _init_area_callback
+.else
   rts
+.endif
 
 
 ;-------------------------------------------------------------------------------------

@@ -2,27 +2,150 @@
 #include "inc/mario.h"
 
 
-#define pad_pressed M0
-#define i M1
-
 WRAPPED(extern void GameCoreRoutine());
 WRAPPED(extern void LoadAreaPointer());
 WRAPPED(extern void DrawMushroomIcon());
 WRAPPED(extern void DemoEngine());
+WRAPPED(void calculate_ping());
+WRAPPED(void init_ping_values());
+
+extern u8 galois32();
+
 extern u8 WSelectBufferTemplate[6];
 
 
+extern u8 EnableWifi;
+extern s8 ServerIndex;
+
+extern u8 NotRespondingTimer;
+extern u8 LagSpikeCooldown;
+extern u8 LagSpikeDuration;
+extern u16 BasePing;
+extern u16 CurrentPing;
+extern u16 PingFlux;
+extern u16 FrameDelayAmount;
+extern u32 seed;
+
+#define SERVER_COUNT 5
+
 const unsigned char title_nmt[32*12];
 static const char connect_text[] = "CONNECT TO SERVER REGION";
-static const char region_text_list[][17] = {
+static const char region_text_list[SERVER_COUNT][17] = {
   "<  NORTH AMER. >",
-  "<  EAST EUROPE >",
   "<  LATIN AMER. >",
+  "<  EAST EUROPE >",
   "< S. EAST ASIA >",
   "<   ANTARTICA  >",
 };
 static const char ethernet_text[] = "ETHERNET";
 static const char wifi_text[] = "WIFI";
+
+// not actually random, but random enough numbers
+static u16 PingLUT[SERVER_COUNT] = {
+  28,
+  113,
+  189,
+  245,
+  601
+};
+
+// not actually random, but random enough numbers
+static u16 PingFluxLUT[SERVER_COUNT] = {
+  23,
+  36,
+  70,
+  141,
+  300
+};
+
+void calculate_ping_display() {
+#define temp_ping (*(u16*)&R4)
+#define i M0
+  // Convert from ping value into BCD for the PING display
+  i = 0;
+  temp_ping = CurrentPing;
+  while (temp_ping >= 100) {
+    temp_ping -= 100;
+    ++i;
+  }
+  GameTimerDisplay[0] = i;
+  i = 0;
+  while (temp_ping >= 10) {
+    temp_ping -= 10;
+    ++i;
+  }
+  GameTimerDisplay[1] = i;
+  GameTimerDisplay[2] = temp_ping;
+#undef i
+#undef temp_ping
+}
+
+
+void init_ping_values() {
+  // Setup the RNG seed etc
+  seed = 0xC053236C;
+  seed ^= *(u32*)&PseudoRandomBitReg;
+  BasePing = PingLUT[ServerIndex];
+  PingFlux = PingFluxLUT[ServerIndex];
+  CurrentPing = BasePing + PingFlux;
+  calculate_ping_display();
+  FrameDelayAmount = CurrentPing >> 6;
+}
+
+void calculate_ping() {
+#define ping_flux (*(u16*)&M0)
+#define i M0
+#define rng (*(u16*)&R4)
+#define temp_ping (*(u16*)&R4)
+
+  // Only lag spike
+  if (LagSpikeCooldown != 0) {
+    --LagSpikeCooldown;
+  }
+
+  // calculate a random fluctuation from the base
+  ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
+
+  R4 = galois32();
+  // One in 32 chance to do a random ping spike on wifi
+  if (EnableWifi && LagSpikeCooldown == 0 && (R4 & 0b11111)) {
+    ping_flux += 500;
+    LagSpikeCooldown = 18;
+  }
+
+
+  R4 = galois32();
+  R5 = galois32();
+
+  // 
+  rng >>= 6;
+
+  while (ping_flux < rng) {
+    // rng -= ping_flux;
+    rng >>= 1;
+  }
+
+  CurrentPing = BasePing + rng;
+  if (CurrentPing > 999) {
+    CurrentPing = 999;
+  }
+
+  calculate_ping_display();
+
+  // Convert from ping value into delay amount
+  // 65k / 999 is roughly 64 / 1 so this is a cheap good approximation
+  FrameDelayAmount = CurrentPing << 6;
+  
+#undef ping_flux
+#undef i
+#undef rng
+#undef temp_ping
+}
+
+
+
+#define pad_pressed M0
+#define i M1
 
 void reset_title() {
   OperMode = 0;
@@ -64,7 +187,8 @@ void select_b_logic() {
     } else {
       // Select button must have been presesed, so redraw the MushroomIcon
       // And switch between 1 and 2 player modes
-      NumberOfPlayers ^= 1;
+      // NumberOfPlayers ^= 1;
+      EnableWifi ^= 1;
       DrawMushroomIcon();
     }
   }
@@ -133,6 +257,38 @@ void title_screen_menu() {
     }
   }
   
+  // Handle switching between servers
+  if ((pad_pressed & (PAD_LEFT | PAD_RIGHT)) != 0 && SelectTimer == 0) {
+    SelectTimer = 0x10;
+    DemoTimer = 0x18;
+    if (JOY_PRESSED(pad_pressed, PAD_LEFT)) {
+      --ServerIndex;
+      if (ServerIndex < 0) {
+        ServerIndex = SERVER_COUNT - 1;
+      }
+    } else {
+      ++ServerIndex;
+      if (ServerIndex >= SERVER_COUNT) {
+        ServerIndex = 0;
+      }
+    }
+
+    BasePing = PingLUT[ServerIndex];
+    PingFlux = PingFluxLUT[ServerIndex];
+
+    VRAM_Buffer_AddrCtrl = 0; // Use VRAM_Buffer1
+    VRAM_Buffer1_Offset += 16 + 5;
+
+    VRAM_Buffer1[0] = 0x22;
+    VRAM_Buffer1[1] = 0x68;
+    VRAM_Buffer1[2] = 16; // Write 16 bytes
+
+    for (i = 0; i < 16; ++i) {
+      VRAM_Buffer1[3 + i] = region_text_list[ServerIndex][i];
+    }
+    VRAM_Buffer1[4 + 16] = 0x00;
+  }
+
   // NullJoypad
   SavedJoypad1Bits = 0;
 run_demo:
@@ -216,9 +372,9 @@ void title_screen_setup() {
   VRAM_Buffer1[3] = 0x00;
   VRAM_Buffer1[4] = 0x00;
   VRAM_Buffer1_Offset = 5;
-  for (i = 0; i < 0x20; i++) {
-    PPU.vram.data = 0x0f;
-  }
+  // for (i = 0; i < 0x20; i++) {
+  //   PPU.vram.data = 0x0f;
+  // }
   
   ENABLE_NMI();
   // Wait for the VRAM buffer to be flushed during NMI to prevent graphic glitches
@@ -337,10 +493,18 @@ void title_screen_setup() {
   // }
   // while (i != 0);
 
+  // Populate the seed with some random value
+  EnableWifi = 0;
+  ServerIndex = 0;
+
+  init_ping_values();
+
+
   ClearBuffersDrawIcon();
   flush_vram_buffer();
   // WriteTopScore();
   // flush_vram_buffer();
+
 
   ++OperMode_Task;
   // Re-enable drawing
