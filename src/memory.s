@@ -389,6 +389,7 @@ RESERVE CalcPingCooldown, 1
 RESERVE EllipseAnimation, 1
 RESERVE LagSpikeCooldown, 1
 RESERVE LagSpikeDuration, 1
+RESERVE NotRespondingQueued, 1
 RESERVE NotRespondingTimer, 1
 RESERVE NotRespondingCount, 1
 RESERVE BasePing, 2

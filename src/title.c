@@ -19,6 +19,7 @@ extern s8 ServerIndex;
 
 extern u8 LagSpikeCooldown;
 extern u8 LagSpikeDuration;
+extern u8 NotRespondingQueued;
 extern u8 NotRespondingTimer;
 extern u8 NotRespondingCount;
 extern u16 BasePing;
@@ -144,6 +145,7 @@ void calculate_ping() {
       // R5 = (R4 & 0b1111) == 0b1111;
       R5 = 1;
       if (NotRespondingTimer == 0 && NotRespondingCount > 2 && R5) {
+        NotRespondingQueued = 1;
         NotRespondingTimer = LagSpikeDuration;
       }
     }
