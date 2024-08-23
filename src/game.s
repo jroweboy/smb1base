@@ -81,6 +81,12 @@ NoDecTimers:
 .endif
 
 PauseSkip:
+
+.if ::ENABLE_C_CODE
+  .import _after_frame_callback
+  jsr _after_frame_callback
+.endif
+
   lda #0
   sta NmiDisable
   rts
@@ -88,6 +94,9 @@ PauseSkip:
 
 ;-------------------------------------------------------------------------------------
 .proc PauseRoutine
+  ; Don't let the user try to unpause the NotResponding screen
+  lda NotRespondingTimer
+  bne ExitPause
                lda OperMode           ;are we in victory mode?
                cmp #MODE_VICTORY  ;if so, go ahead
                beq ChkPauseTimer
@@ -245,8 +254,8 @@ ExitEng:
 ; .endif
 
 .if ENABLE_C_CODE
-  .import _after_frame_callback
-  jmp _after_frame_callback
+  .import _after_game_callback
+  jmp _after_game_callback
 .else
   rts                        ;and after all that, we're finally done!
 .endif

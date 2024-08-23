@@ -180,18 +180,18 @@ extern u8 FloateyNum_Timer[8];
 extern u8 DigitModifier[6];
 
 
-extern u8 IrqNewScroll;
-extern u8 IrqPPUCTRL;
+// extern u8 IrqNewScroll;
+// extern u8 IrqPPUCTRL;
 
 extern u8 volatile NmiDisable;
 extern u8 volatile NmiSkipped;
 extern u8 ShouldSkipDrawSprites;
 
-extern u8 IrqNextScanline;
-extern u8 CurrentA;
-extern u8 NextBank;
-extern u8 SwitchToMainIRQ;
-extern u8 IrqPointerJmp[3];
+// extern u8 IrqNextScanline;
+// extern u8 CurrentA;
+// extern u8 NextBank;
+// extern u8 SwitchToMainIRQ;
+// extern u8 IrqPointerJmp[3];
 
 
 // ; segment "BSS"
@@ -492,7 +492,7 @@ extern u8 DisableIntermediate;
 extern u8 PrimaryHardMode;
 extern u8 WorldSelectNumber;
 
-extern u8* OperMode;
+extern u8 OperMode;
 extern u8 OperMode_Task;
 extern u8 VRAM_Buffer_AddrCtrl;
 extern u8 DisableScreenFlag;

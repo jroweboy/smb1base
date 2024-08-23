@@ -12,16 +12,52 @@
 .proc IrqScrollSplit
   pha
   phx
-    MAPPER_IRQ_ACK
-    ; 
-    lda IrqPPUCTRL
-    and #%00000001
+  phy
+    ; Load the current scanline number that we are on
+    ldy ScanlineCounter
+
+    ; php
+    ; plp
+    ; nop
+    ; nop
+    ; php
+    ; plp
+
+; DELAY_BASE = 15
+; .if ::MAPPER_MMC3
+;   lda #40 - DELAY_BASE
+
+; ; 15—270 cycles of delay: delay=A+15; 0 ≤ A ≤ 255)
+; DelayACycles:
+;         sec     
+; @L:     sbc #5  
+;         bcs @L  ;  6 6 6 6 6  FB FC FD FE FF
+;         adc #3  ;  2 2 2 2 2  FE FF 00 01 02
+;         bcc @4  ;  3 3 2 2 2  FE FF 00 01 02
+;         lsr     ;  - - 2 2 2  -- -- 00 00 01
+;         beq @5  ;  - - 3 3 2  -- -- 00 00 01
+; @4:     lsr     ;  2 2 - - 2  7F 7F -- -- 00
+; @5:     bcs @6  ;  2 3 2 3 2  7F 7F 00 00 00
+; @6:
+
+; .elseif ::MAPPER_MMC5
+;   ; lda #15 - DELAY_BASE
+;   ; php
+;   ; plp
+;   ; php
+;   ; plp
+; .endif
+
+
+
+    lda ScanlineScrollN,y
+    and #%00000011
     asl
     asl
     sta PPUADDR
 
     ; Y position to $2005.
-    lda #32
+    lda ScanlineScrollY,y
     sta PPUSCROLL
 
     ; Prepare for the 2 later writes:
@@ -29,46 +65,65 @@
     and #%11111000
     asl
     asl
-    ldx IrqNewScroll
-    sta IrqNewScroll
-
-DELAY_BASE = 15
-.if ::MAPPER_MMC3
-  lda #40 - DELAY_BASE
-.elseif ::MAPPER_MMC5
-  lda #15 - DELAY_BASE
-.endif
-
-; 15—270 cycles of delay: delay=A+15; 0 ≤ A ≤ 255)
-DelayACycles:
-        sec     
-@L:     sbc #5  
-        bcs @L  ;  6 6 6 6 6  FB FC FD FE FF
-        adc #3  ;  2 2 2 2 2  FE FF 00 01 02
-        bcc @4  ;  3 3 2 2 2  FE FF 00 01 02
-        lsr     ;  - - 2 2 2  -- -- 00 00 01
-        beq @5  ;  - - 3 3 2  -- -- 00 00 01
-@4:     lsr     ;  2 2 - - 2  7F 7F -- -- 00
-@5:     bcs @6  ;  2 3 2 3 2  7F 7F 00 00 00
-@6:
+    ldx ScanlineScrollX,y
+    sta ScanlineScrollX,y
 
     ; ((Y & $F8) << 2) | (X >> 3) in A for $2006 later.
     txa
     lsr
     lsr
     lsr
-    ora IrqNewScroll
+    ora ScanlineScrollX,y
 
+    pha
+    lda ScanlinePpuMask,y
+    tay
+    pla
 
     ; The last two PPU writes must happen during hblank:
     stx PPUSCROLL
     sta PPUADDR
+    sty PPUMASK
+    ; clear the greyscale for the connection message
+    ; lda ScanlineCounter
+    ; lda #%11100001
+    ; and #1
+    ; beq :+
+    ;   ora #%11100000
+    ;   ora Mirror_PPUMASK
+    ;   sta PPUMASK
+    ;   jmp RestoreX
+    ; :
+    ;   lda #%00011110
+    ;   and Mirror_PPUMASK
+    ;   sta PPUMASK
+
+    ; RestoreX:
+    
+    MAPPER_IRQ_ACK
+
+    ldy ScanlineCounter
 
     ; Restore new_x.
-    stx IrqNewScroll
+    txa
+    sta ScanlineScrollX,y
+
+    lda ScanlineTarget+1,y
+    cmp #$ff
+    beq :+
+      ; We aren't the last IRQ so setup the next in the chain
+      SetScanlineIRQ { ScanlineTarget+1,y }
+      inc ScanlineCounter
+      bne ExitIrq
+    :
+    lda #0
+    sta ScanlineCounter
+ExitIrq:
+  ply
   plx
   pla
   rti
+
 .endproc
 
 
@@ -264,9 +319,6 @@ ScreenOff:
 
   jsr OAMandReadJoypad
 
-  ; If the main thread requested a CHR bank switch, do it before the timing window passes
-  jsr BankSwitchCHR
-
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
   cpx #$06
@@ -283,7 +335,10 @@ InitBuffer:
   
 
   lda HorizontalScroll
-  sta IrqNewScroll
+  sta ScanlineScrollX+0
+  sta ScanlineScrollX+2
+  lda #32
+  sta ScanlineScrollY+0
   ; lda Mirror_PPUCTRL
   ; sta IrqScrollBit
   lda Sprite0HitDetectFlag  ;check for flag here
@@ -295,10 +350,15 @@ InitBuffer:
 
 SkipSprite0:
   lda Mirror_PPUCTRL
-  sta IrqPPUCTRL
+  ; sta IrqPPUCTRL
+  sta ScanlineScrollN+0
+  sta ScanlineScrollN+2
   ; and also reset the flags for the HUD
   and #%11111100
   sta PPUCTRL
+
+  ; If the main thread requested a CHR bank switch, do it before the timing window passes
+  jsr BankSwitchCHR
 
   jsr AudioUpdate
   

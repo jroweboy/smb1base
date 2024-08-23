@@ -67,6 +67,12 @@ RESERVE PauseModeFlag, 1
 .endproc
 
 .proc AudioUpdate
+  ; Freeze audio playback duing the pause.
+  lda GamePauseStatus
+  lsr
+  bcc :+
+    rts
+  :
   lda CurrentBank
   pha
     SFXPlayback

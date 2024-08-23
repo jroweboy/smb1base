@@ -2922,7 +2922,9 @@ GameTimerFireworks:
         lda #$ff               ;otherwise set value for no fireworks
 SetFWC: sta FireworksCounter   ;set fireworks counter here
         sty Enemy_State,x      ;set whatever state we have in star flag object
-
+      ; Reuse this variable to store the timer to count down for
+      lda CurrentPing
+      sta ExplosionGfxCounter
 IncrementSFTask1:
       inc StarFlagTaskControl  ;increment star flag object task number
 
@@ -2930,9 +2932,10 @@ StarFlagExit:
       rts                      ;leave
 
 AwardGameTimerPoints:
-         lda GameTimerDisplay   ;check all game timer digits for any intervals left
-         ora GameTimerDisplay+1
-         ora GameTimerDisplay+2
+         lda ExplosionGfxCounter
+        ;  lda GameTimerDisplay   ;check all game timer digits for any intervals left
+        ;  ora GameTimerDisplay+1
+        ;  ora GameTimerDisplay+2
          beq IncrementSFTask1   ;if no time left on game timer at all, branch to next task
          lda FrameCounter
          and #%00000100         ;check frame counter for d2 set (skip ahead
@@ -2940,11 +2943,13 @@ AwardGameTimerPoints:
          lda #Sfx_TimerTick
          sta Square2SoundQueue  ;load timer tick sound
          ; set offset here to subtract from game timer's last digit
-NoTTick: ldy #(GameTimerDisplay + GameTimerLastIndex - DisplayDigits)
-         lda #$ff               ;set adder here to $ff, or -1, to subtract one
-         sta DigitModifier+5    ;from the last digit of the game timer
-         ldx #GameTimerLastIndex
-         jsr DigitsMathRoutine  ;subtract digit
+NoTTick: 
+        ;  ldy #(GameTimerDisplay + GameTimerLastIndex - DisplayDigits)
+        ;  lda #$ff               ;set adder here to $ff, or -1, to subtract one
+        ;  sta DigitModifier+5    ;from the last digit of the game timer
+        ;  ldx #GameTimerLastIndex
+        ;  jsr DigitsMathRoutine  ;subtract digit
+         dec ExplosionGfxCounter
          lda #$05               ;set now to add 50 points
          sta DigitModifier+5    ;per game timer interval subtracted
 EndAreaPoints:

@@ -170,20 +170,27 @@ StackClear = DigitModifier+5
 
 ; DON'T CLEAR PAST HERE
 
-RESERVE IrqNewScroll, 1
-RESERVE IrqPPUCTRL, 1
+; RESERVE IrqNewScroll, 1
+; RESERVE IrqPPUCTRL, 1
 
 RESERVE NmiDisable, 1
 RESERVE NmiSkipped, 1
 RESERVE ShouldSkipDrawSprites, 1
 RESERVE FramesSinceLastSpriteDraw, 1
 
-RESERVE IrqNextScanline, 1
-RESERVE CurrentA, 1
-RESERVE NextBank, 1
-RESERVE SwitchToMainIRQ, 1
-RESERVE IrqPointerJmp, 3
-IrqPointer := IrqPointerJmp + 1
+; RESERVE IrqNextScanline, 1
+; RESERVE CurrentA, 1
+; RESERVE NextBank, 1
+; RESERVE SwitchToMainIRQ, 1
+; RESERVE IrqPointerJmp, 3
+; IrqPointer := IrqPointerJmp + 1
+
+RESERVE ScanlineCounter, 1
+RESERVE ScanlineScrollN, 3
+RESERVE ScanlineScrollX, 3
+RESERVE ScanlineScrollY, 3
+RESERVE ScanlinePpuMask, 3
+RESERVE ScanlineTarget, 4
 
 RESERVE EnableWifi, 1
 RESERVE ServerIndex, 1
@@ -380,6 +387,9 @@ RESERVE SpriteShuffleOffset, 1
 ; Variables for the laggy bros hack
 RESERVE CalcPingCooldown, 1
 RESERVE LagSpikeCooldown, 1
+RESERVE LagSpikeDuration, 1
+RESERVE NotRespondingTimer, 1
+RESERVE NotRespondingCount, 1
 RESERVE BasePing, 2
 RESERVE CurrentPing, 2
 RESERVE PingFlux, 2

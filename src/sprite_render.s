@@ -311,8 +311,11 @@ Exit:
   cmp #$02              ;check for defeated state
   bcc GmbaAnim          ;if not defeated, go ahead and animate
     ; check if the death is from being bumped. if its bumped then d5 is set
-    cmp #4        ;check for enemy stomped
+    cmp #3        ;check for air enemy stomped
+    beq GoombaStomped
+    cmp #4        ;check for ground enemy stomped
     bne :+
+  GoombaStomped:
       ; goomba was squished so use that metasprite instead
       ldy #METASPRITE_GOOMBA_DEAD
       ; the sprite in CHR is upside down intentionally so let the flip happen anyway

@@ -17,9 +17,10 @@ extern u8 WSelectBufferTemplate[6];
 extern u8 EnableWifi;
 extern s8 ServerIndex;
 
-extern u8 NotRespondingTimer;
 extern u8 LagSpikeCooldown;
 extern u8 LagSpikeDuration;
+extern u8 NotRespondingTimer;
+extern u8 NotRespondingCount;
 extern u16 BasePing;
 extern u16 CurrentPing;
 extern u16 PingFlux;
@@ -97,35 +98,76 @@ void calculate_ping() {
 #define i M0
 #define rng (*(u16*)&R4)
 #define temp_ping (*(u16*)&R4)
+#define min_flux R6
 
   // Only lag spike
-  if (LagSpikeCooldown != 0) {
+  if (LagSpikeCooldown > 0) {
     --LagSpikeCooldown;
+  }
+  if (LagSpikeDuration > 0) {
+    --LagSpikeDuration;
+  }
+  if (NotRespondingTimer > 0) {
+    --NotRespondingTimer;
   }
 
   // calculate a random fluctuation from the base
   ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
+  min_flux = 0;
 
   R4 = galois32();
-  // One in 32 chance to do a random ping spike on wifi
-  if (EnableWifi && LagSpikeCooldown == 0 && (R4 & 0b11111)) {
-    ping_flux += 500;
-    LagSpikeCooldown = 18;
+  if (OperMode == 1 && OperMode_Task == 3) {
+
+    // If we aren't in a lag spike yet, check to see if we can start one
+    if (LagSpikeDuration == 0) {
+      NotRespondingCount = 0;
+      if (LagSpikeCooldown == 0) {
+        // One in 32 chance on wifi and 1 in 128 on ethernet to do a random ping spike
+        // R5 = (EnableWifi) ? 0b00011111 : 0b01111111;
+        R5 = 0b1;
+        if ((R4 & R5) == R5) {
+          ping_flux += 300;
+          min_flux = 200;
+          LagSpikeCooldown = (R4 >> 3) & 0b1111;
+          LagSpikeDuration = R4 & 0b111 + 4;
+        }
+      }
+    } else {
+      // We are in a lag spike, so just increase the flux
+      ping_flux += 300;
+      min_flux = 200;
+      
+      NotRespondingCount++;
+
+      // During a lag spike we have a chance to freeze up completely
+      // Don't do this if not in gameplay tho, don't want to ruin the surprise
+      // R5 = (R4 & 0b1111) == 0b1111;
+      R5 = 1;
+      if (NotRespondingTimer == 0 && NotRespondingCount > 2 && R5) {
+        NotRespondingTimer = LagSpikeDuration;
+      }
+    }
   }
 
-
-  R4 = galois32();
+  // R4 = galois32();
   R5 = galois32();
-
-  // 
+  // RNG is a 16 bit value and ping flux is more like a 10 bit value, so shift to
+  // speed this up a lot
   rng >>= 6;
+  ping_flux <<= 1;
 
   while (ping_flux < rng) {
     // rng -= ping_flux;
     rng >>= 1;
   }
 
-  CurrentPing = BasePing + rng;
+  ping_flux >>= 1;
+  while (ping_flux < rng) {
+    rng -= ping_flux;
+    // rng >>= 1;
+  }
+
+  CurrentPing = BasePing + min_flux + rng;
   if (CurrentPing > 999) {
     CurrentPing = 999;
   }
@@ -140,6 +182,7 @@ void calculate_ping() {
 #undef i
 #undef rng
 #undef temp_ping
+#undef min_flux
 }
 
 

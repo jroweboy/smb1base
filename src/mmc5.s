@@ -140,7 +140,7 @@ MMC5_CHR_BG_BANK_0C = MMC5_CHR_BANK_BASE + 11
 .macro SetScanlineIRQ val
 .if (.match (.left (1, {val}), #))
   lda #.right (.tcount ({val})-1, {val})
-.else
+.else 
   lda val
 .endif
   sta $5203
@@ -185,6 +185,49 @@ AreaTypeBankMap:
 .segment "FIXED"
 
 MapperInit:
+  lda #0
+  sta ScanlineCounter
+  lda #$ff
+  sta ScanlineTarget+0
+  sta ScanlineTarget+1
+  sta ScanlineTarget+2
+  sta ScanlineTarget+3
+  sta ScanlineScrollN+0
+  sta ScanlineScrollN+1
+  sta ScanlineScrollN+2
+  sta ScanlineScrollN+3
+  sta ScanlineScrollX+0
+  sta ScanlineScrollX+1
+  sta ScanlineScrollX+2
+  sta ScanlineScrollX+3
+  sta ScanlineScrollY+0
+  sta ScanlineScrollY+1
+  sta ScanlineScrollY+2
+  sta ScanlineScrollY+3
+
+  ; Setup the targets for the switch ahead of time
+  ; lda #70
+  ; sta ScanlineTarget+1
+  lda #140
+  sta ScanlineTarget+2
+  lda #3
+  sta ScanlineScrollN+1
+  lda #0
+  sta ScanlineScrollN+2
+  lda #0
+  sta ScanlineScrollX+1
+  lda #0
+  sta ScanlineScrollX+2
+  lda #13
+  sta ScanlineScrollY+1
+  lda #141
+  sta ScanlineScrollY+2
+  lda #%11111111
+  sta ScanlinePpuMask+2
+  lda #%00011110
+  sta ScanlinePpuMask+1
+  sta ScanlinePpuMask+0
+
   ; Set PRG mode to 4 8kb banks
   lda #3
   sta $5100
@@ -195,9 +238,6 @@ MapperInit:
   sta $5102
   lda #1
   sta $5103
-  ; setup vertical mirroring
-  lda #$44
-  sta $5105
 
   ; Setup default banks
   lda #$80
@@ -206,6 +246,56 @@ MapperInit:
   BankPRGC #.bank(DPCM)
   BankPRG8 #.bank(LOWCODE)
   BankPRGE #.bank(FIXED)
+
+  ; Allow for full writing of the nametable at any point
+  lda #%00000010
+  sta $5104
+
+  ; And copy the screen into the nametable through the CPU side ram
+  lda #<ConnectionLostScreen
+  sta R0
+  lda #>ConnectionLostScreen
+  sta R1
+  ; Write it into the top left corner of the ExNMT
+  lda #<$5C00
+  sta R2
+  lda #>$5C00
+  sta R3
+  
+  ldx #>ConnectionLostScreenSize
+  ldy #0
+  sty R4
+  Loop:
+      lda (R0),y
+      sta (R2),y
+      iny
+      cpy R4
+      bne Loop
+    inc R1
+    inc R3
+    ldy #0
+    lda #ConnectionLostScreenSize - 256
+    sta R4
+    dex
+    bpl Loop
+
+  lda #$55
+  ldx #0
+  AtrLoop:
+    sta $5fc0,x
+    inx
+    cpx #24
+    bne AtrLoop
+
+  
+  lda #%00000000 ; Switch to having it readable by the PPU (without ExAttributes)
+  sta $5104
+
+
+  ; setup vertical mirroring + ExRAM in NMT D
+  lda #%10000100
+  sta $5105
+
 
 .import __SMCCODE_SIZE__, __SMCCODE_LOAD__, __SMCCODE_RUN__ 
   ; Copy the Self Modifying Code for super fast farcall bank switches
@@ -313,3 +403,19 @@ FarCallCommon:
   BankPRGA a
   SMC SafereturnA, { lda #SMC_Value }
   rts
+
+.segment "PLAYER"
+ConnectionLostScreen:
+	.byte $24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c0,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c4,$c1,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c6,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$c7,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c6,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$c7,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c6,$26,$f2,$f3,$f4,$f4,$f1,$f2,$f5,$f6,$f3,$f4,$26,$fc,$f3,$fd,$f5,$fe,$fe,$fe,$26,$c7,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c6,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$c7,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c6,$26,$26,$26,$f0,$f1,$f2,$f3,$f4,$f4,$f1,$f2,$f5,$f6,$f4,$f8,$26,$26,$26,$26,$26,$c7,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c6,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$26,$c7,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$c2,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c5,$c3,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24
+	.byte $24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24,$24
+ConnectionLostScreenSize = * - ConnectionLostScreen
