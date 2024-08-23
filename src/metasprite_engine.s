@@ -267,7 +267,7 @@ Id = .ident(Name)
 .endmacro
 
 
-.proc DrawAllMetasprites
+cproc DrawAllMetasprites
 
 LoopCount = M0
 

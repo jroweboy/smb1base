@@ -386,6 +386,7 @@ RESERVE SpriteShuffleOffset, 1
 
 ; Variables for the laggy bros hack
 RESERVE CalcPingCooldown, 1
+RESERVE EllipseAnimation, 1
 RESERVE LagSpikeCooldown, 1
 RESERVE LagSpikeDuration, 1
 RESERVE NotRespondingTimer, 1

@@ -9,7 +9,9 @@ PUSHSEG(TITLE)
 POPSEG()
 #endif
 
+WRAPPED(extern void DrawAllMetasprites(););
 extern u8 CalcPingCooldown;
+extern u8 EllipseAnimation;
 extern u8 ScanlinePpuMask[3];
 extern u8 ScanlineTarget[4];
 
@@ -36,6 +38,41 @@ void after_frame_callback() {
       ScanlinePpuMask[0] = Mirror_PPUMASK;
       // Setting pause status to 1 will pause without playing the sound
       GamePauseStatus = 1;
+
+      // force draw all sprites during lag
+      DrawAllMetasprites();
+      // so we can move off screen any sprites are in the middle of the banner
+      #define i M0
+      #define n R0
+      for (i = 0; i < 64; ++i) {
+        n = i << 2;
+        M1 = Sprite_Data[n];
+        if (M1 > (74 - 16) && M1 < 141) {
+          Sprite_Data[n] = 0xf8;
+        }
+      }
+      // and then animate the ellipsis ...
+      ++EllipseAnimation;
+      if (EllipseAnimation > 3) {
+        EllipseAnimation = 0;
+      }
+      // Counter for the number of filled ellipses
+      M1 = 0;
+      for (i = 63; i != 0; --i) {
+        if (M1 == EllipseAnimation) {
+          break;
+        }
+        n = i << 2;
+        if (Sprite_Data[n] > 0xf0) {
+          Sprite_Data[n] = 112;
+          Sprite_Data[n+1] = 0x76;
+          Sprite_Data[n+2] = 3;
+          Sprite_Data[n+3] = (21*8) + (M1 << 3);
+          ++M1;
+        }
+      }
+
+      #undef i
     }
     if (NotRespondingTimer == 0) {
       ScanlineTarget[1] = 0xff;

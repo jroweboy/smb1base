@@ -230,7 +230,7 @@ POWERUP_FIREFLOWER_Y_OFFSET = -8
 POWERUP_MUSHROOM_PALETTE = $02
 POWERUP_1UP_NO_MIRROR = 1
 POWERUP_MUSHROOM_NO_MIRROR = 1
-MetaspriteBox "POWERUP", "STAR",       $34, $36
+MetaspriteBox "POWERUP", "STAR",       $34, $34 | SPR_FLIP_H
 ; Force the lower two parts of the fireflower to be palette two by using the override
 MetaspriteBox "POWERUP", "FIREFLOWER", $38, $38 | SPR_FLIP_H , $3a | SPR_PALETTE_1, $3a | SPR_FLIP_H | SPR_PALETTE_1
 MetaspriteBox "POWERUP", "MUSHROOM",   $3c, $3e
