@@ -3,6 +3,7 @@
 #ifndef __MARIO_H
 #define __MARIO_H
 
+#include "internal/charmap.h"
 #include "internal/common_types.h"
 #include "internal/common_nes.h"
 #include "internal/memory.h"

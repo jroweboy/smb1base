@@ -420,20 +420,22 @@ IncSubtask:
 cproc DrawMushroomIcon
   ldy #$07                ;read eight bytes to be read by transfer routine
 IconDataRead:
-  lda MushroomIconData,y  ;note that the default position is set for a
-  sta VRAM_Buffer1-1,y    ;1-player game
-  dey
+    lda MushroomIconData,y  ;note that the default position is set for a
+    sta VRAM_Buffer1-1,y    ;1-player game
+    dey
   bpl IconDataRead
   lda NumberOfPlayers     ;check number of players
   beq ExitIcon            ;if set to 1-player game, we're done
-  lda #$24                ;otherwise, load blank tile in 1-player position
-  sta VRAM_Buffer1+3
-  lda #$2a                ;then load shroom icon tile in 2-player position
-  sta VRAM_Buffer1+5
+    lda #$24                ;otherwise, load blank tile in 1-player position
+    sta VRAM_Buffer1+3
+    lda #$2a                ;then load shroom icon tile in 2-player position
+    sta VRAM_Buffer1+5
 ExitIcon:
   rts
 MushroomIconData:
-  .byte $07, $22, $49, $83, $2a, $24, $24, $00
+  .byte $07, $22, $ab, $83, $2a, $24, $24, $00
+  ; Original location
+  ; .byte $07, $22, $49, $83, $2a, $24, $24, $00
 .endproc
 
 
@@ -535,7 +537,7 @@ endcproc
 GameText:
 TopStatusBarLine:
   .byte $20, $43, $05, "MARIO"
-  .byte $20, $52, $0b, "WORLD  TIME"
+  .byte $20, $52, $0b, "WORLD  PING"
   .byte $20, $68, $05, "0  ", $2e, $29 ; score trailing digit and coin display
   .byte $23, $c0, $7f, $aa ; attribute table data, clears name table 0 to palette 2
   .byte $23, $c2, $01, $ea ; attribute table data, used for coin icon in status bar

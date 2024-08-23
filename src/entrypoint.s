@@ -117,5 +117,6 @@ _COMMON_DEFINE_SEGMENTS = 1
 .pushseg
 .segment "TITLE"
 TitleScreenData:
-.incbin "chr/raw/titlescreen.bin"
+; .incbin "chr/raw/titlescreen.bin"
+
 .popseg
