@@ -28,15 +28,14 @@ extern u16 PingFlux;
 extern u16 FrameDelayAmount;
 extern u32 seed;
 
-#define SERVER_COUNT 5
+#define SERVER_COUNT 4
 
 const unsigned char title_nmt[32*12];
 static const char connect_text[] = "CONNECT TO SERVER REGION";
 static const char region_text_list[SERVER_COUNT][17] = {
   "<  NORTH AMER. >",
-  "<  LATIN AMER. >",
-  "<  EAST EUROPE >",
-  "< S. EAST ASIA >",
+  "< U.K - EUROPE >",
+  "< JAPAN - ASIA >",
   "<   ANTARTICA  >",
 };
 static const char ethernet_text[] = "ETHERNET";
@@ -45,18 +44,18 @@ static const char wifi_text[] = "WIFI";
 // not actually random, but random enough numbers
 static u16 PingLUT[SERVER_COUNT] = {
   28,
-  113,
-  189,
+  136,
+  // 189,
   245,
-  601
+  555
 };
 
 // not actually random, but random enough numbers
 static u16 PingFluxLUT[SERVER_COUNT] = {
   23,
-  36,
+  // 36,
   70,
-  141,
+  241,
   300
 };
 
