@@ -254,26 +254,26 @@ InitScroll:
   lda NmiDisable
   bpl ContinueNMI
     inc NmiSkipped
-    ; ; lag frame, prevent the graphics from going bunk by still running
-    ; ; the irq. also run audio to keep it sounding like we didn't lag
-    ; ; Unless the screen is off, then we don't care
-    ; lda DisableScreenFlag
-    ; bne :+
-    ;   SetScanlineIRQ #$1f
-    ;   lda Mirror_PPUCTRL
-    ;   and #%11111110            ;alter name table address to be $2800
-    ;   sta PPUCTRL              ;(essentially $2000) but save other bits
-    ;   lda #0
-    ;   sta PPUSCROLL
-    ;   sta PPUSCROLL
-    ; :
-    ; ; Force the area/player sprite banks to switch even during lag frames
-    ; jsr BankSwitchCHR
-    ; jsr AudioUpdate
-    ; ply
-    ; plx
-    ; pla
-    ; rti
+    ; lag frame, prevent the graphics from going bunk by still running
+    ; the irq. also run audio to keep it sounding like we didn't lag
+    ; Unless the screen is off, then we don't care
+    lda DisableScreenFlag
+    bne :+
+      SetScanlineIRQ #$1f
+      lda Mirror_PPUCTRL
+      and #%11111110            ;alter name table address to be $2800
+      sta PPUCTRL              ;(essentially $2000) but save other bits
+      lda #0
+      sta PPUSCROLL
+      sta PPUSCROLL
+    :
+    ; Force the area/player sprite banks to switch even during lag frames
+    jsr BankSwitchCHR
+    jsr AudioUpdate
+    ply
+    plx
+    pla
+    rti
 ContinueNMI:
   ; jroweboy disable NMI with a soft disable instead of turning off the NMI source from PPU
   dec NmiDisable
