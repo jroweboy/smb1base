@@ -78,7 +78,7 @@ RotPRandomBit:
     bne RotPRandomBit
 
   ; BankPRGA #.bank(UpdateTopScore)
-  farcall UpdateTopScore
+  ; farcall UpdateTopScore
   lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
   lsr
   bcs PauseSkip
@@ -213,15 +213,75 @@ ProcELoop:
     ; jsr RunGameTimer           ;count down the game timer
   endfar
 
+  ; Move the frame pacing forward. when it reaches the maximum lag, force a draw
+  ; inc FramePacing
+
+  lda SkipFrameCount
+  bne CalculatedSkipFrameCount
+
+  lda CurrentPacingTimer
+  lda CurrentPing
+  sta R0
+  lda CurrentPing+1
+  lsr
+  ror R0
+  lsr
+  ror R0
+
+  ; divide even more
+  lda R0
+  lsr
+  lsr
+  lsr
+  ; lsr
+  ; lsr
+  sta FramePacing
+  bne :+
+    sta SkipFrameCount
+    beq CalculatedSkipFrameCount
+:
+  ; Roll a random number between 0 - frame pacing. This is our new skip count
+  jsr galois32
+  lsr
+  lsr
+  lsr
+  sta CurrentPacingTimer
+  ; Poormans modulo math
+  sec
+:
+  sbc FramePacing
+  bcs :-
+  adc FramePacing
+  sta SkipFrameCount
+CalculatedSkipFrameCount:
+  ; lda R0
+  ; tax
+  ; lda FramePacingLUT,x
+  ; lsr
+  ; sta FramePacing
+
+
   lda ShouldSkipDrawSprites
   beq NoLagSoDraw
   lda FramesSinceLastSpriteDraw
-  cmp #13 ; Force a draw every 13 frames (~5fps) so its not too broken at extreme lag
+  cmp #$0f ; Force a draw every 16 frames (~4fps) so its not too broken at extreme lag
   bcc SkipDrawingCauseLagged
+  jmp DrawDrawForReal
 NoLagSoDraw:
+    ; Check frames since last draw vs the current framepacing to see if we can draw this frame
+    lda SkipFrameCount
+    ; intentionally subtract one more here
+    clc
+    ; sec
+    sbc FramesSinceLastSpriteDraw
+    ; bcc DrawDrawForReal
+    ; sta SkipFrameCount
+    bcs SkipDrawingCauseLagged
+DrawDrawForReal:
     farcall DrawAllMetasprites
     lda #0
     sta FramesSinceLastSpriteDraw
+    sta SkipFrameCount
     beq DoneDrawing
 SkipDrawingCauseLagged:
     inc FramesSinceLastSpriteDraw
@@ -287,6 +347,40 @@ ExitEng:
   rts                        ;and after all that, we're finally done!
 .endif
 
+;; I'm too lazy to recalc this, it will be divided by 2
+; FramePacingLUT:
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$00,$00,$00
+;   .byte $00,$00,$00,$00,$00,$01,$01,$01
+;   .byte $01,$01,$01,$01,$01,$01,$01,$01
+;   .byte $01,$01,$01,$01,$01,$01,$01,$01
+;   .byte $01,$01,$01,$01,$01,$01,$01,$01
+;   .byte $01,$01,$01,$01,$01,$02,$02,$02
+;   .byte $02,$02,$02,$02,$02,$02,$02,$02
+;   .byte $02,$02,$02,$02,$02,$02,$02,$02
+;   .byte $03,$03,$03,$03,$03,$03,$03,$03
+;   .byte $03,$03,$03,$03,$03,$04,$04,$04
+;   .byte $04,$04,$04,$04,$04,$04,$04,$04
+;   .byte $05,$05,$05,$05,$05,$05,$05,$05
+;   .byte $06,$06,$06,$06,$06,$06,$06,$06
+;   .byte $07,$07,$07,$07,$07,$07,$08,$08
+;   .byte $08,$08,$08,$08,$09,$09,$09,$09
+;   .byte $09,$0a,$0a,$0a,$0a,$0b,$0b,$0b
+;   .byte $0b,$0c,$0c,$0c,$0c,$0d,$0d,$0d
+;   .byte $0d,$0e,$0e,$0e,$0e,$0f,$0f,$0f
+;   .byte $10,$10,$10,$11,$11,$11,$12,$12
+;   .byte $12,$13,$13,$13,$14,$14,$15,$15
+;   .byte $15,$16,$16,$17,$17,$17,$18,$18
+;   .byte $19,$19,$19,$1a,$1a,$1b,$1b,$1c
+;   .byte $1c,$1c,$1d,$1d,$1e,$1e,$1f,$1f
 
 cproc UpdatePing
   lda #$a4                   ;set status nybbles to update game timer display

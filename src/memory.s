@@ -166,7 +166,7 @@ RESERVE FloateyNum_Timer, 8
 RESERVE DigitModifier, 6
 
 
-StackClear = DigitModifier+5
+StackClear = DigitModifier+6
 
 ; DON'T CLEAR PAST HERE
 
@@ -176,9 +176,12 @@ StackClear = DigitModifier+5
 RESERVE NmiDisable, 1
 RESERVE NmiSkipped, 1
 RESERVE NmiBackgroundProtect, 1
-; RESERVE NmiSpriteProtect, 1
+RESERVE NmiSpriteProtect, 1
 RESERVE ShouldSkipDrawSprites, 1
 RESERVE FramesSinceLastSpriteDraw, 1
+RESERVE FramePacing, 1
+RESERVE SkipFrameCount, 1
+RESERVE CurrentPacingTimer, 1
 
 ; RESERVE IrqNextScanline, 1
 ; RESERVE CurrentA, 1
