@@ -780,6 +780,17 @@ NoTopSc:
 ;$06, $07 - block buffer address low/high
 
 .proc RemoveCoin_Axe
+  ; If there is an update queued in buffer2, spin wait for it to be cleared
+  lda VRAM_Buffer2_Offset
+  beq ReadyForRemoval
+    lda #0
+    sta NmiBackgroundProtect
+    sta NmiDisable
+  SpinWait:
+      lda VRAM_Buffer2_Offset
+      bne SpinWait
+ReadyForRemoval:
+  inc NmiBackgroundProtect
   ldy #VRAM_Buffer2 - VRAM_Buffer1 + 1 ;set low byte so offset points to $0341
   lda #$03                 ;load offset for default blank metatile
   ldx AreaType             ;check area type
@@ -789,6 +800,8 @@ NoTopSc:
   jsr PutBlockMetatile     ;do a sub to write blank metatile to vram buffer
   lda #$06
   sta VRAM_Buffer_AddrCtrl ;set vram address controller to $0341 and leave
+  lda #0
+  sta NmiBackgroundProtect
   rts
 .endproc
 
