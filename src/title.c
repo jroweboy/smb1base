@@ -22,11 +22,42 @@ extern u8 LagSpikeDuration;
 extern u8 NotRespondingQueued;
 extern u8 NotRespondingTimer;
 extern u8 NotRespondingCount;
+extern u8 StartedNotRespondingPopup;
 extern u16 BasePing;
 extern u16 CurrentPing;
 extern u16 PingFlux;
 extern u16 FrameDelayAmount;
 extern u32 seed;
+
+extern u8 NmiBackgroundProtect;
+
+
+void flicker_wifi_lagging() {
+  // Flicker the wifi indicator in the middle of the screen
+  if (StartedNotRespondingPopup == 0) {
+    // Flicker by checking frame counter
+    if (LagSpikeDuration != 0 && (FrameCounter & 1)) {
+      if (PlayerSize == 0) { // big mario
+          M0 = Sprite_Data[3 * 4 + 0] - 20;
+          M1 = Sprite_Data[3 * 4 + 3];
+      } else {
+          M0 = Sprite_Data[1 * 4 + 0] - 20;
+          M1 = Sprite_Data[1 * 4 + 3];
+      }
+      Sprite_Data[59 * 4 + 0] = M0;
+      Sprite_Data[59 * 4 + 1] = 0x1c;
+      Sprite_Data[59 * 4 + 2] = 2;
+      Sprite_Data[59 * 4 + 3] = M1;
+      Sprite_Data[60 * 4 + 0] = M0;
+      Sprite_Data[60 * 4 + 1] = 0x1e;
+      Sprite_Data[60 * 4 + 2] = 2;
+      Sprite_Data[60 * 4 + 3] = M1+8;
+    } else {
+      Sprite_Data[59 * 4 + 0] = 0xf8;
+      Sprite_Data[60 * 4 + 0] = 0xf8;
+    }
+  }
+}
 
 #define SERVER_COUNT 4
 
@@ -36,7 +67,7 @@ static const char region_text_list[SERVER_COUNT][17] = {
   "<  NORTH AMER. >",
   "< U.K - EUROPE >",
   "< JAPAN - ASIA >",
-  "<   ANTARTICA  >",
+  "<  ANTARCTICA  >",
 };
 static const char ethernet_text[] = "ETHERNET";
 static const char wifi_text[] = "WIFI";
@@ -47,7 +78,7 @@ static u16 PingLUT[SERVER_COUNT] = {
   136,
   // 189,
   245,
-  555
+  455
 };
 
 // not actually random, but random enough numbers
@@ -55,8 +86,8 @@ static u16 PingFluxLUT[SERVER_COUNT] = {
   23,
   // 36,
   70,
-  241,
-  300
+  141,
+  200
 };
 
 void calculate_ping_display() {
@@ -91,6 +122,7 @@ void init_ping_values() {
   CurrentPing = BasePing + PingFlux;
   calculate_ping_display();
   FrameDelayAmount = CurrentPing >> 6;
+  StartedNotRespondingPopup = 0;
 }
 
 void calculate_ping() {
@@ -100,12 +132,11 @@ void calculate_ping() {
 #define temp_ping (*(u16*)&R4)
 #define min_flux R6
 
-  // Only lag spike
-  if (LagSpikeCooldown > 0) {
-    --LagSpikeCooldown;
-  }
+  // Count down lag spike duration first, and when it expires start the cooldown
   if (LagSpikeDuration > 0) {
     --LagSpikeDuration;
+  } else if (LagSpikeCooldown > 0) {
+    --LagSpikeCooldown;
   }
   if (NotRespondingTimer > 0) {
     --NotRespondingTimer;
@@ -122,28 +153,40 @@ void calculate_ping() {
     if (LagSpikeDuration == 0) {
       NotRespondingCount = 0;
       if (LagSpikeCooldown == 0) {
-        // One in 32 chance on wifi and 1 in 128 on ethernet to do a random ping spike
-        // R5 = (EnableWifi) ? 0b00011111 : 0b01111111;
-        R5 = 0b1;
+        // One in 8 chance on wifi and 1 in 32 on ethernet to do a random ping spike
+        R5 = (EnableWifi) ? 0b00000111 : 0b00011111;
+        // R5 = 0b1;
         if ((R4 & R5) == R5) {
-          ping_flux += 300;
-          min_flux = 200;
-          LagSpikeCooldown = (R4 >> 3) & 0b1111;
-          LagSpikeDuration = R4 & 0b111 + 4;
+          if (EnableWifi) {
+            ping_flux += 300;
+            min_flux = 200;
+            LagSpikeCooldown = ((R4 >> 3) & 0b0111) + 8; // 8 to 15 seconds
+            LagSpikeDuration = (R4 & 0b111) + 8; // 8 to 16 seconds
+          } else {
+            ping_flux += 200;
+            min_flux = 100;
+            LagSpikeCooldown = ((R4 >> 3) & 0b1111) + 10; // 10 to 26 seconds
+            LagSpikeDuration = (R4 & 0b11) + 4; // 4 to 7 seconds
+          }
         }
       }
     } else {
       // We are in a lag spike, so just increase the flux
-      ping_flux += 300;
-      min_flux = 200;
+      if (EnableWifi) {
+        ping_flux += 300;
+        min_flux = 200;
+      } else {
+        ping_flux += 200;
+        min_flux = 100;
+      }
       
       NotRespondingCount++;
 
-      // During a lag spike we have a chance to freeze up completely
+      // During a lag spike we have a chance to freeze up completely ( 1 in 16 )
       // Don't do this if not in gameplay tho, don't want to ruin the surprise
-      // R5 = (R4 & 0b1111) == 0b1111;
-      R5 = 1;
-      if (NotRespondingTimer == 0 && NotRespondingCount > 2 && R5) {
+      R5 = (R4 & 0b1111) == 0b1111;
+      // R5 = 1;
+      if (NotRespondingTimer == 0 && NotRespondingCount > 2 && LagSpikeDuration > 3 && R5) {
         NotRespondingQueued = 1;
         NotRespondingTimer = LagSpikeDuration;
       }
@@ -177,7 +220,8 @@ void calculate_ping() {
 
   // Convert from ping value into delay amount
   // 65k / 999 is roughly 64 / 1 so this is a cheap good approximation
-  FrameDelayAmount = CurrentPing << 6;
+  // FrameDelayAmount = CurrentPing << 6;
+  FrameDelayAmount = CurrentPing << 5;
   
 #undef ping_flux
 #undef i
@@ -224,10 +268,12 @@ void select_b_logic() {
       
       // UpdateShroom
       // Update the VRAM buffer with the template for the world select
+      ++NmiBackgroundProtect;
       for (i = 0; i < 6; i++) {
         VRAM_Buffer1[i-1] = WSelectBufferTemplate[i];
         VRAM_Buffer1[3] = WorldNumber+1;
       }
+      NmiBackgroundProtect = 0;
     } else {
       // Select button must have been presesed, so redraw the MushroomIcon
       // And switch between 1 and 2 player modes
@@ -320,17 +366,24 @@ void title_screen_menu() {
     BasePing = PingLUT[ServerIndex];
     PingFlux = PingFluxLUT[ServerIndex];
 
-    VRAM_Buffer_AddrCtrl = 0; // Use VRAM_Buffer1
-    VRAM_Buffer1_Offset += 16 + 5;
-
-    VRAM_Buffer1[0] = 0x22;
-    VRAM_Buffer1[1] = 0x68;
-    VRAM_Buffer1[2] = 16; // Write 16 bytes
+    ++NmiBackgroundProtect;
+    // VRAM_Buffer_AddrCtrl = 0; // Use VRAM_Buffer1
+    M0 = VRAM_Buffer1_Offset;
+    // VRAM_Buffer1[M0++] = 0x22;
+    ++M0;
+    VRAM_Buffer1[M0++] = 0x68;
+    VRAM_Buffer1[M0++] = 16; // Write 16 bytes
 
     for (i = 0; i < 16; ++i) {
-      VRAM_Buffer1[3 + i] = region_text_list[ServerIndex][i];
+      VRAM_Buffer1[M0] = region_text_list[ServerIndex][i];
+      ++M0;
     }
-    VRAM_Buffer1[4 + 16] = 0x00;
+    VRAM_Buffer1[M0] = 0x00;
+    // Prevent incomplete buffers from being written when catching up
+    // by putting the address last. The game only checks that the hi address is nonzero
+    VRAM_Buffer1[VRAM_Buffer1_Offset] = 0x22;
+    VRAM_Buffer1_Offset += M0;
+    NmiBackgroundProtect = 0;
   }
 
   // NullJoypad
@@ -370,6 +423,7 @@ WRAPPED(extern void WriteTopScore());
 // WARNING: Only use this while NMI is disabled
 extern void UpdateScreen();
 void flush_vram_buffer() {
+  // ++NmiBackgroundProtect;
   NmiR0 = VRAM_AddrTable_Low[VRAM_Buffer_AddrCtrl];
   NmiR1 = VRAM_AddrTable_High[VRAM_Buffer_AddrCtrl];
   UpdateScreen(); // update screen with buffer contents
@@ -384,6 +438,14 @@ void flush_vram_buffer() {
   ((u8*) &VRAM_Buffer1_Offset)[R1] = 0;
   VRAM_Buffer1[R1] = 0;
   VRAM_Buffer_AddrCtrl = 0;
+  // NmiBackgroundProtect = 0;
+  
+  // ENABLE_NMI();
+  // // Wait for the VRAM buffer to be flushed during NMI to prevent graphic glitches
+  // M1 = NmiSkipped;
+  // while (M1 == *(volatile u8*)&NmiSkipped);
+  // DISABLE_NMI();
+  
 }
 
 void title_screen_setup() {
@@ -400,7 +462,8 @@ void title_screen_setup() {
   // goto *jumptable[ScreenRoutineTask];
 
   // clear_screen:
-  DISABLE_NMI();
+  Mirror_PPUCTRL &= 0x7f;
+  PPU.control = Mirror_PPUCTRL;
 
   // Disable rendering
   DisableScreenFlag = 1;
@@ -408,6 +471,7 @@ void title_screen_setup() {
   PPU.mask = Mirror_PPUMASK;
   
 
+  ++NmiBackgroundProtect;
   // clear all the palettes
   VRAM_Buffer_AddrCtrl = 0; // Use the VRAM_Buffer1
   VRAM_Buffer1[0] = 0x3f;
@@ -420,10 +484,14 @@ void title_screen_setup() {
   //   PPU.vram.data = 0x0f;
   // }
   
-  ENABLE_NMI();
-  // Wait for the VRAM buffer to be flushed during NMI to prevent graphic glitches
-  while (NmiDisable == 0);
-  DISABLE_NMI();
+  NmiBackgroundProtect = 0;
+
+  flush_vram_buffer();
+
+  // ENABLE_NMI();
+  // // Wait for the VRAM buffer to be flushed during NMI to prevent graphic glitches
+  // while (NmiDisable == 0);
+  // DISABLE_NMI();
 
   // Clear out the attribute tables
   PPU.vram.address = 0x23;
@@ -554,6 +622,8 @@ void title_screen_setup() {
   // Re-enable drawing
   // Mirror_PPUMASK |= (~0b11100111);
   DisableScreenFlag = 0;
+  Mirror_PPUCTRL |= 0x80;
+  PPU.control = Mirror_PPUCTRL;
   ENABLE_NMI();
 
 // setup_palettes:

@@ -1,6 +1,10 @@
 
 .segment "CODE"
 
+
+DelayUntilNMI:
+  lda #0
+  sta NmiDisable
 .proc IdleLoop
   lda NmiDisable
   beq IdleLoop
@@ -9,14 +13,48 @@
 GoToNextFrameImmediately:
   lda NmiSkipped
   pha
+    lda #0
+    sta NmiDisable
+    ; lda #$ff
+    ; sta NmiDisable
     jsr GameLoop
+    lda FrameDelayAmount
+    ldx FrameDelayAmount+1
+    jsr delay_256x_a_30_clocks_b
   pla
   cmp NmiSkipped
   beq IdleLoop
+;     ; We didn't lag, so re-enable NMI and start spinning to simulate lag
+;     lda #0
+;     sta NmiDisable
+;     lda NmiSkipped
+;     pha
+;       lda FrameDelayAmount
+;       ldx FrameDelayAmount+1
+;       jsr delay_256x_a_30_clocks_b
+;     pla
+;     cmp NmiSkipped
+;     beq IdleLoop
+;     ; Extra lag cause a frame skip, so don't burn more cycles than needed
+;     jmp GoToNextFrameImmediately
+; :
   ; We lagged this frame, so skip sprites next frame for faster processing
   lda #1
   sta ShouldSkipDrawSprites
-  jmp GoToNextFrameImmediately
+  ; If we've lagged too much and the VRAM buffers are too full, then we should
+  ; let NMI do its thing.
+
+  ; if we are doing a scroll, force it out
+  ; lda VRAM_Buffer_AddrCtrl
+  ; cmp #6
+  ; beq LagUntilNMI
+  ; lda VRAM_Buffer1_Offset
+  ; cmp #$30
+  ; bcs DelayUntilNMI
+  ; Nothing urgent, so just run ahead anyway
+  ; lda #0
+  ; sta NmiDisable
+  jmp GoToNextFrameImmediately ; IdleLoop
 .endproc
 
 .proc GameLoop
@@ -87,8 +125,6 @@ PauseSkip:
   jsr _after_frame_callback
 .endif
 
-  lda #0
-  sta NmiDisable
   rts
 .endproc
 
@@ -173,7 +209,7 @@ ProcELoop:
     jsr ProcessCannons         ;process bullet bill cannons
     jsr ProcessWhirlpools      ;process whirlpools
     jsr FlagpoleRoutine        ;process the flagpole
-    jsr UpdatePing
+    ; jsr UpdatePing
     ; jsr RunGameTimer           ;count down the game timer
   endfar
 
@@ -225,6 +261,7 @@ SaveAB:
   lda #$00
   sta Left_Right_Buttons     ;nullify left and right buttons temp variable
 UpdScrollVar:
+  inc NmiBackgroundProtect
   lda VRAM_Buffer_AddrCtrl
   cmp #$06                   ;if vram address controller set to 6 (one of two $0341s)
   beq ExitEng                ;then branch to leave
@@ -239,20 +276,10 @@ UpdScrollVar:
         lda #$00                   ;reset vram buffer offset used in conjunction with
         sta VRAM_Buffer2_Offset    ;level graphics buffer at $0341-$035f
   RunParser:
-        farcall AreaParserTaskHandler, jmp  ;update the name table with more level graphics
+        farcall AreaParserTaskHandler  ;update the name table with more level graphics
 ExitEng:
-
-; .if DEBUG_ADD_EXTRA_LAG
-  ; lda SavedJoypadBits
-  ; and #Select_Button
-  ; bne :+
-    
-    lda FrameDelayAmount
-    ldx FrameDelayAmount+1
-    jsr delay_256x_a_30_clocks_b
-  ; :
-; .endif
-
+  lda #0
+  sta NmiBackgroundProtect
 .if ENABLE_C_CODE
   .import _after_game_callback
   jmp _after_game_callback
@@ -261,7 +288,7 @@ ExitEng:
 .endif
 
 
-.proc UpdatePing
+cproc UpdatePing
   lda #$a4                   ;set status nybbles to update game timer display
   jmp PrintStatusBarNumbers  ;do sub to update the display
 .endproc
@@ -271,6 +298,7 @@ ExitEng:
 ;$06-$07 - used to store block buffer address
 BlockObjMT_Updater:
   ldx #$01                  ;set offset to start with second block object
+  inc NmiBackgroundProtect
 UpdateLoop:
     stx ObjectOffset          ;set offset here
     lda VRAM_Buffer1          ;if vram buffer already being used here,
@@ -292,6 +320,8 @@ UpdateLoop:
 NextBUpd:
     dex                       ;decrement block object offset
     bpl UpdateLoop            ;do this until both block objects are dealt with
+  lda #0
+  sta NmiBackgroundProtect
   rts                       ;then leave
 
 ;-------------------------------------------------------------------------------------
@@ -570,6 +600,7 @@ ColorRotation:
               cpx #$31
               bcs ExitColorRot         ;if offset over 48 bytes, branch to leave
               tay                      ;otherwise use frame counter's 3 LSB as offset here
+              inc NmiBackgroundProtect
 GetBlankPal:  lda BlankPalette,y       ;get blank palette for palette 3
               sta VRAM_Buffer1,x       ;store it in the vram buffer
               inx                      ;increment offsets
@@ -603,7 +634,10 @@ GetAreaPal:   lda Palette3Data,y       ;fetch palette to be written based on are
               bcc ExitColorRot         ;if so, branch to leave
               lda #$00
               sta ColorRotateOffset    ;otherwise, init to keep it in range
-ExitColorRot: rts                      ;leave
+ExitColorRot:
+  lda #0
+  sta NmiBackgroundProtect
+  rts                      ;leave
 
 
 ;-------------------------------------------------------------------------------------
@@ -622,7 +656,11 @@ ExitColorRot: rts                      ;leave
 .endproc
 
 .proc FarCallScreenRoutines
-  farcall ScreenRoutines, jmp
+  inc NmiBackgroundProtect
+  farcall ScreenRoutines
+  lda #0
+  sta NmiBackgroundProtect
+  rts
 .endproc
 
 ;-------------------------------------------------------------------------------------
@@ -894,6 +932,7 @@ IncWorldSel:
   and #%00000111              ;mask out higher bits
   sta WorldSelectNumber       ;store as current world select number
   jsr GoContinue
+  inc NmiBackgroundProtect
 UpdateShroom:
   lda WSelectBufferTemplate,x ;write template for world select in vram buffer
   sta VRAM_Buffer1-1,x        ;do this until all bytes are written
@@ -903,6 +942,8 @@ UpdateShroom:
   ldy WorldNumber             ;get world number from variable and increment for
   iny                         ;proper display, and put in blank byte before
   sty VRAM_Buffer1+3          ;null terminator
+  lda #0
+  sta NmiBackgroundProtect
 NullJoypad:
   lda #$00                    ;clear joypad bits for player 1
   sta SavedJoypad1Bits
@@ -1280,6 +1321,7 @@ OutputNumbers:
   pha                      ;save incremented value to stack for now and
     asl                      ;shift to left and use as offset
     tay
+    inc NmiBackgroundProtect
     ldx VRAM_Buffer1_Offset  ;get current buffer pointer
     lda #$20                 ;put at top of screen by default
     cpy #$00                 ;are we writing top score on title screen?
@@ -1314,6 +1356,8 @@ DigitPLoop:
   inx
   stx VRAM_Buffer1_Offset  ;store it in case we want to use it again
 ExitOutputN:
+  lda #0
+  sta NmiBackgroundProtect
   rts
   
 

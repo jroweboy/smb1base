@@ -857,13 +857,20 @@ RemoveBridge:
   sta R5 
   ldy BridgeCollapseOffset  ;get bridge collapse offset here
   lda BridgeCollapseData,y  ;load low byte of name table address and store here
-  sta R4 
+  sta R4
+  inc NmiBackgroundProtect
   ldy VRAM_Buffer1_Offset   ;increment vram buffer offset
   iny
   ldx #$0c                  ;set offset for tile data for sub to draw blank metatile
   farcall RemBridge             ;do sub here to remove bowser's bridge metatiles
   ldx ObjectOffset          ;get enemy offset
-  farcall MoveVOffset       ;set new vram buffer offset
+  dey                     ;decrement vram buffer offset
+  tya                     ;add 10 bytes to it
+  clc
+  adc #10
+  sta VRAM_Buffer1_Offset  ;store as new vram buffer offset
+  lda #0
+  sta NmiBackgroundProtect
   lda #Sfx_Blast            ;load the fireworks/gunfire sound into the square 2 sfx
   sta Square2SoundQueue     ;queue while at the same time loading the brick
   lda #Sfx_BrickShatter     ;shatter sound into the noise sfx queue thus
@@ -3467,6 +3474,7 @@ DrawEraseRope:
          lda Enemy_Y_Speed,y         ;check to see if current platform is
          ora Enemy_Y_MoveForce,y     ;moving at all
          beq ExitRp                  ;if not, skip all of this and branch to leave
+         inc NmiBackgroundProtect
          ldx VRAM_Buffer1_Offset     ;get vram buffer offset
          cpx #$20                    ;if offset beyond a certain point, go ahead
          bcs ExitRp                  ;and skip this, branch to leave
@@ -3520,6 +3528,8 @@ EndRp:   lda #$00                    ;put null terminator at the end
          adc #10
          sta VRAM_Buffer1_Offset
 ExitRp:  ldx ObjectOffset            ;get enemy object buffer offset and leave
+         lda #0
+         sta NmiBackgroundProtect
          rts
 
 SetupPlatformRope:

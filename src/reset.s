@@ -84,21 +84,6 @@
     stx PPUSCROLL
     sta PPUADDR
     sty PPUMASK
-    ; clear the greyscale for the connection message
-    ; lda ScanlineCounter
-    ; lda #%11100001
-    ; and #1
-    ; beq :+
-    ;   ora #%11100000
-    ;   ora Mirror_PPUMASK
-    ;   sta PPUMASK
-    ;   jmp RestoreX
-    ; :
-    ;   lda #%00011110
-    ;   and Mirror_PPUMASK
-    ;   sta PPUMASK
-
-    ; RestoreX:
     
     MAPPER_IRQ_ACK
 
@@ -168,6 +153,9 @@ ColdBoot:
     inx
     inx
     bne :-
+
+  lda #0
+  sta NmiBackgroundProtect
 
   ; do mapper specific init
   jsr MapperInit
@@ -310,29 +298,31 @@ ScreenOff:
   sta PPUSCROLL
   sta OAMADDR          ;reset spr-ram address register
 
-  ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
-  lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
-  sta NmiR0
-  lda VRAM_AddrTable_High,x
-  sta NmiR1
-  jsr UpdateScreen  ;update screen with buffer contents
-
+  lda NmiBackgroundProtect
+  bne :+
+    ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
+    lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
+    sta NmiR0
+    lda VRAM_AddrTable_High,x
+    sta NmiR1
+    jsr UpdateScreen  ;update screen with buffer contents
+    ldy #$00
+    ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
+    cpx #$06
+    bne InitBuffer
+      iny                       ;get offset based on usage
+  InitBuffer:
+    ldx VRAM_Buffer_Offset,y
+    lda #$00                  ;clear buffer header at last location
+    sta VRAM_Buffer1_Offset,x        
+    sta VRAM_Buffer1,x
+    sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
+  :
+  
   jsr OAMandReadJoypad
 
-  ldy #$00
-  ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
-  cpx #$06
-  bne InitBuffer
-    iny                       ;get offset based on usage
-InitBuffer:
-  ldx VRAM_Buffer_Offset,y
-  lda #$00                  ;clear buffer header at last location
-  sta VRAM_Buffer1_Offset,x        
-  sta VRAM_Buffer1,x
-  sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
-  
 
   lda HorizontalScroll
   sta ScanlineScrollX+0

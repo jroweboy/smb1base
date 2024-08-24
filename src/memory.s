@@ -175,6 +175,8 @@ StackClear = DigitModifier+5
 
 RESERVE NmiDisable, 1
 RESERVE NmiSkipped, 1
+RESERVE NmiBackgroundProtect, 1
+; RESERVE NmiSpriteProtect, 1
 RESERVE ShouldSkipDrawSprites, 1
 RESERVE FramesSinceLastSpriteDraw, 1
 
@@ -392,6 +394,7 @@ RESERVE LagSpikeDuration, 1
 RESERVE NotRespondingQueued, 1
 RESERVE NotRespondingTimer, 1
 RESERVE NotRespondingCount, 1
+RESERVE StartedNotRespondingPopup, 1
 RESERVE BasePing, 2
 RESERVE CurrentPing, 2
 RESERVE PingFlux, 2

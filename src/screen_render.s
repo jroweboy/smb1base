@@ -31,7 +31,8 @@ clabel WriteTopScore
   .word ResetSpritesAndScreenTimer
   .word DisplayIntermediate
   .word ResetSpritesAndScreenTimer
-  .word AreaParserTaskControl
+  ; .word AreaParserTaskControl
+  .word Area2Parser2Task2Control2
   .word GetAreaPalette
   .word GetBackgroundColor
   .word GetAlternatePalette1
@@ -134,6 +135,7 @@ SetupIntermediate:
 WriteBottomStatusLine:
 
   jsr GetSBNybbles        ;write player's score and coin tally to screen
+  inc NmiBackgroundProtect
   ldx VRAM_Buffer1_Offset
   lda #$20                ;write address for world-area number on screen
   sta VRAM_Buffer1,x
@@ -157,6 +159,8 @@ WriteBottomStatusLine:
   clc
   adc #$06
   sta VRAM_Buffer1_Offset
+  lda #0
+  sta NmiBackgroundProtect
   jmp IncSubtask
 
 ;-------------------------------------------------------------------------------------
@@ -264,6 +268,27 @@ NoTimeUp:
 
 ;-------------------------------------------------------------------------------------
 
+.proc Area2Parser2Task2Control2
+
+  inc DisableScreenFlag     ;turn off screen
+  farcall AreaParserTaskLoop
+  dec ColumnSets            ;do we need to render more column sets?
+  bpl OutputCol
+    inc ScreenRoutineTask     ;if not, move on to the next task
+OutputCol:
+  lda #$06                  ;set vram buffer to output rendered column set
+  sta VRAM_Buffer_AddrCtrl  ;on next NMI
+  ; lda #0
+  ; sta DisableScreenFlag
+  ; hacky - make sure NMI runs this frame to clear out the buffer
+  lda NmiDisable
+  :
+    cmp NmiDisable
+    beq :-
+  sta NmiDisable
+  rts
+.endproc
+
 .proc AreaParserTaskControl
   inc DisableScreenFlag     ;turn off screen
   farcall AreaParserTaskLoop
@@ -273,12 +298,15 @@ NoTimeUp:
 OutputCol:
   lda #$06                  ;set vram buffer to output rendered column set
   sta VRAM_Buffer_AddrCtrl  ;on next NMI
+  ; lda #0
+  ; sta DisableScreenFlag
   rts
 .endproc
 
 ;-------------------------------------------------------------------------------------
 ;$00 - used as temp counter in GetPlayerColors
 GetBackgroundColor:
+  inc NmiBackgroundProtect
   ldy BackgroundColorCtrl   ;check background color control
   beq NoBGColor             ;if not set, increment task and fetch palette
   lda BGColorCtrl_Addr-4,y  ;put appropriate palette into vram
@@ -288,6 +316,7 @@ NoBGColor:
   ;fallthrough
 
 GetPlayerColors:
+  inc NmiBackgroundProtect
   ldx VRAM_Buffer1_Offset  ;get current buffer offset
   ldy #$00
   lda CurrentPlayer        ;check which player is on the screen
@@ -328,6 +357,8 @@ SetBGColor:
   adc #$07
 SetVRAMOffset:
   sta VRAM_Buffer1_Offset  ;store as new vram buffer offset
+  lda #0
+  sta NmiBackgroundProtect
   rts
 
 BGColorCtrl_Addr:
@@ -418,6 +449,7 @@ IncSubtask:
 ;-------------------------------------------------------------------------------------
 
 cproc DrawMushroomIcon
+  inc NmiBackgroundProtect
   ldy #$07                ;read eight bytes to be read by transfer routine
 IconDataRead:
     lda MushroomIconData,y  ;note that the default position is set for a
@@ -431,6 +463,8 @@ IconDataRead:
     lda #$2a                ;then load shroom icon tile in 2-player position
     sta VRAM_Buffer1+5
 ExitIcon:
+  lda #0
+  sta NmiBackgroundProtect
   rts
 MushroomIconData:
   .byte $07, $22, $ab, $83, $2a, $24, $24, $00
@@ -441,6 +475,7 @@ MushroomIconData:
 
 ;-------------------------------------------------------------------------------------
 cproc WriteGameText
+  inc NmiBackgroundProtect
   pha                      ;save text number to stack
     asl
     tay                      ;multiply by 2 and use as offset
@@ -489,6 +524,8 @@ PutLives:
   ldy LevelNumber
   iny
   sty VRAM_Buffer1+21      ;we're done here
+  lda #0
+  sta NmiBackgroundProtect
   rts
 CheckPlayerName:
   lda NumberOfPlayers    ;check number of players
@@ -510,6 +547,8 @@ NameLoop:
       dey
       bpl NameLoop           ;do this until each letter is replaced
 ExitChkName:
+  lda #0
+  sta NmiBackgroundProtect
   rts
 
 PrintWarpZoneNumbers:
@@ -680,6 +719,7 @@ GetSBNybbles:
 
 UpdateNumber:
   jsr PrintStatusBarNumbers ;print status bar numbers based on nybbles, whatever they be
+  inc NmiBackgroundProtect
   ldy VRAM_Buffer1_Offset   
   lda VRAM_Buffer1-6,y      ;check highest digit of score
   bne NoZSup                ;if zero, overwrite with space tile for zero suppression
@@ -687,6 +727,8 @@ UpdateNumber:
   sta VRAM_Buffer1-6,y
 NoZSup:
   ldx ObjectOffset          ;get enemy object buffer offset
+  lda #0
+  sta NmiBackgroundProtect
   rts
       
 CoinTallyOffsets:
@@ -768,6 +810,7 @@ WriteBlockMetatile:
   beq UseBOffset          ;use offset if metatile is breakable brick w/o line
   iny                     ;if any other metatile, increment offset for empty block
 UseBOffset:
+  inc NmiBackgroundProtect
   tya                     ;put Y in A
   ldy VRAM_Buffer1_Offset ;get vram buffer offset
   iny                     ;move onto next byte

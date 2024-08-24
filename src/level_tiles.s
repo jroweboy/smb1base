@@ -119,7 +119,11 @@ AreaParserTasks:
   .word AreaParserCore
 
 .proc FarCallRenderAreaGraphics
-  farcall RenderAreaGraphics, jmp
+  inc NmiBackgroundProtect
+  farcall RenderAreaGraphics
+  lda #0
+  sta NmiBackgroundProtect
+  rts
 .endproc
 
 ;-------------------------------------------------------------------------------------

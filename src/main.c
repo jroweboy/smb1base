@@ -10,6 +10,9 @@ POPSEG()
 #endif
 
 WRAPPED(extern void DrawAllMetasprites(););
+WRAPPED(void flicker_wifi_lagging(););
+WRAPPED(void UpdatePing());
+
 extern u8 CalcPingCooldown;
 extern u8 EllipseAnimation;
 extern u8 ScanlinePpuMask[3];
@@ -17,6 +20,8 @@ extern u8 ScanlineTarget[4];
 
 void init_area_callback() {
   init_ping_values();
+  CalcPingCooldown = 0;
+  EllipseAnimation = 0;
 }
 
 void after_game_callback() {
@@ -24,14 +29,16 @@ void after_game_callback() {
 }
 
 void after_frame_callback() {
-  // if ((A_B_Buttons & PAD_A) != 0) {
-  //   PlayerFacingDir = 0;
-  // }
+  
+  flicker_wifi_lagging();
+
   CalcPingCooldown++;
   if (CalcPingCooldown == 60) {
     CalcPingCooldown = 0;
 
     calculate_ping();
+    UpdatePing();
+
     if (NotRespondingTimer > 0) {
       ScanlineTarget[1] = 70;
       Mirror_PPUMASK |= 0b11100001;
@@ -44,6 +51,7 @@ void after_frame_callback() {
       // force draw all sprites during lag
       if (NotRespondingQueued) {
         NotRespondingQueued = 0;
+        StartedNotRespondingPopup = 1;
         DrawAllMetasprites();
         // so we can move off screen any sprites are in the middle of the banner
         for (i = 0; i < 64; ++i) {
@@ -78,7 +86,8 @@ void after_frame_callback() {
 
       #undef i
     }
-    if (NotRespondingTimer == 0) {
+    if (StartedNotRespondingPopup && NotRespondingTimer == 0) {
+      StartedNotRespondingPopup = 0;
       ScanlineTarget[1] = 0xff;
       Mirror_PPUMASK &= (~0b11100001);
       ScanlinePpuMask[0] = Mirror_PPUMASK;
