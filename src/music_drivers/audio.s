@@ -69,10 +69,23 @@ RESERVE PauseModeFlag, 1
 .proc AudioUpdate
   ; Freeze audio playback duing the pause.
   lda GamePauseStatus
+  ; If 0x80 is set, then its trying to play the sfx so its a user pause.
+  bmi :+
+  ; If 0x01 then its in pause mode still
   lsr
   bcc :+
+  EarlyExit:
     rts
   :
+  lda PlayerFrozenFlag
+  cmp #1
+  bne :+
+    ; Player is frozen so stop the music entirely
+    lda #$00
+    sta SND_MASTERCTRL_REG
+    beq EarlyExit
+  :
+
   lda CurrentBank
   pha
     SFXPlayback

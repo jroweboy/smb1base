@@ -18,9 +18,9 @@ GoToNextFrameImmediately:
     ; lda #$ff
     ; sta NmiDisable
     jsr GameLoop
-    lda FrameDelayAmount
-    ldx FrameDelayAmount+1
-    jsr delay_256x_a_30_clocks_b
+    ; lda FrameDelayAmount
+    ; ldx FrameDelayAmount+1
+    ; jsr delay_256x_a_30_clocks_b
   pla
   cmp NmiSkipped
   beq IdleLoop
@@ -82,7 +82,20 @@ RotPRandomBit:
   lda GamePauseStatus       ;if in pause mode, do not perform operation mode stuff
   lsr
   bcs PauseSkip
-
+  lda PlayerFrozenFlag
+  cmp #2
+  bne :+
+    ; save room for the player
+    lda #16
+    sta CurrentOAMOffset
+    farcall CopyPlayerStateToFollower
+    ;; If we have reached the end of things to draw then quit while we are ahead
+    lda F_Frame
+    cmp F_StopPoint
+    beq PauseSkip
+    farcall DrawAllMetasprites
+    jmp PauseSkip
+  :
     ; Move the timers ahead by a frame as well
     lda TimerControl          ;if master timer control not set, decrement
     beq DecTimers             ;all frame and interval timers
@@ -119,6 +132,58 @@ NoDecTimers:
 .endif
 
 PauseSkip:
+  ; lda #0
+  ; sta KillTheMusic
+
+  lda PlayerFrozenFlag
+  cmp #2
+  bne PlayerNotFrozen
+;     ldx F_Frame
+;     cpx F_StopPoint
+;     beq PlayerUnFrozen
+; PlayerUnFreezing:
+    ldx F_Frame
+    lda F_PauseSoundQueue,x
+    sta PauseSoundQueue
+    lda F_AreaMusicQueue,x
+    sta AreaMusicQueue
+    lda F_EventMusicQueue,x
+    sta EventMusicQueue
+    lda F_NoiseSoundQueue,x
+    sta NoiseSoundQueue
+    lda F_Square2SoundQueue,x
+    sta Square2SoundQueue
+    lda F_Square1SoundQueue,x
+    sta Square1SoundQueue
+    jmp DoneFrozenHandling
+; PlayerUnFrozen:
+;   lda #$ff
+;   sta F_StopPoint
+
+
+PlayerNotFrozen:
+  lda T_PauseSoundQueue
+  sta PauseSoundQueue
+  lda T_AreaMusicQueue
+  sta AreaMusicQueue
+  lda T_EventMusicQueue
+  sta EventMusicQueue
+  lda T_NoiseSoundQueue
+  sta NoiseSoundQueue
+  lda T_Square2SoundQueue
+  sta Square2SoundQueue
+  lda T_Square1SoundQueue
+  sta Square1SoundQueue
+
+  lda #0
+  sta T_PauseSoundQueue
+  sta T_AreaMusicQueue
+  sta T_EventMusicQueue
+  sta T_NoiseSoundQueue
+  sta T_Square2SoundQueue
+  sta T_Square1SoundQueue
+
+DoneFrozenHandling:
 
 .if ::ENABLE_C_CODE
   .import _after_frame_callback
@@ -156,7 +221,7 @@ ChkStart:      lda SavedJoypad1Bits   ;check to see if start is pressed
                lda GamePauseStatus
                tay
                iny                    ;set pause sfx queue for next pause mode
-               sty PauseSoundQueue
+               sty T_PauseSoundQueue
                eor #%00000001         ;invert d0 and set d7
                ora #%10000000
                bne SetPause           ;unconditional branch
@@ -260,7 +325,6 @@ CalculatedSkipFrameCount:
   ; lsr
   ; sta FramePacing
 
-
   lda ShouldSkipDrawSprites
   beq NoLagSoDraw
   lda FramesSinceLastSpriteDraw
@@ -338,6 +402,8 @@ UpdScrollVar:
   RunParser:
         farcall AreaParserTaskHandler  ;update the name table with more level graphics
 ExitEng:
+
+  farcall CopyPlayerStateToFollower
   lda #0
   sta NmiBackgroundProtect
 .if ENABLE_C_CODE
@@ -514,7 +580,7 @@ UpdSte:    sta Block_State,x          ;store contents of A in block object state
 ;   ora GameTimerDisplay+2
 ;   bne ResGTCtrl              ;if timer not at 100, branch to reset game timer control
 ;   lda #TimeRunningOutMusic
-;   sta EventMusicQueue        ;otherwise load time running out music
+;   sta T_EventMusicQueue        ;otherwise load time running out music
 ; ResGTCtrl:
 ;   lda #$18                   ;reset game timer control
 ;   sta GameTimerCtrlTimer
@@ -897,7 +963,7 @@ SetInitNTHigh:
       sta PlayerEntranceCtrl
 DoneInitArea:
   lda #Silence             ;silence music
-  sta AreaMusicQueue
+  sta T_AreaMusicQueue
   lda #$01                 ;disable screen output
   sta DisableScreenFlag
   inc OperMode_Task        ;increment one of the modes
@@ -927,7 +993,7 @@ DoneInitArea:
   sta ScreenRoutineTask     ;and game over modes
   sta Sprite0HitDetectFlag  ;disable sprite 0 check
   lda #GameOverMusic
-  sta EventMusicQueue       ;put game over music in secondary queue
+  sta T_EventMusicQueue       ;put game over music in secondary queue
   inc DisableScreenFlag     ;disable screen output
   inc OperMode_Task         ;set secondary mode to 1
   rts
@@ -947,7 +1013,7 @@ DoneInitArea:
   bne GameIsOn          ;screen timer to expire
 TerminateGame:
   lda #Silence          ;silence music
-  sta EventMusicQueue
+  sta T_EventMusicQueue
   jsr TransposePlayers  ;check if other player can keep
   bcc ContinueGame      ;going, and do so if possible
   lda WorldNumber       ;otherwise put world number of current
@@ -1171,7 +1237,7 @@ AutoPlayer:
   inx                      ;increment to next page
   stx DestinationPageLoc   ;store here
   lda #EndOfCastleMusic
-  sta EventMusicQueue      ;play win castle music
+  sta T_EventMusicQueue      ;play win castle music
   inc OperMode_Task
   rts
 .endproc
@@ -1256,7 +1322,7 @@ EvalForMusic:
   cpy #$03                  ;if counter not yet at 3 (world 8 only), branch
   bne PrintMsg              ;to print message only (note world 1-7 will only
   lda #VictoryMusic         ;reach this code if counter = 0, and will always branch)
-  sta EventMusicQueue       ;otherwise load victory music first (world 8 only)
+  sta T_EventMusicQueue       ;otherwise load victory music first (world 8 only)
 PrintMsg:
   tya                       ;put primary message counter in A
   clc                       ;add $0c or 12 to counter thus giving an appropriate value,
@@ -1340,7 +1406,7 @@ DecNumTimer:
     bne LoadNumTiles             ;branch ahead if not found
       inc NumberofLives            ;give player one extra life (1-up)
       lda #Sfx_ExtraLife
-      sta Square2SoundQueue        ;and play the 1-up sound
+      sta T_Square2SoundQueue        ;and play the 1-up sound
   LoadNumTiles:
     ldx ScoreUpdateDigit-1,y        ;load point value here
     lda ScoreUpdateAmount-1,y     ;load again and this time

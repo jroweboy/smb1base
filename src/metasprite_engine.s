@@ -278,8 +278,23 @@ LoopCount = M0
   sta Sprite_Y_Position + 4
   sta Sprite_Y_Position + 8
   sta Sprite_Y_Position + 12
+
+  lda PlayerFrozenFlag
+  beq NotFrozen
+    ; Player is frozen in place so use the metasprite from the frozen table
+    cmp #1
+    bne :+
+      ldy F_StopPoint
+      jmp LoadFrozenMetasprite
+    :
+    ldy F_Frame
+  LoadFrozenMetasprite:
+    ldx F_PlayerMetasprite,y
+    jmp CheckShouldDraw
+NotFrozen:
   ldy #0
   ldx ObjectMetasprite,y
+CheckShouldDraw:
   ; unless the player is currently flickering due to damage taken
   beq DoneDrawingPlayer
     ; put the player in slot 0 always
@@ -296,7 +311,13 @@ LoopCount = M0
 
       lda #0
       sta CurrentOAMOffset
+      lda PlayerFrozenFlag
+      beq :+
+        jsr DrawPlayerFollowerMetasprite
+        jmp :++
+      :
       jsr DrawMetasprite
+    :
     pla
     sta CurrentOAMOffset
 DoneDrawingPlayer:
@@ -519,6 +540,56 @@ DontSetFlipBit:
     sta Sprite_Y_Position-12,x
 DontShiftPositions:
   rts
+
+.endproc
+
+; Custom version that copies the player data from the follower table instead
+.proc DrawPlayerFollowerMetasprite
+Ptr = R0
+; OrigOffset = R2
+Atr = R3
+Xlo = R4
+Xhi = R5
+Ylo = R6
+Yhi = R7
+LoopCount = M0
+VFlip = M1
+  
+  lda F_PlayerFacingDir,y
+  lsr
+  bne FacingLeft
+    lda MetaspriteTableRightLo,x
+    sta Ptr
+    lda MetaspriteTableRightHi,x
+    sta Ptr+1
+    bne DrawSprite ; unconditional
+  FacingLeft:
+    lda MetaspriteTableLeftLo,x
+    sta Ptr
+    lda MetaspriteTableLeftHi,x
+    sta Ptr+1
+DrawSprite:
+
+  lda F_Player_X_Position,y
+  sec
+  sbc ScreenLeft_X_Pos
+  sta Xlo
+  lda F_Player_PageLoc,y
+  sbc ScreenLeft_PageLoc
+  sta Xhi
+  lda F_Player_Y_HighPos,y
+  sta Yhi
+  
+  lda #0
+  sta VFlip
+  lda F_Player_Y_Position,y
+  sta Ylo
+
+  lda F_Player_SprAttrib,y
+  sta Atr
+
+  jmp MetaspriteRenderLoop
+  ; rts
 
 .endproc
 

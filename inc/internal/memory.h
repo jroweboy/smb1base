@@ -167,6 +167,13 @@ extern u8 NoiseSoundQueue;
 extern u8 Square2SoundQueue;
 extern u8 Square1SoundQueue;
 
+extern u8 T_PauseSoundQueue;
+extern u8 T_AreaMusicQueue;
+extern u8 T_EventMusicQueue;
+extern u8 T_NoiseSoundQueue;
+extern u8 T_Square2SoundQueue;
+extern u8 T_Square1SoundQueue;
+
 extern u8 FlagpoleFNum_Y_Pos;
 extern u8 FlagpoleFNum_YMFDummy;
 extern u8 FlagpoleScore;
@@ -345,7 +352,7 @@ extern u8 DuplicateObj_Offset[2];
 extern u8 LakituReappearTimer[2];
 extern u8 NumberofGroupEnemies;
 extern u8 ColorRotateOffset;
-extern u8 PlayerGfxOffset;
+// extern u8 PlayerGfxOffset;
 extern u8 WarpZoneControl;
 extern u8 FireworksCounter[2];
 extern u8 MultiLoopCorrectCntr;

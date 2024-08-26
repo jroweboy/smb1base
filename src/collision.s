@@ -222,7 +222,7 @@ InitFireballExplode:
       lda #$80
       sta Fireball_State,x        ;set exploding flag in fireball's state
       lda #Sfx_Bump
-      sta Square1SoundQueue       ;load bump sound
+      sta T_Square1SoundQueue       ;load bump sound
       rts                         ;leave
 
 ChkForNonSolids:
@@ -312,7 +312,7 @@ HandlePECollisions:
        cmp #Goomba
        beq ExPEC
        lda #Sfx_EnemySmack          ;play smack enemy sound
-       sta Square1SoundQueue
+       sta T_Square1SoundQueue
        lda Enemy_State,x            ;set d7 in enemy state, thus become moving shell
        ora #%10000000
        sta Enemy_State,x
@@ -365,7 +365,7 @@ ForceInjury:
           lda #$08
           sta InjuryTimer           ;set injured invincibility timer
           asl
-          sta Square1SoundQueue     ;play pipedown/injury sound
+          sta T_Square1SoundQueue     ;play pipedown/injury sound
           farcall GetPlayerColors       ;change player's palette if necessary
           lda #$0a                  ;set subroutine to run on next frame
 SetKRout: ldy #$01                  ;set new player state
@@ -383,7 +383,7 @@ ExInjColRoutines:
 KillPlayer:
       stx Player_X_Speed   ;halt player's horizontal movement by initializing speed
       inx
-      stx EventMusicQueue  ;set event music queue to death music
+      stx T_EventMusicQueue  ;set event music queue to death music
       lda #$fc
       sta Player_Y_Speed   ;set new vertical speed
       lda #$0b             ;set subroutine to run on next frame
@@ -397,7 +397,7 @@ EnemyStomped:
       cmp #Spiny                 ;if found
       beq InjurePlayer
       lda #Sfx_EnemyStomp        ;otherwise play stomp/swim sound
-      sta Square1SoundQueue
+      sta T_Square1SoundQueue
       lda Enemy_ID,x
       ldy #$00                   ;initialize points data offset for stomped enemies
       cmp #FlyingCheepCheep      ;branch for cheep-cheep
@@ -836,7 +836,7 @@ HurtBowser:
           ora #$03                   ;otherwise add 3 to enemy state
 SetDBSte: sta Enemy_State,x          ;set defeated enemy state
           lda #Sfx_BowserFall
-          sta Square2SoundQueue      ;load bowser defeat sound
+          sta T_Square2SoundQueue      ;load bowser defeat sound
           ldx R1                     ;get enemy offset
           lda #$09                   ;award 5000 points to player for defeating bowser
           bne EnemySmackScore        ;unconditional branch to award points
@@ -875,7 +875,7 @@ GoombaPoints:
 EnemySmackScore:
        jsr SetupFloateyNumber   ;update necessary score variables
        lda #Sfx_EnemySmack      ;play smack enemy sound
-       sta Square1SoundQueue
+       sta T_Square1SoundQueue
 ExHCF: rts                      ;and now let's leave
 
 ;-------------------------------------------------------------------------------------
@@ -885,7 +885,7 @@ HandlePowerUpCollision:
       lda #$06
       jsr SetupFloateyNumber  ;award 1000 points to player by default
       lda #Sfx_PowerUpGrab
-      sta Square2SoundQueue   ;play the power-up sound
+      sta T_Square2SoundQueue   ;play the power-up sound
       lda PowerUpType         ;check power-up type
       cmp #$02
       bcc Shroom_Flower_PUp   ;if mushroom or fire flower, branch
@@ -894,7 +894,7 @@ HandlePowerUpCollision:
       lda #$23                ;otherwise set star mario invincibility
       sta StarInvincibleTimer ;timer, and load the star mario music
       lda #StarPowerMusic     ;into the area music queue, then leave
-      sta AreaMusicQueue
+      sta T_AreaMusicQueue
 NearbyRTS:
       rts
 
@@ -1037,7 +1037,7 @@ SolidOrClimb:
   cmp #$26               ;if climbing metatile,
   beq NYSpd              ;branch ahead and do not play sound
     lda #Sfx_Bump
-    sta Square1SoundQueue  ;otherwise load bump sound
+    sta T_Square1SoundQueue  ;otherwise load bump sound
 NYSpd:
   lda #$01               ;set player's vertical speed to nullify
   sta Player_Y_Speed     ;jump or swim
@@ -1166,7 +1166,7 @@ PipeDwnS:
   ; lda InPipeTransition
   ; bne :+
     ldy #Sfx_PipeDown_Injury
-    sty Square1SoundQueue      ;otherwise load pipedown/injury sound
+    sty T_Square1SoundQueue      ;otherwise load pipedown/injury sound
     ; lda PlayerEntranceCtrl  ;;; check if we are entering the pipe in auto mode
     ; cmp #7
     ; bne :+
@@ -1255,7 +1255,7 @@ ErACM:
   lda #$03
   sta GameEngineSubroutine  ;set to run vertical pipe entry routine on next frame
   lda #Sfx_PipeDown_Injury
-  sta Square1SoundQueue     ;load pipedown/injury sound
+  sta T_Square1SoundQueue     ;load pipedown/injury sound
   ; lda #1
   ; jsr SetupPipeTransitionOverlay
   ; lda Player_X_Position
@@ -1293,7 +1293,7 @@ GetWNum:
   lda AreaAddrOffsets,x     ;get area offset based on world offset
   sta AreaPointer           ;store area offset here to be used to change areas
   lda #Silence
-  sta EventMusicQueue       ;silence music
+  sta T_EventMusicQueue       ;silence music
   lda #$00
   sta EntrancePage          ;initialize starting page number
   sta AreaNumber            ;initialize area number used for area address offset
@@ -1332,7 +1332,7 @@ CheckForCoinMTiles:
   rts
 CoinSd:
   lda #Sfx_CoinGrab
-  sta Square2SoundQueue ;load coin grab sound and leave
+  sta T_Square2SoundQueue ;load coin grab sound and leave
   rts
 
 GetMTileAttrib:
@@ -1580,7 +1580,7 @@ ChkForBump_HammerBroJ:
   asl                    ;ahead and do not play sound
   bcc NoBump
     lda #Sfx_Bump          ;otherwise, play bump sound
-    sta Square1SoundQueue  ;sound will never be played if branching from ChkForRedKoopa
+    sta T_Square1SoundQueue  ;sound will never be played if branching from ChkForRedKoopa
 NoBump:
   lda Enemy_ID,x         ;check for hammer bro
   cmp #$05
@@ -1674,7 +1674,7 @@ FlagpoleCollision:
       lda #BulletBill_CannonVar ;load identifier for bullet bills (cannon variant)
       jsr KillEnemies           ;get rid of them
       lda #Silence
-      sta EventMusicQueue       ;silence music
+      sta T_EventMusicQueue       ;silence music
       lsr
       sta FlagpoleSoundQueue    ;load flagpole sound into flagpole sound queue
       ldx #$04                  ;start at end of vertical coordinate data

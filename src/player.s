@@ -204,7 +204,7 @@ HoleDie:
     ldy DeathMusicLoaded        ;check value here
     bne HoleBottom              ;if already set, branch to next part
       iny
-      sty EventMusicQueue         ;otherwise play death music
+      sty T_EventMusicQueue         ;otherwise play death music
       sty DeathMusicLoaded        ;and set value here
 HoleBottom:
   ldy #$06
@@ -218,7 +218,7 @@ CheckMusicFinished:
   ldy DeathMusicLoaded        ;check to see if music is still playing
   beq DeathMusicEnded         ;branch to leave if so
     lda EventMusicBuffer
-    ora EventMusicQueue
+    ora T_EventMusicQueue
     bne ExitCtrl
 DeathMusicEnded:
     lda #$06                    ;otherwise set to run lose life routine
@@ -326,7 +326,7 @@ HalfwayPageNybbles:
   lda #$00
   sta Sprite0HitDetectFlag
   lda #Silence             ;silence music
-  sta EventMusicQueue
+  sta T_EventMusicQueue
   dec NumberofLives        ;take one life from player
   bpl StillInGame          ;if player still has lives, branch
   lda #$00
@@ -701,7 +701,7 @@ FlagpoleSlide:
   ;  cmp #FlagpoleFlagObject  ;for flagpole flag object
   ;  bne NoFPObj              ;if not found, branch to something residual
   lda FlagpoleSoundQueue   ;load flagpole sound
-  sta Square1SoundQueue    ;into square 1's sfx queue
+  sta T_Square1SoundQueue    ;into square 1's sfx queue
   lda #$00
   sta FlagpoleSoundQueue   ;init flagpole sound queue
   ldy Player_Y_Position
@@ -727,7 +727,7 @@ PlayerEndLevel:
   lda ScrollLock            ;if scroll lock not set, branch ahead to next part
   beq ChkStop               ;because we only need to do this part once
   lda #EndOfLevelMusic
-  sta EventMusicQueue       ;load win level music in event music queue
+  sta T_EventMusicQueue       ;load win level music in event music queue
   lda #$00
   sta ScrollLock            ;turn off scroll lock to skip this part later
 ChkStop:
@@ -766,7 +766,7 @@ NextArea:
   jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0
   sta HalfwayPage           ;reset halfway page to 0 (beginning)
   lda #Silence
-  sta EventMusicQueue       ;silence music and leave
+  sta T_EventMusicQueue       ;silence music and leave
 ExitNA:
   rts
 
@@ -1034,7 +1034,7 @@ GetYPhy:   lda JumpMForceData,y       ;store appropriate jump/swim
            lda SwimmingFlag           ;if swimming flag disabled, branch
            beq PJumpSnd
            lda #Sfx_EnemyStomp        ;load swim/goomba stomp sound into
-           sta Square1SoundQueue      ;square 1's sfx queue
+           sta T_Square1SoundQueue      ;square 1's sfx queue
            lda Player_Y_Position
            cmp #$14                   ;check vertical low byte of player position
            bcs X_Physics              ;if below a certain point, branch
@@ -1045,7 +1045,7 @@ PJumpSnd:  lda #Sfx_BigJump           ;load big mario's jump sound by default
            ldy PlayerSize             ;is mario big?
            beq SJumpSnd
            lda #Sfx_SmallJump         ;if not, load small mario's jump sound
-SJumpSnd:  sta Square1SoundQueue      ;store appropriate jump sound in square 1 sfx queue
+SJumpSnd:  sta T_Square1SoundQueue      ;store appropriate jump sound in square 1 sfx queue
 X_Physics: ldy #$00
            sty R0                     ;init value here
            lda Player_State           ;if mario is on the ground, branch
@@ -1426,3 +1426,156 @@ NoJSChk:
   lda #$04                ;set maximum vertical speed here
   jmp ImposeGravitySprObj ;then jump to move player vertically
 
+
+
+.segment "SRAM"
+
+FRAME_LAG_COUNT = 120
+
+; Cloned Data
+F_Player_State:       .res FRAME_LAG_COUNT
+F_PlayerFacingDir:    .res FRAME_LAG_COUNT
+F_Player_X_Position:  .res FRAME_LAG_COUNT
+F_Player_PageLoc:     .res FRAME_LAG_COUNT
+F_Player_Y_HighPos:   .res FRAME_LAG_COUNT
+F_Player_Y_Position:  .res FRAME_LAG_COUNT
+F_Player_SprAttrib:   .res FRAME_LAG_COUNT
+F_PlayerMetasprite:   .res FRAME_LAG_COUNT
+; F_PlayerGfxOffset:    .res FRAME_LAG_COUNT
+; F_PlayerMoonwalkFlag: .res FRAME_LAG_COUNT
+F_Player_X_MoveForce:  .res FRAME_LAG_COUNT
+F_Player_Y_MoveForce:  .res FRAME_LAG_COUNT
+F_Player_YMoveForceFractional:  .res FRAME_LAG_COUNT
+F_Player_X_Speed:  .res FRAME_LAG_COUNT
+F_Player_Y_Speed:  .res FRAME_LAG_COUNT
+
+F_EventMusicQueue:    .res FRAME_LAG_COUNT
+F_AreaMusicQueue:     .res FRAME_LAG_COUNT
+F_Square1SoundQueue:  .res FRAME_LAG_COUNT
+F_Square2SoundQueue:  .res FRAME_LAG_COUNT
+F_NoiseSoundQueue:    .res FRAME_LAG_COUNT
+F_PauseSoundQueue:    .res FRAME_LAG_COUNT
+
+; Special flags
+; F_Player_Hideflag:    .res 1
+
+; F_Player_Switched:    .res 1
+
+; Calculated Data
+; F_Player_Rel_XPos: .res 1
+; F_Player_Rel_YPos: .res 1
+; F_Player_OffscreenBits: .res 1
+
+; Other
+; Write head of the circular buffer
+RESERVE F_Frame, 1
+
+RESERVE F_StopPoint, 1
+
+.segment "PLAYER"
+
+
+cproc InitFollower
+  lda #0
+  sta F_Frame
+  ; sta F_Player_Hideflag
+  ; sta F_Player_Switched
+  lda #$ff
+  sta F_StopPoint
+  ldx #FRAME_LAG_COUNT-1
+  :
+    sta F_Player_Y_Position,x
+    dex
+    bpl :-
+  rts
+.endproc
+
+.proc CopyPlayerStateToFollower
+  ; if we are in normal state or the first frozen stage, then keep copying until the second.
+  ldx PlayerFrozenFlag
+  cpx #2
+  bcc DoCopyAnyway
+; NoCopy:
+    ; game is frozen while we catch up so don't copy state for now
+    ; cpx F_StopPoint
+    ; beq ResetStopPoint
+      ldx F_Frame
+      inx
+      cpx #FRAME_LAG_COUNT
+      bne :+
+        ldx #0
+      :
+      stx F_Frame
+      rts
+  ; ResetStopPoint:
+  ;   ldx #$ff
+  ;   stx F_StopPoint
+; NoStopPoint:
+
+DoCopyAnyway:
+  ldx F_Frame
+
+  lda Player_State
+  sta F_Player_State,x
+
+  lda Player_X_MoveForce
+  sta F_Player_X_MoveForce,x
+
+  lda Player_Y_MoveForce
+  sta F_Player_Y_MoveForce,x
+
+  lda Player_YMoveForceFractional
+  sta F_Player_YMoveForceFractional,x
+
+  lda Player_X_Speed
+  sta F_Player_X_Speed,x
+
+  lda Player_Y_Speed
+  sta F_Player_Y_Speed,x
+
+  lda PlayerFacingDir
+  sta F_PlayerFacingDir,x
+
+  lda Player_X_Position
+  sta F_Player_X_Position,x
+
+  lda Player_PageLoc
+  sta F_Player_PageLoc,x
+
+  lda Player_Y_HighPos
+  sta F_Player_Y_HighPos,x
+
+  lda Player_Y_Position
+  sta F_Player_Y_Position,x
+
+  lda Player_SprAttrib
+  sta F_Player_SprAttrib,x
+
+  lda PlayerMetasprite
+  sta F_PlayerMetasprite,x
+
+  lda T_Square1SoundQueue
+  sta F_Square1SoundQueue,x
+  lda T_Square2SoundQueue
+  sta F_Square2SoundQueue,x
+  lda T_NoiseSoundQueue
+  sta F_NoiseSoundQueue,x
+  lda T_PauseSoundQueue
+  sta F_PauseSoundQueue,x
+  lda T_AreaMusicQueue
+  sta F_AreaMusicQueue,x
+  lda T_EventMusicQueue
+  sta F_EventMusicQueue,x
+
+  ; lda PlayerMoonwalkFlag
+  ; sta F_PlayerMoonwalkFlag,x
+
+  ; wrap the pointer around
+  inx
+  cpx #FRAME_LAG_COUNT
+  bne :+
+    ldx #0
+:
+  stx F_Frame
+  rts
+.endproc

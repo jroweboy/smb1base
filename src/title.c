@@ -19,12 +19,17 @@ extern u8 WSelectBufferTemplate[6];
 extern u8 EnableWifi;
 extern s8 ServerIndex;
 
+extern u8 FlickerFever;
 extern u8 LagSpikeCooldown;
 extern u8 LagSpikeDuration;
 extern u8 NotRespondingQueued;
 extern u8 NotRespondingTimer;
 extern u8 NotRespondingCount;
 extern u8 StartedNotRespondingPopup;
+extern u8 PlayerFrozenFlag;
+extern u8 PlayerFrozenTimer;
+extern u8 F_Frame;
+extern u8 F_StopPoint;
 extern u16 BasePing;
 extern u16 CurrentPing;
 extern u16 PingFlux;
@@ -39,13 +44,19 @@ extern u8 EllipseAnimation;
 
 void flicker_wifi_lagging() {
   // Flicker the wifi indicator in the middle of the screen
-  if (StartedNotRespondingPopup == 0) {
+  if (StartedNotRespondingPopup == 0 || PlayerFrozenFlag != 0) {
     // Flicker by checking frame counter
-    if (LagSpikeDuration != 0 && (FrameCounter & 1)) {
+    if ((LagSpikeDuration != 0 || PlayerFrozenFlag != 0) && (FlickerFever & 1)) {
       if (PlayerSize == 0) { // big mario
+          if (Sprite_Data[3 * 4 + 0] > 0xf0) {
+            return;
+          }
           M0 = Sprite_Data[3 * 4 + 0] - 20;
           M1 = Sprite_Data[3 * 4 + 3];
       } else {
+          if (Sprite_Data[1 * 4 + 0] > 0xf0) {
+            return;
+          }
           M0 = Sprite_Data[1 * 4 + 0] - 20;
           M1 = Sprite_Data[1 * 4 + 3];
       }
@@ -61,6 +72,7 @@ void flicker_wifi_lagging() {
       Sprite_Data[59 * 4 + 0] = 0xf8;
       Sprite_Data[60 * 4 + 0] = 0xf8;
     }
+    FlickerFever ^= 1;
   }
 }
 
@@ -126,9 +138,12 @@ void init_ping_values() {
   PingFlux = PingFluxLUT[ServerIndex];
   CurrentPing = BasePing + PingFlux;
   calculate_ping_display();
-  FrameDelayAmount = CurrentPing >> 6;
+  FrameDelayAmount = 0;
   StartedNotRespondingPopup = 0;
   EllipseAnimation = 0;
+  PlayerFrozenTimer = 0;
+  PlayerFrozenFlag = 0;
+  LagSpikeCooldown = 5;
 }
 
 void calculate_ping() {
@@ -147,21 +162,34 @@ void calculate_ping() {
   if (NotRespondingTimer > 0) {
     --NotRespondingTimer;
   }
+  if (PlayerFrozenTimer > 0) {
+    --PlayerFrozenTimer;
+  }
 
   // calculate a random fluctuation from the base
   ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
   min_flux = 0;
 
   R4 = galois32();
-  if (OperMode == 1 && OperMode_Task == 3) {
+  if (OperMode == 1 && OperMode_Task == 3 && GamePauseStatus == 0) {
 
-    // If we aren't in a lag spike yet, check to see if we can start one
-    if (LagSpikeDuration == 0) {
+    // If the player is frozen during a lag event
+    // and check if the timer has expired for this event
+    if (PlayerFrozenTimer == 0 && PlayerFrozenFlag == 1) {
+      // State 1 is freezing the player in place
+      PlayerFrozenFlag = 2;
+      PlayerFrozenTimer = 2;
+    } else if (PlayerFrozenTimer == 0 && PlayerFrozenFlag == 2) {
+      // state 2 is where we start doing the play back
+      PlayerFrozenFlag = 0;
+    } else if (LagSpikeDuration == 0) {
+      // If we aren't in a lag spike yet, check to see if we can start one
       NotRespondingCount = 0;
       if (LagSpikeCooldown == 0) {
         // One in 8 chance on wifi and 1 in 32 on ethernet to do a random ping spike
-        R5 = (EnableWifi) ? 0b00000111 : 0b00011111;
+        // R5 = (EnableWifi) ? 0b00000111 : 0b00011111;
         // R5 = 0b1;
+        R5 = 0xff;
         if ((R4 & R5) == R5) {
           if (EnableWifi) {
             ping_flux += 300;
@@ -173,6 +201,19 @@ void calculate_ping() {
             min_flux = 100;
             LagSpikeCooldown = ((R4 >> 3) & 0b1111) + 10; // 10 to 26 seconds
             LagSpikeDuration = (R4 & 0b11) + 4; // 4 to 7 seconds
+          }
+        } else {
+          // Try a different roll to see if this is a GIGA FREEZE instead
+          // R5 = (EnableWifi) ? 0b11100000 : 0b11111000;
+          R5 = 0;
+          if ((R4 & R5) == R5) {
+            // Start a Giga freeze where the player can't move for a few seconds, and
+            // then the player avatar "catches up"
+            PlayerFrozenFlag = 1;
+            PlayerFrozenTimer = 2;
+            F_StopPoint = F_Frame;
+            // ++F_Frame;
+            LagSpikeCooldown = ((EnableWifi) ? 4 : 10) + 4;
           }
         }
       }

@@ -145,13 +145,20 @@ MusicDataHigh := MusicData+1
 ; .segment "STACK"
 
 .segment "SHORTRAM"
-
+; RESERVE KillTheMusic, 1
 RESERVE PauseSoundQueue, 1
 RESERVE AreaMusicQueue, 1
 RESERVE EventMusicQueue, 1
 RESERVE NoiseSoundQueue, 1
 RESERVE Square2SoundQueue, 1
 RESERVE Square1SoundQueue, 1
+
+RESERVE T_PauseSoundQueue, 1
+RESERVE T_AreaMusicQueue, 1
+RESERVE T_EventMusicQueue, 1
+RESERVE T_NoiseSoundQueue, 1
+RESERVE T_Square2SoundQueue, 1
+RESERVE T_Square1SoundQueue, 1
 
 RESERVE FlagpoleFNum_Y_Pos, 1
 RESERVE FlagpoleFNum_YMFDummy, 1
@@ -374,7 +381,7 @@ RESERVE DuplicateObj_Offset, 2
 RESERVE LakituReappearTimer, 2
 RESERVE NumberofGroupEnemies, 1
 RESERVE ColorRotateOffset, 1
-RESERVE PlayerGfxOffset, 1
+; RESERVE PlayerGfxOffset, 1
 RESERVE WarpZoneControl, 1
 RESERVE FireworksCounter, 2
 RESERVE MultiLoopCorrectCntr, 1
@@ -398,6 +405,9 @@ RESERVE NotRespondingQueued, 1
 RESERVE NotRespondingTimer, 1
 RESERVE NotRespondingCount, 1
 RESERVE StartedNotRespondingPopup, 1
+RESERVE PlayerFrozenFlag, 1
+RESERVE PlayerFrozenTimer, 1
+RESERVE FlickerFever, 1
 RESERVE BasePing, 2
 RESERVE CurrentPing, 2
 RESERVE PingFlux, 2

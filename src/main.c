@@ -9,21 +9,22 @@ PUSHSEG(TITLE)
 POPSEG()
 #endif
 
-WRAPPED(void flicker_wifi_lagging(););
+WRAPPED(void flicker_wifi_lagging());
+WRAPPED(void InitFollower());
 
 extern u8 CalcPingCooldown;
 
 void init_area_callback() {
+  InitFollower();
   init_ping_values();
   CalcPingCooldown = 0;
 }
 
 void after_game_callback() {
-
 }
 
 void after_frame_callback() {
-  
+
   flicker_wifi_lagging();
 
   CalcPingCooldown++;

@@ -701,7 +701,7 @@ GiveOneCoin:
   sta CoinTally          ;otherwise, reinitialize coin amount
   inc NumberofLives      ;give the player an extra life
   lda #Sfx_ExtraLife
-  sta Square2SoundQueue  ;play 1-up sound
+  sta T_Square2SoundQueue  ;play 1-up sound
 
 CoinPoints:
   lda #$02               ;set digit modifier to award

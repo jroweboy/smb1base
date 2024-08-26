@@ -837,7 +837,7 @@ BridgeCollapse:
   bcc MoveD_Bowser
 SetM2:
   lda #Silence              ;silence music
-  sta EventMusicQueue
+  sta T_EventMusicQueue
   inc OperMode_Task         ;move onto next secondary mode in autoctrl mode
   jmp KillAllEnemies        ;jump to empty all enemy slots and then leave  
 
@@ -872,9 +872,9 @@ RemoveBridge:
   lda #0
   sta NmiBackgroundProtect
   lda #Sfx_Blast            ;load the fireworks/gunfire sound into the square 2 sfx
-  sta Square2SoundQueue     ;queue while at the same time loading the brick
+  sta T_Square2SoundQueue     ;queue while at the same time loading the brick
   lda #Sfx_BrickShatter     ;shatter sound into the noise sfx queue thus
-  sta NoiseSoundQueue       ;producing the unique sound of the bridge collapsing 
+  sta T_NoiseSoundQueue       ;producing the unique sound of the bridge collapsing 
   inc BridgeCollapseOffset  ;increment bridge collapse offset
   lda BridgeCollapseOffset
   cmp #$0f                  ;if bridge collapse offset has not yet reached
@@ -883,7 +883,7 @@ RemoveBridge:
   lda #%01000000
   sta Enemy_State,x         ;set bowser's state to one of defeated states (d6 set)
   lda #Sfx_BowserFall
-  sta Square2SoundQueue     ;play bowser defeat sound
+  sta T_Square2SoundQueue     ;play bowser defeat sound
 NoBFall:
   jmp BowserGfxHandler      ;jump to code that draws bowser
 
@@ -1208,9 +1208,9 @@ InitBowserFlame:
         lda FrenzyEnemyTimer        ;if timer not expired yet, branch to leave
         bne ExFlmeD
         sta Enemy_Y_MoveForce,x     ;reset something here
-        lda NoiseSoundQueue
+        lda T_NoiseSoundQueue
         ora #Sfx_BowserFlame        ;load bowser's flame sound into queue
-        sta NoiseSoundQueue
+        sta T_NoiseSoundQueue
         ldy BowserFront_Offset      ;get bowser's buffer offset
         lda Enemy_ID,y              ;check for bowser
         cmp #Bowser
@@ -1364,9 +1364,9 @@ BB_SLoop: iny                        ;move onto the next slot
 ExF17:    rts                        ;if found, leave
 
 FireBulletBill:
-      lda Square2SoundQueue
+      lda T_Square2SoundQueue
       ora #Sfx_Blast            ;play fireworks/gunfire sound
-      sta Square2SoundQueue
+      sta T_Square2SoundQueue
       lda #BulletBill_FrenzyVar ;load identifier for bullet bill object
       bne Set17ID               ;unconditional branch
 
@@ -2079,7 +2079,7 @@ SetupBB:   tya
            lda #$0a
            sta EnemyFrameTimer,x     ;set enemy frame timer
            lda #Sfx_Blast
-           sta Square2SoundQueue     ;play fireworks/gunfire sound
+           sta T_Square2SoundQueue     ;play fireworks/gunfire sound
 ChkDSte:   lda Enemy_State,x         ;check enemy state for d5 set
            and #%00100000
            beq BBFly                 ;if not set, skip to move horizontally
@@ -2248,7 +2248,7 @@ BPGet:
   cmp #$03
   beq ProcFireballs
   lda #Sfx_Fireball          ;play fireball sound effect
-  sta Square1SoundQueue
+  sta T_Square1SoundQueue
   lda #$02                   ;load state
   sta Fireball_State,x
   ldy PlayerAnimTimerSet     ;copy animation frame timer setting
@@ -2885,7 +2885,7 @@ FireworksSoundScore:
   sta Enemy_Flag,x
   sta EnemyMetasprite,x
   lda #Sfx_Blast         ;play fireworks/gunfire sound
-  sta Square2SoundQueue
+  sta T_Square2SoundQueue
   lda #$05               ;set part of score modifier for 500 points
   sta DigitModifier+4
   jmp EndAreaPoints     ;jump to award points accordingly then leave
@@ -2948,7 +2948,7 @@ AwardGameTimerPoints:
          and #%00000100         ;check frame counter for d2 set (skip ahead
          beq NoTTick            ;for four frames every four frames) branch if not set
          lda #Sfx_TimerTick
-         sta Square2SoundQueue  ;load timer tick sound
+         sta T_Square2SoundQueue  ;load timer tick sound
          ; set offset here to subtract from game timer's last digit
 NoTTick: 
         ;  ldy #(GameTimerDisplay + GameTimerLastIndex - DisplayDigits)
@@ -3129,7 +3129,7 @@ InitPiranhaPlant:
 ;--------------------------------
 ;$00 - used to store horizontal difference between player and piranha plant
 
-MovePiranhaPlant:
+.proc MovePiranhaPlant
       lda Enemy_State,x           ;check enemy state
       bne Exit               ;if set at all, branch to leave
       lda EnemyFrameTimer,x       ;check enemy's timer here
@@ -3185,7 +3185,7 @@ RiseFallPiranhaPlant:
 
 Exit:
       rts                         ;then leave
-
+.endproc
 ;--------------------------------
 
 InitBalPlatform:
@@ -3926,7 +3926,7 @@ NextVO: txa                      ;store object offset to next available vine slo
         sta Vine_ObjOffset,y      ;using vine flag as offset
         inc Vine_FlagOffset       ;increment vine flag offset
         lda #Sfx_GrowVine
-        sta Square2SoundQueue    ;load vine grow sound
+        sta T_Square2SoundQueue    ;load vine grow sound
         rts
 
 ;-------------------------------------------------------------------------------------

@@ -638,7 +638,7 @@ ChkAreaType:
   ldy #$04               ;select music for cloud type level if found
 StoreMusic:
   lda MusicSelectData,y  ;otherwise select appropriate music for level type
-  sta AreaMusicQueue     ;store in queue and leave
+  sta T_AreaMusicQueue     ;store in queue and leave
 ExitGetM:
   rts
 .endproc

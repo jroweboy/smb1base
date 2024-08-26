@@ -2095,7 +2095,7 @@ ExitBlockChk:
 BumpBlock:
            jsr CheckTopOfBlock     ;check to see if there's a coin directly above this block
            lda #Sfx_Bump
-           sta Square1SoundQueue   ;play bump sound
+           sta T_Square1SoundQueue   ;play bump sound
            lda #$00
            sta Block_X_Speed,x     ;initialize horizontal speed for block object
            sta Block_Y_MoveForce,x ;init fractional movement force
@@ -2165,7 +2165,7 @@ BrickShatter:
       jsr CheckTopOfBlock    ;check to see if there's a coin directly above this block
       lda #Sfx_BrickShatter
       sta Block_RepFlag,x    ;set flag for block object to immediately replace metatile
-      sta NoiseSoundQueue    ;load brick shatter sound
+      sta T_NoiseSoundQueue    ;load brick shatter sound
       jsr SpawnBrickChunks   ;create brick chunk objects
       lda #$fe
       sta Player_Y_Speed     ;set vertical speed for player
@@ -2259,7 +2259,7 @@ JCoinC: lda #$fb
         lda #$01
         sta Misc_Y_HighPos,y   ;set vertical high byte
         sta Misc_State,y       ;set state for misc object
-        sta Square2SoundQueue  ;load coin grab sound
+        sta T_Square2SoundQueue  ;load coin grab sound
         stx ObjectOffset       ;store current control bit as misc object offset 
         farcall GiveOneCoin        ;update coin tally on the screen and coin amount variable
         inc CoinTallyFor1Ups   ;increment coin tally used to activate 1-up block flag
@@ -2312,7 +2312,7 @@ PutBehind:
   lda #%00100000
   sta Enemy_SprAttrib+5     ;set background priority bit
   lda #Sfx_GrowPowerUp
-  sta Square2SoundQueue     ;load power-up reveal sound and leave
+  sta T_Square2SoundQueue     ;load power-up reveal sound and leave
   lda #0
   sta EnemyMetasprite+5
   rts

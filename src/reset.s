@@ -324,9 +324,31 @@ ScreenOff:
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
 
-  lda HorizontalScroll
-  sta ScanlineScrollX+0
-  sta ScanlineScrollX+2
+  lda Mirror_PPUCTRL
+  ; sta IrqPPUCTRL
+  ; sta ScanlineScrollN+0
+  ; sta ScanlineScrollN+2
+  ; and also reset the flags for the HUD
+  and #%11111100
+  sta PPUCTRL
+
+  lda SkipFrameCount
+  lsr
+  ; intentionally subtract one more here
+  clc
+  ; sec
+  sbc FramesSinceLastSpriteDraw
+  ; bcc DrawDrawForReal
+  ; sta SkipFrameCount
+  bcs :+
+    lda Mirror_PPUCTRL
+    ; sta IrqPPUCTRL
+    sta ScanlineScrollN+0
+    sta ScanlineScrollN+2
+    lda HorizontalScroll
+    sta ScanlineScrollX+0
+    sta ScanlineScrollX+2
+  :
   lda #32
   sta ScanlineScrollY+0
   ; lda Mirror_PPUCTRL
@@ -339,14 +361,6 @@ ScreenOff:
     cli
 
 SkipSprite0:
-  lda Mirror_PPUCTRL
-  ; sta IrqPPUCTRL
-  sta ScanlineScrollN+0
-  sta ScanlineScrollN+2
-  ; and also reset the flags for the HUD
-  and #%11111100
-  sta PPUCTRL
-
   ; If the main thread requested a CHR bank switch, do it before the timing window passes
   jsr BankSwitchCHR
 
