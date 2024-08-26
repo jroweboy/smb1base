@@ -332,23 +332,31 @@ ScreenOff:
   and #%11111100
   sta PPUCTRL
 
-  lda SkipFrameCount
-  lsr
-  ; intentionally subtract one more here
-  clc
-  ; sec
-  sbc FramesSinceLastSpriteDraw
-  ; bcc DrawDrawForReal
-  ; sta SkipFrameCount
-  bcs :+
-    lda Mirror_PPUCTRL
-    ; sta IrqPPUCTRL
-    sta ScanlineScrollN+0
-    sta ScanlineScrollN+2
-    lda HorizontalScroll
-    sta ScanlineScrollX+0
-    sta ScanlineScrollX+2
-  :
+  ; Only jitter the scroll in the main game mode
+  lda OperMode
+  cmp #1
+  bne ForceSetScroll
+  lda OperMode_Task
+  cmp #3
+  bne ForceSetScroll
+    lda SkipFrameCount
+    lsr
+    ; intentionally subtract one more here
+    clc
+    ; sec
+    sbc FramesSinceLastSpriteDraw
+    ; bcc DrawDrawForReal
+    ; sta SkipFrameCount
+    bcs SkipSetScroll
+ForceSetScroll:
+      lda Mirror_PPUCTRL
+      ; sta IrqPPUCTRL
+      sta ScanlineScrollN+0
+      sta ScanlineScrollN+2
+      lda HorizontalScroll
+      sta ScanlineScrollX+0
+      sta ScanlineScrollX+2
+SkipSetScroll:
   lda #32
   sta ScanlineScrollY+0
   ; lda Mirror_PPUCTRL

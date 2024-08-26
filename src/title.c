@@ -187,9 +187,9 @@ void calculate_ping() {
       NotRespondingCount = 0;
       if (LagSpikeCooldown == 0) {
         // One in 8 chance on wifi and 1 in 32 on ethernet to do a random ping spike
-        // R5 = (EnableWifi) ? 0b00000111 : 0b00011111;
+        R5 = (EnableWifi) ? 0b00000111 : 0b00011111;
         // R5 = 0b1;
-        R5 = 0xff;
+        // R5 = 0xff;
         if ((R4 & R5) == R5) {
           if (EnableWifi) {
             ping_flux += 300;
@@ -204,8 +204,8 @@ void calculate_ping() {
           }
         } else {
           // Try a different roll to see if this is a GIGA FREEZE instead
-          // R5 = (EnableWifi) ? 0b11100000 : 0b11111000;
-          R5 = 0;
+          R5 = (EnableWifi) ? 0b11100000 : 0b11111000;
+          // R5 = 0;
           if ((R4 & R5) == R5) {
             // Start a Giga freeze where the player can't move for a few seconds, and
             // then the player avatar "catches up"
@@ -234,8 +234,16 @@ void calculate_ping() {
       R5 = (R4 & 0b1111) == 0b1111;
       // R5 = 1;
       if (NotRespondingTimer == 0 && NotRespondingCount > 2 && LagSpikeDuration > 3 && R5) {
-        NotRespondingQueued = 1;
-        NotRespondingTimer = LagSpikeDuration;
+        // RARE MOD CHECK
+        // If they are super unlucky, collision gets messed up temporarily
+        if ((R4 & 0b111111) == 0b111111) {
+          // turn down the artificial ping so the glitch is noticiable
+          ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
+          min_flux = 0;
+        } else {
+          NotRespondingQueued = 1;
+          NotRespondingTimer = LagSpikeDuration;
+        }
       }
     }
   }
@@ -268,7 +276,7 @@ void calculate_ping() {
   // Convert from ping value into delay amount
   // 65k / 999 is roughly 64 / 1 so this is a cheap good approximation
   // FrameDelayAmount = CurrentPing << 6;
-  FrameDelayAmount = CurrentPing << 5;
+  // FrameDelayAmount = CurrentPing << 5;
   
   UpdatePing();
 
