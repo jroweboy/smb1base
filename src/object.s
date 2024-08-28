@@ -415,7 +415,7 @@ RunNormalEnemies:
           ; lda CollisionFlickerMode
           ; cmp #2 ; Enemy -> BG Collision Mode
           ; beq :+ 
-            jsr EnemyToBGCollisionDet
+          jsr EnemyToBGCollisionDet
           ; :
           jsr EnemiesCollision
           jsr PlayerEnemyCollision

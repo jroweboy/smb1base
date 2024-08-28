@@ -356,6 +356,14 @@ ForceSetScroll:
       lda HorizontalScroll
       sta ScanlineScrollX+0
       sta ScanlineScrollX+2
+      lda DisplayRewindMessage
+      bne RegularYScroll
+
+        lda #72 + 5
+        sta ScanlineScrollY+1
+    RegularYScroll:
+        lda #5
+        sta ScanlineScrollY+1
 SkipSetScroll:
   lda #32
   sta ScanlineScrollY+0

@@ -32,6 +32,7 @@ extern u8 CollisionFlickerTimer;
 extern u8 IntangibleFlickerTimer;
 extern u8 CollisionFlickerCooldown;
 extern u8 CollisionFlickerMode;
+extern u8 DisplayRewindMessage;
 extern u8 F_Frame;
 extern u8 F_StopPoint;
 extern u16 BasePing;
@@ -82,15 +83,6 @@ void flicker_wifi_lagging() {
       Sprite_Data[60 * 4 + 0] = 0xf8;
     }
     FlickerFever ^= 1;
-  }
-
-  if (CollisionFlickerMode != 0 && CollisionFlickerMode <= 3) {
-    if (CollisionFlickerTimer != 0) {
-      --CollisionFlickerTimer;
-    }
-    if (CollisionFlickerTimer == 0) {
-      CollisionFlickerMode = 0;
-    }
   }
 }
 
@@ -188,6 +180,22 @@ void calculate_ping() {
   }
   if (CollisionFlickerCooldown > 0) {
     --CollisionFlickerCooldown;
+  }
+  if (CollisionFlickerMode != 0 && CollisionFlickerMode < 4) {
+    if (CollisionFlickerTimer != 0) {
+      --CollisionFlickerTimer;
+    }
+    if (CollisionFlickerTimer == 0) {
+      // The desync is ending, so set the desync rewind message mode start
+      if (CollisionFlickerMode == 1) {
+        CollisionFlickerMode = 2;
+        CollisionFlickerTimer = 2;
+        DisplayRewindMessage = 1;
+      } else {
+        CollisionFlickerMode = 0;
+        DisplayRewindMessage = 0;
+      }
+    }
   }
 
   // calculate a random fluctuation from the base
@@ -293,16 +301,11 @@ void calculate_ping() {
           // CollisionFlickerMode values are +3 to give a 1 second warning that crazy stuff is
           // about to happen
           if ((R4 & 0b11000000) == 0b11000000) {
-            if (R4 & 1) {
-              CollisionFlickerTimer = R4 & 0b11 + 1;
-              CollisionFlickerMode = 4; // Player -> BG Collision Mode
-            } else {
-              CollisionFlickerTimer = 7; // R4 & 0b1 + 1;
-              CollisionFlickerMode = 5; // Enemy -> BG Collision Mode
-            }
+            CollisionFlickerTimer = 2; // R4 & 0b1 + 1;
+            CollisionFlickerMode = 1 + 3; // Desync Collision Mode
             CollisionFlickerCooldown = 20;
           } else if ((R4 & 0b110000) == 0b110000) {
-            CollisionFlickerMode = 6; // Player Intangible timer
+            CollisionFlickerMode = 3 + 3; // Player Intangible timer
             CollisionFlickerCooldown = 20;
           }
         } else {

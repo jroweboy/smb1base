@@ -1460,6 +1460,9 @@ F_Square2SoundQueue:  .res FRAME_LAG_COUNT
 F_NoiseSoundQueue:    .res FRAME_LAG_COUNT
 F_PauseSoundQueue:    .res FRAME_LAG_COUNT
 
+; Data for all enemies gets copied into here when the desync starts
+ChunkOfRAM: .res 256 + 20 * 50
+
 ; Special flags
 ; F_Player_Hideflag:    .res 1
 

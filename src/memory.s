@@ -235,6 +235,42 @@ RESERVE VRAM_Buffer2, 34
 VRAM_Buffer1_PtrOffset = 0
 VRAM_Buffer2_PtrOffset = VRAM_Buffer2_Offset - VRAM_Buffer1_Offset
 
+; moved to abs ram
+RESERVE A_B_Buttons, 1
+RESERVE Up_Down_Buttons, 1
+RESERVE Left_Right_Buttons, 1
+RESERVE PreviousA_B_Buttons, 1
+
+; RESERVE PlayerOAMOffset, 1
+RESERVE CurrentOAMOffset, 1
+RESERVE OriginalOAMOffset, 1
+RESERVE SpriteShuffleOffset, 1
+
+; Variables for the laggy bros hack
+RESERVE CalcPingCooldown, 1
+RESERVE EllipseAnimation, 1
+RESERVE LagSpikeCooldown, 1
+RESERVE LagSpikeDuration, 1
+RESERVE NotRespondingQueued, 1
+RESERVE NotRespondingTimer, 1
+RESERVE NotRespondingCount, 1
+RESERVE StartedNotRespondingPopup, 1
+RESERVE PlayerFrozenFlag, 1
+RESERVE PlayerFrozenTimer, 1
+RESERVE CollisionFlickerTimer, 1
+RESERVE IntangibleFlickerTimer, 1
+RESERVE CollisionFlickerCooldown, 1
+RESERVE CollisionFlickerMode, 1
+RESERVE DisplayRewindMessage, 1
+RESERVE FlickerFever, 1
+RESERVE BasePing, 2
+RESERVE CurrentPing, 2
+RESERVE PingFlux, 2
+RESERVE FrameDelayAmount, 2
+RESERVE seed, 4
+
+
+DesyncCopyStart = *
 RESERVE BowserBodyControls, 1
 RESERVE BowserFeetCounter, 1
 RESERVE BowserMovementSpeed, 1
@@ -251,11 +287,6 @@ RESERVE FirebarSpinSpeed, 16
 RESERVE PlayerFacingDir, 1
 RESERVE Enemy_MovingDir, 25
 
-; moved to abs ram
-RESERVE A_B_Buttons, 1
-RESERVE Up_Down_Buttons, 1
-RESERVE Left_Right_Buttons, 1
-RESERVE PreviousA_B_Buttons, 1
 
 RESERVE Vine_FlagOffset, 1
 RESERVE Vine_Height, 1
@@ -390,33 +421,6 @@ RESERVE JumpspringForce, 1
 RESERVE MaxRangeFromOrigin, 1
 RESERVE BitMFilter, 1
 RESERVE ChangeAreaTimer, 2
-
-; RESERVE PlayerOAMOffset, 1
-RESERVE CurrentOAMOffset, 1
-RESERVE OriginalOAMOffset, 1
-RESERVE SpriteShuffleOffset, 1
-
-; Variables for the laggy bros hack
-RESERVE CalcPingCooldown, 1
-RESERVE EllipseAnimation, 1
-RESERVE LagSpikeCooldown, 1
-RESERVE LagSpikeDuration, 1
-RESERVE NotRespondingQueued, 1
-RESERVE NotRespondingTimer, 1
-RESERVE NotRespondingCount, 1
-RESERVE StartedNotRespondingPopup, 1
-RESERVE PlayerFrozenFlag, 1
-RESERVE PlayerFrozenTimer, 1
-RESERVE CollisionFlickerTimer, 1
-RESERVE IntangibleFlickerTimer, 1
-RESERVE CollisionFlickerCooldown, 1
-RESERVE CollisionFlickerMode, 1
-RESERVE FlickerFever, 1
-RESERVE BasePing, 2
-RESERVE CurrentPing, 2
-RESERVE PingFlux, 2
-RESERVE FrameDelayAmount, 2
-RESERVE seed, 4
 
 RESERVE PlayerMetasprite, 1
 ObjectMetasprite := PlayerMetasprite

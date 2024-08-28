@@ -85,7 +85,7 @@ BBChk_E:
   ldx ObjectOffset          ;get object offset
   lda CollisionFlickerMode
   ; If the enemy collision is off, let them fall
-  cmp #2 ; Enemy -> BG Collision Mode
+  cmp #1 ; Desync Collision Mode
   beq :+
     lda M0
     cmp #$00                  ;check to see if object bumped into anything
