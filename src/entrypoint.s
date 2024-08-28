@@ -88,6 +88,7 @@ _COMMON_DEFINE_SEGMENTS = 1
 ; Castle = 3
 
 .if MAPPER_MMC5
+.incbin "chr/mmc5/bg_title.chr"
 .incbin "chr/mmc5/bg_water.chr"
 .incbin "chr/mmc5/bg_ground.chr"
 .incbin "chr/mmc5/bg_underground.chr"

@@ -407,6 +407,10 @@ RESERVE NotRespondingCount, 1
 RESERVE StartedNotRespondingPopup, 1
 RESERVE PlayerFrozenFlag, 1
 RESERVE PlayerFrozenTimer, 1
+RESERVE CollisionFlickerTimer, 1
+RESERVE IntangibleFlickerTimer, 1
+RESERVE CollisionFlickerCooldown, 1
+RESERVE CollisionFlickerMode, 1
 RESERVE FlickerFever, 1
 RESERVE BasePing, 2
 RESERVE CurrentPing, 2

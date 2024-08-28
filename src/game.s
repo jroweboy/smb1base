@@ -298,25 +298,31 @@ ProcELoop:
   lsr
   lsr
   lsr
-  ; lsr
-  ; lsr
-  sta FramePacing
+  ; Wifi just makes the screen 4x choppier cause wifi sucx
+  ldx EnableWifi
   bne :+
-    sta SkipFrameCount
-    beq CalculatedSkipFrameCount
-:
+    lsr
+    lsr
+  :
+  sta FramePacing
+  cmp #0 ; needed since ldx can set the Z flag
+  beq ZeroSkipFrameCount
+
   ; Roll a random number between 0 - frame pacing. This is our new skip count
   jsr galois32
   lsr
   lsr
   lsr
   sta CurrentPacingTimer
+  beq ZeroSkipFrameCount
   ; Poormans modulo math
   sec
 :
   sbc FramePacing
   bcs :-
   adc FramePacing
+
+ZeroSkipFrameCount:
   sta SkipFrameCount
 CalculatedSkipFrameCount:
   ; lda R0

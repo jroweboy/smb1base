@@ -166,7 +166,11 @@ PlayerSubs:
   jsr RelativePlayerPosition  ;get coordinates relative to the screen
   ldx #$00                    ;set offset for player object
   jsr BoundingBoxCore     ;get player's bounding box coordinates
-  jsr PlayerBGCollision       ;do collision detection and process
+  lda CollisionFlickerMode
+  cmp #1 ; player -> bg flicker mode
+  beq :+
+    jsr PlayerBGCollision       ;do collision detection and process
+  :
   lda Player_Y_Position
   cmp #$40                    ;check to see if player is higher than 64th pixel
   bcc PlayerHole              ;if so, branch ahead

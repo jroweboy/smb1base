@@ -28,6 +28,10 @@ extern u8 NotRespondingCount;
 extern u8 StartedNotRespondingPopup;
 extern u8 PlayerFrozenFlag;
 extern u8 PlayerFrozenTimer;
+extern u8 CollisionFlickerTimer;
+extern u8 IntangibleFlickerTimer;
+extern u8 CollisionFlickerCooldown;
+extern u8 CollisionFlickerMode;
 extern u8 F_Frame;
 extern u8 F_StopPoint;
 extern u16 BasePing;
@@ -62,17 +66,31 @@ void flicker_wifi_lagging() {
       }
       Sprite_Data[59 * 4 + 0] = M0;
       Sprite_Data[59 * 4 + 1] = 0x1c;
-      Sprite_Data[59 * 4 + 2] = 2;
       Sprite_Data[59 * 4 + 3] = M1;
       Sprite_Data[60 * 4 + 0] = M0;
       Sprite_Data[60 * 4 + 1] = 0x1e;
-      Sprite_Data[60 * 4 + 2] = 2;
       Sprite_Data[60 * 4 + 3] = M1+8;
+      if (CollisionFlickerMode != 0) {
+        Sprite_Data[59 * 4 + 2] = 2 | 0x80;
+        Sprite_Data[60 * 4 + 2] = 2 | 0x80;
+      } else {
+        Sprite_Data[59 * 4 + 2] = 2;
+        Sprite_Data[60 * 4 + 2] = 2;
+      }
     } else {
       Sprite_Data[59 * 4 + 0] = 0xf8;
       Sprite_Data[60 * 4 + 0] = 0xf8;
     }
     FlickerFever ^= 1;
+  }
+
+  if (CollisionFlickerMode != 0 && CollisionFlickerMode <= 3) {
+    if (CollisionFlickerTimer != 0) {
+      --CollisionFlickerTimer;
+    }
+    if (CollisionFlickerTimer == 0) {
+      CollisionFlickerMode = 0;
+    }
   }
 }
 
@@ -165,6 +183,12 @@ void calculate_ping() {
   if (PlayerFrozenTimer > 0) {
     --PlayerFrozenTimer;
   }
+  if (IntangibleFlickerTimer > 0) {
+    --IntangibleFlickerTimer;
+  }
+  if (CollisionFlickerCooldown > 0) {
+    --CollisionFlickerCooldown;
+  }
 
   // calculate a random fluctuation from the base
   ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
@@ -182,6 +206,26 @@ void calculate_ping() {
     } else if (PlayerFrozenTimer == 0 && PlayerFrozenFlag == 2) {
       // state 2 is where we start doing the play back
       PlayerFrozenFlag = 0;
+    } else if (CollisionFlickerMode != 0) {
+      // Check collision flicker before LagSpikeDuration
+      if (CollisionFlickerMode == 3) {
+        if (IntangibleFlickerTimer == 0) {
+          IntangibleFlickerTimer = R4 & 0b111 + 1;
+        }
+        // Keep the ping flux going 
+        if (EnableWifi) {
+          ping_flux += 300;
+          min_flux = 200;
+        } else {
+          ping_flux += 200;
+          min_flux = 100;
+        }
+      } else if (CollisionFlickerMode > 3) {
+        // warning timer over, move the collision flicker mode into the corrent mode
+        CollisionFlickerMode -= 3;
+      } else {
+        CollisionFlickerMode = 0;
+      }
     } else if (LagSpikeDuration == 0) {
       // If we aren't in a lag spike yet, check to see if we can start one
       NotRespondingCount = 0;
@@ -231,15 +275,36 @@ void calculate_ping() {
 
       // During a lag spike we have a chance to freeze up completely ( 1 in 16 )
       // Don't do this if not in gameplay tho, don't want to ruin the surprise
+      R4 = 0b111111;
       R5 = (R4 & 0b1111) == 0b1111;
       // R5 = 1;
       if (NotRespondingTimer == 0 && NotRespondingCount > 2 && LagSpikeDuration > 3 && R5) {
         // RARE MOD CHECK
         // If they are super unlucky, collision gets messed up temporarily
-        if ((R4 & 0b111111) == 0b111111) {
+        if (CollisionFlickerCooldown == 0 && (R4 & 0b111111) == 0b111111) {
           // turn down the artificial ping so the glitch is noticiable
-          ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
-          min_flux = 0;
+          // ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
+          // min_flux = 0;
+          // Disable bg collision for 1-4 frames intermittenly
+          // R4 = galois32();
+          // Test out Player BG flicker
+          // R4 = 0b11000001;
+          R4 = 0b11000000;
+          // CollisionFlickerMode values are +3 to give a 1 second warning that crazy stuff is
+          // about to happen
+          if ((R4 & 0b11000000) == 0b11000000) {
+            if (R4 & 1) {
+              CollisionFlickerTimer = R4 & 0b11 + 1;
+              CollisionFlickerMode = 4; // Player -> BG Collision Mode
+            } else {
+              CollisionFlickerTimer = 7; // R4 & 0b1 + 1;
+              CollisionFlickerMode = 5; // Enemy -> BG Collision Mode
+            }
+            CollisionFlickerCooldown = 20;
+          } else if ((R4 & 0b110000) == 0b110000) {
+            CollisionFlickerMode = 6; // Player Intangible timer
+            CollisionFlickerCooldown = 20;
+          }
         } else {
           NotRespondingQueued = 1;
           NotRespondingTimer = LagSpikeDuration;

@@ -412,7 +412,11 @@ RunNormalEnemies:
           jsr EnemyGraphicsEngine
           ; jsr EnemyGfxHandler
           jsr GetEnemyBoundBox
-          jsr EnemyToBGCollisionDet
+          ; lda CollisionFlickerMode
+          ; cmp #2 ; Enemy -> BG Collision Mode
+          ; beq :+ 
+            jsr EnemyToBGCollisionDet
+          ; :
           jsr EnemiesCollision
           jsr PlayerEnemyCollision
           ldy TimerControl          ;if master timer control set, skip to last routine
@@ -3873,7 +3877,7 @@ PowerUpObjHandler:
          jsr EnemyJump              ;note that green paratroopa shares the same code here 
          jmp RunPUSubs              ;then jump to other power-up subroutines
 ShroomM: jsr MoveNormalEnemy        ;do sub to make mushrooms move
-         jsr EnemyToBGCollisionDet  ;deal with collisions
+         jsr EnemyToBGCollisionDet
          jmp RunPUSubs              ;run the other subroutines
 
 GrowThePowerUp:

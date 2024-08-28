@@ -81,8 +81,15 @@ BlockBufferChk_FBall:
   lda #$00                  ;set A to return vertical coordinate
 BBChk_E:
   jsr BlockBufferCollision  ;do collision detection subroutine for sprite object
+  sta M0
   ldx ObjectOffset          ;get object offset
-  cmp #$00                  ;check to see if object bumped into anything
+  lda CollisionFlickerMode
+  ; If the enemy collision is off, let them fall
+  cmp #2 ; Enemy -> BG Collision Mode
+  beq :+
+    lda M0
+    cmp #$00                  ;check to see if object bumped into anything
+:  
   rts
 
 BlockBufferAdderData:
