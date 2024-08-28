@@ -32,7 +32,8 @@ extern u8 CollisionFlickerTimer;
 extern u8 IntangibleFlickerTimer;
 extern u8 CollisionFlickerCooldown;
 extern u8 CollisionFlickerMode;
-extern u8 DisplayRewindMessage;
+extern u8 DisplayDesyncMessage;
+extern u8 DiedDuringDesync;
 extern u8 F_Frame;
 extern u8 F_StopPoint;
 extern u16 BasePing;
@@ -47,7 +48,33 @@ extern u8 ScanlineTarget[4];
 extern u8 EllipseAnimation;
 
 
+
+void reset_title() {
+  OperMode = 0;
+  OperMode_Task = 0;
+  Sprite0HitDetectFlag = 0;
+  ++DisableScreenFlag;
+}
+
 void flicker_wifi_lagging() {
+  // If the player dies during collision flickering, detect desync
+  if (CollisionFlickerMode == 1 && DeathMusicLoaded != 0 && DiedDuringDesync == 0) {
+    DiedDuringDesync = 1;
+    CollisionFlickerTimer = 2;
+  }
+  if (DisplayDesyncMessage && IntangibleFlickerTimer < 2) {
+    if (JOY_PRESSED(SavedJoypad1Bits | SavedJoypad2Bits, PAD_B)) {
+      reset_title();
+      NotRespondingTimer = 0;
+      GamePauseStatus = 0;
+      StartedNotRespondingPopup = 0;
+      ScanlineTarget[1] = 0xff;
+      Mirror_PPUMASK &= (~0b11100001);
+      ScanlinePpuMask[0] = Mirror_PPUMASK;
+      // PPU.mask = Mirror_PPUMASK;
+      return;
+    }
+  }
   // Flicker the wifi indicator in the middle of the screen
   if (StartedNotRespondingPopup == 0 || PlayerFrozenFlag != 0) {
     // Flicker by checking frame counter
@@ -148,12 +175,16 @@ void init_ping_values() {
   PingFlux = PingFluxLUT[ServerIndex];
   CurrentPing = BasePing + PingFlux;
   calculate_ping_display();
+  LagSpikeCooldown = 8;
   FrameDelayAmount = 0;
   StartedNotRespondingPopup = 0;
   EllipseAnimation = 0;
   PlayerFrozenTimer = 0;
   PlayerFrozenFlag = 0;
-  LagSpikeCooldown = 5;
+  CollisionFlickerMode = 0;
+  CollisionFlickerTimer = 0;
+  DisplayDesyncMessage = 0;
+  DiedDuringDesync = 0;
 }
 
 void calculate_ping() {
@@ -188,12 +219,14 @@ void calculate_ping() {
     if (CollisionFlickerTimer == 0) {
       // The desync is ending, so set the desync rewind message mode start
       if (CollisionFlickerMode == 1) {
-        CollisionFlickerMode = 2;
-        CollisionFlickerTimer = 2;
-        DisplayRewindMessage = 1;
-      } else {
+        // CollisionFlickerMode = 2;
+        // CollisionFlickerTimer = 2;
+        if (DiedDuringDesync) {
+          DisplayDesyncMessage = 1;
+        }
+      // } else {
         CollisionFlickerMode = 0;
-        DisplayRewindMessage = 0;
+        // DisplayDesyncMessage = 0;
       }
     }
   }
@@ -231,9 +264,10 @@ void calculate_ping() {
       } else if (CollisionFlickerMode > 3) {
         // warning timer over, move the collision flicker mode into the corrent mode
         CollisionFlickerMode -= 3;
-      } else {
-        CollisionFlickerMode = 0;
       }
+      //  else {
+      //   CollisionFlickerMode = 0;
+      // }
     } else if (LagSpikeDuration == 0) {
       // If we aren't in a lag spike yet, check to see if we can start one
       NotRespondingCount = 0;
@@ -283,35 +317,41 @@ void calculate_ping() {
 
       // During a lag spike we have a chance to freeze up completely ( 1 in 16 )
       // Don't do this if not in gameplay tho, don't want to ruin the surprise
-      R4 = 0b111111;
+      // R4 = 0b111111; // used to test the not responding timer
       R5 = (R4 & 0b1111) == 0b1111;
       // R5 = 1;
       if (NotRespondingTimer == 0 && NotRespondingCount > 2 && LagSpikeDuration > 3 && R5) {
-        // RARE MOD CHECK
+        // RARE MOD CHECK - not implemented
         // If they are super unlucky, collision gets messed up temporarily
-        if (CollisionFlickerCooldown == 0 && (R4 & 0b111111) == 0b111111) {
-          // turn down the artificial ping so the glitch is noticiable
-          // ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
-          // min_flux = 0;
-          // Disable bg collision for 1-4 frames intermittenly
-          // R4 = galois32();
-          // Test out Player BG flicker
-          // R4 = 0b11000001;
-          R4 = 0b11000000;
-          // CollisionFlickerMode values are +3 to give a 1 second warning that crazy stuff is
-          // about to happen
-          if ((R4 & 0b11000000) == 0b11000000) {
-            CollisionFlickerTimer = 2; // R4 & 0b1 + 1;
+        // and then they get a desync message
+        // 1 in 16 chance that instead of getting a not responding message they'll get a
+        // a desync.
+        R4 = galois32();
+        // R4 = 0b1111;
+        if (CollisionFlickerCooldown == 0 && (R4 & 0b001111) == 0b001111) {
+        //   // turn down the artificial ping so the glitch is noticiable
+        //   // ping_flux = PingFlux + ((EnableWifi) ? 100 : 20);
+        //   // min_flux = 0;
+        //   // Disable bg collision for 1-4 frames intermittenly
+        //   // R4 = galois32();
+        //   // Test out Player BG flicker
+        //   // R4 = 0b11000001;
+        //   // R4 = 0b11000000;
+        //   // CollisionFlickerMode values are +3 to give a 1 second warning that crazy stuff is
+        //   // about to happen
+          // if ((R4 & 0b11000000) == 0b11000000) {
+            CollisionFlickerTimer = 4; // R4 & 0b1 + 1;
             CollisionFlickerMode = 1 + 3; // Desync Collision Mode
             CollisionFlickerCooldown = 20;
-          } else if ((R4 & 0b110000) == 0b110000) {
-            CollisionFlickerMode = 3 + 3; // Player Intangible timer
-            CollisionFlickerCooldown = 20;
-          }
+          // } else if ((R4 & 0b110000) == 0b110000) {
+          //   CollisionFlickerMode = 3 + 3; // Player Intangible timer
+          //   CollisionFlickerCooldown = 20;
+          // }
         } else {
           NotRespondingQueued = 1;
           NotRespondingTimer = LagSpikeDuration;
         }
+        
       }
     }
   }
@@ -348,7 +388,18 @@ void calculate_ping() {
   
   UpdatePing();
 
-  if (NotRespondingTimer > 0) {
+  if (DisplayDesyncMessage) {
+    StartedNotRespondingPopup = 1;
+    ScanlineTarget[1] = 70;
+    Mirror_PPUMASK |= 0b11100001;
+    ScanlinePpuMask[0] = Mirror_PPUMASK;
+    // Count down one second before allowing b to be pressed
+    if (GamePauseStatus == 0)
+      IntangibleFlickerTimer = 2;
+    // Setting pause status to 1 will pause without playing the sound
+    GamePauseStatus = 1;
+    NotRespondingTimer = 10;
+  } else if (NotRespondingTimer > 0) {
     ScanlineTarget[1] = 70;
     Mirror_PPUMASK |= 0b11100001;
     ScanlinePpuMask[0] = Mirror_PPUMASK;
@@ -408,19 +459,13 @@ void calculate_ping() {
 #undef rng
 #undef temp_ping
 #undef min_flux
+#undef pad_pressed
 }
 
 
 
 #define pad_pressed M0
 #define i M1
-
-void reset_title() {
-  OperMode = 0;
-  OperMode_Task = 0;
-  Sprite0HitDetectFlag = 0;
-  ++DisableScreenFlag;
-}
 
 void update_world_area_number(u8 world_number) {
   WorldNumber = world_number;
@@ -569,6 +614,10 @@ void title_screen_menu() {
   // NullJoypad
   SavedJoypad1Bits = 0;
 run_demo:
+  if (DemoTimer == 0 && (pad_pressed & (PAD_LEFT | PAD_RIGHT)) != 0) {
+    reset_title();
+    return;
+  }
   // RunDemo
   GameCoreRoutine();
   // If we are running the lose life routine
