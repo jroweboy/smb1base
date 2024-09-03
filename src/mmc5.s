@@ -199,6 +199,10 @@ MapperInit:
   lda #$44
   sta $5105
 
+  ; Nestopia requires SRAM to be explicitly inited
+  lda #0
+  sta MMC5_PRG_BANK_6
+
   ; Setup default banks
   lda #$80
   sta CurrentBank

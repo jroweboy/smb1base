@@ -166,7 +166,7 @@ RESERVE FloateyNum_Timer, 8
 RESERVE DigitModifier, 6
 
 
-StackClear = DigitModifier+5
+StackClear = DigitModifier+6
 
 ; DON'T CLEAR PAST HERE
 

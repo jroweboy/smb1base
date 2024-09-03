@@ -647,7 +647,7 @@ GameTextOffsets:
 ;-------------------------------------------------------------------------------------
 GiveOneCoin:
   lda #$01               ;set digit modifier to add 1 coin
-  sta DigitModifier+1    ;to the current player's coin tally
+  sta DigitModifier+PlayerCoinLastIndex    ;to the current player's coin tally
   ldx CurrentPlayer      ;get current player on the screen
   ldy CoinTallyOffsets,x ;get offset for player's coin tally
   ldx #PlayerCoinLastIndex
@@ -664,7 +664,7 @@ GiveOneCoin:
 
 CoinPoints:
   lda #$02               ;set digit modifier to award
-  sta DigitModifier+4    ;200 points to the player
+  sta DigitModifier+PlayerScoreLastIndex-1    ;200 points to the player
 
 AddToScore:
   ldx CurrentPlayer      ;get current player

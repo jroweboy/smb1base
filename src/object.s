@@ -2880,7 +2880,7 @@ FireworksSoundScore:
   lda #Sfx_Blast         ;play fireworks/gunfire sound
   sta Square2SoundQueue
   lda #$05               ;set part of score modifier for 500 points
-  sta DigitModifier+4
+  sta DigitModifier+PlayerScoreLastIndex-1
   jmp EndAreaPoints     ;jump to award points accordingly then leave
 
 ;--------------------------------
@@ -2942,11 +2942,11 @@ AwardGameTimerPoints:
          ; set offset here to subtract from game timer's last digit
 NoTTick: ldy #(GameTimerDisplay + GameTimerLastIndex - DisplayDigits)
          lda #$ff               ;set adder here to $ff, or -1, to subtract one
-         sta DigitModifier+5    ;from the last digit of the game timer
+         sta DigitModifier+GameTimerLastIndex    ;from the last digit of the game timer
          ldx #GameTimerLastIndex
          jsr DigitsMathRoutine  ;subtract digit
          lda #$05               ;set now to add 50 points
-         sta DigitModifier+5    ;per game timer interval subtracted
+         sta DigitModifier+PlayerScoreLastIndex    ;per game timer interval subtracted
 EndAreaPoints:
          ; load offset for mario's score by default
          ldy #(Player1ScoreDisplay + PlayerScoreLastIndex - DisplayDigits)
