@@ -257,6 +257,11 @@ MapperInit:
   ; Setup default banks
   lda #$80
   sta CurrentBank
+
+  ; Nestopia requires SRAM to be explicitly inited
+  lda #0
+  sta MMC5_PRG_BANK_6
+  
   BankPRGA #.bank(PLAYER)
   BankPRGC #.bank(DPCM)
   BankPRG8 #.bank(LOWCODE)
