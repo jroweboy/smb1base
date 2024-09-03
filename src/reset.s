@@ -264,6 +264,24 @@ ScreenOff:
 
   jsr OAMandReadJoypad
 
+  
+
+  lda HorizontalScroll
+  sta IrqNewScroll
+  ; lda Mirror_PPUCTRL
+  ; sta IrqScrollBit
+  lda Sprite0HitDetectFlag  ;check for flag here
+  beq SkipSprite0
+    SetScanlineIRQ #$1f
+    ; cli just in case NMI runs late
+    cli
+SkipSprite0:
+  lda Mirror_PPUCTRL
+  sta IrqPPUCTRL
+  ; and also reset the flags for the HUD
+  and #%11111100
+  sta PPUCTRL
+
   ; If the main thread requested a CHR bank switch, do it before the timing window passes
   jsr BankSwitchCHR
 
@@ -280,25 +298,6 @@ InitBuffer:
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
   lda Mirror_PPUMASK       ;copy mirror of $2001 to register
   sta PPUMASK
-  
-
-  lda HorizontalScroll
-  sta IrqNewScroll
-  ; lda Mirror_PPUCTRL
-  ; sta IrqScrollBit
-  lda Sprite0HitDetectFlag  ;check for flag here
-  beq SkipSprite0
-  
-    SetScanlineIRQ #$1f
-    ; cli just in case NMI runs late
-    cli
-
-SkipSprite0:
-  lda Mirror_PPUCTRL
-  sta IrqPPUCTRL
-  ; and also reset the flags for the HUD
-  and #%11111100
-  sta PPUCTRL
 
   jsr AudioUpdate
   
