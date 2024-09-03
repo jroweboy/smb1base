@@ -474,6 +474,8 @@ ProcessJumpingParatrooperInner:
     ; fallthrough intentional. The original code does this too
 CheckRightSideUpShell:
   and #%00001111
+  cmp #$02 ; enemy stomped in air
+  beq WriteMetasprite
   cmp #$03 ; enemy stomped upside down
   beq WriteMetasprite
   cmp #$04 ; enemy stomped
