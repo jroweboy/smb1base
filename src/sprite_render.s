@@ -221,7 +221,7 @@ JumpingCoinTiles:
 
 .proc DrawPowerUp
   ldx ObjectOffset
-  ldy PowerUpType            ;get power-up type
+  ldy PowerUpType,x            ;get power-up type
   beq SkipPaletteCycle       ; Don't cycle the palettes for mushroom and 1-up
   cpy #3
   beq SkipPaletteCycle
@@ -902,10 +902,12 @@ ExSPl: ldx ObjectOffset            ;get enemy object offset and leave
 
 .proc FlagpoleGfxHandler
   lda #METASPRITE_MISC_FLAGPOLE_FLAG
-  sta EnemyMetasprite+5
+  sta EnemyMetasprite,x
 
   lda FlagpoleCollisionYPos
   beq Exit
+    ; there is no need to un-hardcode the floatey number as Mario can only interact 
+    ; with one flagpole
     lda MiscMetasprite+5
     bne AlreadyInitializedScore
       ; Initialize the score position
@@ -915,11 +917,11 @@ ExSPl: ldx ObjectOffset            ;get enemy object offset and leave
       sta MiscMetasprite+5
       lda #1
       sta Misc_Y_HighPos+5
-      lda Enemy_X_Position+5
+      lda Enemy_X_Position,x
       clc
       adc #20 ; add 20px to align with vanilla
       sta Misc_X_Position+5
-      lda Enemy_PageLoc+5
+      lda Enemy_PageLoc,x
       adc #00
       sta Misc_PageLoc+5
 

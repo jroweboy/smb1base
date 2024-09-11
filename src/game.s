@@ -486,11 +486,17 @@ FlagpoleScoreDigits:
   .byte $03, $03, $04, $04, $04
 
 FlagpoleRoutine:
-           ldx #$05                  ;set enemy object offset
-           stx ObjectOffset          ;to special use slot
+           ldx #$05                  ;start from last slot
+@loopFlag:
            lda Enemy_ID,x
-           cmp #FlagpoleFlagObject   ;if flagpole flag not found,
-           bne ExitFlagP             ;branch to leave
+           cmp #FlagpoleFlagObject   ;if flagpole flag found,
+           beq @foundFlag            ;branch ahead
+           dex 
+           bpl @loopFlag
+           bmi ExitFlagP             ;unconditional branch
+@foundFlag:
+           stx ObjectOffset          ;set here the slot
+           
            lda GameEngineSubroutine
            cmp #$04                  ;if flagpole slide routine not running,
            bne SkipScore             ;branch to near the end of code

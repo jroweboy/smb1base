@@ -2129,8 +2129,14 @@ StarBlock:
 
 ExtraLifeMushBlock:
       lda #$03         ;load 1-up mushroom into power-up type
-      sta PowerUpType          ;store correct power-up type
+
+      jsr GetEmptySlot
+      bcs allSlotsFull        ;exit if all slots are full
+
+      sta PowerUpType,x
       jmp SetupPowerUp
+allSlotsFull:
+      rts
 
 VineBlock:
       ldx #$05                ;load last slot for enemy object buffer
@@ -2270,32 +2276,34 @@ FMiscLoop: lda Misc_State,y        ;get misc object state
            bne FMiscLoop           ;do this until all slots are checked
            ldy #$08                ;if no empty slots found, use last slot
 UseMiscS:  sty JumpCoinMiscOffset  ;store offset of misc object buffer here (residual)
+ExitStpPowerUp:
            rts
 
 ;-------------------------------------------------------------------------------------
 
 .proc SetupPowerUp
+  ldy SprDataOffset_Ctrl    ;get control bit
   lda #PowerUpObject        ;load power-up identifier into
-  sta Enemy_ID+5            ;special use slot of enemy object buffer
-  lda Block_PageLoc,x       ;store page location of block object
-  sta Enemy_PageLoc+5       ;as page location of power-up object
-  lda Block_X_Position,x    ;store horizontal coordinate of block object
-  sta Enemy_X_Position+5    ;as horizontal coordinate of power-up object
+  sta Enemy_ID,x            ;special use slot of enemy object buffer
+  lda Block_PageLoc,y       ;store page location of block object
+  sta Enemy_PageLoc,x       ;as page location of power-up object
+  lda Block_X_Position,y    ;store horizontal coordinate of block object
+  sta Enemy_X_Position,x    ;as horizontal coordinate of power-up object
   lda #$01
-  sta Enemy_Y_HighPos+5     ;set vertical high byte of power-up object
-  lda Block_Y_Position,x    ;get vertical coordinate of block object
+  sta Enemy_Y_HighPos,x     ;set vertical high byte of power-up object
+  lda Block_Y_Position,y    ;get vertical coordinate of block object
   sec
   sbc #$08                  ;subtract 8 pixels
-  sta Enemy_Y_Position+5    ;and use as vertical coordinate of power-up object
+  sta Enemy_Y_Position,x    ;and use as vertical coordinate of power-up object
   ; fallthrough
 .endproc
 .proc PwrUpJmp
   lda #$01                  ;this is a residual jump point in enemy object jump table
-  sta Enemy_State+5         ;set power-up object's state
-  sta Enemy_Flag+5          ;set buffer flag
+  sta Enemy_State,x         ;set power-up object's state
+  sta Enemy_Flag,x          ;set buffer flag
   lda #$03
-  sta Enemy_BoundBoxCtrl+5  ;set bounding box size control for power-up object
-  lda PowerUpType
+  sta Enemy_BoundBoxCtrl,x  ;set bounding box size control for power-up object
+  lda PowerUpType,x
   cmp #$02                  ;check currently loaded power-up type
   bcs PutBehind             ;if star or 1-up, branch ahead
   lda PlayerStatus          ;otherwise check player's current status
@@ -2303,17 +2311,34 @@ UseMiscS:  sty JumpCoinMiscOffset  ;store offset of misc object buffer here (res
   bcc StrType               ;if player not fiery, use status as power-up type
   lsr                       ;otherwise shift right to force fire flower type
 StrType:
-  sta PowerUpType           ;store type here
+  sta PowerUpType,x         ;store type here
 PutBehind:
   lda #%00100000
-  sta Enemy_SprAttrib+5     ;set background priority bit
+  sta Enemy_SprAttrib,x     ;set background priority bit
   lda #Sfx_GrowPowerUp
   sta Square2SoundQueue     ;load power-up reveal sound and leave
   lda #0
-  sta EnemyMetasprite+5
+  sta EnemyMetasprite,x
   rts
 .endproc
 
+
+.proc GetEmptySlot
+  pha
+  ldx #$05
+@loop:
+  lda Enemy_Flag,x
+  beq @found
+  dex
+  bpl @loop
+  pla
+  sec       ; if every slot is full, then do not spawn
+  rts
+@found:
+  pla
+  clc       ; if found, then return x and carry clear
+  rts
+.endproc
 
 
 .segment "LEVEL"
@@ -2468,21 +2493,24 @@ FlagpoleObject:
   lda #$61                 ;render solid block at the bottom
   sta MetatileBuffer+10
   jsr GetAreaObjXPosition
+  jsr GetEmptySlot
+  bcs FlagpoleFull
   sec                      ;get pixel coordinate of where the flagpole is,
   sbc #$08                 ;subtract eight pixels and use as horizontal
-  sta Enemy_X_Position+5   ;coordinate for the flag
+  sta Enemy_X_Position,x   ;coordinate for the flag
   lda CurrentPageLoc
   sbc #$00                 ;subtract borrow from page location and use as
-  sta Enemy_PageLoc+5      ;page location for the flag
+  sta Enemy_PageLoc,x      ;page location for the flag
   lda #$30
-  sta Enemy_Y_Position+5   ;set vertical coordinate for flag
+  sta Enemy_Y_Position,x   ;set vertical coordinate for flag
   lda #1
-  sta Enemy_Y_HighPos+5
+  sta Enemy_Y_HighPos,x
   lda #$b0 + 8 ; jroweboy offset the flag score by 8 px to account for 8x16 difference
   sta FlagpoleFNum_Y_Pos   ;set initial vertical coordinate for flagpole's floatey number
   lda #FlagpoleFlagObject
-  sta Enemy_ID+5           ;set flag identifier, note that identifier and coordinates
-  inc Enemy_Flag+5         ;use last space in enemy object buffer
+  sta Enemy_ID,x           ;set flag identifier, note that identifier and coordinates
+  inc Enemy_Flag,x         ;use last space in enemy object buffer
+FlagpoleFull:
   rts
 
 ;--------------------------------
@@ -2799,4 +2827,4 @@ NextStair: dec StaircaseControl      ;move onto next step (or first if starting)
            tay
            lda #$61                  ;now render solid block staircase
            jmp RenderUnderPart
-
+  

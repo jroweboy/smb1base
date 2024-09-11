@@ -886,7 +886,7 @@ HandlePowerUpCollision:
       jsr SetupFloateyNumber  ;award 1000 points to player by default
       lda #Sfx_PowerUpGrab
       sta Square2SoundQueue   ;play the power-up sound
-      lda PowerUpType         ;check power-up type
+      lda PowerUpType,x       ;check power-up type
       cmp #$02
       bcc Shroom_Flower_PUp   ;if mushroom or fire flower, branch
       cmp #$03

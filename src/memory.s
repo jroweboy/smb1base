@@ -49,7 +49,7 @@ RESERVE_ZP Fireball_State, 2
 RESERVE_ZP Block_State, 4
 RESERVE_ZP Misc_State, 9
 
-RESERVE_ZP PowerUpType, 1
+RESERVE_ZP PowerUpType, 6
 RESERVE_ZP FireballBouncingFlag, 2
 RESERVE_ZP HammerBroJumpTimer, 9
 RESERVE_ZP Player_MovingDir, 1

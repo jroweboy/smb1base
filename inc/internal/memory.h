@@ -82,7 +82,7 @@ extern u8 Misc_State[9];
 ZP(Player_State, Enemy_State, Fireball_State, Block_State, Misc_State);
 
 // 0 = mushroom, 1 = fireflower, 2 = star, 3 = 1-up
-extern u8 PowerUpType;
+extern u8 PowerUpType[5];
 extern u8 FireballBouncingFlag[2];
 extern u8 Player_MovingDir;
 ZP(PowerUpType, FireballBouncingFlag, Player_MovingDir);
