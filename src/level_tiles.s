@@ -2131,14 +2131,13 @@ ExtraLifeMushBlock:
       lda #$03         ;load 1-up mushroom into power-up type
 .if MULTIPLE_POWERUPS_ON_SCREEN
       jsr GetEmptySlot
-      bcs allSlotsFull        ;exit if all slots are full
+      bcs AllSlotsFull        ;exit if all slots are full
 .else
       ldx #$05
 .endif
-
       sta PowerUpType,x
       jmp SetupPowerUp
-allSlotsFull:
+AllSlotsFull:
       rts
 
 VineBlock:
