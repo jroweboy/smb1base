@@ -886,7 +886,7 @@ HandlePowerUpCollision:
       jsr SetupFloateyNumber  ;award 1000 points to player by default
       lda #Sfx_PowerUpGrab
       sta Square2SoundQueue   ;play the power-up sound
-      lda PowerUpType         ;check power-up type
+      lda PowerUpType,x       ;check power-up type
       cmp #$02
       bcc Shroom_Flower_PUp   ;if mushroom or fire flower, branch
       cmp #$03
@@ -1574,7 +1574,12 @@ NextSdeC: dec Local_eb                    ;move to the next direction
 ExESdeC:  rts
 
 ChkForBump_HammerBroJ: 
+.if MULTIPLE_POWERUPS_ON_SCREEN
+  lda Enemy_ID,x
+  cmp #PowerUpObject
+.else
   cpx #$05               ;check if we're on the special use slot
+.endif
   beq NoBump             ;and if so, branch ahead and do not play sound
   lda Enemy_State,x      ;if enemy state d7 not set, branch
   asl                    ;ahead and do not play sound
