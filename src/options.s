@@ -46,6 +46,7 @@ bool_option MAPPER_MMC3
 bool_option MAPPER_MMC5
 bool_option ENABLE_C_CODE
 bool_option USE_CUSTOM_TITLESCREEN
+bool_option MULTIPLE_POWERUPS_ON_SCREEN
 
 bool_option USE_MMC5_AUDIO
 bool_option USE_VRC7_AUDIO

@@ -2129,9 +2129,12 @@ StarBlock:
 
 ExtraLifeMushBlock:
       lda #$03         ;load 1-up mushroom into power-up type
-
+.if MULTIPLE_POWERUPS_ON_SCREEN
       jsr GetEmptySlot
       bcs allSlotsFull        ;exit if all slots are full
+.else
+      ldx #$05
+.endif
 
       sta PowerUpType,x
       jmp SetupPowerUp
@@ -2322,7 +2325,7 @@ PutBehind:
   rts
 .endproc
 
-
+.if MULTIPLE_POWERUPS_ON_SCREEN
 .proc GetEmptySlot
   pha
   ldx #$05
@@ -2339,6 +2342,7 @@ PutBehind:
   clc       ; if found, then return x and carry clear
   rts
 .endproc
+.endif
 
 
 .segment "LEVEL"
@@ -2493,8 +2497,12 @@ FlagpoleObject:
   lda #$61                 ;render solid block at the bottom
   sta MetatileBuffer+10
   jsr GetAreaObjXPosition
+.if MULTIPLE_POWERUPS_ON_SCREEN
   jsr GetEmptySlot
   bcs FlagpoleFull
+.else
+  ldx #$05
+.endif
   sec                      ;get pixel coordinate of where the flagpole is,
   sbc #$08                 ;subtract eight pixels and use as horizontal
   sta Enemy_X_Position,x   ;coordinate for the flag
