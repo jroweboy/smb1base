@@ -2835,4 +2835,3 @@ NextStair: dec StaircaseControl      ;move onto next step (or first if starting)
            tay
            lda #$61                  ;now render solid block staircase
            jmp RenderUnderPart
-  
