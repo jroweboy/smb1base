@@ -2,6 +2,8 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+if not exist build mkdir build
+
 for /f "delims=" %%a in ('type build_options.ini ^| findstr /v "^[;#\[]"') do (
    set options=!options! --asm-define %%a -D %%a
 )
