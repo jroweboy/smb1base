@@ -399,6 +399,7 @@ RESERVE JumpOrigin_Y_Position, 1
 RESERVE VerticalForce, 1
 RESERVE VerticalForceDown, 1
 RESERVE PlayerChangeSizeFlag, 1
+RESERVE PlayerAnimDirection, 1
 RESERVE PlayerAnimTimerSet, 1
 RESERVE PlayerAnimCtrl, 1
 RESERVE JumpspringAnimCtrl, 1

@@ -1304,6 +1304,10 @@ NonAnimatedActs:
   jsr GetGfxOffsetAdder      ;do a sub here to get offset adder for graphics table
   lda #$00
   sta PlayerAnimCtrl         ;initialize animation frame control
+.if USE_LOOPING_ANIM_CYCLE
+  lda #1
+  sta PlayerAnimDirection
+.endif
   lda PlayerGfxTblOffsets,y  ;load offset to graphics table using size as offset
   rts
 
@@ -1353,12 +1357,37 @@ AnimationControl:
     bne ExAnimC               ;branch if not expired
       lda PlayerAnimTimerSet    ;get animation frame timer amount
       sta PlayerAnimTimer       ;and set timer accordingly
+.if USE_LOOPING_ANIM_CYCLE
+      lda PlayerAnimDirection
+      bmi @NegativeAnimCycle
+        lda PlayerAnimCtrl
+        clc                       ;add one to animation frame control
+        adc PlayerAnimDirection
+        cmp R0                    ;compare to upper extent
+        bcc SetAnimC              ;if frame control + 1 < upper extent, use as next
+          lda #$ff
+          sta PlayerAnimDirection
+          lda R0                  ;otherwise initialize frame control
+          sec
+          sbc #2
+          jmp SetAnimC
+@NegativeAnimCycle:
+        lda PlayerAnimCtrl
+        clc                       ;add one to animation frame control
+        adc PlayerAnimDirection
+        bpl SetAnimC              ;if frame control + 1 < upper extent, use as next
+          lda #1
+          sta PlayerAnimDirection
+          ; lda #$00                  ;otherwise initialize frame control
+          ; jmp SetAnimC
+.else
       lda PlayerAnimCtrl
       clc                       ;add one to animation frame control
       adc #$01
       cmp R0                    ;compare to upper extent
       bcc SetAnimC              ;if frame control + 1 < upper extent, use as next
         lda #$00                  ;otherwise initialize frame control
+.endif
 SetAnimC:
     sta PlayerAnimCtrl        ;store as new animation frame control
 ExAnimC:
