@@ -16,6 +16,13 @@
 ;; NOTICE: These temporary values are overlayed by the audio engine
 ; so don't move them unless you know what you are doing!
 
+; Temporary values used in NMI in vanilla
+RESERVE_ZP NmiR0, 1
+RESERVE_ZP NmiR1, 1
+.if .not USE_VANILLA_MUSIC
+RESERVE_ZP NmiTmp, 5
+.endif
+
 ; Temporary values used by the vanilla code
 RESERVE_ZP R0, 1
 RESERVE_ZP R1, 1
@@ -30,17 +37,12 @@ RESERVE_ZP R7, 1
 RESERVE_ZP M0, 1
 RESERVE_ZP M1, 1
 
-; Temporary values used in NMI in vanilla
-RESERVE_ZP NmiR0, 1
-RESERVE_ZP NmiR1, 1
-
 RESERVE_ZP ObjectOffset, 1
 RESERVE_ZP FrameCounter, 1
 
 RESERVE_ZP SavedJoypad1Bits, 1
 RESERVE_ZP SavedJoypad2Bits, 1
 SavedJoypadBits := SavedJoypad1Bits
-
 
 RESERVE_ZP GameEngineSubroutine, 1
 RESERVE_ZP Enemy_Flag, 7
@@ -141,11 +143,12 @@ Local_ed := SpriteLocalTemp + 2
 ; RESERVEZP Local_ee ; unused
 Local_ef := SpriteLocalTemp + 3
 
+.if USE_VANILLA_MUSIC
 RESERVE_ZP MusicData, 2
 MusicDataLow := MusicData
 MusicDataHigh := MusicData+1
+.endif
 
-; .segment "STACK"
 
 .segment "SHORTRAM"
 
