@@ -13,6 +13,9 @@
 
 .zeropage
 
+;; NOTICE: These temporary values are overlayed by the audio engine
+; so don't move them unless you know what you are doing!
+
 ; Temporary values used by the vanilla code
 RESERVE_ZP R0, 1
 RESERVE_ZP R1, 1
@@ -23,13 +26,13 @@ RESERVE_ZP R5, 1
 RESERVE_ZP R6, 1
 RESERVE_ZP R7, 1
 
-; Temporary values used in NMI in vanilla
-RESERVE_ZP NmiR0, 1
-RESERVE_ZP NmiR1, 1
-
 ; New temporaries that can be reused wherever
 RESERVE_ZP M0, 1
 RESERVE_ZP M1, 1
+
+; Temporary values used in NMI in vanilla
+RESERVE_ZP NmiR0, 1
+RESERVE_ZP NmiR1, 1
 
 RESERVE_ZP ObjectOffset, 1
 RESERVE_ZP FrameCounter, 1
