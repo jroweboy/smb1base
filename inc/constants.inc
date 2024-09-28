@@ -175,6 +175,28 @@ CHR_SPR_CASTLE = CHR_SPR_UNDERGROUND + $02
 MUSHROOM_BOX_METATILE   = $c0
 FIREFLOWER_BOX_METATILE = $c1
 
+.enum
+  VRAM_Buffer1Offset
+  WaterPaletteDataOffset
+  GroundPaletteDataOffset
+  UndergroundPaletteDataOffset
+  CastlePaletteDataOffset
+  VRAM_Buffer1_OffsetOffset
+  VRAM_Buffer2Offset
+  VRAM_Buffer2Offset2
+  BowserPaletteDataOffset
+  DaySnowPaletteDataOffset
+  NightSnowPaletteDataOffset
+  MushroomPaletteDataOffset
+  MarioThanksMessageOffset
+  LuigiThanksMessageOffset
+  MushroomRetainerSavedOffset
+  PrincessSaved1Offset
+  PrincessSaved2Offset
+  WorldSelectMessage1Offset
+  WorldSelectMessage2Offset
+  TitleScreenDataOffset
+.endenum
 
 .enum
   World1

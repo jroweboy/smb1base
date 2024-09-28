@@ -256,6 +256,10 @@ ScreenOff:
   sta OAMADDR          ;reset spr-ram address register
 
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
+  cpx #TitleScreenDataOffset
+  bne :+
+    BankPRGA #.bank(TITLE)
+  :
   lda VRAM_AddrTable_Low,x  ;set indirect at $00 to pointer
   sta NmiR0
   lda VRAM_AddrTable_High,x
@@ -357,7 +361,8 @@ OnCooldown:
       PrincessSaved1, \
       PrincessSaved2, \
       WorldSelectMessage1, \
-      WorldSelectMessage2
+      WorldSelectMessage2, \
+      TitleScreenData
 
 clabel VRAM_AddrTable_Low
 clabel VRAM_AddrTable_High
