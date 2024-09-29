@@ -118,4 +118,5 @@ _COMMON_DEFINE_SEGMENTS = 1
 .segment "TITLE"
 TitleScreenData:
 .incbin "chr/raw/titlescreen.bin"
+.byte $00 ; add terminator byte in case the data editor didn't
 .popseg
