@@ -6,6 +6,7 @@
 #include "internal/common_types.h"
 #include "internal/common_nes.h"
 #include "internal/memory.h"
+#include "internal/mouse.h"
 #include "internal/metasprites.h"
 #include "internal/options.h"
 

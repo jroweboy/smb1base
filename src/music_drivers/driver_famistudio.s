@@ -122,7 +122,7 @@ FAMISTUDIO_CFG_EXTERNAL = 1
 .define FAMISTUDIO_CA65_RAM_SEGMENT  SRAM
 .define FAMISTUDIO_CA65_CODE_SEGMENT FIXED
 
-.if USE_CUSTOM_ENGINE_SFX
+.if ::USE_CUSTOM_ENGINE_SFX
 FAMISTUDIO_CFG_SFX_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_STREAMS = 3
 .endif
@@ -134,7 +134,7 @@ FAMISTUDIO_CFG_SFX_STREAMS = 3
 music_data:
 .include "audio/examples/famistudio/panic_at_the_mario_disco.s"
 
-.if USE_CUSTOM_ENGINE_SFX
+.if ::USE_CUSTOM_ENGINE_SFX
 sfx_data:
 .include "audio/examples/famistudio/panic_at_the_mario_disco_sfx.s"
 .endif

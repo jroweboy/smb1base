@@ -453,16 +453,18 @@ EndGameText:
   cmp #10                  ;more than 9 lives?
   bcc PutLives
   sbc #10                  ;if so, subtract 10 and put a crown tile
+  ; jroweboy: I added +4 to each of these to account for the new position in VRAM Buffer
+  ; because I moved the attribute writes to the start to prevent glitches with that.
   ldy #$9f                 ;next to the difference...strange things happen if
-  sty VRAM_Buffer1+7       ;the number of lives exceeds 19
+  sty VRAM_Buffer1+7+4       ;the number of lives exceeds 19
 PutLives:
-  sta VRAM_Buffer1+8
+  sta VRAM_Buffer1+8+4
   ldy WorldNumber          ;write world and level numbers (incremented for display)
   iny                      ;to the buffer in the spaces surrounding the dash
-  sty VRAM_Buffer1+19
+  sty VRAM_Buffer1+19+4
   ldy LevelNumber
   iny
-  sty VRAM_Buffer1+21      ;we're done here
+  sty VRAM_Buffer1+21+4      ;we're done here
   rts
 CheckPlayerName:
   lda NumberOfPlayers    ;check number of players
@@ -510,19 +512,19 @@ endcproc
 
 GameText:
 TopStatusBarLine:
+  .byte $23, $c0, $7f, $aa ; attribute table data, clears name table 0 to palette 2
+  .byte $23, $c2, $01, $ea ; attribute table data, used for coin icon in status bar
   .byte $20, $43, $05, "MARIO"
   .byte $20, $52, $0b, "WORLD  TIME"
   .byte $20, $68, $05, "0  ", $2e, $29 ; score trailing digit and coin display
-  .byte $23, $c0, $7f, $aa ; attribute table data, clears name table 0 to palette 2
-  .byte $23, $c2, $01, $ea ; attribute table data, used for coin icon in status bar
   .byte $ff ; end of data block
 
 WorldLivesDisplay:
+  .byte $23, $dc, $01, $ba ; attribute table data for crown if more than 9 lives
   .byte $21, $cd, $07, $24, $24 ; cross with spaces used on
   .byte $29, $24, $24, $24, $24 ; lives display
   .byte $21, $4b, $09, "WORLD  - "
   .byte $22, $0c, $47, $24 ; possibly used to clear time up
-  .byte $23, $dc, $01, $ba ; attribute table data for crown if more than 9 lives
   .byte $ff
 
 TwoPlayerTimeUp:

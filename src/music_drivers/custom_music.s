@@ -191,7 +191,7 @@ SkipToUpdate:
 .endscope
 .endmacro
 
-.if USE_CUSTOM_ENGINE_SFX
+.if ::USE_CUSTOM_ENGINE_SFX
 
 
 OneUp =       0
@@ -247,6 +247,8 @@ NoiseSfxTable:
 
 .macro CustomSfxEngine
 .scope
+  lda OperMode
+  jeq SkipToUpdate
   lda PauseModeFlag         ;is sound already in pause mode?
   jne SkipToUpdate
 

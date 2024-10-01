@@ -113,7 +113,6 @@ ColdBoot:
     inx
     inx
     bne :-
-
   ; do mapper specific init
   jsr MapperInit
 FinializeMarioInit:
@@ -249,10 +248,10 @@ ScreenOff:
   sta Mirror_PPUMASK       ;save bits for later but not in register at the moment
   and #%11100111            ;disable screen for now
   sta PPUMASK
-  ldx PPUSTATUS            ;reset flip-flop and reset scroll registers to zero
+  ; ldx PPUSTATUS            ;reset flip-flop and reset scroll registers to zero
   lda #$00
-  sta PPUSCROLL
-  sta PPUSCROLL
+  ; sta PPUSCROLL
+  ; sta PPUSCROLL
   sta OAMADDR          ;reset spr-ram address register
 
   ldx VRAM_Buffer_AddrCtrl  ;load control for pointer to buffer contents
@@ -265,10 +264,6 @@ ScreenOff:
   lda VRAM_AddrTable_High,x
   sta NmiR1
   jsr UpdateScreen  ;update screen with buffer contents
-
-  jsr OAMandReadJoypad
-
-  
 
   lda HorizontalScroll
   sta IrqNewScroll
@@ -286,8 +281,22 @@ SkipSprite0:
   and #%11111100
   sta PPUCTRL
 
+  lda Mirror_PPUMASK       ;copy mirror of $2001 to register
+  sta PPUMASK
+
   ; If the main thread requested a CHR bank switch, do it before the timing window passes
   jsr BankSwitchCHR
+
+.if ::USE_MOUSE_SUPPORT
+  ; Store the previous frame's mouse buttons temporarily
+  lda mouse + kMouseButtons
+  sta NmiR2
+  lda mouse + kMouseY
+  sta NmiR0
+  lda mouse + kMouseX
+  sta NmiR1
+.endif
+  jsr OAMandReadJoypad
 
   ldy #$00
   ldx VRAM_Buffer_AddrCtrl  ;check for usage of $0341
@@ -300,9 +309,12 @@ InitBuffer:
   sta VRAM_Buffer1_Offset,x        
   sta VRAM_Buffer1,x
   sta VRAM_Buffer_AddrCtrl  ;reinit address control to $0301
-  lda Mirror_PPUMASK       ;copy mirror of $2001 to register
-  sta PPUMASK
 
+
+.if ::USE_MOUSE_SUPPORT
+  ; This needs to happen later in NMI but before Audio as custom music can use the Nmi temp variables
+  jsr UpdateMouseExtra
+.endif
   jsr AudioUpdate
   
 .if ::DEBUG_WORLD_SELECT
@@ -518,6 +530,10 @@ SkipByte:
   lda #>CStack
   sta sp+1
 .endif
+.if ::USE_MOUSE_SUPPORT
+  lda #1
+  sta mouse_mask
+.endif
   lda #0
   rts
 .endproc
@@ -570,6 +586,170 @@ delay_256x_a_30_clocks_b:
 .endif
 
 ;;;;;;;;----------------------------------------
+.if ::USE_MOUSE_SUPPORT
+
+.segment "ZEROPAGE"
+
+; NOTE: These must be zero page and adjacent; the code relies on joypad1_down following mouse.
+RESERVE_ZP mouse, 4
+  kMouseZero = 0
+  kMouseButtons = 1
+  kMouseY = 2
+  kMouseX = 3
+RESERVE_ZP SavedJoypad1Bits, 1
+RESERVE_ZP SavedJoypad2Bits, 1
+mouse_mask: .res 1           ; Bitmask indicating which $4017 bit the mouse is on.
+
+;joypad1_down: .res MOUSE_CONFIG_JOYPAD1_SIZE
+
+.segment "SHORTRAM"
+; NOTE: These variables are not page-sensitive and can be absolute.
+advance_sensitivity: .res 1  ; Bool.
+
+.segment "OAMALIGNED"
+
+.proc OAMandReadJoypad
+  ; Strobe the joypads.
+  LDX #$00
+  LDY #$01
+  STY mouse
+  STY JOYPAD_PORT1
+
+ .if ::MOUSE_CONFIG_SENSITIVITY <> 0
+  ; Clock official mouse sensitivity. NOTE: This can be removed if not needed.
+  LDA advance_sensitivity
+  BEQ :+
+  LDA JOYPAD_PORT2
+  STX advance_sensitivity
+ :
+ .endif
+
+  STX JOYPAD_PORT1
+
+  LDA #OAM
+  STA OAM_DMA
+ 
+  ; Desync cycles: 432, 576, 672, 848, 432*2-4 (860)
+
+  ; DMC DMA:         ; PUT GET PUT GET        ; Starts: 0
+
+ :
+  LDA mouse_mask     ; get put get*     *576  ; Starts: 4, 158, 312, 466, [620]
+  AND JOYPAD_PORT2   ; put get put GET
+  CMP #$01           ; put get
+  ROL mouse,X        ; put get put get* PUT GET  *432
+  BCC :-             ; put get (put)
+
+  INX                ; put get
+  CPX #$04           ; put get
+  STY mouse,X        ; put get put GET
+  BNE :-             ; put get (put)
+
+ :
+  LDA JOYPAD_PORT1   ; put get put GET        ; Starts: 619
+  AND #$03           ; put get*         *672
+  CMP #$01           ; put get
+  ROL SavedJoypad1Bits ; put get put get put    ; This can desync, but we finish before it matters.
+  BCC :-             ; get put (get)
+
+ .if ::MOUSE_CONFIG_JOYPAD1_SIZE <> 1
+  STY SavedJoypad1Bits+1 ; get put get
+  NOP                ; put get
+ :
+  LDA JOYPAD_PORT1   ; put get* put GET *848  ; Starts: 751, [879]
+  AND #$03           ; put get
+  CMP #$01           ; put get
+  ROL SavedJoypad1Bits+1 ; put get put get put    ; This can desync, but we finish before it matters.
+  BCC :-             ; get* put (get)   *860
+
+  ; NEXT: 878
+ .endif
+
+  rts
+.endproc
+
+.segment "FIXED"
+.proc UpdateMouseExtra
+  ; Check the report to see if we have a snes mouse plugged in
+  lda mouse + kMouseButtons
+  and #$0f
+  cmp #$01
+  beq :+
+    ; no snes mouse, so leave the first field empty
+    lda #0
+    sta mouse + kMouseZero
+    rts
+  :
+  ; convert the X/Y displacement into X/Y positions on the screen
+  ldx #1
+loop:
+    lda mouse + kMouseY,x
+    bpl :+
+      ; subtract the negative number instead
+      and #$7f
+      sta mouse + kMouseZero ; reuse this value as a temp value
+      lda NmiR0,x
+      sec 
+      sbc mouse + kMouseZero
+      ; check if we underflowed
+      bcc wrappednegative
+      ; check the lower bounds
+      cmp MouseBoundsMin,x
+      bcs setvalue ; didn't wrap so set the value now
+    wrappednegative:
+      lda MouseBoundsMin,x
+      jmp setvalue
+    :
+    ; add the positive number
+    clc
+    adc NmiR0,x
+    ; check if we wrapped, set to the max bounds if we did
+    bcs wrapped
+    ; check the upper bounds
+    cmp MouseBoundsMax,x
+    bcc setvalue ; didn't wrap so set the value
+wrapped:
+    lda MouseBoundsMax,x
+setvalue:
+    sta mouse + kMouseY,x
+    dex
+    bpl loop
+
+  ; calculate newly pressed buttons and shift it into byte zero
+  lda NmiR2
+  eor #%11000000
+  and mouse + kMouseButtons
+  rol
+  ror mouse + kMouseZero
+  rol
+  ror mouse + kMouseZero
+  
+  ; calculate newly released buttons
+  lda mouse + kMouseButtons
+  eor #%11000000
+  and NmiR2
+  rol
+  ror mouse + kMouseZero
+  rol
+  ror mouse + kMouseZero
+
+  ; Set the connected bit
+  sec
+  ror mouse + kMouseZero
+
+  rts
+MouseBoundsMin:
+  .byte MOUSE_Y_MINIMUM, MOUSE_X_MINIMUM
+MouseBoundsMax:
+  .byte MOUSE_Y_MAXIMUM, MOUSE_X_MAXIMUM
+.endproc
+
+.else
+
+.segment "ZEROPAGE"
+RESERVE_ZP SavedJoypad1Bits, 1
+RESERVE_ZP SavedJoypad2Bits, 1
+
 .segment "OAMALIGNED"
 .proc OAMandReadJoypad
   lda #OAM
@@ -592,3 +772,5 @@ read_loop:
 ASSERT_PAGE read_loop
   rts
 .endproc
+
+.endif
