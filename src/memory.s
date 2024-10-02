@@ -19,8 +19,9 @@
 ; Temporary values used in NMI in vanilla
 RESERVE_ZP NmiR0, 1
 RESERVE_ZP NmiR1, 1
+RESERVE_ZP NmiR2, 1
 .if .not USE_VANILLA_MUSIC
-RESERVE_ZP NmiTmp, 5
+RESERVE_ZP NmiTmp, 4
 .endif
 
 ; Temporary values used by the vanilla code
@@ -40,8 +41,7 @@ RESERVE_ZP M1, 1
 RESERVE_ZP ObjectOffset, 1
 RESERVE_ZP FrameCounter, 1
 
-RESERVE_ZP SavedJoypad1Bits, 1
-RESERVE_ZP SavedJoypad2Bits, 1
+.globalzp SavedJoypad1Bits, SavedJoypad2Bits
 SavedJoypadBits := SavedJoypad1Bits
 
 RESERVE_ZP GameEngineSubroutine, 1
@@ -135,14 +135,6 @@ RESERVE_ZP EnemyData, 2
 EnemyDataLow := EnemyData
 EnemyDataHigh := EnemyData + 1
 
-
-RESERVE_ZP SpriteLocalTemp, 4
-Local_eb := SpriteLocalTemp + 0
-Local_ec := SpriteLocalTemp + 1
-Local_ed := SpriteLocalTemp + 2
-; RESERVEZP Local_ee ; unused
-Local_ef := SpriteLocalTemp + 3
-
 .if USE_VANILLA_MUSIC
 RESERVE_ZP MusicData, 2
 MusicDataLow := MusicData
@@ -152,12 +144,21 @@ MusicDataHigh := MusicData+1
 
 .segment "SHORTRAM"
 
+
 RESERVE PauseSoundQueue, 1
 RESERVE AreaMusicQueue, 1
 RESERVE EventMusicQueue, 1
 RESERVE NoiseSoundQueue, 1
 RESERVE Square2SoundQueue, 1
 RESERVE Square1SoundQueue, 1
+
+
+RESERVE   SpriteLocalTemp, 4
+Local_eb := SpriteLocalTemp + 0
+Local_ec := SpriteLocalTemp + 1
+Local_ed := SpriteLocalTemp + 2
+; RESERVEZP Local_ee ; unused
+Local_ef := SpriteLocalTemp + 3
 
 RESERVE FlagpoleFNum_Y_Pos, 1
 RESERVE FlagpoleFNum_YMFDummy, 1

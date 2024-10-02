@@ -48,6 +48,13 @@ bool_option ENABLE_C_CODE
 bool_option USE_CUSTOM_TITLESCREEN
 bool_option MULTIPLE_POWERUPS_ON_SCREEN
 bool_option USE_LOOPING_ANIM_CYCLE
+bool_option USE_MOUSE_SUPPORT
+num_option MOUSE_CONFIG_JOYPAD1_SIZE
+bool_option MOUSE_CONFIG_SENSITIVITY
+num_option MOUSE_X_MINIMUM
+num_option MOUSE_X_MAXIMUM
+num_option MOUSE_Y_MINIMUM
+num_option MOUSE_Y_MAXIMUM
 
 bool_option USE_MMC5_AUDIO
 bool_option USE_VRC7_AUDIO

@@ -12,9 +12,12 @@ POPSEG()
 
 
 void after_frame_callback() {
-  // if ((A_B_Buttons & PAD_A) != 0) {
-  //   PlayerFacingDir = 0;
-  // }
+#if USE_MOUSE_SUPPORT
+  if (mouse.left) {
+    Player_X_Position = mouse.x;
+    Player_Y_Position = mouse.y;
+  }
+#endif
 }
 
 #endif
