@@ -531,6 +531,7 @@ SkipByte:
   sta sp+1
 .endif
 .if ::USE_MOUSE_SUPPORT
+
   lda #1
   sta mouse_mask
 .endif
@@ -600,13 +601,25 @@ RESERVE_ZP SavedJoypad1Bits, 1
 RESERVE_ZP SavedJoypad2Bits, 1
 mouse_mask: .res 1           ; Bitmask indicating which $4017 bit the mouse is on.
 
-;joypad1_down: .res MOUSE_CONFIG_JOYPAD1_SIZE
-
 .segment "SHORTRAM"
 ; NOTE: These variables are not page-sensitive and can be absolute.
 advance_sensitivity: .res 1  ; Bool.
 
 .segment "OAMALIGNED"
+
+.if ::MOUSE_READ_FROM_PORT = 1
+
+MOUSE_PORT = $4016
+CONTROLLER_PORT = $4017
+
+.elseif ::MOUSE_READ_FROM_PORT = 2
+
+MOUSE_PORT = $4017
+CONTROLLER_PORT = $4016
+
+.else
+.error "Cannot read the snes mouse from any ports other than 1 or 2"
+.endif
 
 .proc OAMandReadJoypad
   ; Strobe the joypads.
@@ -619,7 +632,7 @@ advance_sensitivity: .res 1  ; Bool.
   ; Clock official mouse sensitivity. NOTE: This can be removed if not needed.
   LDA advance_sensitivity
   BEQ :+
-  LDA JOYPAD_PORT2
+  LDA MOUSE_PORT
   STX advance_sensitivity
  :
  .endif
@@ -635,7 +648,7 @@ advance_sensitivity: .res 1  ; Bool.
 
  :
   LDA mouse_mask     ; get put get*     *576  ; Starts: 4, 158, 312, 466, [620]
-  AND JOYPAD_PORT2   ; put get put GET
+  AND MOUSE_PORT   ; put get put GET
   CMP #$01           ; put get
   ROL mouse,X        ; put get put get* PUT GET  *432
   BCC :-             ; put get (put)
@@ -646,17 +659,17 @@ advance_sensitivity: .res 1  ; Bool.
   BNE :-             ; put get (put)
 
  :
-  LDA JOYPAD_PORT1   ; put get put GET        ; Starts: 619
+  LDA CONTROLLER_PORT ; put get put GET        ; Starts: 619
   AND #$03           ; put get*         *672
   CMP #$01           ; put get
   ROL SavedJoypad1Bits ; put get put get put    ; This can desync, but we finish before it matters.
   BCC :-             ; get put (get)
 
- .if ::MOUSE_CONFIG_JOYPAD1_SIZE <> 1
+ .if ::MOUSE_CONFIG_CONTROLLER_SIZE <> 1
   STY SavedJoypad1Bits+1 ; get put get
   NOP                ; put get
  :
-  LDA JOYPAD_PORT1   ; put get* put GET *848  ; Starts: 751, [879]
+  LDA CONTROLLER_PORT ; put get* put GET *848  ; Starts: 751, [879]
   AND #$03           ; put get
   CMP #$01           ; put get
   ROL SavedJoypad1Bits+1 ; put get put get put    ; This can desync, but we finish before it matters.
