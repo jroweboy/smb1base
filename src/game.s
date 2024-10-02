@@ -185,6 +185,10 @@ DoneDrawing:
 
   jsr ColorRotation          ;cycle one of the background colors
 
+.if ::USE_SMB2J_FEATURES
+  farcall SimulateWind           ;otherwise, simulate wind where needed
+.endif
+
   lda Player_Y_HighPos
   cmp #$02                   ;if player is below the screen, don't bother with the music
   bpl NoChgMus
@@ -626,6 +630,10 @@ PrimaryGameSetup:
 SecondaryGameSetup:
   lda #$00
   sta DisableScreenFlag     ;enable screen output
+.if ::USE_SMB2J_FEATURES
+  sta FlagpoleMusicFlag
+  sta WindFlag
+.endif
   tay
 ClearVRLoop: sta VRAM_Buffer1-1,y      ;clear buffer at $0300-$03ff
   iny

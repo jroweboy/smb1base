@@ -723,12 +723,22 @@ PlayerEndLevel:
   lda Player_Y_Position     ;check player's vertical position
   cmp #$ae
   bcc ChkStop               ;if player is not yet off the flagpole, skip this part
+.if ::USE_SMB2J_FEATURES
+  lda #$00
+  sta ScrollLock            ;reactivate scroll
+  lda FlagpoleMusicFlag     ;check flag to see if music was already queued
+  bne ChkStop               ;if so, skip this
+  lda #EndOfLevelMusic
+  sta EventMusicQueue       ;load win level music in event music queue
+  inc FlagpoleMusicFlag     ;set flag to keep music from getting queued more than once
+.else
   lda ScrollLock            ;if scroll lock not set, branch ahead to next part
   beq ChkStop               ;because we only need to do this part once
   lda #EndOfLevelMusic
   sta EventMusicQueue       ;load win level music in event music queue
   lda #$00
   sta ScrollLock            ;turn off scroll lock to skip this part later
+.endif 
 ChkStop:
   lda Player_CollisionBits  ;get player collision bits
   lsr                       ;check for d0 set
@@ -809,8 +819,12 @@ OnGroundStateSub:
   sta PlayerFacingDir        ;otherwise set new facing direction
 GndMove:
   jsr ImposeFriction         ;do a sub to impose friction on player's walk/run
+JmpMove:
   jsr MovePlayerHorizontally ;do another sub to move player horizontally
   sta Player_X_Scroll        ;set returned value as player's movement speed for scroll
+.if ::USE_SMB2J_FEATURES
+    farcall BlowPlayerAround
+.endif
   rts
 
 ;--------------------------------
@@ -855,8 +869,12 @@ LRAir:
   beq JSMove                 ;if not pressing any, skip
   jsr ImposeFriction         ;otherwise process horizontal movement
 JSMove:
+.if ::USE_SMB2J_FEATURES
+  jsr JmpMove
+.else
   jsr MovePlayerHorizontally ;do a sub to move player horizontally
   sta Player_X_Scroll        ;set player's speed here, to be used for scroll later
+.endif
   lda GameEngineSubroutine
   cmp #$0b                   ;check for specific routine selected
   bne ExitMov1               ;branch if not set to run
@@ -1298,6 +1316,15 @@ ProcOnGroundActs:
   lda Player_MovingDir       ;otherwise check to see if moving direction
   and PlayerFacingDir        ;and facing direction are the same
   bne ActionWalkRun          ;if moving direction = facing direction, branch, don't skid
+.if ::USE_SMB2J_FEATURES
+    lda GameEngineSubroutine
+    cmp #$09                   ;if running the change size, fire flower, injure
+    bcs NoSkidS                ;or death game engine subroutines, skip this
+      ; Ported from SMB2j
+      lda #Sfx_Skid            ;otherwise play skid sound
+      sta NoiseSoundQueue
+NoSkidS:
+.endif
     iny                        ;otherwise increment to skid offset ($03)
 
 NonAnimatedActs:

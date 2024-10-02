@@ -609,6 +609,10 @@ RunAObj:  lda R0                     ;get stored value and add offset to it
       .word AreaFrenzy            ;bullet bills or swimming cheep-cheeps
       .word AreaFrenzy            ;stop frenzy
       .word LoopCmdE
+.if ::USE_SMB2J_FEATURES
+      .word WindOn
+      .word WindOff
+.endif
 
 ;object for special row $0e or 14
       .word AlterAreaAttributes
@@ -687,6 +691,100 @@ ExitAFrenzy: sta EnemyFrenzyQueue  ;store enemy into frenzy queue
              rts
 
 
+;-------------------------------------------------------------------------------------
+
+.if ::USE_SMB2J_FEATURES
+BlowPlayerAround:
+        lda WindFlag            ;if wind is turned off, just exit
+        beq ExBlow
+        lda AreaType            ;don't blow the player around unless
+        cmp #$01                ;the area is ground type
+        bne ExBlow
+        ldy #$01
+        lda FrameCounter        ;branch to set d0 if on an odd frame
+        asl
+        bcs BThr                ;otherwise wind will only blow
+        ldy #$03                ;one out of every four frames
+BThr:   sty R0
+        lda FrameCounter        ;throttle wind blowing by using the frame counter
+        and R0                 ;to mask out certain frames
+        bne ExBlow
+        lda Player_X_Position   ;move player slightly to the right
+        clc                     ;to simulate the wind moving the player
+        adc #$01
+        sta Player_X_Position
+        lda Player_PageLoc
+        adc #$00
+        sta Player_PageLoc
+        inc Player_X_Scroll     ;add one to movement speed for scroll
+ExBlow: rts
+
+;note the position data values are overwritten in RAM
+LeavesYPosData:
+        .byte $30, $70, $b8, $50, $98, $30
+        .byte $70, $b8, $50, $98, $30, $70
+
+LeavesXPosData:
+        .byte $30, $30, $30, $60, $60, $a0
+        .byte $a0, $a0, $d0, $d0, $d0, $60
+
+LeavesTile:
+        .byte $7b, $7b, $7b, $7b, $7a, $7a
+        .byte $7b, $7b, $7b, $7a, $7b, $7a
+
+SimulateWind:
+          lda WindFlag             ;if no wind, branch to leave
+          beq ExSimW
+          lda #Sfx_Wind            ;play wind sfx
+          sta NoiseSoundQueue
+          jsr ModifyLeavesPos      ;modify X and Y position data of leaves
+          ldx #$00                 ;use mostly unused sprite data offset
+          AllocSpr 12
+DrawLeaf: lda LeavesYPos,x
+          sta Sprite_Y_Position,y  ;set up sprite data in OAM memory
+          lda LeavesTile,x
+          sta Sprite_Tilenumber,y
+          lda #$41
+          sta Sprite_Attributes,y
+          lda LeavesXPos,x
+          sta Sprite_X_Position,y
+          iny
+          iny
+          iny
+          iny
+          inx                      ;if still on first six leaves, continue
+          cpx #$0c                 ;continue until done putting all leaves on the screen
+          bne DrawLeaf
+ExSimW:   rts
+
+LeavesPosAdder:
+   .byte $57, $57, $56, $56, $58, $58, $56, $56, $57, $58, $57, $58
+   .byte $59, $59, $58, $58, $5a, $5a, $58, $58, $59, $5a, $59, $5a
+
+ModifyLeavesPos:
+         ldx #$0b
+MLPLoop: lda LeavesXPos,x      ;add each adder to each X position twice
+         clc                   ;and to each Y position once
+         adc LeavesPosAdder,x
+         adc LeavesPosAdder,x
+         sta LeavesXPos,x
+         lda LeavesYPos,x
+         clc
+         adc LeavesPosAdder,x
+         sta LeavesYPos,x
+         dex
+         bpl MLPLoop
+         rts
+
+WindOn:
+     lda #$01         ;branch to turn the wind on
+     bne WOn
+WindOff:
+     lda #$00         ;turn the wind off
+WOn: sta WindFlag
+     rts
+
+.endif ; ::USE_SMB2J_FEATURES
 
 ;--------------------------------
 

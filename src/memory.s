@@ -20,7 +20,7 @@
 RESERVE_ZP NmiR0, 1
 RESERVE_ZP NmiR1, 1
 RESERVE_ZP NmiR2, 1
-.if .not USE_VANILLA_MUSIC
+.if USE_VANILLA_MUSIC <> 1
 RESERVE_ZP NmiTmp, 4
 .endif
 
@@ -589,4 +589,14 @@ RESERVE DebugCooldown, 1
 
 RESERVE WarmBootValidation, 1
 
+RESERVE FlagpoleMusicFlag, 1
+RESERVE WindFlag, 1
+
+.popseg
+
+.pushseg
+.segment "SRAM"
+
+RESERVE LeavesXPos, 12
+RESERVE LeavesYPos, 12
 .popseg

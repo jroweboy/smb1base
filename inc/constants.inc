@@ -61,6 +61,8 @@ Sfx_GrowVine          = %00000100
 Sfx_GrowPowerUp       = %00000010
 Sfx_CoinGrab          = %00000001
 
+Sfx_Skid              = %10000000
+Sfx_Wind              = %00000100
 Sfx_BowserFlame       = %00000010
 Sfx_BrickShatter      = %00000001
 

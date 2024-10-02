@@ -56,6 +56,7 @@ num_option MOUSE_X_MAXIMUM
 num_option MOUSE_Y_MINIMUM
 num_option MOUSE_Y_MAXIMUM
 
+bool_option USE_SMB2J_FEATURES
 bool_option USE_MMC5_AUDIO
 bool_option USE_VRC7_AUDIO
 bool_option USE_VANILLA_MUSIC

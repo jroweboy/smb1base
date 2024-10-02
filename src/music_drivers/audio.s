@@ -22,7 +22,10 @@ RESERVE PauseModeFlag, 1
 
 
 
-.if ::USE_VANILLA_MUSIC
+.if ::USE_SMB2J_FEATURES
+.include "vanilla_music_smb2j.s"
+
+.elseif ::USE_VANILLA_MUSIC
 .include "vanilla_music.s"
 
 .else
@@ -72,7 +75,7 @@ RESERVE PauseModeFlag, 1
     SFXPlayback
     MusicPlayback
 
-  .if ::USE_VANILLA_SFX && (!::USE_VANILLA_MUSIC)
+  .if ::USE_VANILLA_SFX = 1 && ::USE_VANILLA_MUSIC <> 1
     DriverMusicMixAudio
   .endif
 
