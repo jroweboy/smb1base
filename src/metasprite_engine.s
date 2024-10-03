@@ -271,36 +271,6 @@ Id = .ident(Name)
 
 LoopCount = M0
 
-  ; draw the player first so it doesn't ever flicker
-  ; first clear out the sprites that are reserved for the player
-  lda #$f8
-  sta Sprite_Y_Position + 0
-  sta Sprite_Y_Position + 4
-  sta Sprite_Y_Position + 8
-  sta Sprite_Y_Position + 12
-  ldy #0
-  ldx ObjectMetasprite,y
-  ; unless the player is currently flickering due to damage taken
-  beq DoneDrawingPlayer
-    ; put the player in slot 0 always
-    lda CurrentOAMOffset
-    pha
-      
-      ; Load the bank for the player if it changed
-      lda PlayerBankTable,x
-      cmp PlayerChrBank
-      beq :+
-        sta PlayerChrBank
-        inc ReloadCHRBank
-      :
-
-      lda #0
-      sta CurrentOAMOffset
-      jsr DrawMetasprite
-    pla
-    sta CurrentOAMOffset
-DoneDrawingPlayer:
-
   lda #24 - 1 ; size of the different object update list
   sta LoopCount
   lda SpriteShuffleOffset
@@ -376,11 +346,80 @@ FloateyNumberLoop:
   Skip:
     dex
     bpl FloateyNumberLoop
+  
+  lda CurrentOAMOffset
+  pha
 
+    ; put the player in slot 0 always
+    lda #0
+    sta CurrentOAMOffset
+    
+    ; draw the player first so it doesn't ever flicker
+    ; first clear out the sprites that are reserved for the player
+    lda #$f8
+    sta Sprite_Y_Position + 0
+    sta Sprite_Y_Position + 4
+    sta Sprite_Y_Position + 8
+    sta Sprite_Y_Position + 12
+
+.if ::MOUSE_DISPLAY_CURSOR
+    sta Sprite_Y_Position + 16
+    sta Sprite_Y_Position + 20
+    lda mouse
+    bmi connected
+      ; not connected so draw the alternate sprite at the middle of the screen
+      lda #256 / 2 - 8
+      sta mouse + kMouseX
+      lda #240 / 2 - 8
+      sta mouse + kMouseY
+
+      lda FrameCounter
+      and #%00100000
+      beq useothersprite ; switch between connected and not connected
+        ldy #1
+        bne loadmetasprite ;unconditional
+      useothersprite:
+        ldy #0
+        beq loadmetasprite
+connected:
+    ldy MouseState
+loadmetasprite:
+    ldx MouseStateMetasprite,y
+    lda MetaspriteTableLeftLo,x
+    sta R0 ; Ptr
+    lda MetaspriteTableLeftHi,x
+    sta R1 ; Ptr
+    lda #0
+    sta R3 ; Atr
+    lda mouse + kMouseX
+    sta R4 ; Xlo
+    lda #0
+    sta R5 ; Xhi
+    lda mouse + kMouseY
+    sta R6 ; Ylo
+    lda #1
+    sta R7 ; Yhi
+    jsr MetaspriteRenderLoop
+.endif
+
+    ldy #0
+    ldx ObjectMetasprite,y
+    ; unless the player is currently flickering due to damage taken
+    beq DoneDrawingPlayer
+      ; Load the bank for the player if it changed
+      lda PlayerBankTable,x
+      cmp PlayerChrBank
+      beq :+
+        sta PlayerChrBank
+        inc ReloadCHRBank
+      :
+      jsr DrawMetasprite
+  DoneDrawingPlayer:
+    
   ; Clear sprites up to the offset
   ; Calculate CurrentOAMOffset / 4 * 3 and add that to the OAM clear to jump
   ; the middle of the clear routine based on how many we need to clear
-  lda CurrentOAMOffset
+  pla ; CurrentOAMOffset
   lsr 
   sta M0
   lsr 
@@ -394,6 +433,13 @@ FloateyNumberLoop:
   sta M1
   lda #$f8
   jmp (M0)
+
+.if ::MOUSE_DISPLAY_CURSOR
+MouseStateMetasprite:
+  .byte METASPRITE_MOUSE_POINTER
+  .byte METASPRITE_MOUSE_DISCONNECTED
+  .byte METASPRITE_MOUSE_PINCH
+.endif
 .endproc
 
 MoveAllSpritesOffscreen:
@@ -524,7 +570,6 @@ DontShiftPositions:
 
 .proc MetaspriteRenderLoop
 Ptr = R0
-; OrigOffset = R2
 Atr = R3
 Xlo = R4
 Xhi = R5

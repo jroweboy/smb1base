@@ -124,6 +124,12 @@ ExitPause:     rts
 ;-------------------------------------------------------------------------------------
 clabel GameCoreRoutine
 GameCoreRoutine:
+
+  .if ENABLE_C_CODE
+    .import _before_frame_callback
+    jsr _before_frame_callback
+  .endif
+
   ldx CurrentPlayer          ;get which player is on the screen
   lda SavedJoypadBits,x      ;use appropriate player's controller bits
   sta SavedJoypadBits        ;as the master controller bits
@@ -132,7 +138,7 @@ GameCoreRoutine:
 
   ; lda #0
   ; sta PlayerOAMOffset
-  lda #4 * 4 ; save enough room to draw the player first later
+  lda #6 * 4 ; save enough room to draw the player first later (and the mouse cursor)
   sta CurrentOAMOffset
 
   lda OperMode_Task          ;check major task of operating mode
@@ -167,12 +173,18 @@ ProcELoop:
     jsr RunGameTimer           ;count down the game timer
   endfar
 
+  
+
   lda ShouldSkipDrawSprites
   beq NoLagSoDraw
   lda FramesSinceLastSpriteDraw
   cmp #13 ; Force a draw every 13 frames (~5fps) so its not too broken at extreme lag
   bcc SkipDrawingCauseLagged
 NoLagSoDraw:
+  .if ENABLE_C_CODE
+    .import _sprite_render_callback
+    jsr _sprite_render_callback
+  .endif
     farcall DrawAllMetasprites
     lda #0
     sta FramesSinceLastSpriteDraw
@@ -700,6 +712,9 @@ FarCallGameMenu:
 .endif
 
 InitializeGame:
+.if ::USE_SMB2J_FEATURES
+  farcall InitWindLeaves
+.endif
   ldy #<WorldSelectNumber  ;clear all memory as in initialization procedure,
   jsr InitializeMemory     ;but this time, clear only as far as $076f
   jsr AudioClear
@@ -708,7 +723,6 @@ InitializeGame:
   jsr LoadAreaPointer
 
 InitializeArea:
-
   ldy #<SecondaryMsgCounter                 ;clear all memory again, only as far as $074b
   jsr InitializeMemory     ;this is only necessary in game mode
   ldx #FRAME_TIMER_COUNT

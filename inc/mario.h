@@ -14,6 +14,8 @@
 
 
 // Gameplay callbacks
+void before_frame_callback();
+void sprite_render_callback();
 void after_frame_callback();
 
 // Title screen callbacks

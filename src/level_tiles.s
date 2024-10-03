@@ -784,6 +784,17 @@ WindOff:
 WOn: sta WindFlag
      rts
 
+InitWindLeaves:
+  ldx #LeavesYPosData-1
+@loop:
+    lda LeavesYPosData,x
+    sta LeavesYPos,x
+    lda LeavesXPosData,x
+    sta LeavesXPos,x
+    dex
+    bpl @loop
+  rts
+
 .endif ; ::USE_SMB2J_FEATURES
 
 ;--------------------------------

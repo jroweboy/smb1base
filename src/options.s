@@ -44,20 +44,23 @@ Num = 123
 
 bool_option MAPPER_MMC3
 bool_option MAPPER_MMC5
+bool_option USE_SMB2J_FEATURES
 bool_option ENABLE_C_CODE
 bool_option USE_CUSTOM_TITLESCREEN
 bool_option MULTIPLE_POWERUPS_ON_SCREEN
 bool_option USE_LOOPING_ANIM_CYCLE
 bool_option USE_MOUSE_SUPPORT
+
+
 num_option MOUSE_CONFIG_CONTROLLER_SIZE
 num_option MOUSE_READ_FROM_PORT
 bool_option MOUSE_CONFIG_SENSITIVITY
+bool_option MOUSE_DISPLAY_CURSOR
 num_option MOUSE_X_MINIMUM
 num_option MOUSE_X_MAXIMUM
 num_option MOUSE_Y_MINIMUM
 num_option MOUSE_Y_MAXIMUM
 
-bool_option USE_SMB2J_FEATURES
 bool_option USE_MMC5_AUDIO
 bool_option USE_VRC7_AUDIO
 bool_option USE_VANILLA_MUSIC
@@ -90,6 +93,12 @@ bool_option DEBUG_DISPLAY_VISUAL_FRAMETIME
 .if (.not MAPPER_MMC5) .and USE_MMC5_AUDIO
   ; Either disable USE_MMC5_AUDIO or switch to using MAPPER_MMC5 for this feature to work
   .error "Cannot use MMC5 Audio channels if the mapper isn't MMC5"
+  .fatal "Invalid Options selected"
+.endif
+
+; Force disable mouse curose if mouse is not enabled
+.if USE_MOUSE_SUPPORT = 0 && MOUSE_DISPLAY_CURSOR <> 0
+  .error "Cannot display cursor without mouse support enabled"
   .fatal "Invalid Options selected"
 .endif
 

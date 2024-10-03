@@ -431,6 +431,16 @@ TOAD_PALETTE = $02
 TOAD_Y_OFFSET = -8
 MetaspriteBox "TOAD", "STANDING", $10, $10 | SPR_FLIP_H, $12, $12 | SPR_FLIP_H
 
+.if ::MOUSE_DISPLAY_CURSOR
+MOUSE_VRAM_OFFSET = SPRITE_BANK_5
+MOUSE_PALETTE = $02
+MOUSE_NO_MIRROR = 1
+MOUSE_Y_OFFSET = -8
+MetaspriteBox "MOUSE", "POINTER", $00, $02
+MetaspriteBox "MOUSE", "PINCH", $04, $06
+MetaspriteBox "MOUSE", "DISCONNECTED", $08, $0a
+.endif
+
 
 ; Extra sprite tiles that aren't using metasprites
 

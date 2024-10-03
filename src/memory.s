@@ -528,6 +528,10 @@ RESERVE Mirror_PPUCTRL, 1
 RESERVE Mirror_PPUMASK, 1
 RESERVE NumberOfPlayers, 1
 
+.if ::MOUSE_DISPLAY_CURSOR
+RESERVE MouseState, 1
+.endif
+
 RESERVE IntervalTimerControl, 1
 
 Timers := SelectTimer
@@ -597,6 +601,9 @@ RESERVE WindFlag, 1
 .pushseg
 .segment "SRAM"
 
+.if ::USE_SMB2J_FEATURES
 RESERVE LeavesXPos, 12
 RESERVE LeavesYPos, 12
+.endif
+
 .popseg
