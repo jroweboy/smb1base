@@ -609,13 +609,15 @@ RunAObj:  lda R0                     ;get stored value and add offset to it
       .word AreaFrenzy            ;bullet bills or swimming cheep-cheeps
       .word AreaFrenzy            ;stop frenzy
       .word LoopCmdE
+
+;object for special row $0e or 14
+      .word AlterAreaAttributes
+
+; TODO figure out how to include SMB1 levels with SMB2 level format
 .if ::USE_SMB2J_FEATURES
       .word WindOn
       .word WindOff
 .endif
-
-;object for special row $0e or 14
-      .word AlterAreaAttributes
 
 ;-------------------------------------------------------------------------------------
 ;(these apply to all area object subroutines in this section unless otherwise stated)
