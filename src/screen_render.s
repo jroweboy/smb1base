@@ -482,7 +482,7 @@ ChkLuigi:
     ldy #$04
 NameLoop:
       lda LuigiName,y        ;otherwise, replace "MARIO" with "LUIGI"
-      sta VRAM_Buffer1+3,y
+      sta VRAM_Buffer1+3+8,y
       dey
       bpl NameLoop           ;do this until each letter is replaced
 ExitChkName:
