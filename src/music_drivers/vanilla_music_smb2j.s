@@ -64,6 +64,7 @@ RESERVE AltRegContentFlag, 1
 .endmacro
 
 .macro MusicPlayback
+  BankPRGA #.bank(music_data)
   jsr SoundEngine
 .endmacro
 

@@ -9,9 +9,11 @@ RESERVE ReloadChannel, 2
 
 
 .macro DriverMusicInit
-  BankPRGA #.bank(music_data)
-  ldx #<music_data
-  ldy #>music_data
+  ; Normally we would init the song here, but to support banked music data, we split the songs into their own
+  ; files, and each of those need to be initialized independently.
+  BankPRGA #.bank(music_overworld_data_start)
+  ldx #<music_overworld_data_start
+  ldy #>music_overworld_data_start
   lda #0
   jsr famistudio_init
 .if ::USE_VANILLA_SFX
@@ -44,6 +46,18 @@ RESERVE ReloadChannel, 2
     lda song
   .endif
 .endif
+  ; Load the data pointer into x/y and bank switch to the correct A bank
+  tax
+  ldy music_data_hi_table,x
+  lda music_data_bank_table,x
+  BankPRGA a
+  sta MusicBank
+  lda music_data_lo_table,x
+  tax
+  ; Use NTSC playback speed and then reinit + start the song
+  lda #0
+  jsr famistudio_init
+  lda #0
   jsr famistudio_music_play
 .endmacro
 
@@ -62,6 +76,7 @@ RESERVE ReloadChannel, 2
 .endmacro
 
 .macro DriverMusicUpdate
+  BankPRGA MusicBank
   jsr famistudio_update
 .endmacro
 
@@ -129,18 +144,116 @@ FAMISTUDIO_CFG_SFX_STREAMS = 3
 
 .include "famistudio_ca65.s"
 
+; Custom table listing song pointers and what bank they are in
+
+.define MUSIC_LIST \
+  music_overworld_data_start, \
+  music_underworld_data_start, \
+  music_waterworld_data_start, \
+  music_castleworld_data_start, \
+  music_cloud_data_start, \
+  music_enterpipe_data_start, \
+  music_starman_data_start, \
+  music_death_data_start, \
+  music_gameover_data_start, \
+  music_savedprincess_data_start, \
+  music_anothercastle_data_start, \
+  music_victory_data_start, \
+  music_hurryup_data_start, \
+  music_intermediate_data_start
+
+music_data_lo_table:
+  .lobytes MUSIC_LIST
+
+music_data_hi_table:
+  .hibytes MUSIC_LIST
+
+music_data_bank_table:
+.ifdef MMC5_PRG_ROM
+.define BANK_ADJUST $80
+.else
+.define BANK_ADJUST $00
+.endif
+  .byte .bank(music_overworld_data_start) | BANK_ADJUST
+  .byte .bank(music_underworld_data_start) | BANK_ADJUST
+  .byte .bank(music_waterworld_data_start) | BANK_ADJUST
+  .byte .bank(music_castleworld_data_start) | BANK_ADJUST
+  .byte .bank(music_cloud_data_start) | BANK_ADJUST
+  .byte .bank(music_enterpipe_data_start) | BANK_ADJUST
+  .byte .bank(music_starman_data_start) | BANK_ADJUST
+  .byte .bank(music_death_data_start) | BANK_ADJUST
+  .byte .bank(music_gameover_data_start) | BANK_ADJUST
+  .byte .bank(music_savedprincess_data_start) | BANK_ADJUST
+  .byte .bank(music_anothercastle_data_start) | BANK_ADJUST
+  .byte .bank(music_victory_data_start) | BANK_ADJUST
+  .byte .bank(music_hurryup_data_start) | BANK_ADJUST
+  .byte .bank(music_intermediate_data_start) | BANK_ADJUST
+
+
 .pushseg
-.segment "MUSIC"
-music_data:
-.include "audio/examples/famistudio/panic_at_the_mario_disco.s"
+.segment "MUSIC_OVERWORLD"
+music_overworld_data_start:
+.include "audio/examples/famistudio/disco_mario_overworld.s"
+
+.segment "MUSIC_UNDERWORLD"
+music_underworld_data_start:
+.include "audio/examples/famistudio/disco_mario_underworld.s"
+
+.segment "MUSIC_WATERWORLD"
+music_waterworld_data_start:
+.include "audio/examples/famistudio/disco_mario_waterworld.s"
+
+.segment "MUSIC_CASTLEWORLD"
+music_castleworld_data_start:
+.include "audio/examples/famistudio/disco_mario_castleworld.s"
+
+.segment "MUSIC_CLOUD"
+music_cloud_data_start:
+.include "audio/examples/famistudio/disco_mario_cloud.s"
+
+.segment "MUSIC_ENTERPIPE"
+music_enterpipe_data_start:
+.include "audio/examples/famistudio/disco_mario_enter_in_a_pipe.s"
+
+.segment "MUSIC_STARMAN"
+music_starman_data_start:
+.include "audio/examples/famistudio/disco_mario_starman.s"
+
+.segment "MUSIC_DEATH"
+music_death_data_start:
+.include "audio/examples/famistudio/disco_mario_death.s"
+
+.segment "MUSIC_GAMEOVER"
+music_gameover_data_start:
+.include "audio/examples/famistudio/disco_mario_game_over.s"
+
+.segment "MUSIC_SAVEDPRINCESS"
+music_savedprincess_data_start:
+.include "audio/examples/famistudio/disco_mario_you_saved_the_princess.s"
+
+.segment "MUSIC_ANOTHERCASTLE"
+music_anothercastle_data_start:
+.include "audio/examples/famistudio/disco_mario_in_an_other_castle.s"
+
+.segment "MUSIC_VICTORY"
+music_victory_data_start:
+.include "audio/examples/famistudio/disco_mario_victory.s"
+
+.segment "MUSIC_HURRYUP"
+music_hurryup_data_start:
+.include "audio/examples/famistudio/disco_mario_hurry_up.s"
+
+.segment "MUSIC_INTERMEDIATE"
+music_intermediate_data_start:
+.include "audio/examples/famistudio/disco_mario_new_song.s"
 
 .if ::USE_CUSTOM_ENGINE_SFX
 sfx_data:
 .include "audio/examples/famistudio/panic_at_the_mario_disco_sfx.s"
 .endif
 
-.segment "DPCM"
-.incbin "audio/examples/famistudio/panic_at_the_mario_disco.dmc"
+.segment "DPCM_BANK0"
+.incbin "audio/examples/famistudio/disco_mario.dmc"
 
 .popseg
 

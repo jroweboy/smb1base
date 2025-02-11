@@ -21,7 +21,7 @@ RESERVE_ZP NmiR0, 1
 RESERVE_ZP NmiR1, 1
 RESERVE_ZP NmiR2, 1
 .if USE_VANILLA_MUSIC <> 1
-RESERVE_ZP NmiTmp, 4
+RESERVE_ZP NmiTmp, 5
 .endif
 
 ; Temporary values used by the vanilla code

@@ -4,12 +4,14 @@
 .pushseg
 .segment "SHORTRAM"
 RESERVE MusicLooped, 1
+RESERVE MusicBank, 1
 .popseg
 
 .macro MusicInit
   DriverMusicInit
   lda #0
   sta MusicLooped
+  sta MusicBank
 .endmacro
 
 .macro MusicClear
@@ -17,7 +19,6 @@ RESERVE MusicLooped, 1
 .endmacro
 
 .macro MusicPlayback
-  BankPRGA #.bank(music_data)
   CustomMusicEngine
 .endmacro
 

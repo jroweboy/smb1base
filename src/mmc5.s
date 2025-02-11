@@ -207,7 +207,7 @@ MapperInit:
   lda #$80
   sta CurrentBank
   BankPRGA #.bank(PLAYER)
-  BankPRGC #.bank(DPCM)
+  BankPRGC #.bank(DPCM_BANK0)
   BankPRG8 #.bank(LOWCODE)
   BankPRGE #.bank(FIXED)
 
