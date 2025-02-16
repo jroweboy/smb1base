@@ -121,4 +121,57 @@ skipflip:
 bankbyte s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd,se,sf
 .endmacro
 
+.macro music_table s1,s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd,se,sf
+.ifblank s1
+  ; First parameter is empty
+  .exitmacro
+.endif
+.byte MUSIC_TABLE_OP(.ident(.sprintf("music_data_%s_start", s1))) | BANK_ADJUST
+music_table s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd,se,sf
+.endmacro
+
+.macro IncludeMusicData s1
+.ifblank s1
+  .exitmacro
+.endif
+.segment .concat("MUSIC_", s1)
+.ident(.sprintf("music_data_%s_start", s1)):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, s1)
+.endmacro
+
+.macro macro_iterator iter,s1,s2,s3,s4,s5,s6,s7,s8,s9,sa,sb,sc,sd,se,sf
+.if iter = 0
+.define MUSIC_ITERATOR s1
+.elseif iter = 1
+.define MUSIC_ITERATOR s2
+.elseif iter = 2
+.define MUSIC_ITERATOR s3
+.elseif iter = 3
+.define MUSIC_ITERATOR s4
+.elseif iter = 4
+.define MUSIC_ITERATOR s5
+.elseif iter = 5
+.define MUSIC_ITERATOR s6
+.elseif iter = 6
+.define MUSIC_ITERATOR s7
+.elseif iter = 7
+.define MUSIC_ITERATOR s8
+.elseif iter = 8
+.define MUSIC_ITERATOR s9
+.elseif iter = 9
+.define MUSIC_ITERATOR sa
+.elseif iter = 10
+.define MUSIC_ITERATOR sb
+.elseif iter = 11
+.define MUSIC_ITERATOR sc
+.elseif iter = 12
+.define MUSIC_ITERATOR sd
+.elseif iter = 13
+.define MUSIC_ITERATOR se
+.elseif iter = 14
+.define MUSIC_ITERATOR sf
+.endif
+
+.endmacro
+
 .endif ;__COMMON_INC

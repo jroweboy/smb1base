@@ -1,19 +1,65 @@
 .ifndef DRIVER_FAMISTUDIO_S
 .define DRIVER_FAMISTUDIO_S
 
+
+; INSTRUCTIONS FOR FAMISTUDIO AUDIO
+
+; When exporting the data you must export it twice.
+; Once as a combine project and once as separate files.
+; This allows us to bank include the files in such a way that the DPCM samples
+; are banked independantly from the songs, and we can have as much of each as we want.
+
+; When exporting the project, do NOT change the file name pattern in the export window
+; Make sure you export both times using the same project name and the same folder.
+
+; If everything fits into one bank, then all you need to do is edit the lines below
+; to use the correct path and project name (you choose these when exporting from famistudio)
+
+; IMPORTANT: When you export the single file song data, famistudio will show a log that
+; contains a list of settings that you MUST configure in order for the engine to work.
+; Replace whatever settings you find in the `build_options.ini` under the `CUSTOM AUDIO CONFIGURATION`
+; section with all of the required settings that famistudio export requires.
+
+; NOTE: If you are using more than one bank for music, then you will need to update the `smb1base.cfg` linker script
+; Inside you will find a list of lines that look something like
+; MUSIC_overworld:    load = PRGA_05 .....
+;
+; This `PRGA_05` determines what bank the song is in. All you need to do is move some songs over to new banks in order
+; to get it to work. So for this example, you can move it to PRGA_06 to free up song space in PRGA_05
+; MUSIC_overworld:    load = PRGA_06 .....
+
+; NOTE: When using DPCM bank switching, you must set the banks that you want each sample 
+; to go to in the famistudio editor. After that, you may need to add new DPCM_BANK(n) lines to the
+; linker script (smb1base.cfg). When you do this, do NOT edit the `MEMORY` section unless you know what
+; you are doing. Instead, just change the SEGMENT section and add another DPCM_BANK there as needed.
+; These must be numbered from 0..n, and you can use any PRGA or PRGC banks as needed.
+; Also, you need to set the build_option DPCM_BANK_COUNT to the number of banks you are using.
+
+.define MUSIC_PATH "audio/examples/famistudio"
+.define MUSIC_PROJECT_NAME "disco_mario"
+
+
+;;;
+; NOTICE:
+; Try to avoid editing below this line if possible :)
+
 .pushseg
 .segment "SHORTRAM"
 RESERVE ReloadChannel, 2
 
 .popseg
 
+.ifdef MMC5_PRG_ROM
+BANK_ADJUST .set $80
+.endif
+
 
 .macro DriverMusicInit
   ; Normally we would init the song here, but to support banked music data, we split the songs into their own
   ; files, and each of those need to be initialized independently.
-  BankPRGA #.bank(music_overworld_data_start)
-  ldx #<music_overworld_data_start
-  ldy #>music_overworld_data_start
+  BankPRGA #.bank(music_data_overworld_start)
+  ldx #<music_data_overworld_start
+  ldy #>music_data_overworld_start
   lda #0
   jsr famistudio_init
 .if ::USE_VANILLA_SFX
@@ -142,123 +188,136 @@ FAMISTUDIO_CFG_SFX_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_STREAMS = 3
 .endif
 
+.global famistudio_dpcm_bank_callback
+.proc famistudio_dpcm_bank_callback
+  clc
+  adc #.bank(DPCM_BANK0) | BANK_ADJUST
+  BankPRGC a
+  rts
+.endproc
+
 .include "famistudio_ca65.s"
 
 ; Custom table listing song pointers and what bank they are in
 
 .define MUSIC_LIST \
-  music_overworld_data_start, \
-  music_underworld_data_start, \
-  music_waterworld_data_start, \
-  music_castleworld_data_start, \
-  music_cloud_data_start, \
-  music_enterpipe_data_start, \
-  music_starman_data_start, \
-  music_death_data_start, \
-  music_gameover_data_start, \
-  music_savedprincess_data_start, \
-  music_anothercastle_data_start, \
-  music_victory_data_start, \
-  music_hurryup_data_start, \
-  music_intermediate_data_start
+  "overworld", \
+  "underworld", \
+  "waterworld", \
+  "castleworld", \
+  "cloud", \
+  "enter_in_a_pipe", \
+  "starman", \
+  "death", \
+  "game_over", \
+  "you_saved_the_princess", \
+  "in_an_other_castle", \
+  "victory", \
+  "hurry_up"
+  ; "new_song"
 
+BANK_ADJUST .set $00
+.define MUSIC_TABLE_OP .lobyte
 music_data_lo_table:
-  .lobytes MUSIC_LIST
+  music_table MUSIC_LIST
 
+.undefine MUSIC_TABLE_OP
+.define MUSIC_TABLE_OP .hibyte
 music_data_hi_table:
-  .hibytes MUSIC_LIST
+  music_table MUSIC_LIST
 
 music_data_bank_table:
 .ifdef MMC5_PRG_ROM
-.define BANK_ADJUST $80
-.else
-.define BANK_ADJUST $00
+BANK_ADJUST .set $80
 .endif
-  .byte .bank(music_overworld_data_start) | BANK_ADJUST
-  .byte .bank(music_underworld_data_start) | BANK_ADJUST
-  .byte .bank(music_waterworld_data_start) | BANK_ADJUST
-  .byte .bank(music_castleworld_data_start) | BANK_ADJUST
-  .byte .bank(music_cloud_data_start) | BANK_ADJUST
-  .byte .bank(music_enterpipe_data_start) | BANK_ADJUST
-  .byte .bank(music_starman_data_start) | BANK_ADJUST
-  .byte .bank(music_death_data_start) | BANK_ADJUST
-  .byte .bank(music_gameover_data_start) | BANK_ADJUST
-  .byte .bank(music_savedprincess_data_start) | BANK_ADJUST
-  .byte .bank(music_anothercastle_data_start) | BANK_ADJUST
-  .byte .bank(music_victory_data_start) | BANK_ADJUST
-  .byte .bank(music_hurryup_data_start) | BANK_ADJUST
-  .byte .bank(music_intermediate_data_start) | BANK_ADJUST
-
+.undefine MUSIC_TABLE_OP
+.define MUSIC_TABLE_OP .bank
+  music_table MUSIC_LIST
 
 .pushseg
-.segment "MUSIC_OVERWORLD"
-music_overworld_data_start:
-.include "audio/examples/famistudio/disco_mario_overworld.s"
+; music_include MUSIC_LIST
 
-.segment "MUSIC_UNDERWORLD"
-music_underworld_data_start:
-.include "audio/examples/famistudio/disco_mario_underworld.s"
+; very annoyingly, i can't put this in a loop :/
 
-.segment "MUSIC_WATERWORLD"
-music_waterworld_data_start:
-.include "audio/examples/famistudio/disco_mario_waterworld.s"
+.segment .concat("MUSIC_", "overworld")
+.ident(.sprintf("music_data_%s_start", "overworld")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "overworld")
 
-.segment "MUSIC_CASTLEWORLD"
-music_castleworld_data_start:
-.include "audio/examples/famistudio/disco_mario_castleworld.s"
+.segment .concat("MUSIC_", "underworld")
+.ident(.sprintf("music_data_%s_start", "underworld")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "underworld")
 
-.segment "MUSIC_CLOUD"
-music_cloud_data_start:
-.include "audio/examples/famistudio/disco_mario_cloud.s"
+.segment .concat("MUSIC_", "waterworld")
+.ident(.sprintf("music_data_%s_start", "waterworld")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "waterworld")
 
-.segment "MUSIC_ENTERPIPE"
-music_enterpipe_data_start:
-.include "audio/examples/famistudio/disco_mario_enter_in_a_pipe.s"
+.segment .concat("MUSIC_", "castleworld")
+.ident(.sprintf("music_data_%s_start", "castleworld")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "castleworld")
 
-.segment "MUSIC_STARMAN"
-music_starman_data_start:
-.include "audio/examples/famistudio/disco_mario_starman.s"
+.segment .concat("MUSIC_", "cloud")
+.ident(.sprintf("music_data_%s_start", "cloud")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "cloud")
 
-.segment "MUSIC_DEATH"
-music_death_data_start:
-.include "audio/examples/famistudio/disco_mario_death.s"
+.segment .concat("MUSIC_", "enter_in_a_pipe")
+.ident(.sprintf("music_data_%s_start", "enter_in_a_pipe")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "enter_in_a_pipe")
 
-.segment "MUSIC_GAMEOVER"
-music_gameover_data_start:
-.include "audio/examples/famistudio/disco_mario_game_over.s"
+.segment .concat("MUSIC_", "starman")
+.ident(.sprintf("music_data_%s_start", "starman")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "starman")
 
-.segment "MUSIC_SAVEDPRINCESS"
-music_savedprincess_data_start:
-.include "audio/examples/famistudio/disco_mario_you_saved_the_princess.s"
+.segment .concat("MUSIC_", "death")
+.ident(.sprintf("music_data_%s_start", "death")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "death")
 
-.segment "MUSIC_ANOTHERCASTLE"
-music_anothercastle_data_start:
-.include "audio/examples/famistudio/disco_mario_in_an_other_castle.s"
+.segment .concat("MUSIC_", "game_over")
+.ident(.sprintf("music_data_%s_start", "game_over")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "game_over")
 
-.segment "MUSIC_VICTORY"
-music_victory_data_start:
-.include "audio/examples/famistudio/disco_mario_victory.s"
+.segment .concat("MUSIC_", "you_saved_the_princess")
+.ident(.sprintf("music_data_%s_start", "you_saved_the_princess")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "you_saved_the_princess")
 
-.segment "MUSIC_HURRYUP"
-music_hurryup_data_start:
-.include "audio/examples/famistudio/disco_mario_hurry_up.s"
+.segment .concat("MUSIC_", "in_an_other_castle")
+.ident(.sprintf("music_data_%s_start", "in_an_other_castle")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "in_an_other_castle")
 
-.segment "MUSIC_INTERMEDIATE"
-music_intermediate_data_start:
-.include "audio/examples/famistudio/disco_mario_new_song.s"
+.segment .concat("MUSIC_", "victory")
+.ident(.sprintf("music_data_%s_start", "victory")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "victory")
+
+.segment .concat("MUSIC_", "hurry_up")
+.ident(.sprintf("music_data_%s_start", "hurry_up")):
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "hurry_up")
 
 .if ::USE_CUSTOM_ENGINE_SFX
 sfx_data:
-.include "audio/examples/famistudio/panic_at_the_mario_disco_sfx.s"
+.include .sprintf("%s/%s_%s.s", MUSIC_PATH, MUSIC_PROJECT_NAME, "sfx")
 .endif
 
-.segment "DPCM_BANK0"
-.incbin "audio/examples/famistudio/disco_mario.dmc"
+.if DPCM_BANK_COUNT > 1
+.segment .concat("DPCM_BANK", .string(0))
+.incbin .sprintf("%s/%s_bank%d.dmc", MUSIC_PATH, MUSIC_PROJECT_NAME, 0)
+
+.segment .concat("DPCM_BANK", .string(1))
+.incbin .sprintf("%s/%s_bank%d.dmc", MUSIC_PATH, MUSIC_PROJECT_NAME, 1)
+.else
+; Not using banked dpcm, so just load without the bank tag at the end
+.segment .concat("DPCM_BANK", .string(0))
+.incbin .sprintf("%s/%s.dmc", MUSIC_PATH, MUSIC_PROJECT_NAME)
+
+.endif
+
+.if DPCM_BANK_COUNT > 2
+.segment .concat("DPCM_BANK", .string(2))
+.incbin .sprintf("%s/%s_bank%d.dmc", MUSIC_PATH, MUSIC_PROJECT_NAME, 2)
+.endif
 
 .popseg
 
 .endif
-
+ 
 ; ======================================================================================================================
 ; SMBStudio:
 ; Mix Famistudio output with the vanilla sfx output

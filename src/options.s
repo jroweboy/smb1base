@@ -68,6 +68,7 @@ bool_option USE_FAMISTUDIO_MUSIC
 
 bool_option USE_VANILLA_SFX
 bool_option USE_CUSTOM_ENGINE_SFX
+num_option DPCM_BANK_COUNT
 
 bool_option DEBUG_WORLD_SELECT
 bool_option PRINT_METASPRITE_IDS
@@ -93,6 +94,11 @@ bool_option DEBUG_DISPLAY_VISUAL_FRAMETIME
 .if (.not MAPPER_MMC5) .and USE_MMC5_AUDIO
   ; Either disable USE_MMC5_AUDIO or switch to using MAPPER_MMC5 for this feature to work
   .error "Cannot use MMC5 Audio channels if the mapper isn't MMC5"
+  .fatal "Invalid Options selected"
+.endif
+
+.if (.not USE_VANILLA_MUSIC) .and (.not USE_FAMISTUDIO_MUSIC)
+  .error "Must select at least one audio engine. Either VANILLA or FAMISTUDIO"
   .fatal "Invalid Options selected"
 .endif
 

@@ -4368,6 +4368,9 @@ famistudio_update:
 ;----------------------------------------------------------------------------------------------------------------------
 .if FAMISTUDIO_CFG_SFX_SUPPORT
 
+;smbstudio: Bank switch to the sfx bank first
+    BankPRGA #.bank(sfx_data) | BANK_ADJUST
+
     ; Process all sound effect streams
     .if FAMISTUDIO_CFG_SFX_STREAMS > 0
     ldx #FAMISTUDIO_SFX_CH0
