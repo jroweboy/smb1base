@@ -35,8 +35,8 @@
 ; These must be numbered from 0..n, and you can use any PRGA or PRGC banks as needed.
 ; Also, you need to set the build_option DPCM_BANK_COUNT to the number of banks you are using.
 
-.define MUSIC_PATH "audio/examples/famistudio"
-.define MUSIC_PROJECT_NAME "disco_mario"
+.define MUSIC_PATH "audio/famistudio"
+.define MUSIC_PROJECT_NAME "neonlights"
 
 
 ;;;

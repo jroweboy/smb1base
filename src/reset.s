@@ -391,54 +391,54 @@ VRAM_Buffer_Offset:
 WaterPaletteData:
   .byte $3f, $00, $20
   .byte $0f, $15, $12, $25  
-  .byte $0f, $3a, $1a, $0f
+  .byte $0f, $3a, $1b, $0f
   .byte $0f, $30, $12, $0f
   .byte $0f, $27, $12, $0f
-  .byte $22, $16, $27, $18
-  .byte $0f, $10, $30, $27
-  .byte $0f, $16, $30, $27
+  .byte $22, $15, $27, $18
+  .byte $0f, $1b, $30, $27
+  .byte $0f, $15, $30, $27
   .byte $0f, $0f, $30, $10
   .byte $00
 
 GroundPaletteData:
   .byte $3f, $00, $20
-  .byte $0f, $29, $1a, $0f
-  .byte $0f, $36, $17, $0f
+  .byte $0f, $29, $1b, $0f
+  .byte $0f, $37, $16, $0f
   .byte $0f, $30, $21, $0f
-  .byte $0f, $27, $17, $0f
+  .byte $0f, $27, $16, $0f
   .byte $0f, $16, $27, $18
-  .byte $0f, $1a, $30, $27
+  .byte $0f, $1b, $30, $27
   .byte $0f, $16, $30, $27
-  .byte $0f, $0f, $36, $17
+  .byte $0f, $0f, $36, $16
   .byte $00
 
 UndergroundPaletteData:
   .byte $3f, $00, $20
-  .byte $0f, $29, $1a, $09
-  .byte $0f, $3c, $1c, $0f
+  .byte $0f, $2a, $1b, $1c
+  .byte $0f, $32, $12, $0f
   .byte $0f, $30, $21, $1c
   .byte $0f, $27, $17, $1c
   .byte $0f, $16, $27, $18
-  .byte $0f, $1c, $36, $17
-  .byte $0f, $16, $30, $27
-  .byte $0f, $0c, $3c, $1c
+  .byte $0f, $1c, $32, $16
+  .byte $0f, $06, $30, $27
+  .byte $0f, $02, $32, $12
   .byte $00
 
 CastlePaletteData:
   .byte $3f, $00, $20
-  .byte $0f, $30, $10, $00
-  .byte $0f, $30, $10, $00
-  .byte $0f, $30, $16, $00
+  .byte $0f, $35, $15, $04
+  .byte $0f, $30, $3d, $05
+  .byte $0f, $30, $15, $00
   .byte $0f, $27, $17, $00
-  .byte $0f, $16, $27, $18
+  .byte $0f, $15, $27, $18
   .byte $0f, $1c, $36, $17
-  .byte $0f, $16, $30, $27
+  .byte $0f, $15, $30, $27
   .byte $0f, $00, $30, $10
   .byte $00
 
 DaySnowPaletteData:
   .byte $3f, $00, $04
-  .byte $22, $30, $00, $10
+  .byte $22, $30, $33, $13
   .byte $00
 
 NightSnowPaletteData:
